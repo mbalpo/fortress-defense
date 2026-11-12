@@ -2,7 +2,16 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
-## Combo del guardiano (non ancora pubblicata)
+## 1.1.0 — pubblicazione
+
+- `APP_VERSION` 1.0.0 → 1.1.0. Pubblica le revisioni torri 1 e 2 e le combo del guardiano (voci qui sotto).
+  Elenco dei file in `app/` invariato: `CACHE` e `ASSETS` in `sw.js` restano uguali.
+
+Test: `npm test`, tutti verdi.
+
+Checklist: nessuna voce da cambiare.
+
+## Combo del guardiano (pubblicata nella 1.1.0)
 
 - Il personaggio ora si chiama **guardiano** (gioco, menu, pausa, documenti, commenti; nel codice restano `player` e `PLAYER_DEF`).
 - **11 combo del guardiano**, una per torretta, definite da Marco. Sono carte di categoria Combo, contano come scelte del guardiano e escono solo
@@ -28,7 +37,7 @@ gruppo Combo (le spunte vengono portate); nuovo gruppo “Combo del guardiano”
 (probabilità, quantità, eredità, clone, nomi delle carte) e 2 in “Interpretazioni” (“torretta di lv2”, “scelta chain”); la voce sulle combo
 mancanti ora riguarda solo quelle tra due torrette.
 
-## Revisione torri 2: nomi e conferme (non ancora pubblicata)
+## Revisione torri 2: nomi e conferme (pubblicata nella 1.1.0)
 
 - Marco conferma tutti i valori e le interpretazioni della revisione 2 (DESIGN.md § 10: da **[da rivedere]** a **[Claude]**).
 - Nomi cambiati: Firewheel “Scia corrosiva” → **“Scia combustibile”**; Gravity Vortex Gun “Buco nero denso” → **“Buco nero iperdenso”**;
@@ -40,7 +49,7 @@ Test: `npm test`, 23 su 23 verdi.
 Checklist (già aggiornata da Claude Code, versione 17 dell’artefatto): nuovi nomi; tolta la voce sul nome della chain del Teslacoil;
 tolti dai “Valori da rivedere” e dalle “Interpretazioni” i valori della revisione 2 confermati da Marco.
 
-## Revisione torri 2 (non ancora pubblicata)
+## Revisione torri 2 (pubblicata nella 1.1.0)
 
 Richieste di Marco sulle altre torri e sul personaggio. Con questa revisione **tutte le torri e il personaggio rispettano la regola delle chain**
 (DESIGN.md § 3) e non resta nessuna voce provvisoria; manca solo il contenuto delle combo.
@@ -77,7 +86,7 @@ Checklist (già aggiornata da Claude Code su richiesta di Marco, versione 16 del
 - “Valori da rivedere” e “Interpretazioni”: aggiornate con i valori delle revisioni 1 e 2.
 - Schede di riferimento di personaggio e torri: rigenerate dalle liste del gioco.
 
-## Revisione torri 1 (non ancora pubblicata)
+## Revisione torri 1 (pubblicata nella 1.1.0)
 
 Richieste di Marco sulle prime 7 torri, più la nuova regola delle chain (DESIGN.md § 3).
 
