@@ -81,7 +81,7 @@ console.log("— Firewheel Drone —");
   console.log("nella scia: brucia", e.burnT > 0, "| bruciatura", e.burnDps.toFixed(1), "(attesa 8,0) | vulnerabile al fuoco:", e.fireVulnT > 0,
     ok(e.burnT > 0 && Math.abs(e.burnDps - 8) < 1e-6 && e.fireVulnT > 0));
   const f = mk(60, 100); const h0 = f.hp; X.damage(f, 10, "fire"); const h1 = f.hp; f.fireVulnT = 1; X.damage(f, 10, "fire");
-  console.log("danno da fuoco con la scia corrosiva: ×" + ((h1 - f.hp) / (h0 - h1)).toFixed(2), ok(Math.abs((h1 - f.hp) / (h0 - h1) - 1.3) < 1e-6));
+  console.log("danno da fuoco con la scia combustibile: ×" + ((h1 - f.hp) / (h0 - h1)).toFixed(2), ok(Math.abs((h1 - f.hp) / (h0 - h1) - 1.3) < 1e-6));
 }
 {
   const tot = (up) => { const { X, mk, tower, run, lost } = setup(); const es = [];
@@ -130,7 +130,7 @@ console.log("— Teslacoil —");
   const t = X.teslaChargeT(tower("tesla", { over1: 1, over2: 1, over3: 1 }));
   console.log("carica con tutta la chain:", t.toFixed(1), "s (attesa 2,7)", ok(Math.abs(t - 2.7) < 1e-9));
 }
-for (const [up, expect, label] of [[{}, false, "base"], [{ over1: 1 }, true, "Carica espansiva"], [{ big: 1 }, true, "Esplosione ampia"]]) {
+for (const [up, expect, label] of [[{}, false, "base"], [{ over1: 1 }, true, "Sovraccarico"], [{ big: 1 }, true, "Esplosione ampia"]]) {
   const { X, mk, tower, lost } = setup(); const B = mk(230, 300);
   X.teslaBoom(tower("tesla", up), 180, 300, 0, new Set());
   console.log(label.padEnd(18), "nemico a 50 px colpito:", lost(B) > 0, ok((lost(B) > 0) === expect));
@@ -160,6 +160,6 @@ for (const up of [{ wh1: 1 }, { wh1: 1, whT: 1 }]) {
   const stat = (up) => { const { X, mk, tower, run, lost } = setup(); const e = mk(180, 560 - 252.6);
     X.vortex(tower("vortex", Object.assign({ stat1: 1 }, up)), { x: 180, y: 560 }, -Math.PI / 2); run(2.1); const b = lost(e); run(1); return lost(e) - b; };
   const g = stat({ grow: 1 }) / stat({}), p = stat({ power: 1 }) / stat({});
-  console.log("fermo a fine percorso: Collasso crescente ×" + g.toFixed(2), "(atteso 2) | Buco nero denso ×" + p.toFixed(2), "(atteso 1,5)",
+  console.log("fermo a fine percorso: Collasso crescente ×" + g.toFixed(2), "(atteso 2) | Buco nero iperdenso ×" + p.toFixed(2), "(atteso 1,5)",
     ok(Math.abs(g - 2) < 0.02 && Math.abs(p - 1.5) < 0.02));
 }

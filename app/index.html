@@ -301,7 +301,7 @@ const TURRETS = {
     C("miniB", "mini", 2, "Mini-droni incendiari", "I mini-droni bruciano i nemici"),
     C("miniD", "mini", 3, "Mini-droni potenziati", "I mini-droni fanno più danno"),
     C("trail1", "trail", 1, "Scia di fuoco", "Lascia una scia di 2 s che brucia"),
-    C("trailR", "trail", 2, "Scia corrosiva", "Nella scia: +30% danni da fuoco subiti"),
+    C("trailR", "trail", 2, "Scia combustibile", "Nella scia: +30% danni da fuoco subiti"),
     C("trailB", "trail", 2, "Fiamme intense", "Bruciatura di questa torre +60%"),
     C("trail3", "trail", 3, "Scia persistente", "La scia dura 4 s invece di 2"),
     L("dash", 1, "Scatto", "Più veloce quando non colpisce"),
@@ -352,7 +352,7 @@ const TURRETS = {
     C("orbSlow", "orb", 2, "Sfera rallentante", "La sfera rallenta i nemici"),
     C("orbD", "orb", 2, "Sfera carica", "La sfera fa più danno"),
     C("orbDur", "orb", 3, "Sfera persistente", "La sfera dura più a lungo"),
-    C("over1", "over", 1, "Carica espansiva", "Carica +0,5 s, esplosione più ampia"),
+    C("over1", "over", 1, "Sovraccarico", "Carica +0,5 s, esplosione più ampia"),
     C("over2", "over", 2, "Carica potenziata", "Carica +0,5 s, esplosione più forte"),
     C("over3", "over", 3, "Carica massima", "Carica +1 s: esplosione ancora maggiore"),
     L("chain", 1, "Esplosione a catena", "Colpisce in parte 5 nemici vicini"),
@@ -373,7 +373,7 @@ const TURRETS = {
     C("stat2", "stat", 2, "Statico prolungato", "Il buco nero statico dura 3 s invece di 2"),
     C("stat3", "stat", 3, "Statico potente", "Il buco nero statico fa più danno"),
     L("pull", 1, "Attrazione forte", "Forza attrattiva molto maggiore"),
-    L("power", 1, "Buco nero denso", "Danno dei buchi neri +50%"),
+    L("power", 1, "Buco nero iperdenso", "Danno dei buchi neri +50%"),
     L("twin", 2, "Secondo buco nero", "Genera un secondo buco nero"),
     L("lazy", 2, "Buco nero lento", "Avanza più piano: resta più sui nemici"),
     L("grow", 3, "Collasso crescente", "Danno e attrazione crescono col percorso"),
@@ -485,7 +485,7 @@ function popup(e, v, mult) {
 function damage(e, base, type, quiet, src, ignore) {
   let mult = RESIST[e.def.type][type];
   if (ignore && mult < 1) mult = 1;
-  if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia corrosiva (Firewheel)
+  if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia combustibile (Firewheel)
   if (e.vulnT > 0 && (e.vulnType === "all" || e.vulnType === type)) mult *= 1 + 0.25 * (1 - (e.statRes || 0));
   if (e.fieldT > 0 && src !== "disr") mult *= e.fieldAmp;
   const d = base * mult;
@@ -997,7 +997,7 @@ function wheelDrone(s, x, y, a, o) {
         p.t -= dt;
         for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
           burn(e, 2, 5 * dmgM(s) * bm);
-          if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2);     // Scia corrosiva: +30% di danno da fuoco per 2 s
+          if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2);     // Scia combustibile: +30% di danno da fuoco per 2 s
         }
       }
       this.trail = this.trail.filter((p) => p.t > 0);
@@ -1165,7 +1165,7 @@ function railBoom(s, x, y, avail, dmg0) {
 }
 
 // ---------- 10. TESLACOIL (electric) ----------
-// carica: 0,7 s base; la chain Carica espansiva la allunga (+0,5 / +0,5 / +1 s) e ogni 0,5 s in più fa crescere l’esplosione
+// carica: 0,7 s base; la chain Sovraccarico la allunga (+0,5 / +0,5 / +1 s) e ogni 0,5 s in più fa crescere l’esplosione
 const teslaChargeT = (s) => 0.7 + (has(s, "over1") ? 0.5 : 0) + (has(s, "over2") ? 0.5 : 0) + (has(s, "over3") ? 1 : 0);
 function teslaFire(s) {
   if (!pickTargets({ x: s.x, y: s.y - 10 }, rangeOf(s), 1)[0]) return false;

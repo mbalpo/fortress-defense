@@ -2,6 +2,18 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
+## Revisione torri 2: nomi e conferme (non ancora pubblicata)
+
+- Marco conferma tutti i valori e le interpretazioni della revisione 2 (DESIGN.md § 10: da **[da rivedere]** a **[Claude]**).
+- Nomi cambiati: Firewheel “Scia corrosiva” → **“Scia combustibile”**; Gravity Vortex Gun “Buco nero denso” → **“Buco nero iperdenso”**;
+  chain del Teslacoil “Carica espansiva” → **“Sovraccarico”** (anche la sua voce lv1).
+- DESIGN.md §§ 8 e 9 rigenerati: nella revisione 2 gli elenchi non erano stati reincollati (lo strumento stampa il testo, non scrive il file).
+
+Test: `npm test`, 23 su 23 verdi.
+
+Checklist (già aggiornata da Claude Code, versione 17 dell’artefatto): nuovi nomi; tolta la voce sul nome della chain del Teslacoil;
+tolti dai “Valori da rivedere” e dalle “Interpretazioni” i valori della revisione 2 confermati da Marco.
+
 ## Revisione torri 2 (non ancora pubblicata)
 
 Richieste di Marco sulle altre torri e sul personaggio. Con questa revisione **tutte le torri e il personaggio rispettano la regola delle chain**
