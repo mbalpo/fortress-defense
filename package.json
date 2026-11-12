@@ -1,0 +1,16 @@
+{
+  "name": "fortress-defense",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tower defense personale, PWA offline",
+  "scripts": {
+    "test": "node tests/run.js",
+    "screenshots": "node tests/tools/screens.js",
+    "calibrate": "node tests/tools/calib2.js 1,5,8,10,11,15,20,25,30",
+    "design-lists": "node tests/tools/design-lists.js"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.1.0",
+    "jsdom": "^31.0.0"
+  }
+}
