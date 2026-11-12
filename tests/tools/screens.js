@@ -39,3 +39,23 @@ console.log("Schermate in " + OUT + ":");
   g.frame(130); g.save("08-indicatori-stato.png"); }
 { const g = game({ progress: { cleared: 13, seen: ALL_SEEN }, settings: { targeting: "closest", aim: "manual" } }); g.key("Enter"); g.frame(330);
   const cv = g.w.document.getElementById("c"); const e = new g.w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = 110; e.clientY = 170; cv.dispatchEvent(e); g.frame(40); g.save("09-mira-manuale.png"); }
+{ // combo del guardiano: carte, effetti in battaglia, elenco nella pausa
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
+window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, SLOT_X, GROUND_Y, PLAYER_DEF, guardProc, guardWheel, living, spawn, enemies: () => enemies,
+  clear: () => { queue = []; enemies.length = 0; },
+  setOpts: (o) => { options = o; state = "upgrade"; } };
+})();`);
+  const setup = () => {
+    const g = game({ progress: { cleared: 23, seen: ALL_SEEN }, src }); g.key("Enter"); g.frame(); const X = g.w.__x, p = X.player();
+    const towers = [["hive", {}, 2], ["laser", { multi1: 1 }, 2], ["wheel", { mini1: 1 }, 2], ["vortex", {}, 2]];
+    towers.forEach(([id, up, lv], i) => { const s = X.makeShooter(X.TURRETS[id], X.SLOT_X[i], X.GROUND_Y - 14); Object.assign(s.up, up); s.level = lv; X.slots()[i] = s; });
+    p.level = 2; return { g, X, p };
+  };
+  { const { g, X, p } = setup(); const U = (id) => X.PLAYER_DEF.ups.find((u) => u.id === id);
+    X.setOpts(["kVortex", "kBeam", "kWheel"].map((id) => ({ kind: "up", who: p, up: U(id) }))); g.frame(); g.save("10-carte-combo.png"); }
+  { const { g, X, p } = setup(); Object.assign(p.up, { kHive: 1, kLaser: 1, kWheel: 1, kVortex: 1, proj: 1 }); p.x = p.targetX = 120;
+    X.clear(); [[90, 260], [250, 230], [150, 330], [290, 380], [60, 400], [200, 160]].forEach(([x, y], i) => {
+      X.spawn({ enemy: i % 2 ? "shell" : "brute", x }); const e = X.enemies().slice(-1)[0]; Object.assign(e, { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); });
+    g.frame(90); const e = X.living()[2]; if (e) X.guardProc(p, { laser: true }, e); X.guardWheel(p); X.guardWheel(p); g.frame(50); g.save("11-combo-battaglia.png");
+    g.key("p"); g.frame(); g.key("Tab"); g.frame(); g.save("12-pausa-combo.png"); }
+}

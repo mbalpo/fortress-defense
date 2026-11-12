@@ -3,7 +3,7 @@ const P = (h, ...pairs) => pairs.reduce((a, [x, y]) => { if (!a.includes(x)) thr
 const common = (h) => P(h,
   ["domeHp: 100,", "domeHp: 1000000,"],
   ["options = rollOptions();", "options = [];"],
-  ["  fan = !!fan;", "  fan = !!fan; if (fan) window.__fan = (window.__fan || 0) + 1;"],
+  ["  o = o || {};", "  o = o || {}; if (o.fan) window.__fan = (window.__fan || 0) + 1;"],
   ["if (pierce > 0) { pierce--; this.t = null; }", "if (pierce > 0) { window.__pierce = (window.__pierce || 0) + 1; pierce--; this.t = null; }"],
   ["if (nx) { bounces--;", "if (nx) { window.__bounce = (window.__bounce || 0) + 1; bounces--;"],
   ["if (prob && Math.random() < prob) {", "if (prob && Math.random() < prob) { window.__boom = (window.__boom || 0) + 1;"],
@@ -28,7 +28,7 @@ function scenario(name, playerUps, disrUps, frames = 5400, seed = 4) {
   const shown = Object.entries(o).filter(([, v]) => v).map(([k, v]) => k + "=" + v).join(" ");
   console.log(name.padEnd(34), shown || "(nessun effetto)", g.errors.length ? "ERRORI " + g.errors[0] : "");
 }
-console.log("— personaggio —");
+console.log("— guardiano —");
 scenario("base (nessun potenziamento)", {});
 scenario("+1 perforazione ×2", { pierce: 2 });
 scenario("Perforazione II (+2)", { pen2: 1 });

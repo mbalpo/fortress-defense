@@ -3,7 +3,7 @@ const { makeGame } = require("./bot.js");
 const P = (h, ...pairs) => pairs.reduce((a, [x, y]) => { if (!a.includes(x)) throw new Error("manca: " + x.slice(0, 60)); return a.replace(x, y); }, h);
 const patch = (h) => P(h,
   ["domeHp: 100,", "domeHp: 1000000,"], ["options = rollOptions();", "options = [];"],
-  ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],               // il personaggio non spara: si misura solo la torre
+  ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],               // il guardiano non spara: si misura solo la torre
   ["function railBoom(s, x, y, avail, dmg0) {", "function railBoom(s, x, y, avail, dmg0) { (window.__rb = window.__rb || []).push(Math.round(y));"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { damage, spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, PLAYER_DEF, GROUND_Y, cdOf,

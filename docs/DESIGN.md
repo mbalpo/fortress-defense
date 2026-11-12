@@ -21,15 +21,15 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 ## 2. La partita
 
 - Schermo logico 360×640, sempre in verticale. In basso il suolo, sopra la **cupola** (semi-ellisse larga 344 px, alta 95 px al centro) che protegge
-  personaggio e torrette. In fondo la barra della vita della cupola. **[deciso]** (altezza ridotta su richiesta)
+  guardiano e torrette. In fondo la barra della vita della cupola. **[deciso]** (altezza ridotta su richiesta)
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
 - Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
-- **Personaggio**: si muove sul suolo trascinando (mira automatica) e spara da solo. **[deciso]**
-- **Mira** (scelta nel menu, ricordata): automatica, oppure manuale = il personaggio resta fermo e spara solo mentre si tiene premuto;
+- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando (mira automatica) e spara da solo. **[deciso]**
+- **Mira** (scelta nel menu, ricordata): automatica, oppure manuale = il guardiano resta fermo e spara solo mentre si tiene premuto;
   premendo entro 45 px da un nemico i colpi lo inseguono, altrimenti vanno dritti verso il dito. Le torrette sparano sempre da sole. **[deciso]** (45 px **[Claude]**)
-- **Bersaglio** (torrette e personaggio): “più vicino” o “vita più alta”. **[deciso]**
-- **Frenesia** (chain del personaggio): la barra si carica nel tempo; in automatico parte da sola ma va in pausa se non ci sono nemici a schermo;
+- **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”. **[deciso]**
+- **Frenesia** (chain del guardiano): la barra si carica nel tempo; in automatico parte da sola ma va in pausa se non ci sono nemici a schermo;
   in manuale parte e scorre solo mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]**
 - **Pausa**: pulsante in alto (o Esc/P), si attiva da sola se si cambia app. Due schede: “Nemici del livello” e “Torri e potenziamenti”.
   “Abbandona” chiede un secondo tocco. **[deciso]**
@@ -40,23 +40,28 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 ## 3. Sistema di potenziamenti
 
 - Categorie: **standard**, **chain**, **combo**, **level up**. **[deciso]**
-- Ogni torre e il personaggio partono al **livello 1**: 3 potenziamenti (standard, chain o combo), poi serve un **level up** per salire.
+- Ogni torre e il guardiano partono al **livello 1**: 3 potenziamenti (standard, chain o combo), poi serve un **level up** per salire.
   **Livello massimo 3 = 12 potenziamenti** (3 + level up, per 3 livelli). **[deciso]**
 - Un level up di livello inferiore resta disponibile ai livelli successivi. **[deciso]**
 - **Standard**: massimo 3 pile per voce (per torre, non per partita). **[deciso]**
 - **Chain**: la voce di livello N richiede una voce di livello N−1 della stessa catena **e la torre al livello N**. **[deciso]**
-- Obiettivo di contenuto per ogni torre e per il personaggio: **2 chain**, una da **1 voce lv1, 2 lv2, 1 lv3** e una da **1 lv1, 1 lv2, 1 lv3**;
+- Obiettivo di contenuto per ogni torre e per il guardiano: **2 chain**, una da **1 voce lv1, 2 lv2, 1 lv3** e una da **1 lv1, 1 lv2, 1 lv3**;
   **2 level up a lv1 e a lv2** (lv3 almeno 1). **[deciso]** (rivisto: prima entrambe le chain avevano 2 voci lv2)
 - Comportamento base confermato: la **Sky Guard non brucia** senza potenziamenti (la bruciatura arriva dalla chain Bruciatura e dai level up);
   il **campo del Disruption Drone rallenta** di base. **[deciso]**
-- **Combo**: una sola carta per coppia, anche torretta + personaggio. Compaiono solo con entrambe in campo. Nessuna definita. **(aperto, § 11)**
+- **Combo**: una sola carta per coppia. È una carta da scegliere e costa una scelta. **[deciso]**
+- **Combo del guardiano**: una per torretta (11), definite da Marco. Contano come **scelte del guardiano**. La carta esce solo se la torretta
+  è in campo e la condizione è soddisfatta: **torretta al livello 2** oppure **chain della torretta scelta** (la voce lv1) **con il guardiano al livello 2**.
+  “Colpo” = una salva del guardiano (un tiro di probabilità per salva, così “+1 proiettile” e Ventaglio non moltiplicano l’effetto);
+  “proiettile” = ogni singolo proiettile. Elenco in § 8. **[deciso]** (valori **[da rivedere]**, § 10)
+- **Combo tra due torrette**: nessuna definita. **(aperto, § 11)**
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
 
 ## 4. Campagna e progressione
 
 - 50 livelli selezionabili (fino a “completati + 1”). Il livello di difficoltà D è il numero del livello; in **Epica D = livello + 30**. **[deciso]**
-- **Tetto di livello** di torri e personaggio, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
+- **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **40 → abilità della barriera** (fino a 3), **50 → Epica**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**. **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
@@ -66,8 +71,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   (riduce l’intensità, non la durata). **[deciso]** (valori **[da rivedere]**, § 10)
 - Fino a difficoltà 10 solo nemici “piccoli” (niente asteroidi). **[deciso]**
 - Budget di scelte: 19 per partita, **28 dal livello 11** con i 3 mini-boss. Servono 19 scelte per riempire tutto al tetto lv1, 39 al tetto lv2,
-  64 al tetto lv3 (4 torrette + personaggio). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39: per questo, con 28 scelte,
-  **non si possono massimizzare più di 2 tra torri e personaggio** senza bisogno di una regola esplicita. **[deciso]**
+  64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39: per questo, con 28 scelte,
+  **non si possono massimizzare più di 2 tra torri e guardiano** senza bisogno di una regola esplicita. **[deciso]**
 - Progressione salvata sul dispositivo: livelli completati e nemici scoperti; impostazioni (bersaglio, mira) a parte. **[deciso]**
 
 ## 5. Difficoltà e calibrazione
@@ -88,6 +93,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Dopo la revisione torri 2 (stessi bot): 1 100% · 5 96% · 11 89% · 20 37% (120 partite) · **10 11,9%** e **30 21,4%** (800 partite).
   Confronto diretto con la versione precedente sugli stessi 400 semi: livello 8 dal 61,8% al 57,5%, 15 dall’80,5% al 79,8%, 25 dal 59,5% al 59,0%:
   differenze dentro il rumore. Nessun numero della difficoltà cambiato.
+- Dopo le combo del guardiano, confronto diretto con la versione precedente sugli stessi 200 semi (100 per bot): livello 15 dal 76,5% al 77,5%,
+  25 dal 55,0% al 58,5%, 30 dal 23,5% al 23,0%: dentro il rumore. I bot scelgono le carte a caso o con regole semplici, e le combo escono di rado
+  (peso 0,4 e condizioni), quindi la misura dice poco sulla loro forza vera. Nessun numero della difficoltà cambiato.
 - La difficoltà in **mira manuale non è misurata** (i bot giocano solo in automatico).
 
 ## 6. Nemici, stati e interfaccia dei nemici
@@ -109,9 +117,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - PWA: `manifest.json`, `sw.js` (risponde dalla cache e aggiorna in background: la versione nuova arriva all’avvio successivo), icone.
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html); se cambia l’elenco dei file, aggiornare `ASSETS` e `CACHE` in `sw.js`.
 
-## 8. Personaggio e torrette *(generato)*
+## 8. Guardiano e torrette *(generato)*
 
-### Personaggio
+### Guardiano
 
 Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio.
 - **Standard** (max 3 pile): +1 perforazione (I colpi trapassano un nemico in più); Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%).
@@ -119,6 +127,7 @@ Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta 
 - **Chain · Colpi esplosivi** — lv1 Colpi esplosivi: 10% di esplosione ad area sul colpo · lv2 Più esplosioni: Probabilità di esplosione maggiore · lv3 Esplosioni potenziate: Più probabilità e più raggio
 - **Level up** — lv1 Ventaglio: Proiettili secondari a ventaglio · lv1 Colpo pesante: Molto più danno, lieve knockback · lv2 Perforazione II: +2 perforazione · lv2 Rimbalzo: I proiettili rimbalzano · lv3 Cadenza maggiorata: Cadenza di fuoco base +20%
 - id nel codice: pierce, dmg, proj, frenzy1, fill, fspd, fdur, boom1, boomP, boom3, fan, punch, pen2, ricochet, rate3
+- **Combo** (contano come scelte del guardiano): Sky Guard (torretta lv2) → Proiettili incendiari: Proiettili: +20% di danno extra da fuoco · Laser (torretta lv2) → Laser rotante: 3%: laser rotante sul bersaglio per 3 s · Disruption Drone (chain Distruzione, guardiano lv2) → Colpi distruttivi: 10%: il colpo dà uno stack di distruzione · Aeroblast (chain Mine, guardiano lv2) → Posamine: 5%: una mina dove colpisce (max 5) · Thunderbolt (chain Fulmini ramificati, guardiano lv2) → Colpi ramificati: 5%: il colpo si ramifica come il fulmine · Beam (chain Raggio amplificato, guardiano lv2) → Mira amplificata: Stesso bersaglio: danno +50% in 2 s · Firewheel Drone (chain Mini-droni, guardiano lv2) → Mini-drone di scorta: 3%: genera un mini-drone (max 3) · Hive (torretta lv2) → Clone speculare: Clone specchiato al 50% del danno · Railgun (torretta lv2) → Proiettili frammentati: 10%: il proiettile si divide in 2 · Teslacoil (chain Sovraccarico, guardiano lv2) → Colpo caricato: Ogni 40 colpi: un colpo a danno doppio · Gravity Vortex Gun (torretta lv2) → Proiettili gravitazionali: Proiettili: +20% di danno extra force
 
 ### Sky Guard (`sky`)
 
@@ -286,25 +295,44 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Laser (revisione 2): Raggi penetranti = a ogni attivazione, ogni nemico toccato ha il 30% di subire tutto il danno del laser senza resistenze
   (anche dalla spazzata); senza resistenza non cambia nulla  **[Claude]**
 - Beam (revisione 2): Ramificazione estesa = 3 ramificazioni invece di 2  **[Claude]**
-- Personaggio: intervallo 0,15 s e danno 7 per colpo; ventaglio 4 proiettili al 30%, esplosioni al 70% raggio 30 (39 con la chain lv3; tolta “Esplosioni ampie”), rimbalzo una volta, colpo pesante ×1,6 con knockback 1,5 px per colpo (4,5 in frenesia)  **[da rivedere]**
+- Guardiano: intervallo 0,15 s e danno 7 per colpo; ventaglio 4 proiettili al 30%, esplosioni al 70% raggio 30 (39 con la chain lv3; tolta “Esplosioni ampie”), rimbalzo una volta, colpo pesante ×1,6 con knockback 1,5 px per colpo (4,5 in frenesia)  **[da rivedere]**
+- Combo del guardiano (Marco ha deciso effetti e condizioni; numeri e dettagli di Claude):
+  Proiettili incendiari e Proiettili gravitazionali = ogni proiettile (anche del Ventaglio) fa in più il 20% del suo danno come fuoco / force, senza bruciatura;
+  Laser rotante = 3% per salva; segmento di 110 px centrato sul bersaglio colpito, che lo segue finché vive; 2 giri in 3 s; uno alla volta;
+  danno, larghezza, Raggi debilitanti, Sfruttare i debuff, Debuff prolungati e Raggi penetranti come la torretta; con Raggi multipli 2 mini-raggi
+  a ±60° (danno dei mini-raggi della torretta); niente rimbalzi né spazzata;
+  Colpi distruttivi = 10% per salva, uno stack sul nemico colpito, con la scarica della torretta se c’è (danno della scarica = quello della torretta);
+  Posamine = 5% per salva, mina della torretta (danno, Mine d’urto, Mine potenziate) dove colpisce il primo proiettile; al massimo 5 mine del guardiano insieme;
+  Colpi ramificati = 5% per salva; dal nemico colpito partono le ramificazioni della torretta: 4 (6 con Ramificazione II) entro 130 px, stesso danno
+  ed effetti (Ramificazioni debilitanti, Paralisi totale);
+  Mira amplificata = +25% al secondo sullo stesso bersaglio, fino a +50% in 2 s, si azzera cambiando bersaglio (vale anche per il Ventaglio);
+  Mini-drone di scorta = 3% per salva; mini-drone della torretta (durata, danno, Mini-droni incendiari e potenziati, Fiamme roventi) che parte dal guardiano;
+  al massimo 3 insieme; non ferma la ricarica della torretta e non conta per Raffreddamento;
+  Clone speculare = stessa cadenza e stesso numero di proiettili del guardiano (non il Ventaglio), 50% del danno senza combo, perforazione e Rimbalzo sì,
+  esplosioni, knockback e combo no; in automatico sceglie il proprio bersaglio dalla posizione specchiata; disegnato trasparente;
+  Proiettili frammentati = 10% per proiettile (non Ventaglio), una volta per proiettile: due frammenti al 50% del danno verso i nemici più vicini
+  non ancora colpiti (entro 200 px, altrimenti a ±20°), senza perforazione né rimbalzo;
+  Colpo caricato = un proiettile in più ogni 40 salve, danno ×2 (×3 in tutto con Colpo pesante, scelta di Marco); eredita i “+1 rimbalzo” della
+  Teslacoil (senza il −15%) oltre al Rimbalzo del guardiano; disegnato più grande e giallo  **[da rivedere]**
+- Combo del guardiano, nomi delle carte (Marco ha dato solo gli effetti): Proiettili incendiari, Laser rotante, Colpi distruttivi, Posamine,
+  Colpi ramificati, Mira amplificata, Mini-drone di scorta, Clone speculare, Proiettili frammentati, Colpo caricato, Proiettili gravitazionali  **[da rivedere]**
+- Combo del guardiano, letture di Claude: “torretta di lv2” = basta la torretta al livello 2, il guardiano può essere al livello 1;
+  “scelta chain X” = la torretta ha la voce lv1 di quella chain  **[da rivedere]**
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
 - Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita 800 al livello 10, 2800 al 20, 2900 al 30 (oltre il 30 provvisoria), danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
 
 Interpretazioni di Claude **confermate**: Disruption Drone lv3 “aumento intervallo del danneggiamento” = danneggia più spesso (ogni 0,6 s);
 Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 px → 480 px con 3 pile); Hive, un “colpo” è una raffica
-(i proiettili per colpo non contano nel limite di 10 colpi); “knockdown” del personaggio = knockback.
+(i proiettili per colpo non contano nel limite di 10 colpi); “knockdown” del guardiano = knockback.
 
 ## 11. Decisioni aperte
 
-- **Combo**: una sola carta per coppia (anche torretta + personaggio). Carta da scegliere, che costa una scelta, oppure potenziamento extra gratuito?
-  Consiglio di Claude: carta; i “power up extra” arrivano già dalle carte dei mini-boss, che potrebbero includere anche le combo.
-  Esempi di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo con danno ad area);
-  Personaggio + Hive (clone speculare del personaggio al 50% del danno).
-- **Sblocco delle combo**: condizioni (nemici sconfitti, livelli raggiunti con entrambe in campo) oppure chip? Consiglio: condizioni per le combo,
-  chip per il resto. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Chip a fine livello** (come nel gioco originale): potenziamenti permanenti di torrette e personaggio, sblocco di carte chain/combo/level up,
+- **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
+  con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
+- **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
+- **Chip a fine livello** (come nel gioco originale): potenziamenti permanenti di torrette e guardiano, sblocco di carte chain/combo/level up,
   rimozione delle penalità delle carte “+1 proiettile/rimbalzo”. Da progettare. Se spendibili fin dall’inizio, la curva dal livello 20 va ricalibrata.
-- **Ranger**: sblocco e funzionamento non ancora discussi (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
+- **Ranger**: sblocco e funzionamento non ancora discussi (aiutanti ai lati del guardiano; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: riprende a salire piena, ma equipaggiamento, barriera e chip non esistono ancora: da ricalibrare quando arrivano.
@@ -312,14 +340,15 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
-Obiettivo § 3: per ogni torre e per il personaggio una chain da 1 lv1, 2 lv2, 1 lv3 e una da 1 lv1, 1 lv2, 1 lv3; 2 level up a lv1 e a lv2, almeno 1 a lv3.
-**Complete tutte le torri e il personaggio** (revisioni 1 e 2; controllato da `tests/rev2.js`). Nessuna voce provvisoria rimasta.
+Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 lv3 e una da 1 lv1, 1 lv2, 1 lv3; 2 level up a lv1 e a lv2, almeno 1 a lv3.
+**Complete tutte le torri e il guardiano** (revisioni 1 e 2; controllato da `tests/rev2.js`). Nessuna voce provvisoria rimasta.
 
-- **Combo**: nessuna definita (due esempi in § 11)
+- **Combo del guardiano**: tutte e 11 definite (`tests/combo.js`).
+- **Combo tra due torrette**: nessuna definita (esempio in § 11).
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento · più personaggi con scelta prima del combattimento · abilità della barriera e mine
+Ranger · equipaggiamento · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
 (rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti · chip ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·

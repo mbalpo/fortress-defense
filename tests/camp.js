@@ -46,7 +46,7 @@ function bossTest(level, label) {
 console.log("— mini-boss —");
 bossTest(10, "livello 10"); bossTest(11, "livello 11"); bossTest(25, "livello 25");
 
-// 3) massimo 2 torri/personaggio dal livello 30
+// 3) massimo 2 torri/guardiano dal livello 30
 function maxTest(level) {
   const patch = (h) => tank(h, 20);
   const g = makeGame({ seed: 8, patch, cleared: level - 1, level }); g.key("Enter"); g.frame(); const r = seeded(5);
@@ -65,7 +65,7 @@ function maxTest(level) {
     if (["lost", "won"].includes(g.win.__x.state())) break;
   }
   const X = g.win.__x; const endState = X.state();
-  console.log(`livello ${level}: torri/personaggio al massimo = ${X.maxedCount()} su ${[X.getPlayer(), ...X.getSlots()].filter(Boolean).length} (schermate di scelta viste: ${screens}, partita ${endState === 'won' ? 'vinta' : endState === 'lost' ? 'persa' : 'in corso'})`, g.errors.length ? g.errors[0] : "");
+  console.log(`livello ${level}: torri/guardiano al massimo = ${X.maxedCount()} su ${[X.getPlayer(), ...X.getSlots()].filter(Boolean).length} (schermate di scelta viste: ${screens}, partita ${endState === 'won' ? 'vinta' : endState === 'lost' ? 'persa' : 'in corso'})`, g.errors.length ? g.errors[0] : "");
 }
 console.log("— massimizzazioni —");
 maxTest(21); maxTest(29); maxTest(30);
@@ -75,6 +75,6 @@ maxTest(21); maxTest(29); maxTest(30);
   const g = makeGame({ seed: 9, patch: expose, cleared: 50, level: 10 }); g.key("Enter"); g.frame();
   const X = g.win.__x; let std = 0, chain = 0, lu = 0, nw = 0;
   for (let i = 0; i < 6000; i++) for (const o of X.rollOptions()) { if (o.kind === "new") nw++; else if (o.up.cat === "std") std++; else if (o.up.cat === "chain") chain++; else lu++; }
-  console.log("— frequenza delle carte (6000 estrazioni, personaggio senza torri) —");
+  console.log("— frequenza delle carte (6000 estrazioni, guardiano senza torri) —");
   console.log(`standard: ${std} · chain: ${chain} · nuova torretta: ${nw}  → per voce disponibile (3 standard, 2 chain lv1): standard ${(std / 3).toFixed(0)} vs chain ${(chain / 2).toFixed(0)} = ${(chain / 2 / (std / 3)).toFixed(2)}× (atteso 0,40×)`);
 }

@@ -15,7 +15,7 @@ console.log("— modalità manuale —");
   console.log("7 s senza premere → colpi sparati:", s0, ok(s0 === 0));
   g.click(60, 200); run(g, 120); const s1 = (g.win.__shots || 0) - s0;
   const b = X.ents().find((o) => o.hit && o.vx !== undefined);
-  console.log("2 s premendo a sinistra → colpi:", s1, "| il personaggio resta a x =", p.x, "| direzione del colpo verso sinistra:", b ? b.vx < 0 : "?", ok(s1 > 5 && p.x === 180 && b && b.vx < 0 && b.vy < 0));
+  console.log("2 s premendo a sinistra → colpi:", s1, "| il guardiano resta a x =", p.x, "| direzione del colpo verso sinistra:", b ? b.vx < 0 : "?", ok(s1 > 5 && p.x === 180 && b && b.vx < 0 && b.vy < 0));
   g.up(); const s2 = g.win.__shots; run(g, 120);
   console.log("rilasciato → nuovi colpi in 2 s:", g.win.__shots - s2, ok(g.win.__shots - s2 === 0));
   X.clearAll(); const e = frozen(g, 300, 150); const hp0 = e.hp; g.click(300, 150); run(g, 90); g.up();

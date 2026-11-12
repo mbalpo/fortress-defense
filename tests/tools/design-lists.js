@@ -15,8 +15,14 @@ function ups(list) {
   out.push("- **Level up** — " + (lu.length ? lu.map((u) => `lv${u.lv} ${u.name}: ${u.desc}${u.prov ? " *(provvisorio)*" : ""}`).join(" · ") : "nessuno."));
   out.push(`- id nel codice: ${list.map((u) => u.id).join(", ")}`);
 }
-out.push("### Personaggio", "", "Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio.");
-ups(parseUps(block("const PLAYER_DEF"))); out.push("");
+out.push("### Guardiano", "", "Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio.");
+ups(parseUps(block("const PLAYER_DEF")));
+// combo del guardiano: K(id, torretta, condizione, livello del guardiano, nome, descrizione)
+const TNAME = Object.fromEntries([...src.matchAll(/^  (\w+): \{ name: "([^"]+)"/gm)].map((x) => [x[1], x[2]]));
+const chainName = (tid, id) => { const u = parseUps(block("  " + tid + ": { name:")).find((v) => v.id === id); return u ? u.name : id; };
+const combos = [...block("const PLAYER_DEF").matchAll(/^\s+K\("(\w+)", "(\w+)", (\d+|"\w+"), (\d), "([^"]+)", "([^"]+)"\)/gm)].map((x) =>
+  `${TNAME[x[2]]} (${x[3].startsWith('"') ? "chain " + chainName(x[2], x[3].slice(1, -1)) : "torretta lv" + x[3]}${x[4] > 1 ? ", guardiano lv" + x[4] : ""}) → ${x[5]}: ${x[6]}`);
+out.push("- **Combo** (contano come scelte del guardiano): " + (combos.length ? combos.join(" · ") : "nessuna."), "");
 const tre = /^  (\w+): \{ name: "([^"]+)", type: "(\w+)", range: (\d+), reload: ([\d.]+), blurb: "([^"]+)", ups: \[/gm; let m;
 while ((m = tre.exec(src))) { out.push(`### ${m[2]} (\`${m[1]}\`)`, "", `${TN[m[3]]} · ${m[6]}. Portata ${m[4]} px, ricarica ${m[5].replace(".", ",")} s.`); ups(parseUps(block("  " + m[1] + ": { name:"))); out.push(""); }
 out.push("### Nemici", "");

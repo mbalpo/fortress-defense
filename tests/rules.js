@@ -50,6 +50,6 @@ console.log("          totale potenziamenti torre:", s1.length, "(atteso 12)");
 console.log("          sequenza:", s1.map(c => c.head.split(" · ")[1] + ":" + c.title).join(" → "));
 check("Laser", "Laser", "laser", 4);
 check("Hive", "Hive", "hive", 5);
-console.log("— personaggio —");
-const sp = check("Personaggio", "Personaggio", "sky", 6);
+console.log("— guardiano —");
+const sp = check("Guardiano", "Guardiano", "sky", 6);
 console.log("          sequenza:", sp.map(c => c.head.split(" · ")[1] + ":" + c.title).join(" → "));

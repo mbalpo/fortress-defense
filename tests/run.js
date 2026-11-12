@@ -3,7 +3,7 @@
 const { spawnSync } = require("child_process"), path = require("path");
 const NO_ERR = [/✗/, /errori JS: (?!nessuno)/, /\bERRORI? \S/, /TypeError|ReferenceError|SyntaxError|manca:/];
 const T = [
-  ["upg.js", "ogni potenziamento di ogni torretta e del personaggio, uno alla volta", [/con errori: 0/]],
+  ["upg.js", "ogni potenziamento di ogni torretta e del guardiano, uno alla volta", [/con errori: 0/]],
   ["rules.js", "regole di progressione: 3 potenziamenti, level up, massimo 12", [/regole rispettate: true/], [/regole rispettate: false/]],
   ["camp.js", "tetti per livello completato, mini-boss, massimizzazioni, probabilità", [/Sky Guard: 3 \(attesi 3\)/, /Sky Guard: 7 \(attesi 7\)/, /Sky Guard: 12 \(attesi 12\)/, /chain max lv \d \(≤ livello torre: true\)/]],
   ["boss2.js", "ricompensa del mini-boss: 3 carte applicate", [/schermate di ricompensa: 3/, /carte mostrate 3, potenziamenti applicati 4/]],
@@ -12,9 +12,9 @@ const T = [
   ["hive.js", "droni dell’Hive: cono dell’onda, portata, bersagli, colpi", [/colpi max per drone: 10/]],
   ["fix2.js", "campo del Disruption Drone e percorso del Gravity Vortex Gun", [/\(4,300\):colpito  \(356,300\):colpito/, /durata del campo base\s+≈ 6\.0 s/, /3 pile \(massimo\)\s+raggio: 56 px \| percorso: 482 px/]],
   ["req.js", "frenesia (carica e durata) e buco nero statico", [/base\s+carica ≈ 30 s \| durata ≈ 8\.0 s/, /prolungata \(lv3\)\s+carica ≈ 25 s \| durata ≈ 12\.0 s/, /statico lv1\s+durata del buco nero fermo: 2 s/, /statico lv2\s+durata del buco nero fermo: 3 s/]],
-  ["rate3.js", "level up lv3 del personaggio: cadenza +20%", [/base\s+intervallo medio tra colpi: 0\.15\d s/, /\(lv3\) intervallo medio tra colpi: 0\.12\d s/]],
+  ["rate3.js", "level up lv3 del guardiano: cadenza +20%", [/base\s+intervallo medio tra colpi: 0\.15\d s/, /\(lv3\) intervallo medio tra colpi: 0\.12\d s/]],
   ["dst5.js", "pile della distruzione: 3, e 5 con la chain", [/"dst1":1\}\s+pile massime raggiunte: 3/, /"dst5":1\}\s+pile massime raggiunte: 5/]],
-  ["newfx.js", "effetti del personaggio e del Disruption Drone", [/pierce=\d+/, /bounce=\d+/, /fan=\d+/, /kb=1\.5/, /kb=4\.5/, /boom=\d+/]],
+  ["newfx.js", "effetti del guardiano e del Disruption Drone", [/pierce=\d+/, /bounce=\d+/, /fan=\d+/, /kb=1\.5/, /kb=4\.5/, /boom=\d+/]],
   ["final.js", "sblocchi META e scelta delle carte col tocco", [/parte l’ondata 2: true/]],
   ["manual.js", "mira manuale e pausa della frenesia", [/la partita parte in manuale: true ✓/]],
   ["pause.js", "pausa e sue due schede", [/stato: pause/]],
@@ -27,6 +27,9 @@ const T = [
   ["rev1.js", "revisione torri 1: Laser, Sky Guard, Disruption, Aeroblast, Thunderbolt, Beam, Hive", [/mini-raggi lv3\s+raggi: 3 .* ✓/, /Doppio impatto: .* ✓/, /Esplosione finale: .* ✓/, /scossa in 0,95 s: .* ✓/, /amplificato .* ✓/, /onda ampia\s+nemico a 170 px colpito: true ✓/]],
   ["rev2.js", "revisione torri 2: regola delle chain, Laser, Beam, Hive, Firewheel, Railgun, Teslacoil, Vortex", [/Gravity Vortex Gun\s+chain: 1-1-1 1-2-1 .* ✓/,
     /Raffreddamento, .* ✓/, /Esplosioni a catena, .* ✓/, /Esplosioni paralizzanti: .* ✓/, /Collasso crescente ×.* ✓/, /kamikaze .* ✓/, /Varchi stabili .* ✓/]],
+  ["combo.js", "combo del guardiano: sblocco e effetti delle 11 combo", [/kVortex\s+con vortex .* ✓/, /carta: Guardiano · Combo .* ✓/, /thunder\s+scattate .* ✓/,
+    /con mini-raggi e debuff .* ✓/, /con Scarica distruttiva .* ✓/, /mine create .* ✓/, /Ramificazione II .* ✓/, /nuovo bersaglio .* ✓/,
+    /mini-droni: 3 .* ✓/, /manuale: .* ✓/, /frammentazioni: .* ✓/, /con Colpo pesante\s+colpi caricati .* ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();

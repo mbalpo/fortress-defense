@@ -15,13 +15,14 @@ Tower defense personale di Marco, PWA offline ispirata a *Galaxy Defense: Fortre
 - `tests/` — test automatici (jsdom) e `run.js`; `tests/tools/` — calibrazione, screenshot, generatore degli elenchi di DESIGN.md.
 
 ## Architettura di `app/index.html` (in ordine)
-DATI (`TYPES`, `RESIST`, `ENEMY_DEFS`, `waveSpec`, `CAMPAIGN`, `LV`/`effD`, `bossDef`, `finalBossHp`, `META`) → POTENZIAMENTI (`S`/`C`/`L`, `PLAYER_DEF`,
-`TURRETS` con `ups`) → STATO → STATI E DANNO → TORRETTE (una funzione per torretta, tabella `BEHAV`) → PERSONAGGIO (`PLAYER`, `FRENZY`, `playerTick`) →
+DATI (`TYPES`, `RESIST`, `ENEMY_DEFS`, `waveSpec`, `CAMPAIGN`, `LV`/`effD`, `bossDef`, `finalBossHp`, `META`) → POTENZIAMENTI (`S`/`C`/`L`/`K`, `PLAYER_DEF` con le combo,
+`TURRETS` con `ups`) → STATO → STATI E DANNO → TORRETTE (una funzione per torretta, tabella `BEHAV`) → GUARDIANO (`PLAYER`, `FRENZY`, `playerTick`, `playerBullet`; combo con `comboOn`, `guardProc`) →
 MOTORE DEI POTENZIAMENTI (`eligible`, `rollOptions`, `describe`, `pick`) → LOGICA (`startRun`, `startWave`, `spawn`, `update`, `endWave`) →
 DISEGNO (`TURRET_ART`, `drawEnemy`, indicatori, HUD, menu, pausa, avvisi) → INPUT → SALVATAGGIO → avvio. Il service worker si registra in un secondo `<script>`.
 - Canvas logico 360×640. Testi con `txt()`, testi a colori con `segs()`, pulsanti del canvas con `button()` (si attivano su `pointerdown`).
 - Nuova torretta: voce in `TURRETS`, funzione di tiro in `BEHAV`, disegno in `TURRET_ART`; poi DESIGN.md (`npm run design-lists`).
 - Nuovo potenziamento: voce `S`/`C`/`L` nella lista `ups` (`C` con catena e livello, `L` con livello) e uso con `has(s, id)` / `N(s, id)`.
+- Nuova combo del guardiano: voce `K` in `PLAYER_DEF.ups` (torretta, condizione: livello o voce chain, livello del guardiano) e uso con `comboOn(p, id)`.
 - Comandi che aprono file, condivisione o appunti: usare elementi HTML veri (come il pannello Salvataggio): su touch `pointerdown` non vale come gesto dell’utente.
 
 ## Regole di lavoro

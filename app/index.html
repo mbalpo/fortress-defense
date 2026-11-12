@@ -171,8 +171,11 @@ const META = {
 const S = (id, name, desc) => ({ id, cat: "std", name, desc });
 const C = (id, chain, lv, name, desc) => ({ id, cat: "chain", chain, lv, name, desc });
 const L = (id, lv, name, desc, prov) => ({ id, cat: "lu", lv, name, desc, prov: !!prov });
+// combo del guardiano con una torretta: needs = torretta in campo; cond = livello minimo della torretta (numero) o voce chain scelta (id);
+// lv = livello minimo del guardiano. Conta come scelta del guardiano.
+const K = (id, needs, cond, lv, name, desc) => ({ id, cat: "combo", needs, cond, lv, name, desc });
 
-const PLAYER_DEF = { id: "player", name: "Personaggio", type: "physical", ups: [
+const PLAYER_DEF = { id: "player", name: "Guardiano", type: "physical", ups: [
   S("pierce", "+1 perforazione", "I colpi trapassano un nemico in più"),
   S("dmg", "Danno maggiorato", "Danno +25%"),
   S("proj", "+1 proiettile", "+1 proiettile, danno −15%"),
@@ -188,6 +191,17 @@ const PLAYER_DEF = { id: "player", name: "Personaggio", type: "physical", ups: [
   L("pen2", 2, "Perforazione II", "+2 perforazione"),
   L("ricochet", 2, "Rimbalzo", "I proiettili rimbalzano"),
   L("rate3", 3, "Cadenza maggiorata", "Cadenza di fuoco base +20%"),
+  K("kSky", "sky", 2, 1, "Proiettili incendiari", "Proiettili: +20% di danno extra da fuoco"),
+  K("kLaser", "laser", 2, 1, "Laser rotante", "3%: laser rotante sul bersaglio per 3 s"),
+  K("kDisr", "disr", "dst1", 2, "Colpi distruttivi", "10%: il colpo dà uno stack di distruzione"),
+  K("kAero", "aero", "mine1", 2, "Posamine", "5%: una mina dove colpisce (max 5)"),
+  K("kThunder", "thunder", "fork1", 2, "Colpi ramificati", "5%: il colpo si ramifica come il fulmine"),
+  K("kBeam", "beam", "amp1", 2, "Mira amplificata", "Stesso bersaglio: danno +50% in 2 s"),
+  K("kWheel", "wheel", "mini1", 2, "Mini-drone di scorta", "3%: genera un mini-drone (max 3)"),
+  K("kHive", "hive", 2, 1, "Clone speculare", "Clone specchiato al 50% del danno"),
+  K("kRail", "rail", 2, 1, "Proiettili frammentati", "10%: il proiettile si divide in 2"),
+  K("kTesla", "tesla", "over1", 2, "Colpo caricato", "Ogni 40 colpi: un colpo a danno doppio"),
+  K("kVortex", "vortex", 2, 1, "Proiettili gravitazionali", "Proiettili: +20% di danno extra force"),
 ]};
 
 const TURRETS = {
@@ -402,7 +416,7 @@ try {
 } catch (e) { /* storage non disponibile: si gioca lo stesso */ }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
 function toggleAim() { settings.aim = settings.aim === "auto" ? "manual" : "auto"; saveSettings(); }
-// mira manuale: il personaggio sta fermo e spara solo mentre si preme; aim = punto premuto
+// mira manuale: il guardiano sta fermo e spara solo mentre si preme; aim = punto premuto
 let manual = false;
 const aim = { x: W / 2, y: 200, down: false };
 
@@ -698,7 +712,7 @@ function disrFire(s) {
   // due droni volano ai lati dello schermo e tra loro si forma il campo: occupa tutta la larghezza;
   // i potenziamenti lo allargano in verticale
   const hh = 16 * (1 + 0.3 * N(s, "height")), dur = 6 * (1 + 0.3 * N(s, "dur"));
-  const tick = has(s, "tick") ? 0.6 : 1.0, grip = has(s, "grip"), dmg = 8 * dmgM(s) * (grip ? 1.4 : 1), x0 = s.x, y0 = s.y - 10;
+  const tick = has(s, "tick") ? 0.6 : 1.0, grip = has(s, "grip"), dmg = disrDmg(s), x0 = s.x, y0 = s.y - 10;
   busy(s, 1);                                             // la ricarica parte solo quando il campo è finito
   spawnEnt({ y: t.y, t: dur, age: 0, acc: 0, dead: false,
     update(dt) {
@@ -738,6 +752,7 @@ function disrFire(s) {
     } });
   return true;
 }
+const disrDmg = (s) => 8 * dmgM(s) * (has(s, "grip") ? 1.4 : 1);
 function disrBlast(y, hh, d) {               // Esplosione finale: tutto il campo, a fine durata
   for (const e of living()) if (Math.abs(e.y - y) <= hh + e.def.r) damage(e, d, "force", false, "disr");
   spawnEnt({ t: 0.35, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
@@ -810,7 +825,7 @@ function salvo(s, x, y, cnt) {
 }
 function mine(s, x, y) {
   const st = aeroStats(s), mul = has(s, "mineD") ? 1.6 : 1;
-  spawnEnt({ x, y, age: 0, dead: false,
+  return spawnEnt({ x, y, age: 0, dead: false,
     update(dt) {
       this.age += dt; if (this.age > 25) { this.dead = true; return; }
       for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 8) {
@@ -850,14 +865,29 @@ function thunderFire(s) {
   return true;
 }
 // again = colpo in più del level up “Doppio fulmine” (non ne genera altri)
+const thunderDmg = (s) => 16 * dmgM(s) * Math.pow(0.85, N(s, "sph")) * (has(s, "para3") ? 1.3 : 1);
+function thunderZap(s, e, dmg) {                 // chain Fulmini paralizzanti: 30% di paralisi, con la scossa continua se c’è
+  if (e.dead || Math.random() >= 0.3) return;
+  para(e, has(s, "paraT") ? 1.5 : 1);
+  if (has(s, "paraD") && e.paraT > 0) e.shock = Math.max(e.shock, dmg * 0.25);
+}
+// una ramificazione: danno, Ramificazioni debilitanti, Paralisi totale
+function forkHit(s, e, dmg) {
+  damage(e, dmg * (has(s, "forkW") ? 0.75 : 0.5), "electric", false, "thunder");
+  if (has(s, "forkW")) weaken(e, 3);
+  if (has(s, "para3")) thunderZap(s, e, dmg);
+}
+// Colpi ramificati (combo del guardiano): dal nemico colpito partono le ramificazioni della torretta (4, o 6 con Ramificazione II)
+function thunderFork(s, e0) {
+  const dmg = thunderDmg(s), hit = new Set([e0]);
+  for (let k = 0; k < (has(s, "fork2") ? 6 : 4); k++) {
+    const e = nearestTo(e0.x, e0.y, 130, hit); if (!e) break;
+    hit.add(e); forkHit(s, e, dmg); bolt(zigzag(e0.x, e0.y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5);
+  }
+}
 function thunderBolt(s, x, y0, again) {
-  const w = 10 * (has(s, "wide") ? 1.8 : 1), dmg = 16 * dmgM(s) * Math.pow(0.85, N(s, "sph")) * (has(s, "para3") ? 1.3 : 1);
-  const paraDur = has(s, "paraT") ? 1.5 : 1;
-  const zap = (e) => {                           // chain Fulmini paralizzanti: 30% di paralisi, con la scossa continua se c’è
-    if (e.dead || Math.random() >= 0.3) return;
-    para(e, paraDur);
-    if (has(s, "paraD") && e.paraT > 0) e.shock = Math.max(e.shock, dmg * 0.25);
-  };
+  const w = 10 * (has(s, "wide") ? 1.8 : 1), dmg = thunderDmg(s);
+  const zap = (e) => thunderZap(s, e, dmg);
   const hit = new Set();
   for (const e of living())
     if (Math.abs(e.x - x) <= w / 2 + e.def.r && e.y <= y0 + 12) {
@@ -871,9 +901,7 @@ function thunderBolt(s, x, y0, again) {
     let best = null, bd = 130;
     for (const e of living()) { if (hit.has(e) || e.y > y0 + 12) continue; const d = Math.abs(e.x - x); if (d < bd) { bd = d; best = e; } }
     if (!best) break;
-    hit.add(best); damage(best, dmg * (has(s, "forkW") ? 0.75 : 0.5), "electric", false, "thunder");
-    if (has(s, "forkW")) weaken(best, 3);
-    if (has(s, "para3")) zap(best);
+    hit.add(best); forkHit(s, best, dmg);
     bolt(zigzag(x, best.y, best.x, best.y, 4), TYPES.electric.color, 0.15, 1.5);
   }
   if (has(s, "orb") && Math.random() < 0.3) { const e = randEnemy(); if (e) fieldOrb(s, e.x, e.y, B || 3, dmg); }
@@ -957,15 +985,16 @@ function wheelFire(s) {
   const dur = 5 * (1 + 0.3 * N(s, "dur")), rad = 55 * (1 + 0.3 * N(s, "rad")), dps = 20 * dmgM(s) * heat;
   wheelDrone(s, s.x, s.y - 14, rnd(-2.4, -0.7), { mini: false, dur, rad, dps, launch });
   if (has(s, "mini1"))
-    for (let i = 0; i < 2; i++)
-      wheelDrone(s, s.x, s.y - 14, rnd(-2.6, -0.5), { mini: true, dur, rad: 28, dps: 8 * dmgM(s) * heat * (has(s, "miniD") ? 1.6 : 1), launch });
+    for (let i = 0; i < 2; i++) wheelDrone(s, s.x, s.y - 14, rnd(-2.6, -0.5), Object.assign(wheelMini(s), { launch }));
   return true;
 }
+const wheelMini = (s) => ({ mini: true, dur: 5 * (1 + 0.3 * N(s, "dur")), rad: 28, launch: { hit: new Set() },
+  dps: 8 * dmgM(s) * (has(s, "heat") ? 1.6 : 1) * (has(s, "miniD") ? 1.6 : 1) });
 function wheelDrone(s, x, y, a, o) {
   const base = o.mini ? 170 : 140, bm = has(s, "trailB") ? 1.6 : 1;          // Fiamme intense: solo le bruciature di questa torre
   const trailOn = has(s, "trail1") && !o.mini, trailT = has(s, "trail3") ? 4 : 2;
-  busy(s, 1);
-  spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, hit: new Set(), dead: false,
+  if (!o.free) busy(s, 1);                       // free: mini-drone della combo del guardiano, non tiene ferma la torretta
+  return spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, hit: new Set(), dead: false,
     update(dt) {
       this.rot += 8 * dt;
       // Fiamma crescente: +10% di danno per ogni nemico diverso colpito da questo drone, fino a ×2
@@ -981,7 +1010,8 @@ function wheelDrone(s, x, y, a, o) {
         if (this.t <= 0 && has(s, "stay") && !this.stayed) { this.stayed = true; this.still = 2.5; }
       } else if (this.still > 0) this.still -= dt;
       if (this.t <= 0 && this.still <= 0) {
-        this.dead = true; busy(s, -1);
+        this.dead = true; if (o.free) return;
+        busy(s, -1);
         // Raffreddamento: a lancio finito, −5% di ricarica per ogni nemico colpito, fino a −50%
         if (s.busy === 0 && has(s, "cool")) s.cd *= 1 - Math.min(0.5, 0.05 * o.launch.hit.size);
         return;
@@ -1315,11 +1345,11 @@ function runTurret(s, dt) {
   if (b.fire(s)) { if (!(s.busy > 0)) s.cd = cdOf(s); } else s.cd = 0;
 }
 
-/* ---------- PERSONAGGIO: cadenza alta, nessun cooldown, frenesia ---------- */
+/* ---------- GUARDIANO: cadenza alta, nessun cooldown, frenesia ---------- */
 // frenesia: carica in secondi [base, con la chain], durata [base, con la chain], cadenza e danno
 const FRENZY = { fill: [30, 25], dur: [8, 12], rate: 1.8, rateFast: 2, dmg: 1.35 };
 const frenzyDur = (p) => FRENZY.dur[has(p, "fdur") ? 1 : 0];
-// personaggio: cadenza alta e danno basso per colpo; portata totale; tutti i proiettili di una salva vanno sullo stesso bersaglio
+// guardiano: cadenza alta e danno basso per colpo; portata totale; tutti i proiettili di una salva vanno sullo stesso bersaglio
 const PLAYER = { dmg: 7, interval: 0.15, range: 9999 };
 function frenzyOn(p) { return (p.st.frenzyT || 0) > 0; }
 function playerTick(p, dt) {
@@ -1345,25 +1375,44 @@ function playerTick(p, dt) {
     if (!t) { p.cd = 0; return; }
   }
   const f = frenzyOn(p);
-  const dmg = PLAYER.dmg * dmgM(p) * (has(p, "punch") ? 1.6 : 1) * Math.pow(0.85, N(p, "proj")) * (f ? FRENZY.dmg : 1);
-  for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, false);
+  const raw = PLAYER.dmg * dmgM(p) * Math.pow(0.85, N(p, "proj")) * (f ? FRENZY.dmg : 1);    // senza Colpo pesante
+  const dmg0 = raw * (has(p, "punch") ? 1.6 : 1);
+  const dmg = dmg0 * beamAmp(p, t);
+  // combo che scattano per colpo (salva): l’effetto parte dal primo impatto del primo proiettile
+  const proc = { laser: comboOn(p, "kLaser") && Math.random() < 0.03, disr: comboOn(p, "kDisr") && Math.random() < 0.10,
+    aero: comboOn(p, "kAero") && Math.random() < 0.05, thunder: comboOn(p, "kThunder") && Math.random() < 0.05 };
+  const any = proc.laser || proc.disr || proc.aero || proc.thunder;
+  for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 && any ? { proc } : null);
   if (has(p, "fan")) {                       // proiettili secondari a ventaglio, danno minore
     const base = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;
-    for (const d of [-0.6, -0.3, 0.3, 0.6]) playerBullet(p, pos.x, pos.y, null, dmg * 0.3, base + d, true);
+    for (const d of [-0.6, -0.3, 0.3, 0.6]) playerBullet(p, pos.x, pos.y, null, dmg * 0.3, base + d, { fan: true });
+  }
+  if (comboOn(p, "kWheel") && Math.random() < 0.03) guardWheel(p);
+  if (comboOn(p, "kTesla") && (p.st.shots = (p.st.shots || 0) + 1) % 40 === 0)     // Colpo caricato: ×2 (×3 in tutto con Colpo pesante)
+    playerBullet(p, pos.x, pos.y, t, raw * (has(p, "punch") ? 3 : 2) * beamAmp(p, t, true), ang, { charged: N(partner("tesla"), "bounce") });
+  if (comboOn(p, "kHive")) {                 // Clone speculare: posizione (o direzione, in manuale) specchiata rispetto al centro
+    const cpos = { x: W - p.x, y: pos.y }, ct = manual ? null : pickTargets(cpos, PLAYER.range, 1)[0];
+    for (let k = 0; k < cnt; k++) playerBullet(p, cpos.x + (k - (cnt - 1) / 2) * 7, cpos.y, ct, dmg0 * 0.5, Math.PI - ang, { clone: true });
   }
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
 }
-// t = bersaglio da inseguire (oppure null: il colpo va dritto lungo ang); fan = proiettile secondario del ventaglio
-function playerBullet(p, x, y, t, dmg, ang, fan) {
-  fan = !!fan;
-  let pierce = fan ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0);
-  let bounces = fan ? 0 : (has(p, "ricochet") ? 1 : 0);
-  const prob = fan || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
+// t = bersaglio da inseguire (oppure null: il colpo va dritto lungo ang); o = tipo di proiettile:
+// fan = secondario del ventaglio; clone = del Clone speculare (solo perforazione e rimbalzo, nessun effetto);
+// frag = frammento della combo Railgun (skip: nemici già colpiti dal proiettile da cui nasce); charged = Colpo caricato (Teslacoil: numero di rimbalzi ereditati); proc = combo da attivare al primo impatto
+function playerBullet(p, x, y, t, dmg, ang, o) {
+  o = o || {};
+  const fan = !!o.fan, clone = !!o.clone, frag = !!o.frag, charged = o.charged != null;
+  let pierce = fan || frag ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0);
+  let bounces = fan || frag ? 0 : (has(p, "ricochet") ? 1 : 0) + (charged ? o.charged : 0);
+  const prob = fan || clone || frag || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
   const rad = 30 * (1 + (has(p, "boom3") ? 0.3 : 0));
-  const kb = fan || !has(p, "punch") ? 0 : (frenzyOn(p) ? 4.5 : 1.5);   // il knockback cresce in frenesia (basso per colpo: i colpi sono molti)
+  const kb = fan || clone || frag || !has(p, "punch") ? 0 : (frenzyOn(p) ? 4.5 : 1.5);   // il knockback cresce in frenesia (basso per colpo: i colpi sono molti)
+  // combo per proiettile (non per il clone): danno extra da fuoco o force, frammentazione
+  const fire = !clone && comboOn(p, "kSky"), force = !clone && comboOn(p, "kVortex");
+  let canFrag = !clone && !fan && !frag && comboOn(p, "kRail"), proc = o.proc || null;
   const l = t ? (dist(t.x, t.y, x, y) || 1) : 1;
   spawnEnt({ x, y, vx: t ? (t.x - x) / l : Math.cos(ang), vy: t ? (t.y - y) / l : Math.sin(ang),
-    t: t || null, life: fan ? 0.7 : 6, hit: new Set(), dead: false,
+    t: t || null, life: fan || frag ? 0.7 : 6, hit: new Set(o.skip || []), dead: false,
     update(dt) {
       this.life -= dt; if (this.life <= 0) { this.dead = true; return; }
       if (this.t && !this.t.dead) { const d = dist(this.t.x, this.t.y, this.x, this.y) || 1; this.vx = (this.t.x - this.x) / d; this.vy = (this.t.y - this.y) / d; }
@@ -1371,6 +1420,10 @@ function playerBullet(p, x, y, t, dmg, ang, fan) {
       for (const e of living()) {
         if (this.hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 3) continue;
         this.hit.add(e); damage(e, dmg, "physical", false, "player"); knock(e, kb);
+        if (fire) damage(e, dmg * 0.2, "fire", true, "player");
+        if (force) damage(e, dmg * 0.2, "force", true, "player");
+        if (proc) { guardProc(p, proc, e); proc = null; }
+        if (canFrag && Math.random() < 0.10) { canFrag = false; guardFrag(p, this, dmg); }
         if (prob && Math.random() < prob) {
           for (const f of living()) if (f !== e && dist(f.x, f.y, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7, "physical", false, "player");
           ring(e.x, e.y, rad, TYPES.physical.color, 0.3);
@@ -1384,10 +1437,64 @@ function playerBullet(p, x, y, t, dmg, ang, fan) {
       }
       if (this.y < -20 || this.y > H + 20 || this.x < -20 || this.x > W + 20) this.dead = true;
     },
-    draw() {                                   // tracciante corto
-      ctx.strokeStyle = TYPES.physical.color; ctx.lineWidth = fan ? 1.4 : 2.2; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(this.x - this.vx * 7, this.y - this.vy * 7); ctx.lineTo(this.x, this.y); ctx.stroke();
+    draw() {                                   // tracciante corto (il colpo caricato è più grande, con l’alone elettrico)
+      if (charged) disc(this.x, this.y, 6, TYPES.electric.color, 0.35);
+      ctx.globalAlpha = clone ? 0.6 : 1;
+      ctx.strokeStyle = charged ? "#fff6b0" : TYPES.physical.color; ctx.lineWidth = charged ? 3.4 : fan || frag ? 1.4 : 2.2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(this.x - this.vx * (charged ? 12 : 7), this.y - this.vy * (charged ? 12 : 7)); ctx.lineTo(this.x, this.y); ctx.stroke();
+      ctx.globalAlpha = 1;
     } });
+}
+
+/* ---------- COMBO DEL GUARDIANO (una per torretta; valori provvisori, DESIGN.md § 10) ---------- */
+const COMBO_OF = Object.fromEntries(PLAYER_DEF.ups.filter((u) => u.cat === "combo").map((u) => [u.id, u.needs]));
+const comboOn = (p, id) => has(p, id) && !!partner(COMBO_OF[id]);
+// Mira amplificata (Beam): sullo stesso bersaglio il danno sale fino a +50% in 2 s; cambiando bersaglio si azzera
+function beamAmp(p, t, peek) {
+  if (!comboOn(p, "kBeam")) return 1;
+  if (!peek && (!t || t !== p.st.ampE)) { p.st.ampE = t || null; p.st.ampSince = clock; }
+  return t && t === p.st.ampE ? 1 + 0.5 * Math.min(1, (clock - p.st.ampSince) / 2) : 1;
+}
+// effetti al primo impatto di una salva: laser rotante, stack di distruzione, mina, ramificazione elettrica
+function guardProc(p, proc, e) {
+  if (proc.laser) laserSpin(partner("laser"), p, e);
+  if (proc.disr && !e.dead) { const s = partner("disr"); destruction(s, e, disrDmg(s)); }
+  if (proc.aero) {
+    const list = (p.st.mines = (p.st.mines || []).filter((m) => !m.dead));
+    if (list.length < 5) list.push(mine(partner("aero"), e.x, e.y));
+  }
+  if (proc.thunder) thunderFork(partner("thunder"), e);
+}
+// Proiettili frammentati (Railgun): due frammenti al 50% del danno verso i nemici vicini (altrimenti a ±20°)
+function guardFrag(p, b, dmg) {
+  const a = Math.atan2(b.vy, b.vx), skip = new Set(b.hit);
+  for (const k of [-1, 1]) {
+    const nx = nearestTo(b.x, b.y, 200, skip); if (nx) skip.add(nx);
+    playerBullet(p, b.x, b.y, nx, dmg * 0.5, a + k * 0.35, { frag: true, skip: b.hit });
+  }
+}
+// Mini-drone di scorta (Firewheel): uguale ai mini-droni della torretta, uno alla volta, al massimo 3 insieme; non ferma la ricarica della torretta
+function guardWheel(p) {
+  const list = (p.st.minis = (p.st.minis || []).filter((m) => !m.dead));
+  if (list.length >= 3) return;
+  const s = partner("wheel");
+  list.push(wheelDrone(s, p.x, GROUND_Y - 44, rnd(-2.6, -0.5), Object.assign(wheelMini(s), { free: true })));
+}
+// Laser rotante (Laser): centrato sul bersaglio (lo segue finché vive), 2 giri in 3 s; eredita danno, debuff e mini-raggi, non i rimbalzi
+function laserSpin(s, p, e) {
+  if (p.st.spin && !p.st.spin.dead) return;                 // uno alla volta
+  const half = 55, w = 8 * (has(s, "wide") ? 2 : 1), dbMul = has(s, "debuffdur") ? 1.5 : 1, ign = new Map();
+  const rays = [{ off: 0, dps: 20 * dmgM(s), w }];
+  if (has(s, "multi1")) for (const k of [-1, 1]) rays.push({ off: k * Math.PI / 3, dps: 20 * dmgM(s) * (has(s, "multiD") ? 0.7 : 0.4), w: w * 0.6 });
+  p.st.spin = spawnEnt({ x: e.x, y: e.y, t: 0, e, dead: false,
+    segs(r) { const a = this.t * 4 * Math.PI / 3 + r.off, c = Math.cos(a) * half, sn = Math.sin(a) * half;
+      return [{ x1: this.x - c, y1: this.y - sn, x2: this.x + c, y2: this.y + sn }]; },
+    update(dt) {
+      this.t += dt; if (this.t >= 3) { this.dead = true; return; }
+      if (this.e && !this.e.dead) { this.x = this.e.x; this.y = this.e.y; } else this.e = null;
+      for (const r of rays) { const sg = this.segs(r); for (const f of living()) if (hitSegs(f, sg, r.w)) laserHit(s, f, r.dps * dt, dbMul, true, ign); }
+    },
+    draw() { for (const r of rays) for (const g of this.segs(r)) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1); } });
 }
 
 /* =====================================================================
@@ -1409,10 +1516,16 @@ function eligible(s) {
       if (has(s, u.id) || u.lv > s.level) continue;                   // le chain lv2/lv3 solo se la torre è al livello 2/3
       if (u.lv === 1 || ups.some((v) => v.cat === "chain" && v.chain === u.chain && v.lv === u.lv - 1 && has(s, v.id))) out.push(u);
     } else if (u.cat === "combo") {
-      if (!has(s, u.id) && (u.lv || 1) <= s.level && u.needs && slots.some((t) => t && t.id === u.needs)) out.push(u);
+      if (!has(s, u.id) && (u.lv || 1) <= s.level && comboReady(u)) out.push(u);
     }
   }
   return out;
+}
+// la torretta della combo è in campo e soddisfa la condizione (livello raggiunto o voce chain scelta)
+const partner = (id) => slots.find((t) => t && t.id === id) || null;
+function comboReady(u) {
+  const t = partner(u.needs);
+  return !!t && (typeof u.cond === "number" ? t.level >= u.cond : has(t, u.cond));
 }
 function applyUp(s, u) {
   s.up[u.id] = N(s, u.id) + 1;
@@ -1446,6 +1559,7 @@ function describe(opt) {
   let note;
   if (u.cat === "std") note = "Pila " + (N(s, u.id) + 1) + "/3 · livello " + s.level + " (" + (s.used + 1) + "/3)";
   else if (u.cat === "chain") note = "Chain lv " + u.lv + " · livello " + s.level + " (" + (s.used + 1) + "/3)";
+  else if (u.cat === "combo") note = "Con " + TURRETS[u.needs].name + " · livello " + s.level + " (" + (s.used + 1) + "/3)";
   else note = s.level < 3 ? "Porta al livello " + (s.level + 1) : "Potenziamento finale";
   if (u.prov) note += " · provvisorio";
   const lab = u.cat === "chain" ? "Chain " + u.lv : u.cat === "lu" ? "Level up " + u.lv : CAT_LABEL[u.cat];
@@ -1543,7 +1657,7 @@ function update(dt) {
   waveTime += dt;
   while (queue.length && queue[0].t <= waveTime) spawn(queue.shift());
 
-  if (manual) player.targetX = player.x;                 // in manuale il personaggio non si sposta
+  if (manual) player.targetX = player.x;                 // in manuale il guardiano non si sposta
   else if (keys.left || keys.right) player.targetX = clamp(player.x + (keys.right - keys.left) * 60, PLAYER_MIN, PLAYER_MAX);
   player.targetX = clamp(player.targetX, PLAYER_MIN, PLAYER_MAX);
   const dx = player.targetX - player.x, step = PLAYER_SPEED * dt;
@@ -1732,7 +1846,11 @@ function drawTurret(s) {
   const b = BEHAV[s.id]; if (b.draw) b.draw(s);
 }
 function drawPlayer() {
-  const x = player.x, y = GROUND_Y, f = frenzyOn(player);
+  if (comboOn(player, "kHive")) { ctx.globalAlpha = 0.45; guardianShape(W - player.x); ctx.globalAlpha = 1; }   // Clone speculare
+  guardianShape(player.x);
+}
+function guardianShape(x) {
+  const y = GROUND_Y, f = frenzyOn(player);
   ctx.beginPath(); ctx.moveTo(x, y - 34); ctx.lineTo(x + 14, y - 2); ctx.lineTo(x, y - 8); ctx.lineTo(x - 14, y - 2); ctx.closePath();
   ctx.fillStyle = f ? "#6a3a2a" : "#2a3f6e"; ctx.fill();
   ctx.lineWidth = 1.5; ctx.strokeStyle = f ? "#ff9a5a" : TYPES.physical.color; ctx.stroke();
@@ -1990,7 +2108,7 @@ function menuScreen() {
   const eu = epicUnlocked();
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
     () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
-  const rows = [["Torri e personaggio al livello 2", 10], ["Torri e personaggio al livello 3", 20], ["Equipaggiamento del personaggio", CAMPAIGN.equipUnlock],
+  const rows = [["Torri e guardiano al livello 2", 10], ["Torri e guardiano al livello 3", 20], ["Equipaggiamento del guardiano", CAMPAIGN.equipUnlock],
     ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
   txt("Sblocchi (a fine livello)", 36, 378, 12, "#9fb4d9", "left", "700");
   rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 400 + i * 20, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
