@@ -85,6 +85,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Dopo la revisione torri 1 (stessi bot, 120 partite per livello; 800 al 10 e al 30): 1 100% · 5 96% · 8 61% · **10 13,8%** (prima 14,0%) · 11 91% ·
   15 84% · **20 40%** · 25 61% · **30 17,9%** (prima 20,5%: lieve calo, al limite del rumore). Nessun numero della difficoltà cambiato.
   Nota: con questi bot il livello 10 misura circa 14%, sotto il 25-30% indicato sopra (misura più vecchia, campione più piccolo).
+- Dopo la revisione torri 2 (stessi bot): 1 100% · 5 96% · 11 89% · 20 37% (120 partite) · **10 11,9%** e **30 21,4%** (800 partite).
+  Confronto diretto con la versione precedente sugli stessi 400 semi: livello 8 dal 61,8% al 57,5%, 15 dall’80,5% al 79,8%, 25 dal 59,5% al 59,0%:
+  differenze dentro il rumore. Nessun numero della difficoltà cambiato.
 - La difficoltà in **mira manuale non è misurata** (i bot giocano solo in automatico).
 
 ## 6. Nemici, stati e interfaccia dei nemici
@@ -255,12 +258,32 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   sul bersaglio principale, al 50% del danno al secondo; Raggio amplificato = +70% al secondo sul solo bersaglio principale (al 200% in circa 1,4 s,
   al 400% in circa 4,3 s), si riparte da 100% a ogni attivazione; Raggio vorace = +25% della durata per uccisione del bersaglio principale, fino al doppio;
   Cacciatore di boss = +50% di danno a mini-boss e boss  **[da rivedere]**
-- Firewheel: durata 5 s, 2 mini-droni, sosta 2,5 s, scia 2 s  **[Claude]**
-- Hive: 3 droni base, 4 colpi base (+2 per pila), droni che sparano entro **62 px** (prima 125) **[deciso]** e si avvicinano fino a 45 px, onda 130 px circa ±35° (182 px con Onda ampia), evoluzione 1→2→4 proiettili. Sciame 35% = probabilità che a fine vita un drone ne lanci uno nuovo; resistenza 30% = probabilità che ogni drone resti ancora per un’altra durata intera  **[Claude]**
+- Firewheel: durata 5 s, 2 mini-droni, sosta 2,5 s, scia 2 s (4 s con la chain lv3 **[deciso]**)  **[Claude]**
+- Firewheel (revisione 2): Scia corrosiva = chi tocca la scia subisce +30% da tutti i danni da fuoco per 2 s; Fiamme intense = +60% sulle bruciature
+  di questa torre (scia e mini-droni); Fiamme roventi = danno del lanciafiamme +60% (anche mini-droni); Fiamma crescente = +10% per ogni nemico diverso
+  toccato dal drone, fino a ×2 (vale per ogni drone, si riparte a ogni lancio); Raffreddamento = −5% della ricarica successiva per ogni nemico diverso
+  colpito dal lancio, fino a −50% (ricarica 6,5 s → 3,25 s)  **[da rivedere]**
+- Hive: 3 droni base, 4 colpi base (+2 per pila), droni che sparano entro **62 px** (prima 125) **[deciso]** e si avvicinano fino a 45 px, onda 130 px circa ±35° (182 px con Onda ampia), evoluzione 1→2→4 proiettili. Sciame 35% = probabilità che a fine vita un drone ne lanci uno nuovo; resistenza 30% = probabilità che un drone, finiti i colpi, ne riceva altrettanti  **[Claude]**
+- Hive (revisione 2): i droni **non hanno una durata**, restano finché non hanno sparato tutti i colpi **[deciso]** (spariscono comunque a fine ondata);
+  Colpi di forza = knockback di 8 px per colpo; Droni kamikaze = finiti i colpi il drone vola verso il nemico più vicino (260 px/s, al massimo 3 s)
+  ed esplode in un raggio di 40 px al doppio del danno di un colpo; con Resistenza si tira prima Resistenza  **[da rivedere]**
 - Railgun: perforazione base 3, divisione a ±20°, Slancio +15% per nemico  **[Claude]**
+- Railgun (revisione 2): esplosione base 30 px al 50% del danno del colpo; Carica esplosiva = +15% di danno per ogni perforazione ancora disponibile
+  al momento dell’impatto; Deflagrazione = +10% di raggio per perforazione disponibile; Esplosioni a catena: il k-esimo colpito esplode con probabilità
+  100% − 20% × (k − 1) (80%, 60%, 40%, 20%, poi più nulla); vale anche per i proiettili divisi; Impatto stordente = paralisi 0,8 s;
+  Colpo critico = 30% per ogni nemico colpito, danno del colpo ×1,5 (non dell’esplosione)  **[da rivedere]**
 - Teslacoil: carica 0,7 s, sfera statica 2 s (3,5 s al lv3), esplosione a catena su 5 nemici al 40%  **[Claude]**
-- Gravity Vortex Gun: wormhole 4 s  **[Claude]**
-- Personaggio: intervallo 0,15 s e danno 7 per colpo; ventaglio 4 proiettili al 30%, esplosioni al 70% raggio 30, rimbalzo una volta, colpo pesante ×1,6 con knockback 1,5 px per colpo (4,5 in frenesia)  **[da rivedere]**
+- Teslacoil (revisione 2): il “tempo di ricarica” della chain Carica espansiva è letto come la **carica** prima del tiro (0,7 → 1,2 → 1,7 → 2,7 s), durante la
+  quale la sfera cresce sulla bobina; per ogni 0,5 s di carica in più: raggio +30% (dal lv1) e danno +30% (dal lv2), quindi al lv3 raggio ×2,2 e danno ×2,2.
+  Sfera carica = danno della sfera ×1,6; Esplosione ampia = raggio +40%; Esplosioni paralizzanti = 30% per 1 s, come il Thunderbolt **[deciso]**.
+  Proiettile disegnato come un fulmine globulare (alone tremolante e archi)  **[da rivedere]**
+- Gravity Vortex Gun: wormhole 4 s (6 s con Varchi stabili)  **[Claude]**
+- Gravity Vortex Gun (revisione 2): Buco nero denso = danno +50%; Buco nero lento = avanza a 80 px/s invece di 130 (stesso percorso, più tempo sui nemici);
+  Collasso crescente = danno e attrazione crescono con la strada fatta, fino a ×2 a fine percorso (e da fermo)  **[da rivedere]**
+- Laser (revisione 2): Raggi penetranti = a ogni attivazione, ogni nemico toccato ha il 30% di subire tutto il danno del laser senza resistenze
+  (anche dalla spazzata); senza resistenza non cambia nulla  **[da rivedere]**
+- Beam (revisione 2): Ramificazione estesa = 3 ramificazioni invece di 2  **[Claude]**
+- Personaggio: intervallo 0,15 s e danno 7 per colpo; ventaglio 4 proiettili al 30%, esplosioni al 70% raggio 30 (39 con la chain lv3; tolta “Esplosioni ampie”), rimbalzo una volta, colpo pesante ×1,6 con knockback 1,5 px per colpo (4,5 in frenesia)  **[da rivedere]**
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
 - Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita 800 al livello 10, 2800 al 20, 2900 al 30 (oltre il 30 provvisoria), danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
 
@@ -287,17 +310,10 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 ## 12. Contenuti mancanti (da definire con Marco)
 
 Obiettivo § 3: per ogni torre e per il personaggio una chain da 1 lv1, 2 lv2, 1 lv3 e una da 1 lv1, 1 lv2, 1 lv3; 2 level up a lv1 e a lv2, almeno 1 a lv3.
-Complete: **Sky Guard, Disruption Drone, Aeroblast, Thunderbolt** (revisione 1).
+**Complete tutte le torri e il personaggio** (revisioni 1 e 2; controllato da `tests/rev2.js`). Nessuna voce provvisoria rimasta.
 
-- **Personaggio**: Frenesia e Colpi esplosivi hanno entrambe 2 voci lv2: una delle due va ridotta a 1
-- **Laser**: level up: 1 lv2 (tolto “Indebolimento”, spostato nella chain Raggi multipli)
-- **Beam**: Raggio ramificato e Raggio amplificato hanno entrambe 1 voce lv2: a una delle due ne serve una seconda
-- **Hive**: level up: 1 lv1, 1 lv2 (idee di Claude proposte a Marco, da scegliere)
-- **Firewheel Drone**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 1 lv2
-- **Railgun**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 1 lv2
-- **Teslacoil**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 2 lv2 reali (sostituiscono “Ricarica rapida”, provvisoria)
-- **Gravity Vortex Gun**: Wormhole o Buco nero statico, seconda voce lv2 · level up: 1 lv1, 1 lv2, lv3 reale (sostituisce “Collasso”, provvisorio)
 - **Combo**: nessuna definita (due esempi in § 11)
+- Nome della chain del Teslacoil “Carica espansiva”: a Marco non convince, da scegliere
 
 ## 13. Da costruire
 

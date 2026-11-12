@@ -25,6 +25,8 @@ const T = [
   ["swtest.js", "service worker (simulato)", [/installazione → file in cache/]],
   ["menu.js", "interruttore della mira nel menu", [/dopo il tocco: Mira: manuale/]],
   ["rev1.js", "revisione torri 1: Laser, Sky Guard, Disruption, Aeroblast, Thunderbolt, Beam, Hive", [/mini-raggi lv3\s+raggi: 3 .* ✓/, /Doppio impatto: .* ✓/, /Esplosione finale: .* ✓/, /scossa in 0,95 s: .* ✓/, /amplificato .* ✓/, /onda ampia\s+nemico a 170 px colpito: true ✓/]],
+  ["rev2.js", "revisione torri 2: regola delle chain, Laser, Beam, Hive, Firewheel, Railgun, Teslacoil, Vortex", [/Gravity Vortex Gun\s+chain: 1-1-1 1-2-1 .* ✓/,
+    /Raffreddamento, .* ✓/, /Esplosioni a catena, .* ✓/, /Esplosioni paralizzanti: .* ✓/, /Collasso crescente ×.* ✓/, /kamikaze .* ✓/, /Varchi stabili .* ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();

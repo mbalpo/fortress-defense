@@ -182,7 +182,6 @@ const PLAYER_DEF = { id: "player", name: "Personaggio", type: "physical", ups: [
   C("fdur", "frenzy", 3, "Frenesia prolungata", "La frenesia dura 12 s invece di 8"),
   C("boom1", "boom", 1, "Colpi esplosivi", "10% di esplosione ad area sul colpo"),
   C("boomP", "boom", 2, "Più esplosioni", "Probabilità di esplosione maggiore"),
-  C("boomR", "boom", 2, "Esplosioni ampie", "Raggio dell’esplosione maggiore"),
   C("boom3", "boom", 3, "Esplosioni potenziate", "Più probabilità e più raggio"),
   L("fan", 1, "Ventaglio", "Proiettili secondari a ventaglio"),
   L("punch", 1, "Colpo pesante", "Molto più danno, lieve knockback"),
@@ -223,6 +222,7 @@ const TURRETS = {
     L("wide", 1, "Raggio largo", "Larghezza dei raggi +100%"),
     L("longer", 1, "Raggio persistente", "Durata dei raggi molto maggiore"),
     L("exploit", 2, "Sfruttare i debuff", "Più danno a chi ha un debuff"),
+    L("ignore", 2, "Raggi penetranti", "30%: ignora le resistenze del nemico"),
     L("debuffdur", 3, "Debuff prolungati", "I debuff durano di più"),
   ]},
   disr: { name: "Disruption Drone", type: "force", range: 380, reload: 8.0, blurb: "Due droni creano un campo di forza a tutta larghezza", ups: [
@@ -282,6 +282,7 @@ const TURRETS = {
     S("cd", "Ricarica ridotta", "Ricarica −12%"),
     C("fork1", "fork", 1, "Raggio ramificato", "Colpisce 2 bersagli in più"),
     C("pull", "fork", 2, "Attrazione", "I bersagli si avvicinano al primo"),
+    C("forkN", "fork", 2, "Ramificazione estesa", "Colpisce un bersaglio in più"),
     C("forkX", "fork", 3, "Base esplosiva", "Esplosioni ripetute sul primo bersaglio"),
     C("amp1", "amp", 1, "Raggio amplificato", "Il danno sul bersaglio sale fino al 200%"),
     C("amp2", "amp", 2, "Amplificazione continua", "Cambiando bersaglio non si azzera"),
@@ -299,9 +300,15 @@ const TURRETS = {
     C("mini1", "mini", 1, "Mini-droni", "Genera 2 mini-droni rimbalzanti"),
     C("miniB", "mini", 2, "Mini-droni incendiari", "I mini-droni bruciano i nemici"),
     C("miniD", "mini", 3, "Mini-droni potenziati", "I mini-droni fanno più danno"),
+    C("trail1", "trail", 1, "Scia di fuoco", "Lascia una scia di 2 s che brucia"),
+    C("trailR", "trail", 2, "Scia corrosiva", "Nella scia: +30% danni da fuoco subiti"),
+    C("trailB", "trail", 2, "Fiamme intense", "Bruciatura di questa torre +60%"),
+    C("trail3", "trail", 3, "Scia persistente", "La scia dura 4 s invece di 2"),
     L("dash", 1, "Scatto", "Più veloce quando non colpisce"),
+    L("heat", 1, "Fiamme roventi", "Danno del lanciafiamme +60%"),
     L("stay", 2, "Presidio", "Resta fermo 2,5 s a fine durata"),
-    L("trail", 3, "Scia infuocata", "Lascia una scia che brucia"),
+    L("stoke", 2, "Fiamma crescente", "Ogni colpito: danno +10% (fino a ×2)"),
+    L("cool", 3, "Raffreddamento", "Ogni colpito: ricarica −5% (fino a −50%)"),
   ]},
   hive: { name: "Hive", type: "force", range: 380, reload: 7.0, blurb: "Sciame di droni a ricerca", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
@@ -315,8 +322,10 @@ const TURRETS = {
     C("seed2", "seed", 2, "Sciame II", "Il nuovo drone può essere di lv 2"),
     C("seed3", "seed", 3, "Sciame III", "Il nuovo drone può essere di lv 3"),
     L("evo1", 1, "Evoluzione I", "Dopo 3 colpi: +1 proiettile"),
+    L("push", 1, "Colpi di forza", "I colpi dei droni spingono indietro"),
     L("evo2", 2, "Evoluzione II", "Dopo altri 3 colpi: +2 proiettili"),
-    L("stay", 3, "Resistenza", "Ogni drone ha il 30% di restare ancora"),
+    L("kami", 2, "Droni kamikaze", "Finiti i colpi, il drone si lancia ed esplode"),
+    L("stay", 3, "Resistenza", "30%: finiti i colpi, il drone ricarica"),
   ]},
   rail: { name: "Railgun", type: "physical", range: 380, reload: 1.5, blurb: "Colpi perforanti a cadenza media", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
@@ -325,9 +334,15 @@ const TURRETS = {
     C("split1", "split", 1, "Proiettile diviso", "Dopo il 1° bersaglio si divide in 2"),
     C("split2", "split", 2, "Doppia divisione", "Si divide ancora dopo il 2°"),
     C("mass", "split", 3, "Slancio", "Più danno per ogni nemico attraversato"),
+    C("boom1", "boom", 1, "Proiettile esplosivo", "Il primo impatto provoca un’esplosione"),
+    C("boomD", "boom", 2, "Carica esplosiva", "Più perforazioni: esplosione più forte"),
+    C("boomR", "boom", 2, "Deflagrazione", "Più perforazioni: esplosione più ampia"),
+    C("boom3", "boom", 3, "Esplosioni a catena", "Anche i colpiti dopo il primo esplodono"),
     L("punch", 1, "Impatto", "Danno maggiorato + knockback"),
+    L("pen", 1, "Penetrazione", "Più knockback e perforazione"),
     L("vulnP", 2, "Vulnerabilità fisica", "I colpi rendono vulnerabili al fisico"),
-    L("pen", 3, "Penetrazione", "Più knockback e perforazione"),
+    L("stun", 2, "Impatto stordente", "Paralizza tutti i colpiti"),
+    L("crit", 3, "Colpo critico", "30%: danno +50%"),
   ]},
   tesla: { name: "Teslacoil", type: "electric", range: 380, reload: 2.2, blurb: "Sfera elettrica che esplode al contatto", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
@@ -335,9 +350,15 @@ const TURRETS = {
     S("bounce", "+1 rimbalzo", "+1 rimbalzo, danno −15%"),
     C("orb", "orb", 1, "Sfera statica", "Resta attiva 2 s dopo l’esplosione"),
     C("orbSlow", "orb", 2, "Sfera rallentante", "La sfera rallenta i nemici"),
+    C("orbD", "orb", 2, "Sfera carica", "La sfera fa più danno"),
     C("orbDur", "orb", 3, "Sfera persistente", "La sfera dura più a lungo"),
+    C("over1", "over", 1, "Carica espansiva", "Carica +0,5 s, esplosione più ampia"),
+    C("over2", "over", 2, "Carica potenziata", "Carica +0,5 s, esplosione più forte"),
+    C("over3", "over", 3, "Carica massima", "Carica +1 s: esplosione ancora maggiore"),
     L("chain", 1, "Esplosione a catena", "Colpisce in parte 5 nemici vicini"),
-    L("quick", 2, "Ricarica rapida", "Ricarica −20%", true),
+    L("big", 1, "Esplosione ampia", "Raggio dell’esplosione +40%"),
+    L("quick", 2, "Ricarica rapida", "Ricarica −20%"),
+    L("stun", 2, "Esplosioni paralizzanti", "30%: l’esplosione paralizza i colpiti"),
     L("charge", 3, "Campo di carica", "Mentre carica, colpisce chi è sopra"),
   ]},
   vortex: { name: "Gravity Vortex Gun", type: "force", range: 260, reload: 5.5, blurb: "Buco nero che attrae e danneggia", ups: [
@@ -346,13 +367,16 @@ const TURRETS = {
     S("rad", "Raggio maggiore", "Raggio del buco nero +25%"),
     C("wh1", "worm", 1, "Wormhole", "Due varchi: si riemerge dal secondo"),
     C("wh2", "worm", 2, "Varco ampio", "L’ingresso del wormhole è più grande"),
+    C("whT", "worm", 2, "Varchi stabili", "I wormhole durano 6 s invece di 4"),
     C("wh3", "worm", 3, "Uscita rallentante", "Chi esce dal 2° varco è rallentato"),
     C("stat1", "stat", 1, "Buco nero statico", "A fine percorso resta fermo e attrae"),
     C("stat2", "stat", 2, "Statico prolungato", "Il buco nero statico dura 3 s invece di 2"),
     C("stat3", "stat", 3, "Statico potente", "Il buco nero statico fa più danno"),
     L("pull", 1, "Attrazione forte", "Forza attrattiva molto maggiore"),
+    L("power", 1, "Buco nero denso", "Danno dei buchi neri +50%"),
     L("twin", 2, "Secondo buco nero", "Genera un secondo buco nero"),
-    L("amp", 3, "Collasso", "Danno dei buchi neri +40%", true),
+    L("lazy", 2, "Buco nero lento", "Avanza più piano: resta più sui nemici"),
+    L("grow", 3, "Collasso crescente", "Danno e attrazione crescono col percorso"),
   ]},
 };
 Object.keys(TURRETS).forEach((k) => { TURRETS[k].id = k; });
@@ -457,8 +481,11 @@ function popup(e, v, mult) {
     color: mult > 1 ? "#ffd166" : mult < 1 ? "#7f8ba3" : "#e8eefc",
   });
 }
-function damage(e, base, type, quiet, src) {
+// ignore = ignora le resistenze del nemico (Laser, Raggi penetranti)
+function damage(e, base, type, quiet, src, ignore) {
   let mult = RESIST[e.def.type][type];
+  if (ignore && mult < 1) mult = 1;
+  if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia corrosiva (Firewheel)
   if (e.vulnT > 0 && (e.vulnType === "all" || e.vulnType === type)) mult *= 1 + 0.25 * (1 - (e.statRes || 0));
   if (e.fieldT > 0 && src !== "disr") mult *= e.fieldAmp;
   const d = base * mult;
@@ -618,10 +645,12 @@ function skyCombust(s, x, y) {                 // Combustione: chi muore bruciat
 
 // ---------- 2. LASER (energy) ----------
 // wk = il raggio indebolisce (chain Raggi multipli lv2: raggio principale e mini-raggi, non la spazzata)
-function laserHit(s, e, amount, dbMul, wk) {
+function laserHit(s, e, amount, dbMul, wk, ign) {
   let d = amount;
   if (has(s, "exploit") && debuffed(e)) d *= 1.5;
-  damage(e, d, "energy", true, "laser");
+  // Raggi penetranti: a ogni attivazione, il 30% dei nemici toccati subisce il laser senza resistenze
+  if (ign && !ign.has(e)) ign.set(e, has(s, "ignore") && Math.random() < 0.3);
+  damage(e, d, "energy", true, "laser", ign && ign.get(e));
   if (wk && has(s, "multiW")) weaken(e, 2.5 * dbMul);
 }
 function laserFire(s) {
@@ -629,7 +658,7 @@ function laserFire(s) {
   if (!t) return false;
   const base = Math.atan2(t.y - pos.y, t.x - pos.x);
   const dur = 2.2 * (1 + 0.3 * N(s, "dur")) * (has(s, "longer") ? 1.7 : 1);
-  const w = 8 * (has(s, "wide") ? 2 : 1), bounces = N(s, "bounce"), dbMul = has(s, "debuffdur") ? 1.5 : 1;
+  const w = 8 * (has(s, "wide") ? 2 : 1), bounces = N(s, "bounce"), dbMul = has(s, "debuffdur") ? 1.5 : 1, ign = new Map();
   // i rimbalzi valgono per il raggio principale; i mini-raggi rimbalzano solo con la chain lv3 (e solo allora pagano il −20%)
   const rays = [{ segs: trace(pos.x, pos.y, base, bounces), dps: 20 * dmgM(s) * Math.pow(0.8, bounces), w }];
   if (has(s, "multi1")) {
@@ -640,7 +669,7 @@ function laserFire(s) {
   spawnEnt({ t: dur, dead: false,
     update(dt) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }
-      for (const r of rays) for (const e of living()) if (hitSegs(e, r.segs, r.w)) laserHit(s, e, r.dps * dt, dbMul, true);
+      for (const r of rays) for (const e of living()) if (hitSegs(e, r.segs, r.w)) laserHit(s, e, r.dps * dt, dbMul, true, ign);
     },
     draw() { for (const r of rays) for (const g of r.segs) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1); } });
   if (has(s, "sweep1")) {
@@ -652,7 +681,7 @@ function laserFire(s) {
           t += dt; if (t >= T) { this.dead = true; done(); return; }
           const k = t / T, ang = dir > 0 ? -Math.PI + k * Math.PI : -k * Math.PI;
           this.segs = trace(pos.x, pos.y, ang, 0);
-          for (const e of living()) if (hitSegs(e, this.segs, w)) { laserHit(s, e, 18 * dmgM(s) * dt, dbMul); if (slowIt) slow(e, 1.5 * dbMul); }
+          for (const e of living()) if (hitSegs(e, this.segs, w)) { laserHit(s, e, 18 * dmgM(s) * dt, dbMul, false, ign); if (slowIt) slow(e, 1.5 * dbMul); }
         },
         draw() { for (const g of this.segs) glow(g.x1, g.y1, g.x2, g.y2, "#7ff6ff", w * 0.4, 0.9); } });
     };
@@ -876,7 +905,7 @@ function beamFire(s) {
   const prim = pickTargets(pos, rng, has(s, "second") ? 2 : 1);
   if (!prim.length) return false;
   const dur = 1.8 * (1 + 0.3 * N(s, "dur")), dps = 24 * dmgM(s) * (has(s, "pace") ? 1.4 : 1);
-  const forks = has(s, "fork1") ? 2 : 0, pull = has(s, "pull"), boom = has(s, "forkX");
+  const forks = has(s, "fork1") ? 2 + (has(s, "forkN") ? 1 : 0) : 0, pull = has(s, "pull"), boom = has(s, "forkX");
   // Raggio amplificato: il danno sul bersaglio principale sale del 70% al secondo fino al massimo (×2, ×4 al lv3)
   const ampMax = has(s, "amp3") ? 4 : has(s, "amp1") ? 2 : 1, keepAmp = has(s, "amp2");
   busy(s, 1);
@@ -924,44 +953,57 @@ function beamFire(s) {
 // ---------- 7. FIREWHEEL DRONE (fire) ----------
 function wheelFire(s) {
   if (!living().length) return false;
-  const dur = 5 * (1 + 0.3 * N(s, "dur")), rad = 55 * (1 + 0.3 * N(s, "rad")), dps = 20 * dmgM(s);
-  wheelDrone(s, s.x, s.y - 14, rnd(-2.4, -0.7), { mini: false, dur, rad, dps });
+  const heat = has(s, "heat") ? 1.6 : 1, launch = { hit: new Set() };     // launch.hit: nemici colpiti da tutto il lancio (Raffreddamento)
+  const dur = 5 * (1 + 0.3 * N(s, "dur")), rad = 55 * (1 + 0.3 * N(s, "rad")), dps = 20 * dmgM(s) * heat;
+  wheelDrone(s, s.x, s.y - 14, rnd(-2.4, -0.7), { mini: false, dur, rad, dps, launch });
   if (has(s, "mini1"))
     for (let i = 0; i < 2; i++)
-      wheelDrone(s, s.x, s.y - 14, rnd(-2.6, -0.5), { mini: true, dur, rad: 28, dps: 8 * dmgM(s) * (has(s, "miniD") ? 1.6 : 1) });
+      wheelDrone(s, s.x, s.y - 14, rnd(-2.6, -0.5), { mini: true, dur, rad: 28, dps: 8 * dmgM(s) * heat * (has(s, "miniD") ? 1.6 : 1), launch });
   return true;
 }
 function wheelDrone(s, x, y, a, o) {
-  const base = o.mini ? 170 : 140;
+  const base = o.mini ? 170 : 140, bm = has(s, "trailB") ? 1.6 : 1;          // Fiamme intense: solo le bruciature di questa torre
+  const trailOn = has(s, "trail1") && !o.mini, trailT = has(s, "trail3") ? 4 : 2;
   busy(s, 1);
-  spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, dead: false,
+  spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, hit: new Set(), dead: false,
     update(dt) {
       this.rot += 8 * dt;
+      // Fiamma crescente: +10% di danno per ogni nemico diverso colpito da questo drone, fino a ×2
+      const boost = has(s, "stoke") ? Math.min(2, 1 + 0.1 * this.hit.size) : 1;
       let touching = false;
       for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= o.rad + e.def.r) {
-        touching = true; damage(e, o.dps * dt, "fire", true, "wheel");
-        if (o.mini && has(s, "miniB")) burn(e, 2, 5);
+        touching = true; this.hit.add(e); o.launch.hit.add(e);
+        damage(e, o.dps * boost * dt, "fire", true, "wheel");
+        if (o.mini && has(s, "miniB")) burn(e, 2, 5 * bm);
       }
       if (this.t > 0) {
         this.t -= dt;
         if (this.t <= 0 && has(s, "stay") && !this.stayed) { this.stayed = true; this.still = 2.5; }
       } else if (this.still > 0) this.still -= dt;
-      if (this.t <= 0 && this.still <= 0) { this.dead = true; busy(s, -1); return; }
+      if (this.t <= 0 && this.still <= 0) {
+        this.dead = true; busy(s, -1);
+        // Raffreddamento: a lancio finito, −5% di ricarica per ogni nemico colpito, fino a −50%
+        if (s.busy === 0 && has(s, "cool")) s.cd *= 1 - Math.min(0.5, 0.05 * o.launch.hit.size);
+        return;
+      }
       if (this.t > 0) {
         const sp = base * (has(s, "dash") && !touching ? 1.8 : 1), mv = sp * dt;
         this.x += Math.cos(this.a) * mv; this.y += Math.sin(this.a) * mv; this.dist += mv;
         if (this.x < 22) { this.x = 22; this.a = Math.PI - this.a; } else if (this.x > W - 22) { this.x = W - 22; this.a = Math.PI - this.a; }
         if (this.y < 60) { this.y = 60; this.a = -this.a; } else if (this.y > GROUND_Y - 36) { this.y = GROUND_Y - 36; this.a = -this.a; }
-        if (has(s, "trail") && !o.mini && this.dist > 22) { this.dist = 0; this.trail.push({ x: this.x, y: this.y, t: 2 }); }
+        if (trailOn && this.dist > 22) { this.dist = 0; this.trail.push({ x: this.x, y: this.y, t: trailT }); }
       }
       for (const p of this.trail) {
         p.t -= dt;
-        for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) burn(e, 2, 5 * dmgM(s));
+        for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
+          burn(e, 2, 5 * dmgM(s) * bm);
+          if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2);     // Scia corrosiva: +30% di danno da fuoco per 2 s
+        }
       }
       this.trail = this.trail.filter((p) => p.t > 0);
     },
     draw() {
-      for (const p of this.trail) disc(p.x, p.y, 6, TYPES.fire.color, clamp(p.t / 2, 0, 1) * 0.5);
+      for (const p of this.trail) disc(p.x, p.y, 6, TYPES.fire.color, clamp(p.t / trailT, 0, 1) * 0.5);
       ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(this.x, this.y, o.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
       for (let k = 0; k < 3; k++) { const aa = this.rot + k * 2.0944; glow(this.x, this.y, this.x + Math.cos(aa) * o.rad, this.y + Math.sin(aa) * o.rad, "#ffb347", 2, 0.8); }
       disc(this.x, this.y, o.mini ? 3 : 5, "#ffe0b0");
@@ -1016,48 +1058,64 @@ function hiveWave(s, o, dmg, ang) {
   waveFx(o.x, o.y, ang, len);
 }
 function hiveDrone(s, x, y, lvl, gen) {
-  // la durata cresce con i colpi disponibili: 4 colpi base, +2 per ogni "più colpi" (max 10)
-  const cap0 = 4 + 2 * N(s, "hits"), life = 4 + cap0 * 1.2;
+  // nessun limite di tempo: il drone resta finché non ha sparato tutti i colpi (4 base, +2 per ogni "più colpi", max 10)
+  const cap0 = 4 + 2 * N(s, "hits");
   const dmg = 12 * dmgM(s) * Math.pow(0.85, N(s, "drone"));
   const list = (s.st.hive = (s.st.hive || []).filter((o) => !o.dead));
-  const d0 = spawnEnt({ x, y, lvl, gen, shots: 0, cap: cap0, cd: 0.6, t: null, rt: 0, left: life, stayed: false, dead: false,
+  const d0 = spawnEnt({ x, y, lvl, gen, shots: 0, cap: cap0, cd: 0.6, t: null, rt: 0, stayed: false, kami: 0, dead: false,
     fire() {
       const tg = this.t && dist(this.t.x, this.t.y, this.x, this.y) <= HIVE_RANGE ? this.t : nearestTo(this.x, this.y, HIVE_RANGE);
       if (!tg) return;                                    // nessun nemico a portata: non spara
-      const first = this.shots === 0, last = this.shots + 1 >= this.cap || this.left <= 1.1;
+      const first = this.shots === 0, last = this.shots + 1 >= this.cap;
       if ((first && has(s, "wave1")) || (last && has(s, "wave3"))) hiveWave(s, this, dmg, Math.atan2(tg.y - this.y, tg.x - this.x));
       else {
         const n = [1, 2, 4][this.lvl - 1], hit = new Set([tg]);
         for (let k = 0; k < n; k++) {                     // i proiettili extra cercano altri nemici vicini, altrimenti colpiscono lo stesso
           const e = k === 0 ? tg : (nearestTo(this.x, this.y, HIVE_RANGE + 30, hit) || tg);
           hit.add(e); damage(e, dmg, "force", false, "hive");
+          if (has(s, "push")) knock(e, 8);               // Colpi di forza
           bolt([{ x: this.x, y: this.y }, { x: e.x, y: e.y }], TYPES.force.color, 0.12, 1.8);
         }
       }
       this.shots++; this.cd = 1.0;
       if (this.shots % 3 === 0) { if (this.lvl === 1 && has(s, "evo1")) this.lvl = 2; else if (this.lvl === 2 && has(s, "evo2")) this.lvl = 3; }
     },
+    die() {
+      this.dead = true;
+      if (this.gen === 0 && has(s, "seed1") && Math.random() < 0.35)
+        hiveDrone(s, this.x, this.y, Math.min(this.lvl, has(s, "seed3") ? 3 : has(s, "seed2") ? 2 : 1), 1);
+    },
+    boom() {                                              // Droni kamikaze: esplosione ad area al doppio del danno di un colpo
+      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= 40 + e.def.r) damage(e, dmg * 2, "force", false, "hive");
+      ring(this.x, this.y, 40, TYPES.force.color, 0.35); this.die();
+    },
     update(dt) {
-      this.left -= dt; this.cd -= dt; this.rt -= dt;
+      if (this.kami > 0) {                                // in volo verso il nemico più vicino (al massimo 3 s, poi esplode dov’è)
+        this.kami -= dt;
+        if (!this.t || this.t.dead) this.t = nearestTo(this.x, this.y, 900);
+        if (!this.t) return this.die();
+        const d = dist(this.t.x, this.t.y, this.x, this.y), mv = 260 * dt;
+        if (d <= this.t.def.r + 6 + mv || this.kami <= 0) return this.boom();
+        this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
+        return;
+      }
+      this.cd -= dt; this.rt -= dt;
       if (!this.t || this.t.dead || (settings.targeting === "highest" && this.rt <= 0)) { this.t = hiveTarget(s, this); this.rt = 1; }
       if (this.t) {                                       // si avvicina finché è a portata, poi si ferma
         const d = dist(this.t.x, this.t.y, this.x, this.y);
         if (d > HIVE_STOP) { const mv = Math.min(d - HIVE_STOP, 150 * dt); this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv; }
       }
       if (this.cd <= 0) this.fire();
-      if (this.left <= 0 || this.shots >= this.cap) {
-        if (has(s, "stay") && !this.stayed && Math.random() < 0.3) { this.stayed = true; this.left = life; this.cap = this.shots + cap0; }
-        else {
-          this.dead = true;
-          if (this.gen === 0 && has(s, "seed1") && Math.random() < 0.35)
-            hiveDrone(s, this.x, this.y, Math.min(this.lvl, has(s, "seed3") ? 3 : has(s, "seed2") ? 2 : 1), 1);
-        }
+      if (this.shots >= this.cap) {
+        if (has(s, "stay") && !this.stayed && Math.random() < 0.3) { this.stayed = true; this.cap = this.shots + cap0; }
+        else if (has(s, "kami")) { this.kami = 3; this.t = nearestTo(this.x, this.y, 900); }
+        else this.die();
       }
     },
     draw() {
       const r = 4.5 + this.lvl * 1.5, pts = [];
       for (let i = 0; i < 6; i++) pts.push([this.x + Math.cos(i * 1.0472 + 0.5236) * r, this.y + Math.sin(i * 1.0472 + 0.5236) * r]);
-      poly(pts, TYPES.force.color, "#ffffff", 1); disc(this.x, this.y, r * 0.35, "#070b16");
+      poly(pts, this.kami > 0 ? "#ff7a3d" : TYPES.force.color, "#ffffff", 1); disc(this.x, this.y, r * 0.35, "#070b16");
     } });
   list.push(d0);
 }
@@ -1078,9 +1136,15 @@ function railShot(s, x, y, a, st) {
       this.x += Math.cos(a) * 1000 * dt; this.y += Math.sin(a) * 1000 * dt;
       for (const e of living()) {
         if (hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 4) continue;
+        const avail = st.pierce;                         // perforazioni disponibili al momento dell’impatto
         hit.add(e); st.hits++; st.pierce--;
-        damage(e, dmg0 * (has(s, "mass") ? 1 + 0.15 * (st.hits - 1) : 1), "physical", false, "rail");
+        const crit = has(s, "crit") && Math.random() < 0.3 ? 1.5 : 1;            // Colpo critico
+        damage(e, dmg0 * crit * (has(s, "mass") ? 1 + 0.15 * (st.hits - 1) : 1), "physical", false, "rail");
         knock(e, kb); if (has(s, "vulnP")) vuln(e, 3, "physical");
+        if (has(s, "stun")) para(e, 0.8);                // Impatto stordente (i boss sono immuni)
+        // Proiettile esplosivo: il primo impatto esplode sempre; con il lv3 il colpito n° k esplode con probabilità 100% − 20% × (k − 1)
+        if (has(s, "boom1") && ((st.hits === 1 && !st.child) || (st.hits > 1 && has(s, "boom3") && Math.random() < 1 - 0.2 * (st.hits - 1))))
+          railBoom(s, e.x, e.y, avail, dmg0);
         if (!st.child && st.pierce > 0 && ((st.hits === 1 && has(s, "split1")) || (st.hits === 2 && has(s, "split2"))))
           railShot(s, this.x, this.y, a + (Math.random() < 0.5 ? -1 : 1) * 0.35, { pierce: st.pierce, hits: st.hits, child: true });
         if (st.pierce <= 0) { this.dead = true; break; }
@@ -1094,10 +1158,18 @@ function railShot(s, x, y, a, st) {
     } });
 }
 
+function railBoom(s, x, y, avail, dmg0) {
+  const rad = 30 * (has(s, "boomR") ? 1 + 0.1 * avail : 1), d = dmg0 * 0.5 * (has(s, "boomD") ? 1 + 0.15 * avail : 1);
+  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
+  ring(x, y, rad, TYPES.physical.color, 0.3);
+}
+
 // ---------- 10. TESLACOIL (electric) ----------
+// carica: 0,7 s base; la chain Carica espansiva la allunga (+0,5 / +0,5 / +1 s) e ogni 0,5 s in più fa crescere l’esplosione
+const teslaChargeT = (s) => 0.7 + (has(s, "over1") ? 0.5 : 0) + (has(s, "over2") ? 0.5 : 0) + (has(s, "over3") ? 1 : 0);
 function teslaFire(s) {
   if (!pickTargets({ x: s.x, y: s.y - 10 }, rangeOf(s), 1)[0]) return false;
-  s.st.charge = 0.7; busy(s, 1); return true;
+  s.st.charge = s.st.chargeT = teslaChargeT(s); busy(s, 1); return true;
 }
 function teslaTick(s, dt) {
   if (!(s.st.charge > 0)) return;
@@ -1121,25 +1193,49 @@ function teslaBall(s, x, y, target, bounces, hitSet) {
       this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
       if (this.age > 6) this.dead = true;
     },
-    draw() { disc(this.x, this.y, 8, TYPES.electric.color, 0.3); disc(this.x, this.y, 4.5, "#fff6b0"); } });
+    draw() { ballLightning(this.x, this.y, 6, this.age); } });
+}
+// fulmine globulare: alone tremolante, nucleo chiaro e piccoli archi che si staccano dalla superficie (niente Math.random: solo funzione del tempo)
+function ballLightning(x, y, r, age) {
+  const fl = 0.75 + 0.25 * Math.sin(age * 43) * Math.sin(age * 17 + 1);
+  disc(x, y, r * 2.3, TYPES.electric.color, 0.10 * fl);
+  disc(x, y, r * 1.5, TYPES.electric.color, 0.28 * fl);
+  ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.2; ctx.lineCap = "round";
+  for (let k = 0; k < 4; k++) {
+    const a0 = age * (k % 2 ? 5 : -4) + k * 1.571, len = r * (1.5 + 0.7 * Math.sin(age * 29 + k * 3));
+    ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(age * 23 + k));
+    ctx.beginPath(); ctx.moveTo(x + Math.cos(a0) * r * 0.6, y + Math.sin(a0) * r * 0.6);
+    for (let i = 1; i <= 3; i++) {
+      const rr = r * 0.6 + (len - r * 0.6) * i / 3, aa = a0 + 0.35 * Math.sin(age * 61 + i * 2.3 + k);
+      ctx.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  disc(x, y, r * 0.95, "#fff6b0", 0.9); disc(x, y, r * 0.5, "#ffffff");
 }
 function teslaBoom(s, x, y, bounces, hitSet) {
-  const dmg = 28 * dmgM(s) * Math.pow(0.85, N(s, "bounce")), rad = 36, first = [];
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) { hitSet.add(e); first.push(e); damage(e, dmg, "electric", false, "tesla"); }
+  const extra = (teslaChargeT(s) - 0.7) / 0.5;               // mezzi secondi di carica in più
+  const dmg = 28 * dmgM(s) * Math.pow(0.85, N(s, "bounce")) * (has(s, "over2") ? 1 + 0.3 * extra : 1);
+  const rad = 36 * (has(s, "big") ? 1.4 : 1) * (has(s, "over1") ? 1 + 0.3 * extra : 1), first = [];
+  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) {
+    hitSet.add(e); first.push(e); damage(e, dmg, "electric", false, "tesla");
+    if (has(s, "stun") && Math.random() < 0.3) para(e, 1);          // Esplosioni paralizzanti: come la paralisi del Thunderbolt
+  }
   ring(x, y, rad, TYPES.electric.color, 0.3);
   if (has(s, "chain")) {
     const near = living().filter((e) => !hitSet.has(e) && dist(e.x, e.y, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
     for (const e of near) { hitSet.add(e); damage(e, dmg * 0.4, "electric", false, "tesla"); bolt(zigzag(x, y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5); }
   }
   if (has(s, "orb"))
-    zone(x, y, rad, has(s, "orbDur") ? 3.5 : 2, (e, dt) => { damage(e, 12 * dmgM(s) * dt, "electric", true, "tesla"); if (has(s, "orbSlow")) slow(e, 0.4); }, TYPES.electric.color);
+    zone(x, y, rad, has(s, "orbDur") ? 3.5 : 2, (e, dt) => { damage(e, 12 * dmgM(s) * (has(s, "orbD") ? 1.6 : 1) * dt, "electric", true, "tesla"); if (has(s, "orbSlow")) slow(e, 0.4); }, TYPES.electric.color);
   if (bounces > 0) {
     const nx = nearestTo(x, y, 170, hitSet);
     if (nx) teslaBall(s, x, y, nx, bounces - 1, hitSet);
   }
 }
 function teslaDraw(s) {
-  if (s.st.charge > 0) { const k = 1 - s.st.charge / 0.7; disc(s.x, s.y - 20, 3 + 6 * k, TYPES.electric.color, 0.35 + 0.5 * k); }
+  if (s.st.charge > 0) { const k = 1 - s.st.charge / (s.st.chargeT || 0.7); ballLightning(s.x, s.y - 20, 2 + 4 * k, s.st.charge * 3); }
 }
 
 // ---------- 11. GRAVITY VORTEX GUN (force) ----------
@@ -1158,21 +1254,22 @@ function vortexFire(s) {
 const VORTEX_LEN0 = 0.75 * H / (1 + 0.3 * 3);          // ≈ 253 px di partenza (480 px al massimo)
 function vortex(s, pos, a) {
   const len = VORTEX_LEN0 * (1 + 0.3 * N(s, "len")), R = 32 * (1 + 0.25 * N(s, "rad"));
-  const pull = 80 * (has(s, "pull") ? 1.6 : 1), dps = 12 * dmgM(s) * (has(s, "amp") ? 1.4 : 1);
+  const pull = 80 * (has(s, "pull") ? 1.6 : 1), dps = 12 * dmgM(s) * (has(s, "power") ? 1.5 : 1), speed = has(s, "lazy") ? 80 : 130;
   const stat = has(s, "stat1"), statT = has(s, "stat2") ? 3 : 2, statDps = dps * (has(s, "stat3") ? 1.6 : 1);
   spawnEnt({ x: pos.x, y: pos.y, trav: 0, still: -1, A: null, dead: false, spin: 0,
     update(dt) {
       this.spin += 4 * dt;
       if (this.still < 0) {
-        const mv = 130 * dt; this.x += Math.cos(a) * mv; this.y += Math.sin(a) * mv; this.trav += mv;
+        const mv = speed * dt; this.x += Math.cos(a) * mv; this.y += Math.sin(a) * mv; this.trav += mv;
         if (this.trav >= len || this.y < 10 || this.x < 0 || this.x > W) { if (stat) this.still = statT; else return this.finish(); }
       } else { this.still -= dt; if (this.still <= 0) return this.finish(); }
-      const d = (this.trav < len && this.still < 0 ? dps : statDps) * dt;
+      const g = has(s, "grow") ? 1 + Math.min(1, this.trav / len) : 1;     // Collasso crescente: fino a ×2 a fine percorso
+      const d = (this.trav < len && this.still < 0 ? dps : statDps) * g * dt;
       for (const e of living()) {
         const dx = this.x - e.x, dy = this.y - e.y, dd = Math.hypot(dx, dy);
         if (dd > R + e.def.r) continue;
         if (!this.A && has(s, "wh1")) this.A = { x: e.x, y: e.y };
-        const f = Math.min(dd, pull * dt); if (dd > 1 && !e.boss) { e.x += dx / dd * f; e.y += dy / dd * f; }
+        const f = Math.min(dd, pull * g * dt); if (dd > 1 && !e.boss) { e.x += dx / dd * f; e.y += dy / dd * f; }
         damage(e, d, "force", true, "vortex");
       }
     },
@@ -1187,7 +1284,7 @@ function vortex(s, pos, a) {
 }
 function portals(s, A, B) {
   const rA = 22 * (has(s, "wh2") ? 1.6 : 1);
-  spawnEnt({ t: 4, dead: false,
+  spawnEnt({ t: has(s, "whT") ? 6 : 4, dead: false,
     update(dt) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
       for (const e of living()) if (e.tpCd <= 0 && !e.boss && dist(e.x, e.y, A.x, A.y) <= rA + e.def.r) {
@@ -1262,7 +1359,7 @@ function playerBullet(p, x, y, t, dmg, ang, fan) {
   let pierce = fan ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0);
   let bounces = fan ? 0 : (has(p, "ricochet") ? 1 : 0);
   const prob = fan || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
-  const rad = 30 * (1 + (has(p, "boomR") ? 0.4 : 0) + (has(p, "boom3") ? 0.3 : 0));
+  const rad = 30 * (1 + (has(p, "boom3") ? 0.3 : 0));
   const kb = fan || !has(p, "punch") ? 0 : (frenzyOn(p) ? 4.5 : 1.5);   // il knockback cresce in frenesia (basso per colpo: i colpi sono molti)
   const l = t ? (dist(t.x, t.y, x, y) || 1) : 1;
   spawnEnt({ x, y, vx: t ? (t.x - x) / l : Math.cos(ang), vy: t ? (t.y - y) / l : Math.sin(ang),
@@ -1424,7 +1521,7 @@ function spawn(q) {
     speed: d.speed * levelSpeed(D) * waveSpeed(wave), curSpeed: 0, dmg: d.dmg * levelDmg(D) * waveDmg(wave),
     flash: 0, phase: rnd(0, 6.28), dead: false, acc: 0, accT: 0, atk: 0.3,
     shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34), rot: rnd(0, 6.28), spin: rnd(-0.8, 0.8),
-    slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, skyBurnT: 0, skyBurnS: null, shock: 0, shockCd: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
+    slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, skyBurnT: 0, skyBurnS: null, fireVulnT: 0, shock: 0, shockCd: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
   });
 }
 
@@ -1463,7 +1560,7 @@ function update(dt) {
     e.paraT = Math.max(0, e.paraT - dt); e.fieldT = Math.max(0, e.fieldT - dt); e.tpCd = Math.max(0, e.tpCd - dt);
     e.accT = Math.max(0, e.accT - dt); e.flash = Math.max(0, e.flash - dt); e.rot += e.spin * dt;
     e.destrT = Math.max(0, e.destrT - dt); if (e.destrT <= 0) e.destrN = 0;
-    e.skyBurnT = Math.max(0, e.skyBurnT - dt);
+    e.skyBurnT = Math.max(0, e.skyBurnT - dt); e.fireVulnT = Math.max(0, e.fireVulnT - dt);
     if (e.paraT > 0 && e.shock > 0) {                // scossa continua (Thunderbolt): danno a intervalli finché dura la paralisi
       e.shockCd -= dt;
       if (e.shockCd <= 0) { e.shockCd = 0.3; damage(e, e.shock, "electric", true, "thunder"); if (e.dead) continue; }
