@@ -45,7 +45,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Un level up di livello inferiore resta disponibile ai livelli successivi. **[deciso]**
 - **Standard**: massimo 3 pile per voce (per torre, non per partita). **[deciso]**
 - **Chain**: la voce di livello N richiede una voce di livello N−1 della stessa catena **e la torre al livello N**. **[deciso]**
-- Obiettivo di contenuto per ogni torre: **2 chain complete** (1 voce lv1, 2 lv2, 1 lv3) e **2 level up a lv1 e a lv2** (lv3 almeno 1). **[deciso]**
+- Obiettivo di contenuto per ogni torre e per il personaggio: **2 chain**, una da **1 voce lv1, 2 lv2, 1 lv3** e una da **1 lv1, 1 lv2, 1 lv3**;
+  **2 level up a lv1 e a lv2** (lv3 almeno 1). **[deciso]** (rivisto: prima entrambe le chain avevano 2 voci lv2)
+- Comportamento base confermato: la **Sky Guard non brucia** senza potenziamenti (la bruciatura arriva dalla chain Bruciatura e dai level up);
+  il **campo del Disruption Drone rallenta** di base. **[deciso]**
 - **Combo**: una sola carta per coppia, anche torretta + personaggio. Compaiono solo con entrambe in campo. Nessuna definita. **(aperto, § 11)**
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
@@ -79,6 +82,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
 - Esito attuale (vittorie dei bot): livelli 1-5 100% · 8 circa 40-60% · **10 circa 25-30% (muro)** · 11-15 circa 60-80% (sollievo dopo lo sblocco) ·
   **20 circa 32-37%** · 25 circa 40-50% · **30 circa 23-25%**. Muri ai multipli di 10, respiro in mezzo. **[deciso]**
+- Dopo la revisione torri 1 (stessi bot, 120 partite per livello; 800 al 10 e al 30): 1 100% · 5 96% · 8 61% · **10 13,8%** (prima 14,0%) · 11 91% ·
+  15 84% · **20 40%** · 25 61% · **30 17,9%** (prima 20,5%: lieve calo, al limite del rumore). Nessun numero della difficoltà cambiato.
+  Nota: con questi bot il livello 10 misura circa 14%, sotto il 25-30% indicato sopra (misura più vecchia, campione più piccolo).
 - La difficoltà in **mira manuale non è misurata** (i bot giocano solo in automatico).
 
 ## 6. Nemici, stati e interfaccia dei nemici
@@ -115,18 +121,19 @@ Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta 
 
 Fire · Missili a ricerca casuale, lungo raggio. Portata 520 px, ricarica 3,0 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 missile (+1 missile, danno −15%); Raggio d’impatto (Raggio d’impatto +30%).
-- **Chain · Frammentazione** — lv1 Frammentazione: All’impatto: 3 mini-missili · lv2 Frammentazione II: I mini-missili diventano 6 · lv3 Frammentazione III: I mini-missili diventano 9
-- **Level up** — lv1 Area infuocata: L’impatto brucia l’area per 5 s · lv1 Impatto devastante: Danno da impatto molto più alto · lv2 Scia incendiaria: I missili bruciano chi attraversano · lv3 Salva potenziata: +2 missili per lancio
-- id nel codice: dmg, msl, rad, split1, split2, split3, fire, impact, pass, plus2
+- **Chain · Frammentazione** — lv1 Frammentazione: All’impatto: 3 mini-missili · lv2 Frammentazione II: I mini-missili diventano 6 · lv2 Mini-missili esplosivi: 50%: i mini-missili esplodono ad area · lv3 Frammentazione III: I mini-missili diventano 9
+- **Chain · Missili incendiari** — lv1 Missili incendiari: I missili principali bruciano i colpiti · lv2 Bruciatura intensa: Danno da bruciatura +60% · lv3 Combustione: Chi muore bruciato esplode ad area
+- **Level up** — lv1 Area infuocata: L’impatto brucia l’area per 5 s · lv1 Impatto devastante: Danno da impatto molto più alto · lv2 Scia incendiaria: I missili bruciano chi attraversano · lv2 Doppio impatto: Seconda esplosione dopo l’impatto · lv3 Salva potenziata: +2 missili per lancio
+- id nel codice: dmg, msl, rad, split1, split2, splitB, split3, burn1, burn2, burn3, fire, impact, pass, again, plus2
 
 ### Laser (`laser`)
 
 Energy · Raggi fissi che trapassano tutto. Portata 900 px, ricarica 5,0 s.
-- **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 rimbalzo (Rimbalzo sui bordi, danno −20%); Durata maggiorata (Durata dei raggi +30%).
-- **Chain · Raggi multipli** — lv1 Raggi multipli: +1 raggio fisso · lv2 Raggi multipli II: +2 raggi fissi in totale · lv3 Raggi multipli III: +3 raggi fissi in totale
+- **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 rimbalzo (Raggio principale: rimbalzo, danno −20%); Durata maggiorata (Durata dei raggi +30%).
+- **Chain · Raggi multipli** — lv1 Raggi multipli: +2 mini-raggi fissi, danno minore · lv2 Raggi debilitanti: Raggio e mini-raggi indeboliscono · lv2 Mini-raggi potenziati: Danno dei mini-raggi maggiore · lv3 Mini-raggi rimbalzanti: Anche i mini-raggi rimbalzano
 - **Chain · Raggio spazzante** — lv1 Raggio spazzante: Un raggio attraversa lo schermo · lv2 Spazzata rallentante: Il raggio rallenta i colpiti · lv3 Doppia spazzata: Seconda spazzata in senso opposto
-- **Level up** — lv1 Raggio largo: Larghezza dei raggi +100% · lv1 Raggio persistente: Durata dei raggi molto maggiore · lv2 Indebolimento: I nemici colpiti sono indeboliti · lv2 Sfruttare i debuff: Più danno a chi ha un debuff · lv3 Debuff prolungati: I debuff durano di più
-- id nel codice: dmg, bounce, dur, multi1, multi2, multi3, sweep1, sweep2, sweep3, wide, longer, weaken, exploit, debuffdur
+- **Level up** — lv1 Raggio largo: Larghezza dei raggi +100% · lv1 Raggio persistente: Durata dei raggi molto maggiore · lv2 Sfruttare i debuff: Più danno a chi ha un debuff · lv3 Debuff prolungati: I debuff durano di più
+- id nel codice: dmg, bounce, dur, multi1, multiW, multiD, multi3, sweep1, sweep2, sweep3, wide, longer, exploit, debuffdur
 
 ### Disruption Drone (`disr`)
 
@@ -134,33 +141,35 @@ Force · Due droni creano un campo di forza a tutta larghezza. Portata 380 px, r
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Campo più alto (Altezza del campo +30%); Campo più duraturo (Durata del campo +30%).
 - **Chain · Teletrasporto** — lv1 Teletrasporto: 5%: il colpito viene spinto indietro · lv2 Salto al bordo: 2,5%: teletrasporto al bordo superiore · lv3 Teletrasporto letale: Il teletrasporto danneggia in % la vita
 - **Chain · Distruzione** — lv1 Distruzione: Stack: i nemici infliggono −10% danno · lv2 Scarica distruttiva: A stack massimo: scarica di danno · lv2 Distruzione estesa: Stack massimo da 3 a 5 · lv3 Doppia scarica: Una seconda scarica a stack massimo
-- **Level up** — lv1 Ricarica rapida: Ricarica leggermente ridotta · lv2 Campo destabilizzante: Più danni dalle altre torri nel campo · lv3 Pulsazione rapida: Il campo danneggia più spesso
-- id nel codice: dmg, height, dur, tp1, tp2, tp3, dst1, dstB, dst5, dst3, reload, amp, tick
+- **Level up** — lv1 Ricarica rapida: Ricarica leggermente ridotta · lv1 Esplosione finale: A fine durata il campo esplode · lv2 Campo destabilizzante: Più danni dalle altre torri nel campo · lv2 Pulsazione rapida: Il campo danneggia più spesso · lv3 Campo attrattivo: Più danno, attira verso il centro
+- id nel codice: dmg, height, dur, tp1, tp2, tp3, dst1, dstB, dst5, dst3, reload, blast, amp, tick, grip
 
 ### Aeroblast (`aero`)
 
 Physical · Colpi esplosivi con knockback, corto raggio. Portata 260 px, ricarica 2,6 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%); Più rapido (Danno +10%, ricarica −10%).
-- **Chain · Salva di schegge** — lv1 Salva di schegge: Dopo il colpo: 5 proiettili minori · lv2 Schegge d’urto: Le schegge causano knockback · lv2 Più schegge: Le schegge diventano 7 · lv3 Doppia salva: Le schegge partono due volte
+- **Chain · Salva di schegge** — lv1 Salva di schegge: Dopo il colpo: 5 proiettili minori · lv2 Schegge d’urto: Le schegge causano knockback · lv3 Doppia salva: Le schegge partono due volte
 - **Chain · Mine** — lv1 Mine: Ogni colpo rilascia una mina · lv2 Più mine: 2 mine per colpo · lv2 Mine d’urto: Le mine causano knockback · lv3 Mine potenziate: Le mine fanno più danno
-- **Level up** — lv1 Spinta maggiore: Knockback molto più forte · lv2 Gittata estesa: Raggio d’azione +30% · lv3 Doppia esplosione: I colpi esplodono ancora dopo 1 s
-- id nel codice: dmg, proj, fast, salvo1, salvoK, salvo7, salvo2, mine1, mine2, mineK, mineD, knock, reach, echo
+- **Level up** — lv1 Spinta maggiore: Knockback molto più forte · lv1 Esplosioni ampie: Raggio d’esplosione dei colpi +40% · lv2 Gittata estesa: Raggio d’azione +30% · lv2 Doppia esplosione: I colpi esplodono ancora dopo 1 s · lv3 Gittata massima: Raggio d’azione: altro +30%
+- id nel codice: dmg, proj, fast, salvo1, salvoK, salvo2, mine1, mine2, mineK, mineD, knock, blast, reach, echo, reach2
 
 ### Thunderbolt (`thunder`)
 
 Electric · Sfere sulla barriera, fulmini a tutto schermo. Portata 700 px, ricarica 1,6 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 sfera (+1 sfera, danno −15%); Più rapido (Danno +10%, ricarica −10%).
-- **Chain · Fulmini ramificati** — lv1 Fulmini ramificati: I fulmini si ramificano 4 volte · lv2 Ramificazione II: Fino a 8 ramificazioni · lv3 Ramificazioni debilitanti: Le ramificazioni indeboliscono
-- **Level up** — lv1 Fulmini larghi: Larghezza dei fulmini maggiore · lv2 Sfera sul campo: I fulmini possono creare una sfera · lv2 Paralisi: I fulmini possono paralizzare · lv3 Sfere pungenti: Danni a chi è vicino alle sfere
-- id nel codice: dmg, sph, fast, fork1, fork2, forkW, wide, orb, para, aura
+- **Chain · Fulmini ramificati** — lv1 Fulmini ramificati: I fulmini si ramificano 4 volte · lv2 Ramificazione II: Fino a 6 ramificazioni · lv3 Ramificazioni debilitanti: Indeboliscono e fanno più danno
+- **Chain · Fulmini paralizzanti** — lv1 Fulmini paralizzanti: 30%: il fulmine paralizza i colpiti · lv2 Paralisi prolungata: La paralisi dura 1,5 s invece di 1 · lv2 Scossa continua: Danno elettrico ai paralizzati · lv3 Paralisi totale: Ramificazioni paralizzanti, danno +30%
+- **Level up** — lv1 Fulmini larghi: Larghezza dei fulmini maggiore · lv1 Sfera sul campo: I fulmini possono creare una sfera · lv2 Doppio fulmine: 50%: il fulmine colpisce ancora · lv2 Fulmini corrosivi: I fulmini rendono vulnerabili · lv3 Sfere pungenti: Danni a chi è vicino alle sfere
+- id nel codice: dmg, sph, fast, fork1, fork2, forkW, para1, paraT, paraD, para3, wide, orb, twice, vuln, aura
 
 ### Beam (`beam`)
 
 Energy · Raggio che colpisce il bersaglio per tutta la durata. Portata 380 px, ricarica 3,4 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Durata estesa (Durata del raggio +30%); Ricarica ridotta (Ricarica −12%).
-- **Chain · Raggio ramificato** — lv1 Raggio ramificato: Colpisce un bersaglio in più · lv2 Doppia ramificazione: Un altro bersaglio in più · lv3 Attrazione: I bersagli si avvicinano tra loro
-- **Level up** — lv1 Vulnerabilità: Il raggio rende i nemici vulnerabili · lv2 Ritmo accelerato: Il danno del raggio è più rapido · lv3 Secondo laser: Genera un secondo laser
-- id nel codice: dmg, dur, cd, fork1, fork2, pull, vuln, pace, second
+- **Chain · Raggio ramificato** — lv1 Raggio ramificato: Colpisce 2 bersagli in più · lv2 Attrazione: I bersagli si avvicinano al primo · lv3 Base esplosiva: Esplosioni ripetute sul primo bersaglio
+- **Chain · Raggio amplificato** — lv1 Raggio amplificato: Il danno sul bersaglio sale fino al 200% · lv2 Amplificazione continua: Cambiando bersaglio non si azzera · lv3 Amplificazione massima: Il danno sale fino al 400%
+- **Level up** — lv1 Vulnerabilità: Il raggio rende i nemici vulnerabili · lv1 Ritmo accelerato: Il danno del raggio è più rapido · lv2 Raggio vorace: Ogni uccisione lo allunga (fino a ×2) · lv2 Cacciatore di boss: Più danno a mini-boss e boss · lv3 Secondo laser: Genera un secondo laser
+- id nel codice: dmg, dur, cd, fork1, pull, forkX, amp1, amp2, amp3, vuln, pace, feed, boss, second
 
 ### Firewheel Drone (`wheel`)
 
@@ -174,10 +183,10 @@ Fire · Drone lanciafiamme che rimbalza sullo schermo. Portata 380 px, ricarica 
 
 Force · Sciame di droni a ricerca. Portata 380 px, ricarica 7,0 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 drone (+1 drone, danno −15%); Più colpi (I droni sparano 2 volte in più).
-- **Chain · Onda iniziale** — lv1 Onda iniziale: Il primo colpo è un’onda d’urto in avanti · lv2 Onda rallentante: L’onda rallenta i nemici · lv3 Onda finale: Anche l’ultimo colpo è un’onda
+- **Chain · Onda iniziale** — lv1 Onda iniziale: Il primo colpo è un’onda d’urto in avanti · lv2 Onda ampia: L’onda arriva più lontano · lv2 Onda rallentante: L’onda rallenta i nemici · lv3 Onda finale: Anche l’ultimo colpo è un’onda
 - **Chain · Sciame** — lv1 Sciame: 35%: a fine vita lancia un nuovo drone · lv2 Sciame II: Il nuovo drone può essere di lv 2 · lv3 Sciame III: Il nuovo drone può essere di lv 3
 - **Level up** — lv1 Evoluzione I: Dopo 3 colpi: +1 proiettile · lv2 Evoluzione II: Dopo altri 3 colpi: +2 proiettili · lv3 Resistenza: Ogni drone ha il 30% di restare ancora
-- id nel codice: dmg, drone, hits, wave1, wave2, wave3, seed1, seed2, seed3, evo1, evo2, stay
+- id nel codice: dmg, drone, hits, wave1, waveR, wave2, wave3, seed1, seed2, seed3, evo1, evo2, stay
 
 ### Railgun (`rail`)
 
@@ -224,14 +233,30 @@ Force · Buco nero che attrae e danneggia. Portata 260 px, ricarica 5,5 s.
 Accettati: tutti tranne quelli segnati **[da rivedere]**.
 
 - Sky Guard: 3 mini-missili al lv1 (dove la descrizione diceva “X”), bruciatura 3 s, area infuocata 5 s  **[Claude]**
-- Laser: spazzata di 1,6 s su 180°, raggi extra sfalsati di circa 10°, indebolimento 2,5 s  **[da rivedere]**
+- Sky Guard (revisione 1): mini-missile esplosivo = area piena del missile principale (30 px, cresce con “Raggio d’impatto”) al 35% del danno;
+  Missili incendiari = bruciatura 3 s a 6 al secondo su chi è colpito dall’impatto; Bruciatura intensa = +60% su tutte le bruciature della Sky Guard
+  (anche area infuocata e scia); Combustione = esplosione di 40 px al 60% del danno del missile, solo per chi muore con una bruciatura **della Sky Guard**
+  (scelta di Marco), può fare esplodere a catena altri bruciati; Doppio impatto = seconda esplosione dopo 0,5 s al 60%, senza mini-missili né area infuocata  **[da rivedere]**
+- Laser: spazzata di **3 s** su 180° **[deciso]**; mini-raggi sfalsati di circa 10°, larghi il 60%, danno 40% del raggio principale (70% con la chain lv2),
+  indebolimento 2,5 s dai raggi fissi (non dalla spazzata). I rimbalzi valgono solo per il raggio principale **[deciso]**; i mini-raggi li usano
+  dal lv3 della chain e solo allora pagano il −20% per pila  **[da rivedere]**
 - Disruption Drone: campo 6 s, ricarica 8 s da quando finisce, danno 8 per colpo, colpo ogni 1 s (0,6 s con il lv3), altezza base ±16 px, arretramento 90 px  **[Claude]**
 - Disruption Drone: teletrasporto lv3 = 20% della vita attuale; scarica = 3× danno del campo, seconda dopo 0,4 s, stack azzerati dopo la scarica  **[Claude]**
+- Disruption Drone (revisione 1): Esplosione finale = 3× il danno di un colpo del campo su tutta la fascia; Campo attrattivo = danno +40% e a ogni colpo
+  il nemico fa metà della strada verso la linea centrale del campo (anche verso il basso; non i boss)  **[da rivedere]**
 - Aeroblast: schegge al 30% del danno, seconda salva dopo 0,5 s, mine di 25 s, doppia esplosione al 60% dopo 1 s  **[Claude]**
-- Thunderbolt: fulmine ogni 1,6 s, ramificazioni al 50%, sfera sul campo 30% per 4 s, paralisi 20% per 1 s  **[Claude]**
-- Beam: durata 1,8 s, ramificazioni entro 220 px, attrazione verso il baricentro  **[Claude]**
+- Aeroblast (revisione 1): Esplosioni ampie = raggio 40 → 56 px; Gittata massima = altri +30% della portata base, che si somma a Gittata estesa (260 → 338 → 416 px)  **[da rivedere]**
+- Thunderbolt: fulmine ogni 1,6 s, ramificazioni al 50%, sfera sul campo 30% per 4 s  **[Claude]**
+- Thunderbolt (revisione 1): paralisi della chain **30% per 1 s** (1,5 s al lv2) **[deciso]**; Scossa continua = un colpo ogni 0,3 s al 25% del danno del fulmine
+  finché dura la paralisi; Ramificazioni debilitanti = ramificazioni al 75% invece del 50%; Paralisi totale = +30% di danno a fulmine e ramificazioni;
+  Doppio fulmine = 50% di un secondo fulmine dopo 0,2 s nello stesso punto; Fulmini corrosivi = vulnerabilità 2,5 s a tutti i danni dal fulmine principale  **[da rivedere]**
+- Beam: durata 1,8 s, ramificazioni entro 220 px  **[Claude]**
+- Beam (revisione 1): Attrazione = le ramificazioni sono tirate verso il bersaglio principale da cui partono; Base esplosiva = esplosione di 40 px ogni 0,5 s
+  sul bersaglio principale, al 50% del danno al secondo; Raggio amplificato = +70% al secondo sul solo bersaglio principale (al 200% in circa 1,4 s,
+  al 400% in circa 4,3 s), si riparte da 100% a ogni attivazione; Raggio vorace = +25% della durata per uccisione del bersaglio principale, fino al doppio;
+  Cacciatore di boss = +50% di danno a mini-boss e boss  **[da rivedere]**
 - Firewheel: durata 5 s, 2 mini-droni, sosta 2,5 s, scia 2 s  **[Claude]**
-- Hive: 3 droni base, 4 colpi base (+2 per pila), onda 130 px circa ±35°, evoluzione 1→2→4 proiettili. Sciame 35% = probabilità che a fine vita un drone ne lanci uno nuovo; resistenza 30% = probabilità che ogni drone resti ancora per un’altra durata intera  **[Claude]**
+- Hive: 3 droni base, 4 colpi base (+2 per pila), droni che sparano entro **62 px** (prima 125) **[deciso]** e si avvicinano fino a 45 px, onda 130 px circa ±35° (182 px con Onda ampia), evoluzione 1→2→4 proiettili. Sciame 35% = probabilità che a fine vita un drone ne lanci uno nuovo; resistenza 30% = probabilità che ogni drone resti ancora per un’altra durata intera  **[Claude]**
 - Railgun: perforazione base 3, divisione a ±20°, Slancio +15% per nemico  **[Claude]**
 - Teslacoil: carica 0,7 s, sfera statica 2 s (3,5 s al lv3), esplosione a catena su 5 nemici al 40%  **[Claude]**
 - Gravity Vortex Gun: wormhole 4 s  **[Claude]**
@@ -261,19 +286,17 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
-Obiettivo § 3: 2 chain complete (1 lv1, 2 lv2, 1 lv3) e 2 level up a lv1 e lv2 per ogni torre.
+Obiettivo § 3: per ogni torre e per il personaggio una chain da 1 lv1, 2 lv2, 1 lv3 e una da 1 lv1, 1 lv2, 1 lv3; 2 level up a lv1 e a lv2, almeno 1 a lv3.
+Complete: **Sky Guard, Disruption Drone, Aeroblast, Thunderbolt** (revisione 1).
 
-- **Sky Guard**: Frammentazione, seconda voce lv2 · seconda chain intera · level up: 1 voce lv2
-- **Laser**: Raggi multipli, seconda voce lv2 · Raggio spazzante, seconda voce lv2
-- **Disruption Drone**: Teletrasporto, seconda voce lv2 · level up: 1 lv1, 1 lv2
-- **Aeroblast**: level up: 1 lv1, 1 lv2
-- **Thunderbolt**: Fulmini ramificati, seconda voce lv2 · seconda chain intera · level up: 1 lv1
-- **Beam**: Raggio ramificato, seconda voce lv2 · seconda chain intera · level up: 1 lv1, 1 lv2
-- **Firewheel Drone**: Mini-droni, seconda voce lv2 · seconda chain intera · level up: 1 lv1, 1 lv2
-- **Hive**: Onda, seconda voce lv2 · Sciame, seconda voce lv2 · level up: 1 lv1, 1 lv2
-- **Railgun**: Proiettile diviso, seconda voce lv2 · seconda chain intera · level up: 1 lv1, 1 lv2
-- **Teslacoil**: Sfera statica, seconda voce lv2 · seconda chain intera · level up: 1 lv1, 2 lv2 reali (sostituiscono “Ricarica rapida”, provvisoria)
-- **Gravity Vortex Gun**: Wormhole, seconda voce lv2 · Buco nero statico, seconda voce lv2 · level up: 1 lv1, 1 lv2, lv3 reale (sostituisce “Collasso”, provvisorio)
+- **Personaggio**: Frenesia e Colpi esplosivi hanno entrambe 2 voci lv2: una delle due va ridotta a 1
+- **Laser**: level up: 1 lv2 (tolto “Indebolimento”, spostato nella chain Raggi multipli)
+- **Beam**: Raggio ramificato e Raggio amplificato hanno entrambe 1 voce lv2: a una delle due ne serve una seconda
+- **Hive**: level up: 1 lv1, 1 lv2 (idee di Claude proposte a Marco, da scegliere)
+- **Firewheel Drone**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 1 lv2
+- **Railgun**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 1 lv2
+- **Teslacoil**: seconda chain intera (una delle due con 2 voci lv2) · level up: 1 lv1, 2 lv2 reali (sostituiscono “Ricarica rapida”, provvisoria)
+- **Gravity Vortex Gun**: Wormhole o Buco nero statico, seconda voce lv2 · level up: 1 lv1, 1 lv2, lv3 reale (sostituisce “Collasso”, provvisorio)
 - **Combo**: nessuna definita (due esempi in § 11)
 
 ## 13. Da costruire

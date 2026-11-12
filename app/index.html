@@ -198,25 +198,30 @@ const TURRETS = {
     S("rad", "Raggio d’impatto", "Raggio d’impatto +30%"),
     C("split1", "split", 1, "Frammentazione", "All’impatto: 3 mini-missili"),
     C("split2", "split", 2, "Frammentazione II", "I mini-missili diventano 6"),
+    C("splitB", "split", 2, "Mini-missili esplosivi", "50%: i mini-missili esplodono ad area"),
     C("split3", "split", 3, "Frammentazione III", "I mini-missili diventano 9"),
+    C("burn1", "burn", 1, "Missili incendiari", "I missili principali bruciano i colpiti"),
+    C("burn2", "burn", 2, "Bruciatura intensa", "Danno da bruciatura +60%"),
+    C("burn3", "burn", 3, "Combustione", "Chi muore bruciato esplode ad area"),
     L("fire", 1, "Area infuocata", "L’impatto brucia l’area per 5 s"),
     L("impact", 1, "Impatto devastante", "Danno da impatto molto più alto"),
     L("pass", 2, "Scia incendiaria", "I missili bruciano chi attraversano"),
+    L("again", 2, "Doppio impatto", "Seconda esplosione dopo l’impatto"),
     L("plus2", 3, "Salva potenziata", "+2 missili per lancio"),
   ]},
   laser: { name: "Laser", type: "energy", range: 900, reload: 5.0, blurb: "Raggi fissi che trapassano tutto", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
-    S("bounce", "+1 rimbalzo", "Rimbalzo sui bordi, danno −20%"),
+    S("bounce", "+1 rimbalzo", "Raggio principale: rimbalzo, danno −20%"),
     S("dur", "Durata maggiorata", "Durata dei raggi +30%"),
-    C("multi1", "multi", 1, "Raggi multipli", "+1 raggio fisso"),
-    C("multi2", "multi", 2, "Raggi multipli II", "+2 raggi fissi in totale"),
-    C("multi3", "multi", 3, "Raggi multipli III", "+3 raggi fissi in totale"),
+    C("multi1", "multi", 1, "Raggi multipli", "+2 mini-raggi fissi, danno minore"),
+    C("multiW", "multi", 2, "Raggi debilitanti", "Raggio e mini-raggi indeboliscono"),
+    C("multiD", "multi", 2, "Mini-raggi potenziati", "Danno dei mini-raggi maggiore"),
+    C("multi3", "multi", 3, "Mini-raggi rimbalzanti", "Anche i mini-raggi rimbalzano"),
     C("sweep1", "sweep", 1, "Raggio spazzante", "Un raggio attraversa lo schermo"),
     C("sweep2", "sweep", 2, "Spazzata rallentante", "Il raggio rallenta i colpiti"),
     C("sweep3", "sweep", 3, "Doppia spazzata", "Seconda spazzata in senso opposto"),
     L("wide", 1, "Raggio largo", "Larghezza dei raggi +100%"),
     L("longer", 1, "Raggio persistente", "Durata dei raggi molto maggiore"),
-    L("weaken", 2, "Indebolimento", "I nemici colpiti sono indeboliti"),
     L("exploit", 2, "Sfruttare i debuff", "Più danno a chi ha un debuff"),
     L("debuffdur", 3, "Debuff prolungati", "I debuff durano di più"),
   ]},
@@ -232,8 +237,10 @@ const TURRETS = {
     C("dst5", "dst", 2, "Distruzione estesa", "Stack massimo da 3 a 5"),
     C("dst3", "dst", 3, "Doppia scarica", "Una seconda scarica a stack massimo"),
     L("reload", 1, "Ricarica rapida", "Ricarica leggermente ridotta"),
+    L("blast", 1, "Esplosione finale", "A fine durata il campo esplode"),
     L("amp", 2, "Campo destabilizzante", "Più danni dalle altre torri nel campo"),
-    L("tick", 3, "Pulsazione rapida", "Il campo danneggia più spesso"),
+    L("tick", 2, "Pulsazione rapida", "Il campo danneggia più spesso"),
+    L("grip", 3, "Campo attrattivo", "Più danno, attira verso il centro"),
   ]},
   aero: { name: "Aeroblast", type: "physical", range: 260, reload: 2.6, blurb: "Colpi esplosivi con knockback, corto raggio", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
@@ -241,37 +248,48 @@ const TURRETS = {
     S("fast", "Più rapido", "Danno +10%, ricarica −10%"),
     C("salvo1", "salvo", 1, "Salva di schegge", "Dopo il colpo: 5 proiettili minori"),
     C("salvoK", "salvo", 2, "Schegge d’urto", "Le schegge causano knockback"),
-    C("salvo7", "salvo", 2, "Più schegge", "Le schegge diventano 7"),
     C("salvo2", "salvo", 3, "Doppia salva", "Le schegge partono due volte"),
     C("mine1", "mine", 1, "Mine", "Ogni colpo rilascia una mina"),
     C("mine2", "mine", 2, "Più mine", "2 mine per colpo"),
     C("mineK", "mine", 2, "Mine d’urto", "Le mine causano knockback"),
     C("mineD", "mine", 3, "Mine potenziate", "Le mine fanno più danno"),
     L("knock", 1, "Spinta maggiore", "Knockback molto più forte"),
+    L("blast", 1, "Esplosioni ampie", "Raggio d’esplosione dei colpi +40%"),
     L("reach", 2, "Gittata estesa", "Raggio d’azione +30%"),
-    L("echo", 3, "Doppia esplosione", "I colpi esplodono ancora dopo 1 s"),
+    L("echo", 2, "Doppia esplosione", "I colpi esplodono ancora dopo 1 s"),
+    L("reach2", 3, "Gittata massima", "Raggio d’azione: altro +30%"),
   ]},
   thunder: { name: "Thunderbolt", type: "electric", range: 700, reload: 1.6, blurb: "Sfere sulla barriera, fulmini a tutto schermo", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
     S("sph", "+1 sfera", "+1 sfera, danno −15%"),
     S("fast", "Più rapido", "Danno +10%, ricarica −10%"),
     C("fork1", "fork", 1, "Fulmini ramificati", "I fulmini si ramificano 4 volte"),
-    C("fork2", "fork", 2, "Ramificazione II", "Fino a 8 ramificazioni"),
-    C("forkW", "fork", 3, "Ramificazioni debilitanti", "Le ramificazioni indeboliscono"),
+    C("fork2", "fork", 2, "Ramificazione II", "Fino a 6 ramificazioni"),
+    C("forkW", "fork", 3, "Ramificazioni debilitanti", "Indeboliscono e fanno più danno"),
+    C("para1", "para", 1, "Fulmini paralizzanti", "30%: il fulmine paralizza i colpiti"),
+    C("paraT", "para", 2, "Paralisi prolungata", "La paralisi dura 1,5 s invece di 1"),
+    C("paraD", "para", 2, "Scossa continua", "Danno elettrico ai paralizzati"),
+    C("para3", "para", 3, "Paralisi totale", "Ramificazioni paralizzanti, danno +30%"),
     L("wide", 1, "Fulmini larghi", "Larghezza dei fulmini maggiore"),
-    L("orb", 2, "Sfera sul campo", "I fulmini possono creare una sfera"),
-    L("para", 2, "Paralisi", "I fulmini possono paralizzare"),
+    L("orb", 1, "Sfera sul campo", "I fulmini possono creare una sfera"),
+    L("twice", 2, "Doppio fulmine", "50%: il fulmine colpisce ancora"),
+    L("vuln", 2, "Fulmini corrosivi", "I fulmini rendono vulnerabili"),
     L("aura", 3, "Sfere pungenti", "Danni a chi è vicino alle sfere"),
   ]},
   beam: { name: "Beam", type: "energy", range: 380, reload: 3.4, blurb: "Raggio che colpisce il bersaglio per tutta la durata", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
     S("dur", "Durata estesa", "Durata del raggio +30%"),
     S("cd", "Ricarica ridotta", "Ricarica −12%"),
-    C("fork1", "fork", 1, "Raggio ramificato", "Colpisce un bersaglio in più"),
-    C("fork2", "fork", 2, "Doppia ramificazione", "Un altro bersaglio in più"),
-    C("pull", "fork", 3, "Attrazione", "I bersagli si avvicinano tra loro"),
+    C("fork1", "fork", 1, "Raggio ramificato", "Colpisce 2 bersagli in più"),
+    C("pull", "fork", 2, "Attrazione", "I bersagli si avvicinano al primo"),
+    C("forkX", "fork", 3, "Base esplosiva", "Esplosioni ripetute sul primo bersaglio"),
+    C("amp1", "amp", 1, "Raggio amplificato", "Il danno sul bersaglio sale fino al 200%"),
+    C("amp2", "amp", 2, "Amplificazione continua", "Cambiando bersaglio non si azzera"),
+    C("amp3", "amp", 3, "Amplificazione massima", "Il danno sale fino al 400%"),
     L("vuln", 1, "Vulnerabilità", "Il raggio rende i nemici vulnerabili"),
-    L("pace", 2, "Ritmo accelerato", "Il danno del raggio è più rapido"),
+    L("pace", 1, "Ritmo accelerato", "Il danno del raggio è più rapido"),
+    L("feed", 2, "Raggio vorace", "Ogni uccisione lo allunga (fino a ×2)"),
+    L("boss", 2, "Cacciatore di boss", "Più danno a mini-boss e boss"),
     L("second", 3, "Secondo laser", "Genera un secondo laser"),
   ]},
   wheel: { name: "Firewheel Drone", type: "fire", range: 380, reload: 6.5, blurb: "Drone lanciafiamme che rimbalza sullo schermo", ups: [
@@ -290,6 +308,7 @@ const TURRETS = {
     S("drone", "+1 drone", "+1 drone, danno −15%"),
     S("hits", "Più colpi", "I droni sparano 2 volte in più"),
     C("wave1", "wave", 1, "Onda iniziale", "Il primo colpo è un’onda d’urto in avanti"),
+    C("waveR", "wave", 2, "Onda ampia", "L’onda arriva più lontano"),
     C("wave2", "wave", 2, "Onda rallentante", "L’onda rallenta i nemici"),
     C("wave3", "wave", 3, "Onda finale", "Anche l’ultimo colpo è un’onda"),
     C("seed1", "seed", 1, "Sciame", "35%: a fine vita lancia un nuovo drone"),
@@ -403,7 +422,7 @@ const randEnemy = () => { const l = living(); return l.length ? l[Math.floor(Mat
 const N = (s, id) => s.up[id] || 0;
 const has = (s, id) => (s.up[id] || 0) > 0;
 const dmgM = (s) => (1 + 0.25 * N(s, "dmg")) * (1 + 0.1 * N(s, "fast"));
-const rangeOf = (s) => s.def.range * (has(s, "reach") ? 1.3 : 1);
+const rangeOf = (s) => s.def.range * (1 + (has(s, "reach") ? 0.3 : 0) + (has(s, "reach2") ? 0.3 : 0));
 const cdOf = (s) => s.def.reload * Math.pow(0.88, N(s, "cd")) * Math.pow(0.9, N(s, "fast"))
   * (has(s, "reload") ? 0.85 : 1) * (has(s, "quick") ? 0.8 : 1);
 
@@ -444,12 +463,17 @@ function damage(e, base, type, quiet, src) {
   if (e.fieldT > 0 && src !== "disr") mult *= e.fieldAmp;
   const d = base * mult;
   e.hp -= d; e.flash = 0.06;
-  if (e.hp <= 0) e.dead = true;
+  if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
     if (e.accT > 0) return;
     e.accT = 0.45; popup(e, e.acc, mult); e.acc = 0;
   } else popup(e, d, mult);
+}
+
+// effetti alla morte di un nemico (tutte le morti passano da damage)
+function onDeath(e) {
+  if (e.burnT > 0 && e.skyBurnT > 0 && e.skyBurnS && has(e.skyBurnS, "burn3")) { const s = e.skyBurnS, x = e.x, y = e.y; later(0.05, () => skyCombust(s, x, y)); }
 }
 
 // ---- entità temporanee: ognuna ha update(dt), draw() e dead ----
@@ -556,7 +580,7 @@ function missile(s, x, y, mini, target) {
       this.a += clamp(d, -turn * dt, turn * dt);
       this.x += Math.cos(this.a) * sp * dt; this.y += Math.sin(this.a) * sp * dt;
       if (has(s, "pass") && !mini)
-        for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 10) burn(e, 3, 5 * dmgM(s));
+        for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 10) skyBurn(s, e, 3, 5 * dmgM(s));
       if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; skyImpact(s, this.x, this.y, mini); }
       else if (this.age > 9) this.dead = true;
     },
@@ -566,43 +590,63 @@ function missile(s, x, y, mini, target) {
       poly([[x + ca * L, y + sa * L], [x - ca * L - sa * wd, y - sa * L + ca * wd], [x - ca * L + sa * wd, y - sa * L - ca * wd]], "#e8eefc", TYPES.fire.color, 1.2);
     } });
 }
-function skyImpact(s, x, y, mini) {
-  const st = skyStats(s), dmg = mini ? st.dmg * 0.35 : st.dmg, rad = mini ? 14 : st.rad;
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, dmg, "fire", false, "sky");
-  ring(x, y, rad, TYPES.fire.color, 0.3);
-  if (mini) return;
+// echo = seconda esplosione del level up “Doppio impatto” (60% del danno, senza effetti aggiuntivi)
+function skyImpact(s, x, y, mini, echo) {
+  const st = skyStats(s), big = mini && has(s, "splitB") && Math.random() < 0.5;    // mini-missile esplosivo: area piena
+  const dmg = mini ? st.dmg * 0.35 : echo ? st.dmg * 0.6 : st.dmg, rad = mini && !big ? 14 : st.rad;
+  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) {
+    damage(e, dmg, "fire", false, "sky");
+    if (!mini && !echo && !e.dead && has(s, "burn1")) skyBurn(s, e, 3, 6 * dmgM(s));
+  }
+  ring(x, y, rad, TYPES.fire.color, big || echo ? 0.4 : 0.3);
+  if (mini || echo) return;
   const splits = has(s, "split3") ? 9 : has(s, "split2") ? 6 : has(s, "split1") ? 3 : 0;
   for (let k = 0; k < splits; k++) missile(s, x, y, true, randEnemy());
-  if (has(s, "fire")) zone(x, y, rad, 5, (e) => burn(e, 1.5, 5 * dmgM(s)), TYPES.fire.color);
+  if (has(s, "fire")) zone(x, y, rad, 5, (e) => skyBurn(s, e, 1.5, 5 * dmgM(s)), TYPES.fire.color);
+  if (has(s, "again")) later(0.5, () => skyImpact(s, x, y, false, true));
+}
+// tutte le bruciature della Sky Guard passano da qui: chain Bruciatura (danno +60%, esplosione alla morte)
+function skyBurn(s, e, t, dps) {
+  burn(e, t, dps * (has(s, "burn2") ? 1.6 : 1));
+  e.skyBurnT = Math.max(e.skyBurnT, t); e.skyBurnS = s;
+}
+function skyCombust(s, x, y) {                 // Combustione: chi muore bruciato dalla Sky Guard esplode
+  const rad = 40;
+  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, skyStats(s).dmg * 0.6, "fire", false, "sky");
+  ring(x, y, rad, "#ffb347", 0.4);
 }
 
 // ---------- 2. LASER (energy) ----------
-function laserHit(s, e, amount, dbMul) {
+// wk = il raggio indebolisce (chain Raggi multipli lv2: raggio principale e mini-raggi, non la spazzata)
+function laserHit(s, e, amount, dbMul, wk) {
   let d = amount;
   if (has(s, "exploit") && debuffed(e)) d *= 1.5;
   damage(e, d, "energy", true, "laser");
-  if (has(s, "weaken")) weaken(e, 2.5 * dbMul);
+  if (wk && has(s, "multiW")) weaken(e, 2.5 * dbMul);
 }
 function laserFire(s) {
   const pos = { x: s.x, y: s.y - 8 }, t = pickTargets(pos, rangeOf(s), 1)[0];
   if (!t) return false;
   const base = Math.atan2(t.y - pos.y, t.x - pos.x);
-  const extra = has(s, "multi3") ? 3 : has(s, "multi2") ? 2 : has(s, "multi1") ? 1 : 0, cnt = 1 + extra;
   const dur = 2.2 * (1 + 0.3 * N(s, "dur")) * (has(s, "longer") ? 1.7 : 1);
-  const w = 8 * (has(s, "wide") ? 2 : 1), bounces = N(s, "bounce");
-  const dps = 20 * dmgM(s) * Math.pow(0.8, bounces), dbMul = has(s, "debuffdur") ? 1.5 : 1;
-  const all = Array.from({ length: cnt }, (_, i) => trace(pos.x, pos.y, base + (i - (cnt - 1) / 2) * 0.17, bounces));
+  const w = 8 * (has(s, "wide") ? 2 : 1), bounces = N(s, "bounce"), dbMul = has(s, "debuffdur") ? 1.5 : 1;
+  // i rimbalzi valgono per il raggio principale; i mini-raggi rimbalzano solo con la chain lv3 (e solo allora pagano il −20%)
+  const rays = [{ segs: trace(pos.x, pos.y, base, bounces), dps: 20 * dmgM(s) * Math.pow(0.8, bounces), w }];
+  if (has(s, "multi1")) {
+    const mb = has(s, "multi3") ? bounces : 0, mdps = 20 * dmgM(s) * (has(s, "multiD") ? 0.7 : 0.4) * Math.pow(0.8, mb);
+    for (const k of [-1, 1]) rays.push({ segs: trace(pos.x, pos.y, base + k * 0.17, mb), dps: mdps, w: w * 0.6 });
+  }
   busy(s, 1);
   spawnEnt({ t: dur, dead: false,
     update(dt) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }
-      for (const segs of all) for (const e of living()) if (hitSegs(e, segs, w)) laserHit(s, e, dps * dt, dbMul);
+      for (const r of rays) for (const e of living()) if (hitSegs(e, r.segs, r.w)) laserHit(s, e, r.dps * dt, dbMul, true);
     },
-    draw() { for (const segs of all) for (const g of segs) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, w * 0.45, 1); } });
+    draw() { for (const r of rays) for (const g of r.segs) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1); } });
   if (has(s, "sweep1")) {
     const slowIt = has(s, "sweep2");
     const sweep = (dir, done) => {
-      let t = 0; const T = 1.6;
+      let t = 0; const T = 3.0;
       spawnEnt({ dead: false, segs: [],
         update(dt) {
           t += dt; if (t >= T) { this.dead = true; done(); return; }
@@ -625,11 +669,12 @@ function disrFire(s) {
   // due droni volano ai lati dello schermo e tra loro si forma il campo: occupa tutta la larghezza;
   // i potenziamenti lo allargano in verticale
   const hh = 16 * (1 + 0.3 * N(s, "height")), dur = 6 * (1 + 0.3 * N(s, "dur"));
-  const tick = has(s, "tick") ? 0.6 : 1.0, dmg = 8 * dmgM(s), x0 = s.x, y0 = s.y - 10;
+  const tick = has(s, "tick") ? 0.6 : 1.0, grip = has(s, "grip"), dmg = 8 * dmgM(s) * (grip ? 1.4 : 1), x0 = s.x, y0 = s.y - 10;
   busy(s, 1);                                             // la ricarica parte solo quando il campo è finito
   spawnEnt({ y: t.y, t: dur, age: 0, acc: 0, dead: false,
     update(dt) {
-      this.age += dt; this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }
+      this.age += dt; this.t -= dt;
+      if (this.t <= 0) { this.dead = true; if (has(s, "blast")) disrBlast(this.y, hh, dmg * 3); busy(s, -1); return; }
       if (this.age < 0.4) return;                           // i droni stanno raggiungendo i lati
       this.acc += dt; const doTick = this.acc >= tick; if (doTick) this.acc = 0;
       for (const e of living())
@@ -639,6 +684,7 @@ function disrFire(s) {
           if (doTick) {
             damage(e, dmg, "force", false, "disr");
             if (e.dead) continue;
+            if (grip && !e.boss) e.y += (this.y - e.y) * 0.5;   // Campo attrattivo: verso la linea centrale del campo
             if (has(s, "dst1")) destruction(s, e, dmg);
             if (has(s, "tp1") && !e.dead) teleportRoll(s, e);
           }
@@ -663,6 +709,11 @@ function disrFire(s) {
     } });
   return true;
 }
+function disrBlast(y, hh, d) {               // Esplosione finale: tutto il campo, a fine durata
+  for (const e of living()) if (Math.abs(e.y - y) <= hh + e.def.r) damage(e, d, "force", false, "disr");
+  spawnEnt({ t: 0.35, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
+    draw() { ctx.globalAlpha = 0.5 * clamp(this.t / 0.35, 0, 1); ctx.fillStyle = "#e6d4ff"; ctx.fillRect(0, y - hh, W, hh * 2); ctx.globalAlpha = 1; } });
+}
 function discharge(e, d) { damage(e, d, "force", false, "disr"); ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.3); }
 function destruction(s, e, dmg) {            // stack "distruzione": −10% danno inflitto, 5 s
   const max = has(s, "dst5") ? 5 : 3;
@@ -682,7 +733,7 @@ function teleportRoll(s, e) {
 
 // ---------- 4. AEROBLAST (physical) ----------
 function aeroStats(s) {
-  return { dmg: 24 * dmgM(s) * Math.pow(0.85, N(s, "proj")), rad: 40, knock: has(s, "knock") ? 30 : 14 };
+  return { dmg: 24 * dmgM(s) * Math.pow(0.85, N(s, "proj")), rad: 40 * (has(s, "blast") ? 1.4 : 1), knock: has(s, "knock") ? 30 : 14 };
 }
 function aeroFire(s) {
   const pos = { x: s.x, y: s.y - 8 }, cnt = 2 + N(s, "proj");
@@ -706,9 +757,8 @@ function aeroBoom(s, x, y, echo) {
   ring(x, y, st.rad, TYPES.physical.color, 0.35);
   if (echo) return;
   if (has(s, "salvo1")) {
-    const cnt = has(s, "salvo7") ? 7 : 5;
-    salvo(s, x, y, cnt);
-    if (has(s, "salvo2")) later(0.5, () => salvo(s, x, y, cnt));
+    salvo(s, x, y, 5);
+    if (has(s, "salvo2")) later(0.5, () => salvo(s, x, y, 5));
   }
   if (has(s, "mine1")) { const m = has(s, "mine2") ? 2 : 1; for (let i = 0; i < m; i++) mine(s, x + rnd(-14, 14), y + rnd(-8, 8)); }
   if (has(s, "echo")) later(1.0, () => aeroBoom(s, x, y, true));
@@ -770,25 +820,35 @@ function thunderFire(s) {
   for (const o of s.st.sph || []) thunderBolt(s, o.x, o.y);
   return true;
 }
-function thunderBolt(s, x, y0) {
-  const w = 10 * (has(s, "wide") ? 1.8 : 1), dmg = 16 * dmgM(s) * Math.pow(0.85, N(s, "sph"));
+// again = colpo in più del level up “Doppio fulmine” (non ne genera altri)
+function thunderBolt(s, x, y0, again) {
+  const w = 10 * (has(s, "wide") ? 1.8 : 1), dmg = 16 * dmgM(s) * Math.pow(0.85, N(s, "sph")) * (has(s, "para3") ? 1.3 : 1);
+  const paraDur = has(s, "paraT") ? 1.5 : 1;
+  const zap = (e) => {                           // chain Fulmini paralizzanti: 30% di paralisi, con la scossa continua se c’è
+    if (e.dead || Math.random() >= 0.3) return;
+    para(e, paraDur);
+    if (has(s, "paraD") && e.paraT > 0) e.shock = Math.max(e.shock, dmg * 0.25);
+  };
   const hit = new Set();
   for (const e of living())
     if (Math.abs(e.x - x) <= w / 2 + e.def.r && e.y <= y0 + 12) {
       hit.add(e); damage(e, dmg, "electric", false, "thunder");
-      if (has(s, "para") && Math.random() < 0.2) para(e, 1.0);
+      if (has(s, "para1")) zap(e);
+      if (has(s, "vuln") && !e.dead) vuln(e, 2.5, "all");
     }
   bolt(zigzag(x, y0, x, 0, 6), TYPES.electric.color, 0.18, w * 0.5);
-  const B = has(s, "fork2") ? 8 : has(s, "fork1") ? 4 : 0;
+  const B = has(s, "fork2") ? 6 : has(s, "fork1") ? 4 : 0;
   for (let k = 0; k < B; k++) {
     let best = null, bd = 130;
     for (const e of living()) { if (hit.has(e) || e.y > y0 + 12) continue; const d = Math.abs(e.x - x); if (d < bd) { bd = d; best = e; } }
     if (!best) break;
-    hit.add(best); damage(best, dmg * 0.5, "electric", false, "thunder");
+    hit.add(best); damage(best, dmg * (has(s, "forkW") ? 0.75 : 0.5), "electric", false, "thunder");
     if (has(s, "forkW")) weaken(best, 3);
+    if (has(s, "para3")) zap(best);
     bolt(zigzag(x, best.y, best.x, best.y, 4), TYPES.electric.color, 0.15, 1.5);
   }
   if (has(s, "orb") && Math.random() < 0.3) { const e = randEnemy(); if (e) fieldOrb(s, e.x, e.y, B || 3, dmg); }
+  if (!again && has(s, "twice") && Math.random() < 0.5) later(0.2, () => thunderBolt(s, x, y0, true));
 }
 function fieldOrb(s, x, y, B, dmg) {
   spawnEnt({ x, y, t: 4, acc: 0, dead: false,
@@ -816,30 +876,45 @@ function beamFire(s) {
   const prim = pickTargets(pos, rng, has(s, "second") ? 2 : 1);
   if (!prim.length) return false;
   const dur = 1.8 * (1 + 0.3 * N(s, "dur")), dps = 24 * dmgM(s) * (has(s, "pace") ? 1.4 : 1);
-  const forks = has(s, "fork2") ? 2 : has(s, "fork1") ? 1 : 0, pull = has(s, "pull");
+  const forks = has(s, "fork1") ? 2 : 0, pull = has(s, "pull"), boom = has(s, "forkX");
+  // Raggio amplificato: il danno sul bersaglio principale sale del 70% al secondo fino al massimo (×2, ×4 al lv3)
+  const ampMax = has(s, "amp3") ? 4 : has(s, "amp1") ? 2 : 1, keepAmp = has(s, "amp2");
   busy(s, 1);
-  spawnEnt({ t: dur, dead: false, links: [],
+  spawnEnt({ t: dur, ext: 0, boomT: 0.5, amp: prim.map(() => 1), dead: false, links: [],
     update(dt) {
       this.t -= dt;
       for (let i = 0; i < prim.length; i++)
         if (prim[i] && (prim[i].dead || dist(prim[i].x, prim[i].y, pos.x, pos.y) > rng + prim[i].def.r)) {
           const used = new Set(prim); prim[i] = pickTargets(pos, rng, 4).find((e) => !used.has(e)) || null;
+          if (!keepAmp) this.amp[i] = 1;
         }
-      const hit = new Set(); this.links = [];
+      const hit = new Set(), branches = []; this.links = [];
       for (const p of prim) {
         if (!p) continue;
         this.links.push([pos, p]); hit.add(p);
         for (let k = 0; k < forks; k++) {
           const nx = nearestTo(p.x, p.y, 220, hit); if (!nx) break;
-          hit.add(nx); this.links.push([p, nx]);
+          hit.add(nx); this.links.push([p, nx]); branches.push([p, nx]);
         }
       }
       if (this.t <= 0 || hit.size === 0) { this.dead = true; busy(s, -1); return; }
-      let cx = 0, cy = 0;
-      for (const e of hit) { damage(e, dps * dt, "energy", true, "beam"); if (has(s, "vuln")) vuln(e, 2, "all"); cx += e.x; cy += e.y; }
-      if (pull && hit.size > 1) {
-        cx /= hit.size; cy /= hit.size;
-        for (const e of hit) { if (e.boss) continue; e.x += (cx - e.x) * Math.min(1, 0.9 * dt); e.y += (cy - e.y) * Math.min(1, 0.9 * dt); }
+      for (let i = 0; i < prim.length; i++) if (prim[i]) this.amp[i] = Math.min(ampMax, this.amp[i] + 0.7 * dt);
+      for (const e of hit) {
+        const i = prim.indexOf(e);
+        const d = dps * dt * (i >= 0 ? this.amp[i] : 1) * (e.boss && has(s, "boss") ? 1.5 : 1);
+        damage(e, d, "energy", true, "beam"); if (has(s, "vuln") && !e.dead) vuln(e, 2, "all");
+        if (i >= 0 && e.dead && has(s, "feed") && this.ext < dur) {      // Raggio vorace: +25% della durata per uccisione, fino al doppio
+          const add = Math.min(dur * 0.25, dur - this.ext); this.ext += add; this.t += add;
+        }
+      }
+      if (pull)                                   // le ramificazioni sono attratte verso il bersaglio principale da cui partono
+        for (const [p, b] of branches) { if (b.boss || b.dead) continue; const k = Math.min(1, 0.9 * dt); b.x += (p.x - b.x) * k; b.y += (p.y - b.y) * k; }
+      if (boom && forks && (this.boomT -= dt) <= 0) {   // Base esplosiva: un’esplosione ogni 0,5 s sul bersaglio principale
+        this.boomT = 0.5;
+        for (const p of prim) if (p) {
+          for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 40 + e.def.r) damage(e, dps * 0.5, "energy", false, "beam");
+          ring(p.x, p.y, 40, TYPES.energy.color, 0.3);
+        }
       }
     },
     draw() { for (const [a, b] of this.links) glow(a.x, a.y - (a === pos ? 0 : 0), b.x, b.y, TYPES.energy.color, 2.6, 1); } });
@@ -900,7 +975,8 @@ function hiveFire(s) {
   for (let k = 0; k < cnt; k++) hiveDrone(s, s.x + (k - (cnt - 1) / 2) * 12, s.y - 12, 1, 0);
   return true;
 }
-const HIVE_RANGE = 125;      // i droni sparano solo se un nemico è entro questa distanza
+const HIVE_RANGE = 62;       // i droni sparano solo se un nemico è entro questa distanza
+const HIVE_STOP = 45;        // i droni si avvicinano al bersaglio fino a questa distanza
 const HIVE_HALF = 0.62;      // semi-apertura dell’onda (rad): un’onda d’urto in avanti
 function hiveTarget(s, d) {
   // regola "vita più alta": tutti i droni puntano lo stesso nemico; altrimenti si distribuiscono
@@ -925,7 +1001,7 @@ function waveFx(x, y, ang, len) {
     } });
 }
 function hiveWave(s, o, dmg, ang) {
-  const len = 130;
+  const len = 130 * (has(s, "waveR") ? 1.4 : 1);
   for (const e of living()) {
     const dx = e.x - o.x, dy = e.y - o.y, d = Math.hypot(dx, dy);
     if (d > len + e.def.r) continue;
@@ -966,7 +1042,7 @@ function hiveDrone(s, x, y, lvl, gen) {
       if (!this.t || this.t.dead || (settings.targeting === "highest" && this.rt <= 0)) { this.t = hiveTarget(s, this); this.rt = 1; }
       if (this.t) {                                       // si avvicina finché è a portata, poi si ferma
         const d = dist(this.t.x, this.t.y, this.x, this.y);
-        if (d > 70) { const mv = Math.min(d - 70, 150 * dt); this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv; }
+        if (d > HIVE_STOP) { const mv = Math.min(d - HIVE_STOP, 150 * dt); this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv; }
       }
       if (this.cd <= 0) this.fire();
       if (this.left <= 0 || this.shots >= this.cap) {
@@ -1348,7 +1424,7 @@ function spawn(q) {
     speed: d.speed * levelSpeed(D) * waveSpeed(wave), curSpeed: 0, dmg: d.dmg * levelDmg(D) * waveDmg(wave),
     flash: 0, phase: rnd(0, 6.28), dead: false, acc: 0, accT: 0, atk: 0.3,
     shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34), rot: rnd(0, 6.28), spin: rnd(-0.8, 0.8),
-    slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
+    slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, skyBurnT: 0, skyBurnS: null, shock: 0, shockCd: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
   });
 }
 
@@ -1387,6 +1463,11 @@ function update(dt) {
     e.paraT = Math.max(0, e.paraT - dt); e.fieldT = Math.max(0, e.fieldT - dt); e.tpCd = Math.max(0, e.tpCd - dt);
     e.accT = Math.max(0, e.accT - dt); e.flash = Math.max(0, e.flash - dt); e.rot += e.spin * dt;
     e.destrT = Math.max(0, e.destrT - dt); if (e.destrT <= 0) e.destrN = 0;
+    e.skyBurnT = Math.max(0, e.skyBurnT - dt);
+    if (e.paraT > 0 && e.shock > 0) {                // scossa continua (Thunderbolt): danno a intervalli finché dura la paralisi
+      e.shockCd -= dt;
+      if (e.shockCd <= 0) { e.shockCd = 0.3; damage(e, e.shock, "electric", true, "thunder"); if (e.dead) continue; }
+    } else { e.shock = 0; e.shockCd = 0; }
     if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, "fire", true, "burn"); if (e.burnT <= 0) e.burnDps = 0; if (e.dead) continue; }
     e.curSpeed = e.speed * (e.slowT > 0 ? 1 - 0.5 * (1 - (e.statRes || 0)) : 1) * (e.paraT > 0 ? 0 : 1);
     if (touchesDome(e)) {

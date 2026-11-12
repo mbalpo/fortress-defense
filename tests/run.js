@@ -24,6 +24,7 @@ const T = [
   ["savetest.js", "salvataggio: esporta, importa, rifiuti", [/Salvataggio importato/]],
   ["swtest.js", "service worker (simulato)", [/installazione → file in cache/]],
   ["menu.js", "interruttore della mira nel menu", [/dopo il tocco: Mira: manuale/]],
+  ["rev1.js", "revisione torri 1: Laser, Sky Guard, Disruption, Aeroblast, Thunderbolt, Beam, Hive", [/mini-raggi lv3\s+raggi: 3 .* ✓/, /Doppio impatto: .* ✓/, /Esplosione finale: .* ✓/, /scossa in 0,95 s: .* ✓/, /amplificato .* ✓/, /onda ampia\s+nemico a 170 px colpito: true ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();

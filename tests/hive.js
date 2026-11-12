@@ -45,5 +45,5 @@ function run(label, ups, toggle, frames = 6000) {
 console.log("\nPartita:");
 run("regola 'più vicino'", {});
 run("regola 'vita più alta'", {}, true);
-run("più colpi ×3 (atteso 10)", { hits: 3 });
+run("più colpi ×3 (atteso 10)", { hits: 3 }, false, 12000);
 run("più colpi ×1 (atteso 6)", { hits: 1 });
