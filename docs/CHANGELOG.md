@@ -3,6 +3,20 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Descrizione delle abilità della barriera (solo documentazione)
+
+Testo di Marco **[deciso]**; nessuna modifica a codice, test o sezioni *(generato)*. Versione del gioco invariata (1.7.0).
+
+- DESIGN.md § 16: inserite le descrizioni delle 9 abilità al posto di “Descrizione di ciascuna come da Marco” (il testo non era nel file).
+- Il vecchio elenco “Aperti” diviso in “Risolti dal testo di Marco” (lato della Repulsiva, Riflettente sotto il 100%, valore base di Ustionante e Minata,
+  Backup una volta, Congelante con l’indebolimento) e nuovi “Aperti” per la fase 3, scritti come domande.
+
+Test: nessuno (solo documentazione).
+
+Catalogo grafico: non cambiato.
+
+Checklist: nuova voce “Fase 3, abilità della barriera: rispondere alle domande aperte del § 16”; togliere “Descrizioni delle abilità della barriera” se presente.
+
 ## 1.7.0 — curva fino al livello 200 e albero sulla lunga durata
 
 Richieste di Marco: i livelli 40 e 50 non devono essere così difficili; la campagna deve arrivare almeno al 200, con un albero che cresca a lungo e tetti più alti

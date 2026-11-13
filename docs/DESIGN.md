@@ -543,7 +543,21 @@ Regole di calcolo **[Claude] [da rivedere]**:
     - **Resistere**: Rigenerazione · Barriera di backup · Barriera impenetrabile
     - **Controllo**: Barriera repulsiva · Barriera congelante · Barriera riflettente
     - **Offesa**: Barriera ustionante · Barriera minata · Barriera potenziante
-- Le abilità con cooldown hanno un ciclo base di 40 s (Impenetrabile: minimo 20 s). Descrizione di ciascuna come da Marco; i numeri per livello sono **[da rivedere]**.
+- Le abilità con cooldown hanno un ciclo base di 40 s (Impenetrabile: minimo 20 s). I numeri per livello sono **[da rivedere]**.
+- **Descrizione delle abilità** **[deciso]** (testo di Marco):
+  1. **Rigenerazione**: +X% di vita ogni volta che la vita scende sotto il 40%, al massimo Y volte; X e Y crescono con il livello dell’abilità.
+  2. **Barriera repulsiva**: ogni 40 s un’onda d’urto dà knockback ai nemici vicini alla barriera. L’onda è larga metà schermo e parte dal lato, sinistro o destro,
+     dove ci sono più nemici; la potenza del knockback cresce con il livello.
+  3. **Barriera riflettente**: ogni 40 s, per X secondi, la barriera riflette verso i nemici parte del danno che le stanno facendo; danno riflesso e durata crescono con il livello.
+  4. **Barriera ustionante**: ogni 40 s, per X secondi, chi colpisce la barriera brucia; la durata cresce con il livello. L’intensità della bruciatura viene dalle statistiche
+     delle torrette di fuoco, se in campo, altrimenti è un valore fisso.
+  5. **Barriera minata**: ogni 40 s compaiono mine lungo il bordo della barriera; il numero cresce con il livello. Il danno delle mine viene dalle statistiche dell’Aeroblast,
+     se in campo, altrimenti è fisso.
+  6. **Barriera congelante**: ogni 40 s la barriera emette un gas refrigerante che indebolisce i nemici che lo toccano; potenza della riduzione ed estensione verticale del gas
+     crescono con il livello.
+  7. **Barriera di backup**: la prima volta che la vita si esaurisce compare una nuova barriera con il X% della vita originale; X cresce con il livello.
+  8. **Barriera potenziante**: ogni 40 s una scarica di energia dà a torrette e guardiano +X% di danno per Y secondi; X e Y crescono con il livello; il bonus è cumulativo con gli altri.
+  9. **Barriera impenetrabile**: ogni X secondi la barriera guadagna 1 immunità a un colpo; X scende con il livello, minimo 20 s.
 
 ### Torrette
 - **Sezione condivisa per tipo** **[deciso]**: danno del tipo, durata degli status, danno di tutte le torrette. Valgono **solo per le torrette** (il guardiano ha già il suo albero e l’equipaggiamento).
@@ -630,6 +644,18 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]**
 - **Da misurare con i bot**: muri 10/20/30 con il pool libero; potenza richiesta fino a 200 livelli (con la formula attuale la vita base dei nemici è ×1,9 al 100 e ×3,2 al 200 rispetto al 30, ma la curva oltre il 30 cambierà);
   costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo.
-- **Aperti** (nodi della barriera): forma di Rigenerazione (la cura riporta sopra la soglia e le cariche si esauriscono in pochi colpi), Riflettente (oltre il 100% del danno subito), valore base di Ustionante e Minata
-  indipendente dalle torrette, lato della Repulsiva (casuale o dove ci sono più nemici), nuovo stato per “velocità di attacco” della Congelante, Potenziante (si somma o moltiplica), tetti di Backup,
-  partenza sfalsata dei cooldown, fusione dei nodi 6 e 7, se i nodi “del tipo” sono per tipo o globali per la durata degli status.
+- **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
+  e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
+  Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.
+- **Aperti** (abilità della barriera, per costruire la fase 3):
+  - Rigenerazione: se la cura è piccola, la vita torna sopra il 40% e ci riscende subito, e le Y cariche finiscono in pochi colpi. Va bene così o serve un intervallo minimo tra due cure?
+  - Ustionante: con due torrette di fuoco in campo (Sky Guard e Firewheel) quale conta? Valore fisso senza torretta di fuoco.
+  - Minata: danno fisso senza Aeroblast; se le mine ereditano anche Mine d’urto e Mine potenziate dell’Aeroblast.
+  - Congelante: l’indebolimento oggi è −35% fisso; per la Congelante la riduzione cresce col livello. Quanto dura il gas.
+  - Potenziante: “cumulativo” = si somma agli altri bonus di danno o li moltiplica.
+  - Impenetrabile: le immunità si accumulano o al massimo 1 alla volta.
+  - Cooldown: a inizio partita le abilità partono tutte insieme o sfalsate; se il tempo continua tra un’ondata e l’altra.
+  - Equipaggiamento delle abilità: le 3 sono una per gruppo o 3 qualsiasi; quale è l’abilità d’ingresso di ogni gruppo (sempre sceglibile) e come si sbloccano le altre (nodo dell’albero, costo).
+  - Livelli di ogni abilità nell’albero e numeri per livello (X, Y, durate, danni, knockback).
+  - Repulsiva: solo knockback o anche danno (il segnaposto di oggi fa 15 di danno force).
+  - Backup e premio della cupola al 100%: a fine livello si confronta la vita con quella della barriera originale o con quella di backup.
