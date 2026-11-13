@@ -32,6 +32,8 @@ const T = [
   ["combo.js", "combo del guardiano: sblocco e effetti delle 11 combo", [/kVortex\s+con vortex .* ✓/, /carta: Guardiano · Combo .* ✓/, /thunder\s+scattate .* ✓/,
     /con mini-raggi e debuff .* ✓/, /con Scarica distruttiva .* ✓/, /mine create .* ✓/, /Ramificazione II .* ✓/, /nuovo bersaglio .* ✓/,
     /mini-droni: 3 .* ✓/, /manuale: .* ✓/, /frammentazioni: .* ✓/, /con Colpo pesante\s+colpi caricati .* ✓/]],
+  ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
+    /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();

@@ -2,7 +2,7 @@ const { JSDOM } = require("jsdom");
 const fs = require("fs");
 const path = require("path");
 const APP = path.join(__dirname, "..", "app");
-const SRC = fs.readFileSync(process.env.GAME_FILE || path.join(APP, "index.html"), "utf8");
+const SRC = require("./src").gameHtml(process.env.GAME_FILE);
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 

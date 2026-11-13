@@ -357,13 +357,17 @@ Ranger · equipaggiamento e chip (§ 15) · più guardiani da scegliere prima de
 (rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
-salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero ·
-schermata iniziale con controllo aggiornamenti e tocco per iniziare (§ 7).
+salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
 
 ## 14. Strumenti di lavoro
 
 - **Checklist di revisione** (artefatto su claude.ai, gestita dal progetto): https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX
 - **Modifiche dal lato codice**: `docs/CHANGELOG.md`, con le voci della checklist da aggiornare.
+- **Catalogo grafico** (`docs/catalogo-grafico.html`): pagina unica con schermate, torrette, guardiano, nemici, proiettili, effetti e animazioni, disegnati dal codice stesso del gioco;
+  serve anche da file da passare ad altre IA per migliorare la grafica. Si rigenera con `npm run catalog` (in automatico prima di `npm test`);
+  un test fallisce se è indietro rispetto ai file del gioco. Ogni voce del CHANGELOG riporta se è stato rigenerato. **[deciso]**
+  (percorso, comando e test **[Claude]**)
+  Il disegno sta in `app/draw.js`, modulo condiviso dal gioco e dal catalogo **[Claude]**.
 
 ## 15. Equipaggiamento e chip (da costruire)
 

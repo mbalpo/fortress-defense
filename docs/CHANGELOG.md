@@ -1,6 +1,49 @@
 # Changelog
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
+Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
+
+## 1.3.0 — catalogo grafico e disegno in un modulo condiviso
+
+Decisioni di Marco: pagina che riusa il codice di disegno, rigenerazione automatica, aggiornamento sempre dichiarato qui.
+Percorso, comando e test proposti da Claude e accettati.
+
+- **Disegno estratto in `app/draw.js`**: primitive, `TURRET_ART`, `drawTurret`, guardiano, `drawEnemy`, `STATUS_ICONS`/`statusIcon`/`drawStatus`,
+  cupola, suolo, fortezza, HUD, avvisi, schermate (menu, carte, ricompensa, pausa, vittoria, sconfitta), `draw()`. I disegni di proiettili ed effetti,
+  prima scritti dentro la logica di ogni torretta, sono ora funzioni di `FX` (22: `ring`, `bolt`, `zone`, `missile`, `laserRays`, …, `guardBullet`);
+  l’entità chiama `FX.<nome>(this, …)` nel suo `draw()`. Anche `ballLightning`, `thunderDraw`, `teslaDraw`; nuove funzioni `drawCrosshair` e `drawFloater`
+  (stesso disegno di prima, separato per poterlo mostrare da solo).
+  Collegamento: `index.html` valuta il testo di `FORTRESS_DRAW` nel proprio ambito (`const DRAW = eval(…)()`), così il codice di disegno è rimasto
+  identico riga per riga e legge lo stato del gioco come prima. Nessun cambio di aspetto o di comportamento.
+- `sw.js`: `./draw.js` aggiunto ad `ASSETS` (`swtest.js` ora si aspetta 8 file); `APP_VERSION` e `VERSION` 1.3.0. `CACHE` invariata (dipende da `VERSION`).
+- **Generatore** `npm run catalog` (`tests/tools/catalog.js`) → `docs/catalogo-grafico.html`, fuori da `app/` (non va nella cache della PWA).
+  Pagina unica, nessuna dipendenza: incorpora `draw.js`, lo script del gioco, CSS e markup di schermata iniziale e salvataggio, le 4 icone come data URI.
+  Contiene: vincoli per chi propone modifiche; 19 schermate (13 del canvas, 3 stati della schermata iniziale, 3 del salvataggio con confirmBox ed errore);
+  11 torrette e guardiano con id, tipo, funzioni, dimensioni misurate e colori; 7 aspetti di nemico, mini-boss e boss finale nei 5 tipi, colpito,
+  barra della vita, 6 indicatori e distruzione da 1 a 5 pile; ogni funzione `FX` animata da sola (con chi la usa) e una scena per torretta, guardiano
+  e combo; carte Standard, Chain, Level up, Combo, Nuova torretta e ricompensa; scena di prova con 4 torrette e 20 nemici; palette; sezione
+  “Da aggiungere” (Ranger, equipaggiamento, Moduli); il codice di `draw.js`; hash, versione e data. Le scene sono il gioco vero in iframe,
+  con orologio comune (play/pausa, +1 e +10 fotogrammi, rallentatore, riavvio). Prima di scrivere, il generatore fa girare ogni scena in jsdom
+  e si ferma se c’è un errore. Riscrive il file solo se l’hash dei file è cambiato (`--force` per rifarlo comunque).
+- **Aggiornamento automatico**: `pretest` lancia il generatore prima di `npm test`; nuovo test `tests/catalog.js`: fallisce se l’hash scritto nel catalogo
+  non è quello dei file attuali (tutti i file di `app/` e il generatore) o se manca una voce di `TURRETS`, `TURRET_ART`, `ENEMY_DEFS`, `STATUS_ICONS`,
+  `FX`, `TYPES` o la scena degli effetti di una torretta. Provato anche al contrario: con `draw.js` cambiato e con due voci tolte fallisce.
+- Test: `tests/src.js` incorpora `draw.js` in `index.html` per jsdom (usato da `bot.js`, `savetest.js`, `splash.js`, `screens.js`).
+- `npm run screenshots`: aggiunte 7 schermate (13 battaglia con 4 torrette e 20 nemici, 14 mini-boss, 15 boss finale, 16 carte Standard/Chain/Level up,
+  17 annuncio dell’ondata, 18 vittoria, 19 sconfitta).
+- DESIGN.md § 13: tolta la voce 'schermata iniziale' (già costruita nella 1.2.0); aggiunta la voce 'catalogo grafico', poi tolta anche questa
+  perché il catalogo è completo e il test è verde. § 14: voce “Catalogo grafico”. CLAUDE.md: `draw.js` nella struttura e nell’architettura,
+  regola 9 (catalogo da controllare e rigenerare). DEPLOY.md: `draw.js` nell’elenco dei file.
+
+Confronto degli screenshot (seed e orologio fissi): le 19 schermate, prese prima dell’estrazione e rifatte dopo, sono **identiche byte per byte**;
+l’unica differenza è `01-menu.png`, per la scritta “v1.3.0” (con la versione riportata a 1.2.0 il file torna identico).
+
+Test: 25 esistenti + `catalog.js`, tutti verdi (`npm test`, 26). Catalogo aperto in un browser: 40 scene e 69 tessere senza errori.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (versione 1.3.0, hash b7ea2f39b599be21…, 13/11/2026).
+
+Checklist: nuova voce “Catalogo grafico: quando cambia la grafica, controllare la pagina e passarla alle altre IA (§ 14)”;
+togliere, se c’è, “Schermata iniziale con controllo aggiornamenti” tra le cose da costruire (§ 13).
 
 ## 1.2.5 — partenza dal livello 2 (solo documentazione)
 

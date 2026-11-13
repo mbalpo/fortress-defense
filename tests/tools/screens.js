@@ -1,6 +1,6 @@
 // Genera le schermate principali in tests/screenshots/ (serve @napi-rs/canvas). Uso: npm run screenshots
 const { JSDOM } = require("jsdom"), fs = require("fs"), path = require("path");
-const SRC = fs.readFileSync(path.join(__dirname, "..", "..", "app", "index.html"), "utf8");
+const SRC = require("../src").gameHtml();
 const OUT = path.join(__dirname, "..", "screenshots"); fs.mkdirSync(OUT, { recursive: true });
 const seeded = (seed) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
 const BUILD = "META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });";
@@ -59,4 +59,25 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
       X.spawn({ enemy: i % 2 ? "shell" : "brute", x }); const e = X.enemies().slice(-1)[0]; Object.assign(e, { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); });
     g.frame(90); const e = X.living()[2]; if (e) X.guardProc(p, { laser: true }, e); X.guardWheel(p); X.guardWheel(p); g.frame(50); g.save("11-combo-battaglia.png");
     g.key("p"); g.frame(); g.key("Tab"); g.frame(); g.save("12-pausa-combo.png"); }
+}
+{ // scene aggiunte per il catalogo grafico: 4 torrette e molti nemici, mini-boss, boss finale, carte Standard/Chain/Level up, annuncio, vittoria, sconfitta
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const setup = (cleared) => { const g = game({ progress: { cleared, seen: ALL_SEEN }, src }); g.key("Enter"); g.frame(); return { g, ev: g.w.__ev }; };
+  const towers = (ev, list) => ev(`(${JSON.stringify(list)}).forEach(([id, lv], i) => { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); s.level = lv; slots[i] = s; })`);
+  const put = (ev, enemy, x, y, extra) => ev(`spawn({ enemy: "${enemy}", x: ${x} }); Object.assign(enemies[enemies.length - 1], { x: ${x}, y: ${y}, speed: 0, spin: 0.6, hp: 1e7, maxHp: 1e7 }, ${JSON.stringify(extra || {})});`);
+  { const { g, ev } = setup(23); ev("queue = []; enemies.length = 0;"); towers(ev, [["thunder", 2], ["beam", 2], ["aero", 2], ["tesla", 2]]);
+    const kinds = ["drone", "wisp", "brute", "spitter", "shell"];
+    for (let i = 0; i < 20; i++) put(ev, kinds[i % 5], 30 + (i * 67) % 300, 150 + Math.floor(i / 5) * 70 + (i % 3) * 12, { hp: 1e7 * (0.4 + 0.15 * (i % 4)) });
+    g.frame(150); g.save("13-battaglia-4-torrette.png"); }
+  { const { g, ev } = setup(23); ev("queue = []; enemies.length = 0; spawn({ enemy: 'boss', def: bossDef(campLevel, 5), x: 180 }); Object.assign(enemies[0], { y: 230, speed: 0, hp: 6e6, maxHp: 1e7 });");
+    g.frame(90); g.save("14-mini-boss.png"); }
+  { const { g, ev } = setup(19); ev("queue = []; enemies.length = 0; spawn({ enemy: 'boss', def: finalBossDef(20), x: 180 }); Object.assign(enemies[0], { y: 240, speed: 0, hp: 7e6, maxHp: 1e7 });");
+    g.frame(90); g.save("15-boss-finale.png"); }
+  { const { g, ev } = setup(23); towers(ev, [["sky", 1], ["rail", 2]]);
+    ev(`const sky = slots[0], rail = slots[1], U = (s, id) => s.def.ups.find((u) => u.id === id);
+      options = [{ kind: "up", who: sky, up: U(sky, "dmg") }, { kind: "up", who: rail, up: rail.def.ups.find((u) => u.cat === "chain" && u.lv === 1) }, { kind: "up", who: player, up: player.def.ups.find((u) => u.cat === "lu" && u.lv === 2) }]; state = "upgrade";`);
+    g.frame(); g.save("16-carte-standard-chain-levelup.png"); }
+  { const { g } = setup(23); g.frame(8); g.save("17-annuncio-ondata.png"); }
+  { const { g, ev } = setup(23); g.frame(200); ev("state = 'won'"); g.frame(); g.save("18-vittoria.png"); }
+  { const { g, ev } = setup(23); g.frame(200); ev("domeHp = 0; state = 'lost'"); g.frame(); g.save("19-sconfitta.png"); }
 }

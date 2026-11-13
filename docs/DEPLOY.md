@@ -3,6 +3,7 @@ FORTRESS DEFENSE · app installabile (PWA)
 
 CONTENUTO
   app/index.html          il gioco
+  app/draw.js             il disegno (grafica del canvas), usato da index.html
   app/manifest.json       nome, colori e icone dell'app
   app/sw.js               service worker: fa partire il gioco anche offline
   app/icon-*.png          icone (192, 512, 512 "maskable" per Android, 180 per iPhone)

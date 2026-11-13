@@ -1,5 +1,5 @@
 const { JSDOM } = require("jsdom"); const fs = require("fs");
-const SRC = fs.readFileSync(require("path").join(__dirname, "..", "app", "index.html"), "utf8");
+const SRC = require("./src").gameHtml();
 const ok = (c) => c ? "✓" : "✗ ERRORE";
 function game(storage) {
   let rafCb = null, t = 0; const texts = [], errors = [], cap = { blob: null, name: null, clip: null };

@@ -1,6 +1,6 @@
 // Schermata iniziale: controllo aggiornamenti (service worker simulato) e tocco su “Start”.
 const { JSDOM } = require("jsdom"), fs = require("fs"), path = require("path");
-const SRC = fs.readFileSync(path.join(__dirname, "..", "app", "index.html"), "utf8").replace("location.reload();", "window.__reload();");
+const SRC = require("./src").gameHtml().replace("location.reload();", "window.__reload();");
 const ok = (c) => c ? "✓" : "✗ ERRORE";
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 

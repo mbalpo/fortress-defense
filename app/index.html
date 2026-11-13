@@ -54,6 +54,7 @@
 </head>
 <body>
 <canvas id="c" aria-label="Campo di battaglia"></canvas>
+<script src="draw.js"></script>
 <div id="splash" role="button" aria-label="Fortress Defense">
   <h1>FORTRESS DEFENSE</h1>
   <img src="icon-512.png" alt="" width="512" height="512">
@@ -84,6 +85,9 @@
 const W = 360, H = 640;
 const cv = document.getElementById("c");
 const ctx = cv.getContext("2d");
+// DISEGNO: sta in draw.js (condiviso con il catalogo grafico). Si valuta qui, dentro l’ambito del gioco, così vede lo stato.
+const DRAW = eval("(" + FORTRESS_DRAW + ")")();
+const { draw, FX, thunderDraw, teslaDraw } = DRAW;
 
 /* =====================================================================
    DATI — tipi di danno, nemici, ondate. I numeri sono segnaposto.
@@ -539,8 +543,7 @@ function later(sec, fn) { spawnEnt({ t: sec, dead: false, draw() {}, update(dt) 
 function ring(x, y, r1, color, life) {
   spawnEnt({ t: life, dead: false,
     update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
-    draw() { const k = clamp(this.t / life, 0, 1); ctx.globalAlpha = k; ctx.strokeStyle = color; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(x, y, r1 * (1 - k * 0.9), 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1; } });
+    draw() { FX.ring(this, x, y, r1, color, life); } });
 }
 function zigzag(x1, y1, x2, y2, amp) {
   const d = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.round(d / 18)), pts = [{ x: x1, y: y1 }];
@@ -550,25 +553,14 @@ function zigzag(x1, y1, x2, y2, amp) {
 function bolt(pts, color, life, w) {
   spawnEnt({ t: life, dead: false,
     update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
-    draw() { ctx.globalAlpha = clamp(this.t / life, 0, 1); ctx.strokeStyle = color; ctx.lineWidth = w || 2; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke(); ctx.globalAlpha = 1; } });
+    draw() { FX.bolt(this, pts, color, life, w); } });
 }
 function zone(x, y, r, life, apply, color) {
   return spawnEnt({ x, y, r, t: life, dead: false,
     update(dt) { this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
       for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= this.r + e.def.r) apply(e, dt); },
-    draw() { ctx.globalAlpha = 0.22 * Math.min(1, this.t / 0.5); ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 0.6 * Math.min(1, this.t / 0.5); ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1; } });
+    draw() { FX.zone(this, color); } });
 }
-function glow(x1, y1, x2, y2, color, w, a) {
-  ctx.lineCap = "round"; ctx.strokeStyle = color;
-  ctx.globalAlpha = 0.25 * a; ctx.lineWidth = w * 2.4; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  ctx.globalAlpha = 0.95 * a; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  ctx.globalAlpha = 1;
-}
-function disc(x, y, r, color, a) { ctx.globalAlpha = a == null ? 1 : a; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1; }
 
 // ---- raggi: tracciamento con rimbalzi sui bordi dello schermo ----
 function trace(x, y, a, bounces) {
@@ -641,11 +633,7 @@ function missile(s, x, y, mini, target) {
       if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; skyImpact(s, this.x, this.y, mini); }
       else if (this.age > 9) this.dead = true;
     },
-    draw() {                                   // missile: corpo, punta e fiamma in coda
-      const ca = Math.cos(this.a), sa = Math.sin(this.a), L = mini ? 5 : 8, wd = mini ? 1.6 : 2.5, x = this.x, y = this.y;
-      disc(x - ca * (L + 2), y - sa * (L + 2), wd + 0.8, "#ffd18a", 0.85);
-      poly([[x + ca * L, y + sa * L], [x - ca * L - sa * wd, y - sa * L + ca * wd], [x - ca * L + sa * wd, y - sa * L - ca * wd]], "#e8eefc", TYPES.fire.color, 1.2);
-    } });
+    draw() { FX.missile(this, mini); } });
 }
 // echo = seconda esplosione del level up “Doppio impatto” (60% del danno, senza effetti aggiuntivi)
 function skyImpact(s, x, y, mini, echo) {
@@ -701,7 +689,7 @@ function laserFire(s) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }
       for (const r of rays) for (const e of living()) if (hitSegs(e, r.segs, r.w)) laserHit(s, e, r.dps * dt, dbMul, true, ign);
     },
-    draw() { for (const r of rays) for (const g of r.segs) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1); } });
+    draw() { FX.laserRays(rays); } });
   if (has(s, "sweep1")) {
     const slowIt = has(s, "sweep2");
     const sweep = (dir, done) => {
@@ -713,7 +701,7 @@ function laserFire(s) {
           this.segs = trace(pos.x, pos.y, ang, 0);
           for (const e of living()) if (hitSegs(e, this.segs, w)) { laserHit(s, e, 18 * dmgM(s) * dt, dbMul, false, ign); if (slowIt) slow(e, 1.5 * dbMul); }
         },
-        draw() { for (const g of this.segs) glow(g.x1, g.y1, g.x2, g.y2, "#7ff6ff", w * 0.4, 0.9); } });
+        draw() { FX.laserSweep(this, w); } });
     };
     busy(s, 1);
     sweep(1, () => { if (has(s, "sweep3")) sweep(-1, () => busy(s, -1)); else busy(s, -1); });
@@ -749,30 +737,14 @@ function disrFire(s) {
           }
         }
     },
-    draw() {
-      const k = clamp(this.age / 0.4, 0, 1), a = clamp(this.t / 0.6, 0, 1);
-      if (k >= 1) {
-        const f = clamp((this.age - 0.4) / 0.2, 0, 1) * a;
-        ctx.globalAlpha = 0.2 * f; ctx.fillStyle = TYPES.force.color; ctx.fillRect(0, this.y - hh, W, hh * 2);
-        ctx.globalAlpha = 0.8 * f; ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(0, this.y - hh); ctx.lineTo(W, this.y - hh); ctx.moveTo(0, this.y + hh); ctx.lineTo(W, this.y + hh); ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-      for (const tx of [14, W - 14]) {
-        const px = x0 + (tx - x0) * k, py = y0 + (this.y - y0) * k;
-        ctx.globalAlpha = k >= 1 ? a : 1;
-        ctx.beginPath(); ctx.moveTo(px, py - 7); ctx.lineTo(px + 7, py); ctx.lineTo(px, py + 7); ctx.lineTo(px - 7, py); ctx.closePath();
-        ctx.fillStyle = TYPES.force.color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-    } });
+    draw() { FX.disrField(this, x0, y0, hh); } });
   return true;
 }
 const disrDmg = (s) => 8 * dmgM(s) * (has(s, "grip") ? 1.4 : 1);
 function disrBlast(y, hh, d) {               // Esplosione finale: tutto il campo, a fine durata
   for (const e of living()) if (Math.abs(e.y - y) <= hh + e.def.r) damage(e, d, "force", false, "disr");
   spawnEnt({ t: 0.35, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
-    draw() { ctx.globalAlpha = 0.5 * clamp(this.t / 0.35, 0, 1); ctx.fillStyle = "#e6d4ff"; ctx.fillRect(0, y - hh, W, hh * 2); ctx.globalAlpha = 1; } });
+    draw() { FX.disrBlast(this, y, hh); } });
 }
 function discharge(e, d) { damage(e, d, "force", false, "disr"); ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.3); }
 function destruction(s, e, dmg) {            // stack "distruzione": −10% danno inflitto, 5 s
@@ -807,7 +779,7 @@ function aeroFire(s) {
         const d = dist(tx, ty, this.x, this.y), mv = 260 * dt;
         if (d <= mv) { this.dead = true; aeroBoom(s, tx, ty, false); } else { this.x += (tx - this.x) / d * mv; this.y += (ty - this.y) / d * mv; }
       },
-      draw() { disc(this.x, this.y, 4.6, "#c7d1e6"); ctx.fillStyle = "#26345c"; ctx.fillRect(this.x - 4.6, this.y - 1, 9.2, 2); disc(this.x, this.y - 5.4, 1.4, "#ffb347"); } });   // bomba
+      draw() { FX.aeroBomb(this); } });
   }
   return true;
 }
@@ -836,7 +808,7 @@ function salvo(s, x, y, cnt) {
           damage(e, st.dmg * 0.3, "physical", false, "aero"); if (has(s, "salvoK")) knock(e, 10); this.dead = true; break;
         }
       },
-      draw() { poly([[this.x, this.y - 3], [this.x + 2.4, this.y + 2], [this.x - 2.4, this.y + 2]], TYPES.physical.color); } });   // scheggia
+      draw() { FX.aeroShard(this); } });
   }
 }
 function mine(s, x, y) {
@@ -852,11 +824,7 @@ function mine(s, x, y) {
         break;
       }
     },
-    draw() {                                   // mina con le punte
-      ctx.strokeStyle = "#8a97b8"; ctx.lineWidth = 1.4; ctx.beginPath();
-      for (let i = 0; i < 4; i++) { const a = i * 0.7854; ctx.moveTo(this.x - Math.cos(a) * 6, this.y - Math.sin(a) * 6); ctx.lineTo(this.x + Math.cos(a) * 6, this.y + Math.sin(a) * 6); }
-      ctx.stroke(); disc(this.x, this.y, 4, "#26345c"); disc(this.x, this.y, 2.2, TYPES.physical.color, 0.6 + 0.4 * Math.sin(this.age * 6));
-    } });
+    draw() { FX.aeroMine(this); } });
 }
 
 // ---------- 5. THUNDERBOLT (electric) ----------
@@ -937,10 +905,7 @@ function fieldOrb(s, x, y, B, dmg) {
         }
       }
     },
-    draw() { disc(this.x, this.y, 6, TYPES.electric.color, 0.9); ring(this.x, this.y, 0, "#fff", 0.001); } });
-}
-function thunderDraw(s) {
-  for (const o of s.st.sph || []) { disc(o.x, o.y, 9, TYPES.electric.color, 0.25); disc(o.x, o.y, 5, "#fff6b0"); }
+    draw() { FX.fieldOrb(this); } });
 }
 
 // ---------- 6. BEAM (energy) ----------
@@ -990,7 +955,7 @@ function beamFire(s) {
         }
       }
     },
-    draw() { for (const [a, b] of this.links) glow(a.x, a.y - (a === pos ? 0 : 0), b.x, b.y, TYPES.energy.color, 2.6, 1); } });
+    draw() { FX.beamLinks(this, pos); } });
   return true;
 }
 
@@ -1048,12 +1013,7 @@ function wheelDrone(s, x, y, a, o) {
       }
       this.trail = this.trail.filter((p) => p.t > 0);
     },
-    draw() {
-      for (const p of this.trail) disc(p.x, p.y, 6, TYPES.fire.color, clamp(p.t / trailT, 0, 1) * 0.5);
-      ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(this.x, this.y, o.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
-      for (let k = 0; k < 3; k++) { const aa = this.rot + k * 2.0944; glow(this.x, this.y, this.x + Math.cos(aa) * o.rad, this.y + Math.sin(aa) * o.rad, "#ffb347", 2, 0.8); }
-      disc(this.x, this.y, o.mini ? 3 : 5, "#ffe0b0");
-    } });
+    draw() { FX.wheelDrone(this, o, trailT); } });
 }
 
 // ---------- 8. HIVE (force) ----------
@@ -1078,15 +1038,7 @@ function hiveTarget(s, d) {
 function waveFx(x, y, ang, len) {
   spawnEnt({ t: 0.35, dead: false,
     update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
-    draw() {
-      const k = 1 - clamp(this.t / 0.35, 0, 1);
-      for (let i = 0; i < 3; i++) {
-        const r = len * clamp(k * 1.2 - i * 0.12, 0, 1); if (r <= 0) continue;
-        ctx.globalAlpha = (1 - k) * 0.9; ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 2.6 - i * 0.7;
-        ctx.beginPath(); ctx.arc(x, y, r, ang - HIVE_HALF, ang + HIVE_HALF); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    } });
+    draw() { FX.hiveWave(this, x, y, ang, len); } });
 }
 function hiveWave(s, o, dmg, ang) {
   const len = 130 * (has(s, "waveR") ? 1.4 : 1);
@@ -1158,11 +1110,7 @@ function hiveDrone(s, x, y, lvl, gen) {
         else this.die();
       }
     },
-    draw() {
-      const r = 4.5 + this.lvl * 1.5, pts = [];
-      for (let i = 0; i < 6; i++) pts.push([this.x + Math.cos(i * 1.0472 + 0.5236) * r, this.y + Math.sin(i * 1.0472 + 0.5236) * r]);
-      poly(pts, this.kami > 0 ? "#ff7a3d" : TYPES.force.color, "#ffffff", 1); disc(this.x, this.y, r * 0.35, "#070b16");
-    } });
+    draw() { FX.hiveDrone(this); } });
   list.push(d0);
 }
 
@@ -1197,11 +1145,7 @@ function railShot(s, x, y, a, st) {
       }
       if (this.x < -20 || this.x > W + 20 || this.y < -20) this.dead = true;
     },
-    draw() {                                   // proiettile a punta con una scia corta (non una linea)
-      const ca = Math.cos(a), sa = Math.sin(a), x = this.x, y = this.y;
-      ctx.globalAlpha = 0.35; ctx.strokeStyle = TYPES.physical.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - ca * 18, y - sa * 18); ctx.lineTo(x - ca * 6, y - sa * 6); ctx.stroke(); ctx.globalAlpha = 1;
-      poly([[x + ca * 7, y + sa * 7], [x - ca * 5 - sa * 3, y - sa * 5 + ca * 3], [x - ca * 5 + sa * 3, y - sa * 5 - ca * 3]], "#f4f7ff", TYPES.physical.color, 1);
-    } });
+    draw() { FX.railShot(this, a); } });
 }
 
 function railBoom(s, x, y, avail, dmg0) {
@@ -1239,26 +1183,7 @@ function teslaBall(s, x, y, target, bounces, hitSet) {
       this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
       if (this.age > 6) this.dead = true;
     },
-    draw() { ballLightning(this.x, this.y, 6, this.age); } });
-}
-// fulmine globulare: alone tremolante, nucleo chiaro e piccoli archi che si staccano dalla superficie (niente Math.random: solo funzione del tempo)
-function ballLightning(x, y, r, age) {
-  const fl = 0.75 + 0.25 * Math.sin(age * 43) * Math.sin(age * 17 + 1);
-  disc(x, y, r * 2.3, TYPES.electric.color, 0.10 * fl);
-  disc(x, y, r * 1.5, TYPES.electric.color, 0.28 * fl);
-  ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.2; ctx.lineCap = "round";
-  for (let k = 0; k < 4; k++) {
-    const a0 = age * (k % 2 ? 5 : -4) + k * 1.571, len = r * (1.5 + 0.7 * Math.sin(age * 29 + k * 3));
-    ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(age * 23 + k));
-    ctx.beginPath(); ctx.moveTo(x + Math.cos(a0) * r * 0.6, y + Math.sin(a0) * r * 0.6);
-    for (let i = 1; i <= 3; i++) {
-      const rr = r * 0.6 + (len - r * 0.6) * i / 3, aa = a0 + 0.35 * Math.sin(age * 61 + i * 2.3 + k);
-      ctx.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  disc(x, y, r * 0.95, "#fff6b0", 0.9); disc(x, y, r * 0.5, "#ffffff");
+    draw() { FX.teslaBall(this); } });
 }
 function teslaBoom(s, x, y, bounces, hitSet) {
   const extra = (teslaChargeT(s) - 0.7) / 0.5;               // mezzi secondi di carica in più
@@ -1279,9 +1204,6 @@ function teslaBoom(s, x, y, bounces, hitSet) {
     const nx = nearestTo(x, y, 170, hitSet);
     if (nx) teslaBall(s, x, y, nx, bounces - 1, hitSet);
   }
-}
-function teslaDraw(s) {
-  if (s.st.charge > 0) { const k = 1 - s.st.charge / (s.st.chargeT || 0.7); ballLightning(s.x, s.y - 20, 2 + 4 * k, s.st.charge * 3); }
 }
 
 // ---------- 11. GRAVITY VORTEX GUN (force) ----------
@@ -1320,13 +1242,7 @@ function vortex(s, pos, a) {
       }
     },
     finish() { this.dead = true; if (has(s, "wh1") && this.A) portals(s, this.A, { x: this.x, y: this.y }); },
-    draw() {
-      disc(this.x, this.y, R, "#1a0b3a", 0.35);
-      ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 2; ctx.globalAlpha = 0.9;
-      ctx.beginPath(); ctx.arc(this.x, this.y, R * 0.6, this.spin, this.spin + 4.2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(this.x, this.y, R * 0.3, -this.spin, -this.spin + 4.2); ctx.stroke(); ctx.globalAlpha = 1;
-      disc(this.x, this.y, 6, "#000");
-    } });
+    draw() { FX.vortex(this, R); } });
 }
 function portals(s, A, B) {
   const rA = 22 * (has(s, "wh2") ? 1.6 : 1);
@@ -1338,13 +1254,7 @@ function portals(s, A, B) {
         if (has(s, "wh3")) slow(e, 2);
       }
     },
-    draw() {
-      const a = clamp(this.t / 0.6, 0, 1);
-      for (const [p, r, c] of [[A, rA, "#7fe8ff"], [B, 18, "#ff9bf0"]]) {
-        ctx.globalAlpha = a; ctx.strokeStyle = c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.stroke();
-        ctx.globalAlpha = 0.25 * a; ctx.fillStyle = c; ctx.fill(); ctx.globalAlpha = 1;
-      }
-    } });
+    draw() { FX.portals(this, A, rA, B); } });
 }
 
 const BEHAV = {
@@ -1453,13 +1363,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
       }
       if (this.y < -20 || this.y > H + 20 || this.x < -20 || this.x > W + 20) this.dead = true;
     },
-    draw() {                                   // tracciante corto (il colpo caricato è più grande, con l’alone elettrico)
-      if (charged) disc(this.x, this.y, 6, TYPES.electric.color, 0.35);
-      ctx.globalAlpha = clone ? 0.6 : 1;
-      ctx.strokeStyle = charged ? "#fff6b0" : TYPES.physical.color; ctx.lineWidth = charged ? 3.4 : fan || frag ? 1.4 : 2.2; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(this.x - this.vx * (charged ? 12 : 7), this.y - this.vy * (charged ? 12 : 7)); ctx.lineTo(this.x, this.y); ctx.stroke();
-      ctx.globalAlpha = 1;
-    } });
+    draw() { FX.guardBullet(this, charged, clone, fan, frag); } });
 }
 
 /* ---------- COMBO DEL GUARDIANO (una per torretta; valori provvisori, DESIGN.md § 10) ---------- */
@@ -1510,7 +1414,7 @@ function laserSpin(s, p, e) {
       if (this.e && !this.e.dead) { this.x = this.e.x; this.y = this.e.y; } else this.e = null;
       for (const r of rays) { const sg = this.segs(r); for (const f of living()) if (hitSegs(f, sg, r.w)) laserHit(s, f, r.dps * dt, dbMul, true, ign); }
     },
-    draw() { for (const r of rays) for (const g of this.segs(r)) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1); } });
+    draw() { FX.laserSpin(this, rays); } });
 }
 
 /* =====================================================================
@@ -1749,477 +1653,7 @@ let pauseTab = "enemies", pauseQuit = false;
 function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; aim.down = false; pauseQuit = false; }
 function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit = false; }
 
-/* =====================================================================
-   DISEGNO
-   ===================================================================== */
-function rr(x, y, w, h, r) {
-  ctx.beginPath(); ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-}
-function txt(s, x, y, size, color, align, weight) {
-  ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillStyle = color || "#e8eefc"; ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
-  ctx.fillText(s, x, y);
-}
-function button(x, y, w, h, label, onTap, opts) {
-  opts = opts || {};
-  buttons.push({ x, y, w, h, onTap });
-  rr(x, y, w, h, 8); ctx.fillStyle = opts.fill || "rgba(18,30,58,0.92)"; ctx.fill();
-  ctx.lineWidth = 1.5; ctx.strokeStyle = opts.stroke || "#2c4272"; ctx.stroke();
-  if (label) txt(label, x + w / 2, y + h / 2 + 1, opts.size || 13, opts.color || "#e8eefc", "center");
-}
-
-function drawDomeFill() {
-  const frac = clamp(domeHp / domeMax, 0, 1);
-  const g = ctx.createRadialGradient(DOME.cx, DOME.cy, 20, DOME.cx, DOME.cy, DOME.ry);
-  g.addColorStop(0, "rgba(63,224,255,0.02)");
-  g.addColorStop(1, "rgba(63,224,255," + (0.05 + 0.13 * frac + domeFlash * 0.5) + ")");
-  ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI, Math.PI * 2); ctx.closePath();
-  ctx.fillStyle = g; ctx.fill();
-}
-function drawDomeEdge() {
-  const frac = clamp(domeHp / domeMax, 0, 1);
-  ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI, Math.PI * 2);
-  ctx.lineWidth = 2 + domeFlash * 8;
-  ctx.strokeStyle = frac > 0.35 ? "rgba(127,232,255," + (0.35 + 0.4 * frac + domeFlash) + ")" : "rgba(255,110,110," + (0.5 + domeFlash) + ")";
-  ctx.stroke();
-}
-function drawGround() {
-  ctx.fillStyle = "#14203f"; ctx.fillRect(0, GROUND_Y, W, GROUND_H);
-  ctx.fillStyle = "#2c4272"; ctx.fillRect(0, GROUND_Y, W, 2);
-  for (let i = 0; i < 4; i++) {
-    if (slots[i]) continue;
-    ctx.setLineDash([3, 3]); ctx.lineWidth = 1.2; ctx.strokeStyle = "#3a5084";
-    ctx.strokeRect(SLOT_X[i] - 9, GROUND_Y - 8, 18, 8); ctx.setLineDash([]);
-  }
-}
-function poly(pts, fill, stroke, lw) {
-  ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath();
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1.2; ctx.stroke(); }
-}
-// una forma diversa per ogni torretta (x = centro, g = suolo, c = colore del tipo di danno)
-const BODY = "#2b3a66", BODY2 = "#44598f", DARK = "#070b16";
-const TURRET_ART = {
-  sky(x, g, c) {                 // lanciamissili: due tubi con le punte dei missili
-    ctx.fillStyle = BODY; ctx.fillRect(x - 11, g - 8, 22, 8);
-    for (const dx of [-5.5, 5.5]) { ctx.fillStyle = BODY2; ctx.fillRect(x + dx - 3.5, g - 22, 7, 15); poly([[x + dx - 3.2, g - 22], [x + dx + 3.2, g - 22], [x + dx, g - 29]], c); }
-  },
-  laser(x, g, c) {               // emettitore: treppiede, canna sottile, lente
-    poly([[x - 10, g], [x + 10, g], [x + 4, g - 9], [x - 4, g - 9]], BODY);
-    ctx.fillStyle = BODY2; ctx.fillRect(x - 2.5, g - 24, 5, 16);
-    disc(x, g - 25, 4.8, c); disc(x, g - 25, 2, "#ffffff", 0.85);
-  },
-  disr(x, g, c) {                // piattaforma con due droni
-    ctx.fillStyle = BODY; ctx.fillRect(x - 11, g - 5, 22, 5); ctx.fillStyle = BODY2; ctx.fillRect(x - 2, g - 12, 4, 8);
-    for (const dx of [-7, 7]) poly([[x + dx, g - 22], [x + dx + 5, g - 16.5], [x + dx, g - 11], [x + dx - 5, g - 16.5]], c, "#ffffff", 0.8);
-  },
-  aero(x, g, c) {                // mortaio: canna corta e larga
-    poly([[x - 6, g], [x + 6, g], [x + 10, g - 17], [x - 10, g - 17]], BODY2);
-    ctx.fillStyle = c; ctx.fillRect(x - 10.5, g - 20, 21, 3.5); ctx.fillStyle = BODY; ctx.fillRect(x - 8, g - 9, 16, 3);
-  },
-  thunder(x, g, c) {             // torre a traliccio con la sfera in cima
-    poly([[x - 7, g], [x + 7, g], [x + 2.5, g - 23], [x - 2.5, g - 23]], BODY, BODY2, 1.2);
-    ctx.strokeStyle = BODY2; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - 5.5, g - 6); ctx.lineTo(x + 4, g - 14); ctx.moveTo(x + 5.5, g - 6); ctx.lineTo(x - 4, g - 14); ctx.stroke();
-    disc(x, g - 27, 6.5, c, 0.3); disc(x, g - 27, 4.2, c);
-  },
-  beam(x, g, c) {                // parabola con l’ago
-    ctx.fillStyle = BODY; ctx.fillRect(x - 3, g - 10, 6, 10);
-    ctx.beginPath(); ctx.arc(x, g - 22, 11, 0.15 * Math.PI, 0.85 * Math.PI); ctx.lineWidth = 3.2; ctx.strokeStyle = BODY2; ctx.stroke();
-    ctx.strokeStyle = c; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x, g - 11); ctx.lineTo(x, g - 26); ctx.stroke(); disc(x, g - 27, 2.6, c);
-  },
-  wheel(x, g, c) {               // fionda con la palla di fuoco
-    ctx.strokeStyle = BODY2; ctx.lineWidth = 3.6; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x, g); ctx.lineTo(x, g - 11); ctx.lineTo(x - 8.5, g - 25); ctx.moveTo(x, g - 11); ctx.lineTo(x + 8.5, g - 25); ctx.stroke();
-    ctx.strokeStyle = "#c9b28a"; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(x - 8.5, g - 25); ctx.quadraticCurveTo(x, g - 13, x + 8.5, g - 25); ctx.stroke();
-    disc(x, g - 18.5, 3.8, c);
-  },
-  hive(x, g, c) {                // alveare a fasce
-    let y = g;
-    [[11, 6], [10, 6], [8, 6], [5, 5]].forEach((row, i) => { rr(x - row[0], y - row[1], row[0] * 2, row[1], 3); ctx.fillStyle = i % 2 ? BODY2 : c; ctx.fill(); y -= row[1] - 0.5; });
-    disc(x, g - 5, 2.8, DARK);
-  },
-  rail(x, g, c) {                // due rotaie parallele
-    ctx.fillStyle = BODY; ctx.fillRect(x - 9, g - 8, 18, 8);
-    ctx.fillStyle = "#c7d1e6"; ctx.fillRect(x - 5.5, g - 29, 3, 22); ctx.fillRect(x + 2.5, g - 29, 3, 22);
-    ctx.fillStyle = c; ctx.fillRect(x - 2.5, g - 13, 5, 4);
-  },
-  tesla(x, g, c) {               // bobina ad anelli
-    ctx.fillStyle = BODY2; ctx.fillRect(x - 1.5, g - 22, 3, 22); ctx.fillStyle = BODY; ctx.fillRect(x - 9, g - 4, 18, 4);
-    ctx.strokeStyle = c; ctx.lineWidth = 2;
-    [[9, 7], [7, 12], [5, 17]].forEach((q) => { ctx.beginPath(); ctx.ellipse(x, g - q[1], q[0], 2.4, 0, 0, 6.2832); ctx.stroke(); });
-    disc(x, g - 24, 3.2, "#fff6b0");
-  },
-  vortex(x, g, c) {              // cannone ad anello
-    ctx.fillStyle = BODY; ctx.fillRect(x - 8, g - 7, 16, 7); ctx.fillStyle = BODY2; ctx.fillRect(x - 3, g - 12, 6, 6);
-    disc(x, g - 19, 8.2, DARK); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(x, g - 19, 7.5, 0, 6.2832); ctx.stroke(); disc(x, g - 19, 2.2, c, 0.75);
-  },
-};
-function drawTurret(s) {
-  TURRET_ART[s.id](s.x, GROUND_Y, TYPES[s.def.type].color);
-  txt("L" + s.level + (s.done ? " ★" : " " + s.used + "/3"), s.x, GROUND_Y + 18, 9, s.done ? "#ffd166" : "#9fb4d9", "center", "700");
-  const b = BEHAV[s.id]; if (b.draw) b.draw(s);
-}
-function drawPlayer() {
-  if (comboOn(player, "kHive")) { ctx.globalAlpha = 0.45; guardianShape(W - player.x); ctx.globalAlpha = 1; }   // Clone speculare
-  guardianShape(player.x);
-}
-function guardianShape(x) {
-  const y = GROUND_Y, f = frenzyOn(player);
-  ctx.beginPath(); ctx.moveTo(x, y - 34); ctx.lineTo(x + 14, y - 2); ctx.lineTo(x, y - 8); ctx.lineTo(x - 14, y - 2); ctx.closePath();
-  ctx.fillStyle = f ? "#6a3a2a" : "#2a3f6e"; ctx.fill();
-  ctx.lineWidth = 1.5; ctx.strokeStyle = f ? "#ff9a5a" : TYPES.physical.color; ctx.stroke();
-}
-// indicatori sopra il nemico: rallentamento, paralisi, indebolimento, vulnerabilità, bruciatura
-const STATUS_ICONS = [
-  ["slow", (e) => e.slowT > 0, "#b07cff"], ["para", (e) => e.paraT > 0, "#ffe14d"], ["weak", (e) => e.weakT > 0, "#8aa0c8"],
-  ["destr", (e) => e.destrN > 0 && e.destrT > 0, "#8aa0c8"],
-  ["vuln", (e) => e.vulnT > 0, "#ff4d6d"], ["burn", (e) => e.burnT > 0, "#ff7a3d"],
-];
-function statusIcon(kind, x, y, c, e) {
-  disc(x, y, kind === "destr" ? 7.5 : 6.5, "rgba(7,11,22,0.78)");
-  ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 1.7; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.beginPath();
-  if (kind === "slow") { ctx.moveTo(x - 3.5, y - 2); ctx.lineTo(x, y + 2.5); ctx.lineTo(x + 3.5, y - 2); ctx.stroke(); }
-  else if (kind === "para") { ctx.moveTo(x + 1.5, y - 4.5); ctx.lineTo(x - 2.5, y + 0.5); ctx.lineTo(x + 0.5, y + 0.5); ctx.lineTo(x - 1.5, y + 4.5); ctx.lineTo(x + 2.5, y - 0.5); ctx.lineTo(x - 0.5, y - 0.5); ctx.closePath(); ctx.fill(); }
-  else if (kind === "weak") { ctx.arc(x, y, 3.8, 0, 6.2832); ctx.moveTo(x - 2, y); ctx.lineTo(x + 2, y); ctx.stroke(); }
-  else if (kind === "vuln") { ctx.arc(x, y, 3.2, 0, 6.2832); ctx.moveTo(x, y - 5); ctx.lineTo(x, y + 5); ctx.moveTo(x - 5, y); ctx.lineTo(x + 5, y); ctx.stroke(); }
-  else if (kind === "destr") {                   // distruzione: una linea ondulata per pila (fino a 5)
-    const n = Math.min(5, e.destrN), sp = n > 3 ? 2.3 : 2.9, y0 = y - (n - 1) * sp / 2;
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < n; i++) { const yy = y0 + i * sp; ctx.moveTo(x - 5, yy); for (let k = 1; k <= 8; k++) ctx.lineTo(x - 5 + k * 1.25, yy + Math.sin(k * 1.25) * 1.3); }
-    ctx.stroke();
-  }
-  else { ctx.moveTo(x, y - 4.8); ctx.quadraticCurveTo(x + 4.6, y, x, y + 4.6); ctx.quadraticCurveTo(x - 4.6, y, x, y - 4.8); ctx.fill(); }
-}
-function drawStatus(e) {
-  const act = STATUS_ICONS.filter((t) => t[1](e)); if (!act.length) return;
-  const gap = 14, x0 = e.x - (act.length - 1) * gap / 2, y = e.y - e.def.r - 17;
-  act.forEach((t, i) => statusIcon(t[0], x0 + i * gap, y, t[2], e));
-}
-// nemici a tema spaziale: il colore resta quello del tipo di danno (serve per le resistenze), cambia la forma
-function rockPath(e, r) {
-  ctx.beginPath(); const n = e.shape.length;
-  for (let i = 0; i < n; i++) { const a = e.rot + i / n * 6.2832, q = r * e.shape[i], px = e.x + Math.cos(a) * q, py = e.y + Math.sin(a) * q; if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
-  ctx.closePath();
-}
-function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perché scende)
-  const g = ctx.createLinearGradient(e.x, e.y - r * len, e.x, e.y);
-  g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, col);
-  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(e.x - r * 0.75, e.y); ctx.lineTo(e.x, e.y - r * len); ctx.lineTo(e.x + r * 0.75, e.y); ctx.closePath(); ctx.fill();
-}
-function drawEnemy(e) {
-  const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, r = e.def.r, look = e.def.look || "rock", x = e.x, y = e.y, shade = "rgba(7,11,22,0.38)";
-  if (look === "rock" || look === "asteroid" || look === "meteor") {
-    if (look === "meteor") tail(e, r, 2.6, "rgba(255,180,90,0.7)");
-    rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
-    const cr = look === "asteroid" ? [[-0.3, -0.2, 0.26], [0.34, 0.14, 0.2], [-0.05, 0.42, 0.15]] : [[-0.25, -0.15, 0.24], [0.3, 0.26, 0.16]];
-    for (const q of cr) disc(x + q[0] * r, y + q[1] * r, q[2] * r, shade);
-  } else if (look === "shard") {               // cristallo-cometa
-    tail(e, r, 2.2, "rgba(120,235,255,0.55)");
-    poly([[x, y + r * 1.25], [x + r * 0.78, y - r * 0.1], [x, y - r * 1.05], [x - r * 0.78, y - r * 0.1]], c, "rgba(7,11,22,0.6)", 1.3);
-    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - r * 1.05); ctx.lineTo(x, y + r * 1.25); ctx.moveTo(x - r * 0.78, y - r * 0.1); ctx.lineTo(x + r * 0.78, y - r * 0.1); ctx.stroke();
-  } else if (look === "saucer") {              // navicella
-    ctx.beginPath(); ctx.ellipse(x, y - r * 0.2, r * 0.6, r * 0.62, 0, Math.PI, 6.2832); ctx.fillStyle = "rgba(223,233,255,0.9)"; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x, y, r * 1.15, r * 0.48, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
-    for (const dx of [-0.6, 0, 0.6]) disc(x + dx * r, y + r * 0.1, r * 0.13, shade);
-  } else {                                     // nave aliena (mini-boss) e nave madre (boss finale): contorno dorato
-    const w = look === "mothership" ? 1.2 : 1.05;
-    if (look === "mothership") for (const sgn of [-1, 1]) poly([[x + sgn * r * 0.9, y - r * 0.35], [x + sgn * r * 1.55, y - r * 0.75], [x + sgn * r * 1.2, y + r * 0.1]], c, "#ffd166", 2);
-    poly([[x, y + r], [x + r * w, y - r * 0.15], [x + r * 0.55, y - r * 0.85], [x - r * 0.55, y - r * 0.85], [x - r * w, y - r * 0.15]], c, "#ffd166", 2.6);
-    disc(x, y + r * 0.1, r * 0.3, "rgba(7,11,22,0.6)"); disc(x, y + r * 0.1, r * 0.14, "#fff6b0", 0.9);
-    for (const dx of [-0.3, 0.3]) disc(x + dx * r, y - r * 0.85, r * 0.13, "#ffd18a");
-    for (const dx of [-0.55, 0.55]) disc(x + dx * r, y - r * 0.25, r * 0.1, shade);
-  }
-  if (e.hp < e.maxHp || e.boss) {
-    const w = r * 2, by = y - r * (look === "shard" ? 1.05 : 1) - 8;
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, by, w, 3);
-    ctx.fillStyle = TYPES[e.def.type].color; ctx.fillRect(x - r, by, w * clamp(e.hp / e.maxHp, 0, 1), 3);
-  }
-  drawStatus(e);
-}
-function drawHud() {
-  button(8, 10, 196, 32, "Bersaglio: " + TARGET_LABEL[settings.targeting], toggleTargeting);
-  if (state === "play") {
-    button(210, 10, 38, 32, "", pauseGame);
-    ctx.fillStyle = "#e8eefc"; ctx.fillRect(222, 18, 4, 16); ctx.fillRect(232, 18, 4, 16);
-  }
-  txt("Ondata " + wave + "/" + N_WAVES, W - 10, 26, 14, "#e8eefc", "right", "700");
-  txt("Nemici: " + (queue.length + enemies.length) + (manual ? " · mira manuale" : ""), 10, 62, 12, "#9fb4d9", "left", "500");
-  txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
-  const fb = enemies.find((e) => e.final && !e.dead);
-  if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
-    txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
-    rr(30, 100, 300, 12, 6); ctx.fillStyle = "rgba(7,11,22,0.85)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
-    const k = clamp(fb.hp / fb.maxHp, 0, 1);
-    if (k > 0) { rr(32, 102, 296 * k, 8, 4); ctx.fillStyle = TYPES[fb.def.type].color; ctx.fill(); }
-  } else if (enemies.some((e) => e.boss && !e.dead)) txt("MINI-BOSS", W / 2, 62, 12, "#ffd166", "center", "800");
-  if (has(player, "frenzy1")) {
-    const f = frenzyOn(player), k = f ? clamp(player.st.frenzyT / frenzyDur(player), 0, 1) : (player.st.charge || 0);
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(10, 76, 110, 6);
-    ctx.fillStyle = f ? "#ff9a5a" : "#7fa0e0"; ctx.fillRect(10, 76, 110 * k, 6);
-    txt(f ? (player.st.paused ? "Frenesia in pausa" : "Frenesia!") : (k >= 1 ? "Frenesia pronta" : "Frenesia"), 126, 79, 10, f ? "#ff9a5a" : "#6f82ad", "left", "600");
-  }
-}
-function drawFortress() {
-  const y = H - FORT_H;
-  ctx.fillStyle = "#101a33"; ctx.fillRect(0, y, W, FORT_H);
-  const frac = clamp(domeHp / domeMax, 0, 1);
-  ctx.fillStyle = frac > 0.35 ? "#3fe0a0" : "#ff5a5a"; ctx.fillRect(10, y + 9, (W - 20) * frac, 8);
-  ctx.strokeStyle = "#2c4272"; ctx.lineWidth = 1; ctx.strokeRect(10, y + 9, W - 20, 8);
-  txt("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13, 10, "#e8eefc", "center", "700");
-}
-function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, W, H); }
-
-/* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
-const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre" };
-const MUTED = "#8a9ac0";
-function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
-function tw(str, size, weight) { setFont(size, weight); const m = ctx.measureText(str); return m && typeof m.width === "number" ? m.width : str.length * size * 0.56; }
-// testo a pezzi di colori diversi sulla stessa riga: [[testo, colore, dimensione?, peso?], ...]
-function segs(parts, x, y, size) {
-  for (const [t, c, sz, wt] of parts) { txt(t, x, y, sz || size, c, "left", wt || "600"); x += tw(t, sz || size, wt || "600"); }
-}
-function wrap(str, maxW, size) {
-  const out = []; let line = "";
-  for (const w of str.split(" ")) { const t = line ? line + " " + w : w; if (tw(t, size, "500") > maxW && line) { out.push(line); line = w; } else line = t; }
-  if (line) out.push(line); return out;
-}
-const resOf = (type) => ({ res: TYPE_KEYS.filter((t) => RESIST[type][t] < 1), weak: TYPE_KEYS.filter((t) => RESIST[type][t] > 1) });
-const typeList = (ts) => ts.flatMap((t, i) => (i ? [[", ", MUTED], [TYPES[t].name, TYPES[t].color]] : [[TYPES[t].name, TYPES[t].color]]));
-const ICON_SHAPE = [0.9, 1.0, 0.82, 0.98, 0.88, 1.02, 0.86, 0.95, 0.92];
-function enemyIcon(def, x, y, size) {           // disegna il nemico in piccolo, con la stessa grafica del campo
-  const e = { def, x: 0, y: 0, hp: 1, maxHp: 1, flash: 0, shape: ICON_SHAPE, rot: 0.4, boss: false };
-  const k = size / (def.r * (def.look === "mothership" ? 1.6 : 1.3));
-  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); drawEnemy(e); ctx.restore();
-}
-function levelEnemies() {                       // chi arriva davvero in questo livello: ricavato dalle ondate
-  const D = curDiff(), kinds = new Map();
-  for (let n = 1; n <= N_WAVES; n++)
-    for (const g of waveSpec(n, D).groups) if (g.count > 0) { const w = kinds.get(g.enemy) || []; if (!w.includes(n)) w.push(n); kinds.set(g.enemy, w); }
-  return {
-    kinds: [...kinds.entries()].sort((a, b) => a[1][0] - b[1][0]),
-    bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: bossDef(campLevel, n) })) : [],
-    fin: hasFinalBoss() ? finalBossDef(campLevel) : null,
-  };
-}
-function unknownRow(y, title, sub) {             // riga "incognita" per chi non hai ancora incontrato
-  disc(34, y + 12, 13, "rgba(138,154,192,0.16)");
-  ctx.strokeStyle = "#5f7299"; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(34, y + 12, 13, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
-  txt("?", 34, y + 13, 15, "#8a9ac0", "center", "800");
-  txt(title, 62, y + 4, 13, "#8a9ac0", "left", "700");
-  txt(sub, 62, y + 21, 10, "#6f82ad", "left", "500");
-}
-function pauseEnemies() {
-  const { kinds, bosses, fin } = levelEnemies(), seen = (key) => progress.seen.includes(key);
-  const bossTypes = [...new Set(bosses.map((b) => b.def.type))];           // ogni tipo di mini-boss si scopre a parte
-  const all = kinds.length + bossTypes.length + (fin ? 1 : 0);
-  const known = kinds.filter(([k]) => seen(ENEMY_DEFS[k].look)).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen("mothership:" + fin.type) ? 1 : 0);
-  let y = 106;
-  txt("Livello " + campLevel + " · " + MODES[mode].label + " · difficoltà " + curDiff() + " · scoperti " + known + " su " + all, 16, y, 11, "#9fb4d9", "left", "600"); y += 14;
-  txt("Il colore indica il tipo di danno: resiste ×0,5, debole ×1,5", 16, y, 10, "#6f82ad", "left", "500"); y += 18;
-  for (const [k, waves] of kinds) {
-    const d = ENEMY_DEFS[k], r = resOf(d.type);
-    if (!seen(d.look)) { unknownRow(y, "Nemico sconosciuto", "Lo scoprirai quando entra in campo (dalla " + waves[0] + "ª ondata)"); y += 40; continue; }
-    enemyIcon(d, 34, y + 18, 15);
-    segs([[ENEMY_NAME[d.look] + "  ", "#e8eefc", 13, "700"], [TYPES[d.type].name, TYPES[d.type].color, 11, "700"]], 62, y + 4, 13);
-    segs([["Resiste a ", MUTED], ...typeList(r.res), ["  ·  Debole a ", MUTED], ...typeList(r.weak)], 62, y + 21, 11);
-    txt("In " + waves.length + " ondate su " + N_WAVES + ", dalla " + waves[0] + "ª", 62, y + 36, 10, "#6f82ad", "left", "500");
-    y += 47;
-  }
-  const bossLine = (n, d, yy) => {             // due righe corte: tipo e debolezza, poi resistenze
-    const r = resOf(d.type);
-    segs([[(n ? "Ondata " + n + ": " : ""), MUTED], [TYPES[d.type].name, TYPES[d.type].color, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], 62, yy, 11);
-    segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · spinte " + Math.round(d.kbRes * 100) + "% · stati " + Math.round(d.statRes * 100) + "%", "#6f82ad"]], 62, yy + 14, 10);
-  };
-  const knownBoss = bosses.find((b) => seen("ship:" + b.def.type));
-  if (bosses.length && !knownBoss) { y += 4; unknownRow(y, "Mini-boss sconosciuti", "Ondate " + CAMPAIGN.bossWaves.join(", ") + " · li scoprirai quando entrano in campo"); y += 40; }
-  else if (bosses.length) {
-    y += 4; enemyIcon(knownBoss.def, 34, y + 14, 16);
-    txt("Mini-boss · nave aliena", 62, y + 4, 13, "#ffd166", "left", "700"); y += 20;
-    for (const b of bosses) {
-      if (seen("ship:" + b.def.type)) { bossLine(b.n, b.def, y); y += 30; }
-      else { segs([["Ondata " + b.n + ": ", MUTED], ["tipo sconosciuto", "#8a9ac0", 11, "700"]], 62, y, 11); y += 18; }
-    }
-    txt("Immuni a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 18;
-  }
-  if (fin && !seen("mothership:" + fin.type)) unknownRow(y, "Boss finale sconosciuto", "Ondata " + N_WAVES + " · lo scoprirai quando entra in campo");
-  else if (fin) {
-    enemyIcon(fin, 34, y + 14, 16);
-    txt("Boss finale · nave madre (ondata " + N_WAVES + ")", 62, y + 4, 13, "#ffd166", "left", "700"); y += 20;
-    bossLine(0, fin, y); y += 30;
-    txt("Immune a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500");
-  }
-}
-function drawAlert() {                           // avviso "nuovo nemico" sotto la barra in alto
-  const a = alerts[0]; if (!a) return;
-  const x = 16, y = 120, w = W - 32, h = 56, d = a.def, r = resOf(d.type), c = TYPES[d.type].color;
-  rr(x, y, w, h, 10); ctx.fillStyle = "rgba(10,16,32,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
-  enemyIcon(d, x + 26, y + h / 2, 16);
-  segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
-  segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
-  segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · dettagli nella pausa", "#6f82ad"]], x + 52, y + 46, 10);
-}
-function upText(s) {
-  const parts = [];
-  for (const u of s.def.ups) {
-    const n = N(s, u.id); if (!n) continue;
-    parts.push(u.name + (n > 1 ? " ×" + n : "") + (u.cat === "chain" ? " (chain lv" + u.lv + ")" : u.cat === "lu" ? " (level up)" : u.cat === "combo" ? " (combo)" : ""));
-  }
-  return parts.length ? parts.join(", ") : "nessun potenziamento";
-}
-function pauseBuild() {
-  let y = 106;
-  txt("Ondata " + wave + "/" + N_WAVES + " · Cupola " + Math.ceil(domeHp) + "/" + domeMax + " · torri fino al lv " + towerCap(), 16, y, 11, "#9fb4d9", "left", "600"); y += 14;
-  txt("Bersaglio: " + TARGET_LABEL[settings.targeting] + " · Mira: " + (manual ? "manuale" : "automatica"), 16, y, 11, "#9fb4d9", "left", "600"); y += 20;
-  const list = [player, ...slots.filter(Boolean)];
-  let size = 11, rows;
-  for (size of [11, 10, 9]) {                    // se non ci sta, rimpicciolisce il testo
-    rows = list.map((s) => wrap(upText(s), W - 40, size));
-    if (rows.reduce((a, r) => a + 22 + r.length * (size + 3) + 6, 0) <= 560 - y) break;
-  }
-  list.forEach((s, i) => {
-    const c = TYPES[s.def.type].color;
-    segs([[s.def.name, c, 13, "700"], ["   " + (s.done ? "★ al massimo" : "livello " + s.level + " · " + s.used + "/3"), s.done ? "#ffd166" : MUTED, 11, "600"]], 20, y + 4, 13);
-    y += 20;
-    rows[i].forEach((l) => { txt(l, 20, y, size, "#b9c8e6", "left", "500"); y += size + 3; });
-    y += 8;
-  });
-  const free = slots.filter((t) => !t).length;
-  txt(free ? "Slot liberi: " + free + " di 4" : "Tutti e 4 gli slot sono occupati", 20, y + 2, 11, "#6f82ad", "left", "500");
-}
-function pauseScreen() {
-  buttons = [];                                  // in pausa i pulsanti del campo di battaglia non sono attivi
-  dim(0.92);
-  txt("PAUSA", W / 2, 32, 20, "#e8eefc", "center", "800");
-  [["enemies", "Nemici del livello"], ["build", "Torri e potenziamenti"]].forEach(([id, label], i) => {
-    const on = pauseTab === id;
-    button(16 + i * 168, 52, 160, 34, label, () => { pauseTab = id; pauseQuit = false; },
-      { size: 12, fill: on ? "rgba(63,224,160,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#3fe0a0" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
-  });
-  if (pauseTab === "enemies") pauseEnemies(); else pauseBuild();
-  button(16, 584, 208, 44, "Riprendi", resumeGame, { size: 16, stroke: "#3fe0a0" });
-  button(232, 584, 112, 44, pauseQuit ? "Tocca di nuovo" : "Abbandona", () => { if (pauseQuit) toMenu(); else pauseQuit = true; },
-    { size: pauseQuit ? 11 : 13, stroke: "#ff7a3d" });
-}
-
-function overlay(title, lines, color, y0) {
-  dim(0.78);
-  txt(title, W / 2, y0 || 190, 30, color || "#e8eefc", "center", "800");
-  lines.forEach((l, i) => txt(l, W / 2, (y0 || 190) + 48 + i * 22, 14, "#9fb4d9", "center", "500"));
-}
-function menuScreen() {
-  dim(0.8);
-  txt("FORTRESS DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800");
-  txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
-  button(36, 130, 56, 56, "−", () => { selLevel = Math.max(1, selLevel - 1); }, { size: 26 });
-  button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
-  txt("Livello " + selLevel, W / 2, 150, 24, "#e8eefc", "center", "800");
-  txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
-  const man = settings.aim === "manual";
-  button(60, 196, 240, 34, "Mira: " + AIM_LABEL[settings.aim], toggleAim, { size: 13, stroke: man ? "#ffd166" : "#2c4272" });
-  txt(man ? "Fermo: spara solo mentre tieni premuto sul bersaglio" : "Si muove trascinando e spara da solo", W / 2, 241, 10, "#6f82ad", "center", "500");
-  button(60, 254, 240, 46, "Standard", () => startRun("standard"), { size: 16, stroke: "#3fe0a0" });
-  const eu = epicUnlocked();
-  button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
-    () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
-  const rows = [["Torri e guardiano al livello 2", 10], ["Torri e guardiano al livello 3", 20], ["Equipaggiamento del guardiano", CAMPAIGN.equipUnlock],
-    ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
-  txt("Sblocchi (a fine livello)", 36, 378, 12, "#9fb4d9", "left", "700");
-  rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 400 + i * 20, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
-  txt("Dal livello 11: mini-boss alle ondate 5, 10, 15", 36, 504, 11, "#ffd166", "left", "500");
-  txt("In Epica i mini-boss ci sono fin dal livello 1", 36, 519, 11, "#ffd166", "left", "500");
-  txt("Livelli 10, 20, 30…: boss finale all’ondata 20", 36, 534, 11, "#ffd166", "left", "500");
-  button(60, 562, 240, 36, "Salvataggio · esporta o importa", openSave, { size: 13, stroke: "#7fa0e0" });
-  txt("Invio = Standard · E = Epica · ←/→ = livello · M = mira", W / 2, 614, 11, "#5f7299", "center", "500");
-  txt("v" + APP_VERSION, W - 8, 632, 9, "#3a4a70", "right", "500");
-}
-function wonScreen() {
-  overlay("LIVELLO SUPERATO", ["Livello " + campLevel + " completato" + (mode === "epic" ? " (Epica)" : ""), "Cupola: " + Math.ceil(domeHp) + "/" + domeMax], "#3fe0a0");
-  const more = mode === "standard" && campLevel < CAMPAIGN.maxLevel;
-  button(60, 300, 240, 48, more ? "Livello " + (campLevel + 1) : "Rigioca", nextOrRetry, { size: 16, stroke: "#3fe0a0" });
-  if (more) button(60, 360, 240, 48, "Rigioca il livello " + campLevel, retry, { size: 14 });
-  button(60, more ? 420 : 360, 240, 48, "Menu", toMenu, { size: 14 });
-}
-function lostScreen() {
-  overlay("CUPOLA DISTRUTTA", ["Livello " + campLevel + " · ondata " + wave + " di " + N_WAVES], "#ff5a5a");
-  button(60, 300, 240, 48, "Riprova", retry, { size: 16, stroke: "#ff7a3d" });
-  button(60, 360, 240, 48, "Menu", toMenu, { size: 14 });
-}
-function rewardScreen() {
-  txt("Ricompensa mini-boss", W / 2, 86, 24, "#ffd166", "center", "800");
-  txt("Hai ottenuto " + rewards.length + " potenziamenti", W / 2, 116, 13, "#9fb4d9", "center", "500");
-  rewards.forEach((o, i) => {
-    const x = 20, y = 140 + i * 122, w = 320, h = 110, c = TYPES[o.type].color;
-    rr(x, y, w, h, 8); ctx.fillStyle = "rgba(18,30,58,0.92)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = c; ctx.stroke();
-    disc(x + 26, y + h / 2, 13, c);
-    txt("✓", x + 26, y + h / 2 + 1, 14, "#070b16", "center", "800");
-    txt(o.head, x + 52, y + 22, 11, c, "left", "700");
-    txt(o.title, x + 52, y + 46, 16, "#e8eefc", "left", "700");
-    txt(o.desc, x + 52, y + 70, 12, "#b9c8e6", "left", "500");
-    txt(o.note, x + 52, y + 92, 10, "#6f82ad", "left", "500");
-  });
-  button(60, 140 + rewards.length * 122 + 4, 240, 48, "Continua", () => pick(0), { size: 16, stroke: "#ffd166" });
-}
-function upgradeScreen() {
-  dim(0.84);
-  if (rewards) { rewardScreen(); return; }
-  txt(bonusMode ? "Ricompensa mini-boss" : "Ondata " + wave + " superata", W / 2, 86, 24, bonusMode ? "#ffd166" : "#3fe0a0", "center", "800");
-  txt("Scegli un potenziamento", W / 2, 116, 13, "#9fb4d9", "center", "500");
-  options.forEach((opt, i) => {
-    const x = 20, y = 140 + i * 122, w = 320, h = 110, o = describe(opt), c = TYPES[o.type].color;
-    button(x, y, w, h, "", () => pick(i), { stroke: c });
-    disc(x + 26, y + h / 2, 13, c);
-    txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
-    txt(o.head, x + 52, y + 22, 11, c, "left", "700");
-    txt(o.title, x + 52, y + 46, 16, "#e8eefc", "left", "700");
-    txt(o.desc, x + 52, y + 70, 12, "#b9c8e6", "left", "500");
-    txt(o.note, x + 52, y + 92, 10, "#6f82ad", "left", "500");
-  });
-  txt("Torri fino al lv " + towerCap() + (campLevel >= CAMPAIGN.maxMaxedFrom ? " · al massimo: " + maxedCount() + "/" + CAMPAIGN.maxMaxed : ""), W / 2, 140 + options.length * 122 + 12, 11, "#6f82ad", "center", "500");
-}
-
-function draw() {
-  buttons = [];
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#0a1020"); g.addColorStop(1, "#16254a");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#9fb4d9";
-  for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
-  ctx.globalAlpha = 1;
-
-  if (state !== "menu" && state !== "save") {
-    drawDomeFill(); drawGround();
-    slots.forEach((s) => { if (s) drawTurret(s); });
-    drawPlayer();
-    if (manual && aim.down && state === "play") {       // mirino nel punto premuto
-      ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
-      ctx.beginPath(); ctx.arc(aim.x, aim.y, 12, 0, 6.2832); ctx.moveTo(aim.x - 18, aim.y); ctx.lineTo(aim.x - 6, aim.y); ctx.moveTo(aim.x + 6, aim.y); ctx.lineTo(aim.x + 18, aim.y);
-      ctx.moveTo(aim.x, aim.y - 18); ctx.lineTo(aim.x, aim.y - 6); ctx.moveTo(aim.x, aim.y + 6); ctx.lineTo(aim.x, aim.y + 18); ctx.stroke(); ctx.globalAlpha = 1;
-    }
-    enemies.forEach(drawEnemy);
-    for (const o of ents) o.draw();
-    drawDomeEdge(); drawFortress();
-    for (const f of floaters) { ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700"); }
-    ctx.globalAlpha = 1;
-    drawHud();
-    if (state === "play") drawAlert();
-    if (state === "play" && waveTime < 0) {
-      ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
-      txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
-      if (manual && wave === 1) txt("Tieni premuto sul bersaglio per sparare", W / 2, 290, 12, "#9fb4d9", "center", "600");
-      if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
-      else if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
-      ctx.globalAlpha = 1;
-    }
-  }
-  if (state === "menu" || state === "save") menuScreen();          // il pannello del salvataggio sta sopra al menu
-  else if (state === "upgrade") upgradeScreen();
-  else if (state === "won") wonScreen();
-  else if (state === "lost") lostScreen();
-  else if (state === "pause") pauseScreen();
-}
+/* DISEGNO: in draw.js (vedi in cima: const DRAW). */
 
 /* =====================================================================
    INPUT E AVVIO
@@ -2292,7 +1726,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 1, CODE_PREFIX = "FD1:";
 const $id = (id) => document.getElementById(id);
 function makeSave() {
