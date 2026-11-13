@@ -338,6 +338,8 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Resistenze dei nemici normali**: la tabella attuale è un segnaposto di Claude.
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
+- **Moduli** (§ 15): valori X per rarità di tutti i 30 effetti; pesi e ripartizione nei pool proposti da Claude, da confermare.
+  Effetto 30: vale per tutte le torrette della battaglia (ipotesi del testo) o una sola? Effetto 8: “salve” solo del guardiano o anche delle torrette?
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
@@ -366,9 +368,76 @@ schermata iniziale con controllo aggiornamenti e tocco per iniziare (§ 7).
 - **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono per sbloccare o migliorare potenziamenti permanenti, carte e penalità; **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
 - **Equipaggiamento**: 6 pezzi (testa, armatura, guanti, stivali, arma, nucleo). Ogni pezzo dà una statistica base (tipicamente attacco del personaggio) e ha slot per i Moduli. Si trova come drop casuale a fine livello assieme ai chip. **[deciso]**
 - **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
-- **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Danno bonus globali: % danno per tipo, vita della barriera, immunità parziale, effetti speciali su guardiano e barriera che non toccano le carte (es. danno maggiore con barriera sotto il 30%, +% vita barriera per mini-boss sconfitto, immunità ai primi colpi). **[deciso]** (categoria; gli esempi non sono valori definitivi)
-- **Fusione**: si fondono sia gli equip sia i Moduli: **5 pezzi uguali (stesso tipo e rarità) danno 1 pezzo della rarità successiva, per tutte le rarità**. **[deciso]**
+- **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Ogni Modulo ha **un effetto**, preso dal pool del suo pezzo
+  (catalogo e pool sotto); la rarità decide il valore X. **[deciso]**
+- **Fusione**: si fondono sia gli equip sia i Moduli, **per tutte le rarità**, e il risultato è della rarità successiva. **[deciso]**
+  - Equip: **5 pezzi uguali** (stesso tipo e rarità).
+  - Moduli: **5 Moduli dello stesso pezzo e della stessa rarità**, anche con effetti diversi; l’effetto del risultato si **estrae a caso dal pool
+    del pezzo**, con i pesi sotto.
+- **Doppioni**: nello stesso pezzo non si installano due Moduli con lo stesso effetto; su pezzi diversi gli effetti si sommano
+  (le probabilità hanno un tetto del 100%). **[deciso]**
+
+### Catalogo degli effetti dei Moduli **[deciso]** (valori X per rarità: da definire)
+
+Gli effetti 4, 12 e 17 hanno una parte di danno che parte **negativa nel comune** e diventa **positiva dal leggendario**. Gli effetti 22, 29 e 30
+partono da una probabilità bassa nel comune e arrivano al **100% nell’ancestrale**.
+
+| # | Effetto | Peso |
+|---|---|---|
+| 1 | Probabilità di critico +X% | 3 |
+| 2 | Danno del guardiano +X% | 3 |
+| 3 | +X% danni per ogni torre piazzata in battaglia | 2 |
+| 4 | +1 proiettile del guardiano e −/+X% danni | 1 |
+| 5 | +X% danni per ogni nemico vicino alla fortezza | 3 |
+| 6 | +X% danni ai nemici con un debuff | 3 |
+| 7 | Cadenza di fuoco −X% (intervallo più breve tra una salva e l’altra) | 2 |
+| 8 | Le salve allungano del X% la durata dei debuff (una sola volta per nemico con uno stato) | 2 |
+| 9 | +X% danni per ogni Modulo installato | 2 |
+| 10 | Immunità ai primi X danni e contrattacco pari al X% del danno del guardiano per i primi X colpi nemici | 1 |
+| 11 | Barriera +X vita e danno subito dalla barriera −X | 3 |
+| 12 | Danni −/+X% e +X% danni per ogni carta scelta in battaglia | 2 |
+| 13 | +X% danni ai nemici vicini alla barriera | 3 |
+| 14 | Immunità per X s quando la vita della barriera scende sotto il 20% | 1 |
+| 15 | Cooldown delle abilità della barriera −X% | 2 |
+| 16 | Ripristina il X% della vita della fortezza per ogni mini-boss o boss ucciso | 2 |
+| 17 | Penetrazione dei proiettili del guardiano +1 e −/+X% danni | 2 |
+| 18 | +X% danni ai nemici con più del 70% di vita | 3 |
+| 19 | Danno da esplosione del guardiano +X% | 3 |
+| 20 | Danno aggiuntivo pari al X% della vita massima del bersaglio (al massimo il doppio del danno del guardiano) | 1 |
+| 21 | X refresh delle scelte per battaglia | 1 |
+| 22 | X% di probabilità di 4 carte tra cui scegliere invece di 3, a ogni ondata (la scelta resta una) | 1 |
+| 23 | Danno force +X% (torrette force) | 3 |
+| 24 | Danno physical +X% (torrette physical) | 3 |
+| 25 | Danno elettrico +X% (torrette elettriche) | 3 |
+| 26 | Danno fuoco +X% (torrette fuoco) | 3 |
+| 27 | Danno energy +X% (torrette energy) | 3 |
+| 28 | Tutti i danni delle torrette +X% | 1 |
+| 29 | X% di probabilità che il guardiano parta dal livello 2 (si scelgono subito anche carte lv2; le lv1 restano) | 1 |
+| 30 | X% di probabilità che le torrette partano dal livello 2 (come sopra) | 1 |
+
+**Pesi** **[Claude] [da rivedere]**: 3 = frequente, 2 = medio, 1 = raro (gli effetti più forti). La probabilità di un effetto è il suo peso diviso
+la somma dei pesi del pool (somme: arma 23, guanti 22, stivali 22, armatura 20, testa 18, nucleo 17; in testa e nucleo gli effetti rari pesano di più, perché ne
+contengono 4 su 9).
+
+### Pool per pezzo **[deciso]** (la regola) · ripartizione **[Claude] [da rivedere]**
+
+Ogni pezzo ha un pool di **9 effetti**: **1 esclusivo** e 8 condivisi con altri pezzi. Con 30 effetti: 6 esclusivi e 24 condivisi, ognuno in 2 pool.
+
+| Pezzo | Esclusivo | Condivisi |
+|---|---|---|
+| Arma | 4 (+1 proiettile) | 1, 2, 7, 17, 18, 19, 23, 24 |
+| Guanti | 20 (% vita massima) | 1, 6, 7, 8, 17, 19, 25, 26 |
+| Testa | 22 (4 carte tra cui scegliere) | 2, 3, 9, 12, 18, 21, 27, 29 |
+| Nucleo | 30 (torrette dal lv2) | 3, 9, 21, 23, 25, 27, 28, 29 |
+| Armatura | 10 (immunità e contrattacco) | 5, 11, 12, 13, 15, 16, 24, 28 |
+| Stivali | 14 (immunità sotto il 20%) | 5, 6, 8, 11, 13, 15, 16, 26 |
+
+Criterio: arma e guanti per l’attacco del guardiano, armatura e stivali per barriera e difesa, testa per le carte, nucleo per le torrette.
+I 5 tipi di danno e “tutti i danni” sono distribuiti in modo che ogni tipo stia in 2 pezzi.
 - **Fusione di un equip con Moduli inseriti**: i Moduli tornano in inventario. **[deciso]**
 - **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. **[deciso]**
-- **Vincoli di design**: nessun effetto dà scelte, carte o livelli gratis (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
-- **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità, potenza totale dell’equipaggiamento completo. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
+- **Vincoli di design**: nessun effetto dà scelte o carte in più da prendere (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
+  Eccezione **[deciso]**: sono ammessi gli effetti che cambiano quali carte compaiono o da che livello si parte (21 refresh, 22 quattro carte
+  tra cui scegliere, 29 e 30 partenza dal livello 2). Nota: partire dal livello 2 equivale a un level up gratis, cioè una scelta risparmiata
+  per quel pezzo: va misurato l’effetto sul budget del § 4.
+- **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
