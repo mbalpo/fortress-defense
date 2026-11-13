@@ -3,6 +3,37 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.8.0 — abilità della barriera (fase 3 dell’albero)
+
+Testo e risposte di Marco **[deciso]** nel § 16 di DESIGN.md (Rigenerazione rivista, Ustionante con il valore maggiore, mine dell’Aeroblast, Congelante, Potenziante che si somma,
+immunità che si accumulano, cooldown sfalsati e fermi, una abilità per gruppo nell’ordine dello schema, Repulsiva solo knockback, Backup senza premio della cupola).
+Valori per livello e letture di Claude, provvisori, nello stesso paragrafo.
+
+- **Dati** (`index.html`): `AB_GROUPS`, `ABILITIES` con i valori per livello, `abVal`; nodi dell’albero `TREE.abilities` (`ab:<id>`, 5 livelli; la prima di ogni gruppo
+  parte dal livello 1 senza spesa con il nuovo campo `free`, le altre si sbloccano con 3 Sigilli e seguono la regola dei livelli).
+- **Equipaggiamento**: `progress.abilities` { resist, control, offense } (null = le tre d’ingresso), `equipAbility`, `equippedAbilities`; attive in partita solo con il livello 40 completato.
+  Salvate nel file e nel codice di esportazione (formato versione 2, campo nuovo opzionale; valori non validi scartati).
+- **In battaglia**: `startAbilities`, `abilityTick` (in `update`, quindi ferme in pausa e nella scelta delle carte), `fireAbility`, `tryBackup`.
+  Rigenerazione, Backup, Impenetrabile (`domeShield`, immunità accumulate, consumate in `domeHit`), Repulsiva (metà schermo dal lato con più nemici), Congelante
+  (gas: `weaken` con intensità `weakK`), Riflettente (danno force al nemico che colpisce), Ustionante (`fireBurnDps`: la torretta di fuoco più forte o 6),
+  Minata (mine di `mine()` dell’Aeroblast in campo o di una Aeroblast base), Potenziante (`powerBonus`). Tolti i segnaposto di rigenerazione e repulsione e `repulseCd`.
+- **Danno**: in `dmgM` i bonus di tipo e tutte le torrette, “Più carte, più danno” e Potenziante ora si **sommano** (prima Più carte moltiplicava).
+- **Disegno** (`draw.js`): nuove `FX.domeWave`, `FX.domeGas`, `FX.domeAura`, `FX.shieldCount` (scudo con il numero sulla barra della cupola); bordo colorato con un’abilità attiva.
+  Albero: la sezione Barriera ha due schede, Potenziamenti e Abilità (tre gruppi, pallino per equipaggiare, riga per i livelli); `treeNodeRow` accetta posizione e larghezza.
+- **Taratura**: con le abilità i muri dal 50 al 200 salivano al 39,5%; coefficiente del boss finale da 1,1 a 1,5 (3625 al 50, 5522 al 100, 7190 al 200): media **31,1%**
+  (200 partite per muro). `tests/tools/curva.js`: i bot comprano i livelli delle abilità d’ingresso. Numeri in DESIGN.md § 5 e § 16.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.8.0.
+- **Test**: nuovo `tests/abilities.js` (gruppi e sblocchi, equipaggiamento e regola dei livelli, attive solo dal 40, cooldown sfalsati e fermi in pausa e nella scelta delle carte,
+  Rigenerazione con soglia, attesa e massimo di volte, Backup una volta e niente premio della cupola, immunità accumulate e consumate, Repulsiva solo sul lato giusto,
+  Congelante −35% e −45% e durata del gas, Riflettente e sua fine, Ustionante fissa e con la torretta più forte, Minata 4 e 6 mine e mine dell’Aeroblast in campo,
+  Potenziante che si somma, salvataggio). 28 test, tutti verdi.
+- Screenshot: nuovi 27 (albero · abilità) e 28 (abilità in battaglia), controllati; descrizioni dei nodi accorciate per stare nella riga.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (4 nuove tessere FX, scene “Albero dei Sigilli · Abilità” e “Abilità della barriera in battaglia”; 49 scene, 73 tessere).
+
+Checklist: nuove voci “Abilità della barriera: provarle dal livello 40”, “Valori per livello delle 9 abilità (provvisori) da rivedere”, “Letture: Rigenerazione sotto il 40%,
+mine da 4 a 8, Congelante da −25% a −45%, abilità che aspettano un nemico”; togliere “Fase 3, abilità della barriera: rispondere alle domande aperte del § 16”.
+
 ## Descrizione delle abilità della barriera (solo documentazione)
 
 Testo di Marco **[deciso]**; nessuna modifica a codice, test o sezioni *(generato)*. Versione del gioco invariata (1.7.0).

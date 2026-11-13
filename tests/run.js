@@ -36,6 +36,10 @@ const T = [
     /carte scelte in una partita: 17 .* ✓/, /Esc → stato menu .* ✓/, /versione 1 importata: .* ✓/, /codice FD1 andata e ritorno: .* ✓/,
     /costi 111112222233333444440 .* ✓/, /livelli massimi: .* ✓/, /pari \(1 e 1\): .* ✓/, /guardiano davanti .* ✓/, /regola dei livelli .* ✓/, /danno ×2\.0125 .* ✓/, /senza albero: danno ×1\.25 .* ✓/, /cupola: vita 130 .* ✓/, /Ignorare un colpo .* ✓/,
     /Durata degli stati .* ✓/, /Ventaglio ampliato al 3: .* 7 .* ✓/, /livelli oltre il massimo .* ✓/]],
+  ["abilities.js", "abilità della barriera: gruppi, cooldown, le 9 abilità, salvataggio", [/con 40: regen repulse burn ✓/, /dopo 5 s di scelta delle carte .* ✓/,
+    /Rigenerazione al 3: .* ✓/, /terza no, massimo 2 .* ✓/, /seconda caduta → stato lost ✓/, /vinto con la cupola piena dopo il Backup: .* ✓/, /Impenetrabile al 3: .* ✓/,
+    /Repulsiva al 2, .* ✓/, /al 5: danno alla cupola .* ✓/, /Riflettente al 2: .* ✓/, /con Sky Guard .* ✓/, /con l’Aeroblast in campo: .* ✓/, /al livello 1: mine 4 .* ✓/,
+    /Potenziante al 1: .* ✓/, /dal salvataggio: equipaggiate .* ✓/, /schermata Barriera .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
 ];

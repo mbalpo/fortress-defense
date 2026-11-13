@@ -65,7 +65,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**; dell’albero ci sono le fasi 1 e 2 (§ 16). **[deciso]**
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. L’equipaggiamento **non è ancora costruito**; albero e abilità della barriera sì (fasi 1-3, § 16). **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -85,7 +85,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
     dal 31 sale di **0,2 per livello** (`EFF_SLOPE_31`; al 200 effD = 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
-  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,1 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3045 al 50, 4436 al 100, 5659 al 200), danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
+  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
     al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
@@ -373,8 +373,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli, fase 3 e nodo “più carte” (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
-(rigenerazione e repulsione oggi sono segnaposto a mano in `META`, diversi dalle definizioni del § 16: vanno sostituiti) · schermata degli sblocchi permanenti ·
+Ranger · equipaggiamento e chip (§ 15) · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
 salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
@@ -545,7 +544,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
     - **Offesa**: Barriera ustionante · Barriera minata · Barriera potenziante
 - Le abilità con cooldown hanno un ciclo base di 40 s (Impenetrabile: minimo 20 s). I numeri per livello sono **[da rivedere]**.
 - **Descrizione delle abilità** **[deciso]** (testo di Marco):
-  1. **Rigenerazione**: +X% di vita ogni volta che la vita scende sotto il 40%, al massimo Y volte; X e Y crescono con il livello dell’abilità.
+  1. **Rigenerazione** (rivista da Marco): rigenera X al secondo per Y secondi, al massimo Z volte; non si riattiva prima di 2·Y secondi dalla fine dell’effetto.
   2. **Barriera repulsiva**: ogni 40 s un’onda d’urto dà knockback ai nemici vicini alla barriera. L’onda è larga metà schermo e parte dal lato, sinistro o destro,
      dove ci sono più nemici; la potenza del knockback cresce con il livello.
   3. **Barriera riflettente**: ogni 40 s, per X secondi, la barriera riflette verso i nemici parte del danno che le stanno facendo; danno riflesso e durata crescono con il livello.
@@ -638,6 +637,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
   livelli tra i muri (80-200 partite): 31 38,5% · 33 45,0% · 37 63,0% · 39 68,5% · 45 73,8% · 55 78,8% · 85 90,0% · 125 75,0% · 175 63,7% · 195 61,3%.
   Con 1 solo Sigillo per livello (nessun premio della cupola, 100 partite): 45 66% · 60 26% · 100 20% · 125 77% · 150 29% · 175 50% · 200 11%.
   Il 31 resta il livello più duro della sua decina (38,5%): non c’è uno sblocco come al 10 e al 20; l’equipaggiamento dovrebbe dare il respiro.
+- **Taratura 1.8.0, con le abilità della barriera**: dal 40 completato i bot usano le tre abilità d’ingresso (Rigenerazione, Repulsiva, Ustionante) e ne comprano i livelli.
+  Con il boss della 1.7.0 i muri dal 50 al 200 salivano al 39,5% di media (livelli intermedi 45 73% · 85 91% · 125 70,5% · 175 81% · 195 78%): coefficiente del boss
+  da 1,1 a 1,3 (35,1%) e poi **1,5**: muri dal 50 al 200 in media **31,1%** (200 partite ciascuno: 50 26,0% · 60 30,5% · 70 34,0% · 80 18,0% · 90 16,5% · 100 41,5% ·
+  110 35,5% · 120 41,5% · 130 33,0% · 140 17,0% · 150 34,5% · 160 42,5% · 170 47,0% · 180 36,5% · 190 18,0% · 200 25,5%); il 40 (senza abilità) 35,5%.
 - **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
 
 ### Regole generali
@@ -647,15 +650,31 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.
-- **Aperti** (abilità della barriera, per costruire la fase 3):
-  - Rigenerazione: se la cura è piccola, la vita torna sopra il 40% e ci riscende subito, e le Y cariche finiscono in pochi colpi. Va bene così o serve un intervallo minimo tra due cure?
-  - Ustionante: con due torrette di fuoco in campo (Sky Guard e Firewheel) quale conta? Valore fisso senza torretta di fuoco.
-  - Minata: danno fisso senza Aeroblast; se le mine ereditano anche Mine d’urto e Mine potenziate dell’Aeroblast.
-  - Congelante: l’indebolimento oggi è −35% fisso; per la Congelante la riduzione cresce col livello. Quanto dura il gas.
-  - Potenziante: “cumulativo” = si somma agli altri bonus di danno o li moltiplica.
-  - Impenetrabile: le immunità si accumulano o al massimo 1 alla volta.
-  - Cooldown: a inizio partita le abilità partono tutte insieme o sfalsate; se il tempo continua tra un’ondata e l’altra.
-  - Equipaggiamento delle abilità: le 3 sono una per gruppo o 3 qualsiasi; quale è l’abilità d’ingresso di ogni gruppo (sempre sceglibile) e come si sbloccano le altre (nodo dell’albero, costo).
-  - Livelli di ogni abilità nell’albero e numeri per livello (X, Y, durate, danni, knockback).
-  - Repulsiva: solo knockback o anche danno (il segnaposto di oggi fa 15 di danno force).
-  - Backup e premio della cupola al 100%: a fine livello si confronta la vita con quella della barriera originale o con quella di backup.
+- **Risposte di Marco** **[deciso]**:
+  - Rigenerazione: nuova forma (sopra), con l’attesa di 2·Y secondi tra due attivazioni.
+  - Ustionante: con torrette di fuoco in campo vale il valore maggiore; senza, valore fisso.
+  - Minata: le mine ereditano i potenziamenti dell’Aeroblast, se in campo; minimo 4 mine, il massimo dipende dal tetto dell’abilità (per ora 5 livelli, si potrà alzare).
+  - Congelante: indebolimento che cresce col livello, da un minimo di −25%; gas di 8 s, alto da 60 a 140 px.
+  - Potenziante: il bonus **si somma** agli altri; X da +15% a +40%, Y da 6 a 10 s.
+  - Impenetrabile: le immunità si accumulano, anche con quelle date da equipaggiamento o altri effetti; si vedono come un numero con uno scudo sulla vita della barriera.
+  - Cooldown: partono sfalsati e si fermano durante la pausa e la scelta delle carte.
+  - Equipaggiamento: **una abilità per gruppo**; ordine dello schema: Resistere Rigenerazione · Backup · Impenetrabile; Controllo Repulsiva · Congelante · Riflettente;
+    Offesa Ustionante · Minata · Potenziante (la prima è l’abilità d’ingresso, sempre sceglibile).
+  - Repulsiva: solo knockback.
+  - Backup: se si attiva, il premio della cupola al 100% non si prende.
+- **Letture e valori di Claude** **[Claude] [da rivedere]** (fase 3):
+  - Rigenerazione scatta quando la vita scende sotto il 40% (soglia del testo originale); X in % della vita massima al secondo.
+  - “Tetto dell’abilità 5” letto come 5 livelli: mine da 4 (livello 1) a 8 (livello 5).
+  - Congelante da −25% (livello 1) a −45% (livello 5).
+  - 5 livelli per ogni abilità; la prima di ogni gruppo è al livello 1 senza spesa, la seconda si sblocca con un nodo, la terza dopo la seconda.
+  - Le abilità si equipaggiano dal livello 40 (completato).
+  - Partenza sfalsata: la prima abilità con cooldown scatta a 10 s, la seconda a 20, la terza a 30. Le abilità con cooldown aspettano un nemico in campo
+    (la Repulsiva un nemico vicino alla barriera) prima di scattare.
+  - Costi: sblocco della seconda e della terza abilità di un gruppo 3 Sigilli; livelli 2-5 1 Sigillo ciascuno (come gli altri nodi). La terza non supera il livello della seconda,
+    la seconda non supera quello della prima (regola dei livelli).
+  - Valori per livello 1 → 5: Rigenerazione 2 → 4% della vita massima al secondo, per 5 → 7 s, 1 → 3 volte · Backup vita 20 → 60% · Impenetrabile un’immunità ogni 40 → 20 s ·
+    Repulsiva spinta 50 → 130 px (solo i nemici vicini alla barriera, metà schermo) · Congelante −25 → −45%, gas 8 s alto 60 → 140 px · Riflettente 30 → 70% del danno per 4 → 8 s
+    (danno force) · Ustionante 5 → 9 s, bruciatura di 3 s a 6 al secondo o al valore della torretta di fuoco più forte (Sky Guard: Missili incendiari; Firewheel: scia) ·
+    Minata 4 → 8 mine sul bordo · Potenziante +15 → +40% per 6 → 10 s. Il nodo Riduzione cooldown e il suo tetto valgono per tutte; Impenetrabile non scende sotto i 20 s.
+  - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
+  - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).

@@ -164,9 +164,9 @@ const TYPE_KEYS = ["fire", "energy", "electric", "force", "physical"];
 const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed: 20, r: 24, dmg: 9, boss: true, look: "ship",
   kbRes: 0.4 + 0.1 * ((lv * 7 + n / 5) % 5), statRes: 0.25 + 0.1 * ((lv * 3 + n / 5) % 4) });   // resistenze variabili: spinte 40-80%, stati 25-55%
 // vita base del boss finale, tarata con i bot perché i muri si superino circa nel 30% delle partite (scelta di Marco):
-// 10, 20, 30 sul pool libero; dal 40 con l’albero atteso, 1450 × (1 + 1,1 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
+// 10, 20, 30 sul pool libero; dal 40 con l’albero atteso e le abilità della barriera, 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
-const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.1 * Math.pow(Math.max(0, lv / 10 - 4), 0.35));
+const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35));
 // vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
 const WALL_ENEMY_HP = { 10: 0.93 };
 const finalBossDef = (lv) => ({ type: TYPE_KEYS[(lv / 10) % 5], hp: finalBossHp(lv), speed: 14, r: 34, dmg: 8, boss: true, final: true, look: "mothership", kbRes: 0.85, statRes: 0.6 });   // vita che cresce con il livello
@@ -183,7 +183,7 @@ const META = {
   startTurrets: [],        // vuoto = si parte senza torrette
   domeHp: 100,
   domeReduction: 0,        // 0..1: riduzione del danno subito dalla cupola
-  domeAbilities: [],       // fino a 3 tra: "regen", "repulse" (segnaposto: le abilità del § 16 sono diverse)
+  domeAbilities: [],       // abilità della barriera a mano, per le prove: id di ABILITIES (es. "regen", "repulse"), al livello dell’albero o 1
   unlocked: {},            // carte di TREE_LOCKS sbloccate con i Sigilli, per entità: { player: [...], sky: [...] }
 };
 
@@ -448,7 +448,7 @@ const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unloc
 // Fase 1, sblocchi (generati da TREE_LOCKS): chain da 3 voci in sequenza, le altre carte bloccate, “Sblocco permanente” dopo tutti gli altri.
 // Fase 2, nodi numerici: carte standard di ogni torretta e del guardiano, sezione condivisa per tipo, spina e rami della barriera.
 // Costi e valori [Claude, provvisori].
-const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3 };
+const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3, abilityUnlock: 3 };
 // nodi a livelli: il livello L costa 1 + ⌊(L − 1) / 5⌋ Sigilli (1 per i livelli 1-5, 2 per i 6-10, 3 per gli 11-15, 4 per i 16-20)
 const levelCost = (L) => 1 + Math.floor((L - 1) / 5);
 const CAT_NAME = { lu: "Level up", std: "Standard" };
@@ -503,6 +503,31 @@ TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + 
   lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"]),
   // Marco: la torretta o il guardiano con più carte scelte nella partita ha +5/10/15/20/25% di danno (a parità: tutti quelli in testa)
   lvNode("barrier:cards", "barrier", "Più carte, più danno", 5, (L) => "chi ha più carte: danno +" + pctS(TREE_VAL.cards * L), ["barrier:red"])];
+// Abilità della barriera (DESIGN.md § 16, fase 3): 3 gruppi, una abilità equipaggiata per gruppo, dal livello 40 completato.
+// La prima di ogni gruppo è l’abilità d’ingresso (livello 1 senza spesa); la seconda si sblocca con un nodo, la terza dopo la seconda.
+// Valori per livello 1-5 [Claude, provvisori] salvo quelli dati da Marco (Potenziante, Congelante: gas e altezza, mine da 4).
+const AB_GROUPS = [["resist", "Resistere", ["regen", "backup", "impen"]], ["control", "Controllo", ["repulse", "freeze", "reflect"]],
+  ["offense", "Offesa", ["burn", "mines", "power"]]];
+const AB_CD = 40;                                   // ciclo base delle abilità con cooldown (s)
+const ABILITIES = {
+  regen:   { name: "Rigenerazione", rate: [2, 2.5, 3, 3.5, 4], dur: [5, 5, 6, 6, 7], uses: [1, 2, 2, 3, 3],      // % della vita massima al secondo, s, volte
+    fx: (L, v) => fmt(v.rate) + "%/s per " + v.dur + " s, ×" + v.uses },
+  backup:  { name: "Barriera di backup", pct: [20, 30, 40, 50, 60], fx: (L, v) => "vita " + v.pct + "%" },
+  impen:   { name: "Barriera impenetrabile", every: [40, 35, 30, 25, 20], fx: (L, v) => "scudo ogni " + v.every + " s" },   // minimo 20 s
+  repulse: { name: "Barriera repulsiva", cd: true, knock: [50, 70, 90, 110, 130], fx: (L, v) => "spinta " + v.knock + " px" },
+  freeze:  { name: "Barriera congelante", cd: true, weak: [25, 30, 35, 40, 45], height: [60, 80, 100, 120, 140], dur: 8,
+    fx: (L, v) => "−" + v.weak + "%, " + v.height + " px" },
+  reflect: { name: "Barriera riflettente", cd: true, frac: [30, 40, 50, 60, 70], dur: [4, 5, 6, 7, 8], fx: (L, v) => v.frac + "% per " + v.dur + " s" },
+  burn:    { name: "Barriera ustionante", cd: true, dur: [5, 6, 7, 8, 9], dps: 6, fx: (L, v) => "brucia per " + v.dur + " s" },
+  mines:   { name: "Barriera minata", cd: true, count: [4, 5, 6, 7, 8], fx: (L, v) => v.count + " mine" },
+  power:   { name: "Barriera potenziante", cd: true, pct: [15, 21.25, 27.5, 33.75, 40], dur: [6, 7, 8, 9, 10], fx: (L, v) => "+" + fmt(v.pct) + "% per " + v.dur + " s" },
+};
+// valori di un’abilità al livello L (1-5): ogni lista diventa il suo elemento
+const abVal = (id, L) => { const a = ABILITIES[id], o = {}; for (const k in a) o[k] = Array.isArray(a[k]) ? a[k][Math.max(1, Math.min(5, L)) - 1] : a[k]; return o; };
+const AB_GROUP_OF = Object.fromEntries(AB_GROUPS.flatMap(([g, , ids]) => ids.map((id) => [id, g])));
+TREE.abilities = AB_GROUPS.flatMap(([g, , ids]) => ids.map((id, i) => ({ id: "ab:" + id, who: "abilities", kind: "ability", ab: id, group: g, name: ABILITIES[id].name,
+  max: 5, free: i === 0 ? 1 : 0, costs: [i === 0 ? 0 : SEAL_COST.abilityUnlock, 2, 3, 4, 5].map((c, k) => k ? levelCost(k + 1) : c), req: i ? ["ab:" + ids[i - 1]] : [],
+  fx: (L) => ABILITIES[id].fx(L, abVal(id, L)) })));
 const TREE_NODE = Object.fromEntries(Object.values(TREE).flat().map((n) => [n.id, n]));
 const TREE_IDS = new Set(Object.keys(TREE_NODE));
 
@@ -535,7 +560,8 @@ let mode = "standard";
 let clock = 0;
 let wave = 1, waveTime = 0, queue = [];
 let enemies = [], ents = [], floaters = [];
-let domeHp = 100, domeMax = 100, domeFlash = 0, domeSince = 0, repulseCd = 0;
+let domeHp = 100, domeMax = 100, domeFlash = 0, domeSince = 0, domeShield = 0;   // domeShield: immunità accumulate (un colpo ciascuna)
+let AB = { list: [] };          // abilità della barriera nella partita in corso (startAbilities)
 let player, slots, options = [];
 let dragging = false;
 const keys = { left: 0, right: 0 };
@@ -555,14 +581,20 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // seen = nemici già incontrati in tutta la campagna (chiave = aspetto: navicella, meteora…, nave aliena, nave madre)
 // seals = Sigilli da spendere · claims = premi già riscossi ("s31" primo completamento Standard del 31, "s31p" premio della barriera al 100%, "e5"… Epica)
 // tree = nodi comprati { "sky:burn1": 1 } · loadout = torrette equipaggiate prima dell’ondata 1 (con lo sblocco permanente, al massimo 4)
-const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [] };
+// abilities = abilità della barriera equipaggiate { resist, control, offense }; null = quelle d’ingresso (mai cambiate)
+const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [], abilities: null };
 // Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
 function cleanSeals(p) {
   const tree = {};
   if (p && p.tree && typeof p.tree === "object") for (const k in p.tree) { const L = Math.floor(+p.tree[k]); if (TREE_IDS.has(k) && L > 0) tree[k] = Math.min(L, TREE_NODE[k].max); }
   const claims = p && Array.isArray(p.claims) ? [...new Set(p.claims.filter((k) => typeof k === "string" && /^[se]\d{1,3}p?$/.test(k)))] : [];
   const loadout = p && Array.isArray(p.loadout) ? [...new Set(p.loadout.filter((id) => tree[id + ":perm"]))].slice(0, 4) : [];
-  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, claims, tree, loadout };
+  let abilities = null;
+  if (p && p.abilities && typeof p.abilities === "object") {
+    abilities = {};
+    for (const [g, , ids] of AB_GROUPS) { const id = p.abilities[g]; if (ids.includes(id) && (tree["ab:" + id] || TREE_NODE["ab:" + id].free)) abilities[g] = id; }
+  }
+  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, claims, tree, loadout, abilities };
 }
 try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
@@ -578,9 +610,10 @@ const epicUnlocked = () => progress.cleared >= CAMPAIGN.epicUnlock;
 const treeOpen = () => progress.cleared >= CAMPAIGN.sealsFrom || progress.claims.length > 0;   // l’albero si apre completando il livello 31
 
 /* ---------- ALBERO DEI SIGILLI: acquisto dei nodi e torrette equipaggiate ---------- */
-const nodeLv = (n) => progress.tree[n.id] || 0;
-const treeLv = (id) => progress.tree[id] || 0;
+const nodeLv = (n) => Math.max(progress.tree[n.id] || 0, n.free || 0);           // free: livello di partenza senza spesa (abilità d’ingresso)
+const treeLv = (id) => TREE_NODE[id] ? nodeLv(TREE_NODE[id]) : progress.tree[id] || 0;
 const nodeOwned = (n) => nodeLv(n) > 0;
+const abilitiesOpen = () => progress.cleared >= CAMPAIGN.barrierUnlock;
 const nodeCost = (n) => n.costs[Math.min(nodeLv(n), n.max - 1)];             // costo del prossimo livello
 // max (livello massimo) · ready (si può comprare) · req (i nodi precedenti non sono abbastanza alti) · poor (Sigilli insufficienti)
 const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.req.some((r) => treeLv(r) < Math.min(nodeLv(n) + 1, TREE_NODE[r].max)) ? "req"
@@ -608,6 +641,14 @@ function sealReward(m, lv, full) {
   return { got: 0, why: "done" };
 }
 let sealGain = null;
+// abilità equipaggiate per gruppo (senza scelta: quelle d’ingresso)
+const equippedAbilities = () => progress.abilities || Object.fromEntries(AB_GROUPS.map(([g, , ids]) => [g, ids[0]]));
+function equipAbility(id) {                     // tocco sul pallino: equipaggia nel suo gruppo o toglie
+  const g = AB_GROUP_OF[id], cur = { ...equippedAbilities() };
+  if (cur[g] === id) delete cur[g];
+  else { if (treeLv("ab:" + id) < 1) return false; cur[g] = id; }
+  progress.abilities = cur; saveProgress(); return true;
+}
 const curDiff = () => diffOf(campLevel, mode === "epic");
 const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
 const randEnemy = () => { const l = living(); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
@@ -619,9 +660,10 @@ const stdB = (s, id, v) => v * (1 + STD_BOOST.bonus * SB(s, id));               
 const stdR = (s, id, f) => 1 - (1 - f) * (1 + STD_BOOST.reduce * SB(s, id));       // fattore della ricarica per pila
 const stdM = (s, id, m) => 1 - (1 - m) * (1 - SB(s, id) / 3);                      // fattore del malus per pila (1 dal livello 3, poi oltre)
 const stdC = (s, id, v) => Math.round(v * (1 + STD_BOOST.bonus * SB(s, id)));      // bonus a numero intero per pila
-const dmgM = (s) => (1 + stdB(s, "dmg", 0.25) * N(s, "dmg")) * (1 + stdB(s, "fast", 0.1) * N(s, "fast")) * (s.tb || 1) * (s.top ? cardsBonus : 1);
+// bonus dell’albero e delle abilità che si sommano tra loro: tipo e tutte le torrette (s.tb), più carte, Barriera potenziante
+const dmgM = (s) => (1 + stdB(s, "dmg", 0.25) * N(s, "dmg")) * (1 + stdB(s, "fast", 0.1) * N(s, "fast")) * ((s.tb || 1) + (s.top ? cardsBonus - 1 : 0) + powerBonus);
 // nodo “Più carte, più danno”: s.top = ha più carte di tutti (ricalcolato a ogni carta presa); cardsBonus fissato a inizio partita
-let cardsBonus = 1;
+let cardsBonus = 1, powerBonus = 0;              // powerBonus: Barriera potenziante attiva
 const cardCount = (s) => Object.values(s.up).reduce((a, n) => a + n, 0);
 function markTop() {
   const all = [player, ...slots].filter(Boolean), best = Math.max(...all.map(cardCount));
@@ -650,7 +692,7 @@ let statDur = 1;                                // durata degli stati delle torr
 const slow = (e, t) => { e.slowT = Math.max(e.slowT, t * statDur); };
 // resistenza agli stati (statRes, solo boss): riduce l’intensità; resistenza ai knockback (kbRes). I boss sono immuni a paralisi, attrazione e teletrasporto.
 const burn = (e, t, dps) => { e.burnT = Math.max(e.burnT, t * statDur); e.burnDps = Math.max(e.burnDps, dps * (1 - (e.statRes || 0))); };
-const weaken = (e, t) => { e.weakT = Math.max(e.weakT, t * statDur); };
+const weaken = (e, t, k) => { k = k || 0.35; e.weakK = e.weakT > 0 ? Math.max(e.weakK || 0.35, k) : k; e.weakT = Math.max(e.weakT, t * statDur); };   // k: −35% di base, Congelante di più
 const para = (e, t) => { if (e.boss) return; e.paraT = Math.max(e.paraT, t * statDur); };
 function vuln(e, t, type) {
   if (e.vulnT > 0 && e.vulnType === "all") type = "all";
@@ -1680,9 +1722,10 @@ function startRun(m) {
   manual = settings.aim === "manual"; aim.down = false;
   mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
-  domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp")) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0; repulseCd = 6;
+  domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp")) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan");
   statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
+  startAbilities();
   slots = [null, null, null, null];
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
   // torrette equipaggiate con lo sblocco permanente (DESIGN.md § 16): ognuna consuma una delle prime scelte dopo le ondate.
@@ -1731,12 +1774,87 @@ function domeNear(e) {
   const dx = (e.x - DOME.cx) / (DOME.rx + e.def.r), dy = (e.y - DOME.cy) / (DOME.ry + e.def.r);
   return Math.sqrt(dx * dx + dy * dy) <= 1.25;
 }
+/* ---------- ABILITÀ DELLA BARRIERA (DESIGN.md § 16) ---------- */
+// equipaggiate dall’albero (dal livello 40 completato) e, a mano, META.domeAbilities (livello dell’albero o 1)
+function startAbilities() {
+  const ids = abilitiesOpen() ? Object.values(equippedAbilities()) : [];
+  for (const id of META.domeAbilities) if (ABILITIES[id] && !ids.includes(id)) ids.push(id);
+  AB = { list: [], burnT: 0, reflectT: 0, powerT: 0, gasT: 0, regenT: 0, regenWait: 0, regenUses: 0, backupUsed: false };
+  domeShield = 0; powerBonus = 0;
+  let k = 0;
+  for (const id of ids) {
+    const v = abVal(id, Math.max(1, treeLv("ab:" + id))), a = { id, v, t: 0 };
+    if (ABILITIES[id].cd) a.t = 10 * ++k;                                           // partenza sfalsata: 10, 20, 30 s
+    if (id === "impen") a.t = abEvery(v);
+    AB.list.push(a);
+  }
+}
+const abEvery = (v) => Math.max(20, v.every * abCdM());                             // Impenetrabile: minimo 20 s
+const hasAb = (id) => AB.list.find((a) => a.id === id);
+// valore della bruciatura: la torretta di fuoco più forte in campo, altrimenti fisso
+function fireBurnDps() {
+  let best = ABILITIES.burn.dps;
+  for (const s of slots) if (s && s.id === "sky") best = Math.max(best, 6 * dmgM(s) * (has(s, "burn2") ? 1.6 : 1));
+  else if (s && s.id === "wheel") best = Math.max(best, 5 * dmgM(s) * (has(s, "trailB") ? 1.6 : 1));
+  return best;
+}
+function fireAbility(a) {
+  const v = a.v;
+  if (a.id === "repulse") {                                                         // onda su metà schermo, dal lato con più nemici
+    const L = living().filter((e) => e.y > 0), left = L.filter((e) => e.x < W / 2).length >= L.length - L.filter((e) => e.x < W / 2).length;
+    for (const e of L) if ((e.x < W / 2) === left && domeNear(e)) knock(e, v.knock);
+    domeWave(left ? -1 : 1);
+  } else if (a.id === "freeze") { AB.gasT = v.dur; AB.gasH = v.height; AB.gasK = v.weak / 100; }
+  else if (a.id === "reflect") { AB.reflectT = v.dur; AB.reflectK = v.frac / 100; }
+  else if (a.id === "burn") { AB.burnT = v.dur; AB.burnDps = fireBurnDps(); }
+  else if (a.id === "mines") {                                                      // mine lungo il bordo: quelle dell’Aeroblast in campo, o una base
+    const src = slots.find((s) => s && s.id === "aero") || makeShooter(TURRETS.aero, W / 2, GROUND_Y - 14);
+    for (let i = 0; i < v.count; i++) {
+      const ang = Math.PI * (1.08 + 0.84 * i / Math.max(1, v.count - 1));
+      mine(src, DOME.cx + (DOME.rx + 10) * Math.cos(ang), DOME.cy + (DOME.ry + 10) * Math.sin(ang));
+    }
+  } else if (a.id === "power") { AB.powerT = v.dur; powerBonus = v.pct / 100; }
+}
+function abilityTick(dt) {
+  const anyone = enemies.some((e) => !e.dead && e.y > 0);
+  for (const a of AB.list) {
+    if (a.id === "impen") { a.t -= dt; if (a.t <= 0) { domeShield++; a.t = abEvery(a.v); } continue; }
+    if (!ABILITIES[a.id].cd) continue;
+    a.t -= dt;
+    const ready = a.id === "repulse" ? enemies.some((e) => !e.dead && domeNear(e)) : anyone;   // aspetta un bersaglio prima di partire
+    if (a.t <= 0 && ready) { fireAbility(a); a.t = AB_CD * abCdM(); }
+  }
+  AB.burnT = Math.max(0, AB.burnT - dt); AB.reflectT = Math.max(0, AB.reflectT - dt);
+  if (AB.powerT > 0) { AB.powerT -= dt; if (AB.powerT <= 0) powerBonus = 0; }
+  if (AB.gasT > 0) {                                                                // gas: fascia sopra il bordo della cupola
+    AB.gasT -= dt; const h = AB.gasH;
+    for (const e of living()) { const dx = (e.x - DOME.cx) / (DOME.rx + h), dy = (e.y - DOME.cy) / (DOME.ry + h); if (dx * dx + dy * dy <= 1) weaken(e, 0.3, AB.gasK); }
+  }
+  const rg = hasAb("regen");
+  if (rg) {                                                                         // Rigenerazione: sotto il 40%, X% al secondo per Y s, al massimo Z volte
+    if (AB.regenT > 0) { domeHp = Math.min(domeMax, domeHp + domeMax * rg.v.rate / 100 * dt); AB.regenT -= dt; if (AB.regenT <= 0) AB.regenWait = 2 * rg.v.dur; }
+    else if (AB.regenWait > 0) AB.regenWait -= dt;
+    else if (AB.regenUses < rg.v.uses && domeHp < 0.4 * domeMax) { AB.regenUses++; AB.regenT = rg.v.dur; }
+  }
+}
+// Barriera di backup: la prima volta che la cupola cade, una nuova al X% della vita originale
+function tryBackup() {
+  const b = hasAb("backup"); if (!b || AB.backupUsed) return false;
+  AB.backupUsed = true; domeHp = domeMax * b.v.pct / 100; ring(DOME.cx, DOME.cy, DOME.ry, "#7fe8ff", 0.8); return true;
+}
+function domeWave(side) {
+  spawnEnt({ t: 0.6, side, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; }, draw() { FX.domeWave(this); } });
+}
+
 // riduzione del danno alla cupola: META (equipaggiamento, a mano) + albero, con tetto sul totale; cooldown delle abilità idem
 const domeRed = () => Math.min(TREE_CAP.red, clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red"));
 const abCdM = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd"));
 function domeHit(e) {
-  const dmg = Math.max(1, e.dmg * (e.weakT > 0 ? 1 - 0.35 * (1 - (e.statRes || 0)) : 1) * (1 - 0.1 * e.destrN * (1 - (e.statRes || 0))) * (1 - domeRed()));
+  const dmg = Math.max(1, e.dmg * (e.weakT > 0 ? 1 - (e.weakK || 0.35) * (1 - (e.statRes || 0)) : 1) * (1 - 0.1 * e.destrN * (1 - (e.statRes || 0))) * (1 - domeRed()));
+  if (AB.burnT > 0) burn(e, 3, AB.burnDps);                                     // Barriera ustionante: brucia chi colpisce
+  if (domeShield > 0) { domeShield--; ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // immunità (Impenetrabile, in futuro equipaggiamento)
   if (Math.random() < TREE_VAL.ignore * treeLv("barrier:ignore")) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#c9a2ff", 0.3); return; }   // colpo ignorato (albero)
+  if (AB.reflectT > 0) damage(e, dmg * AB.reflectK, "force", false, "dome");    // Barriera riflettente
   domeHp -= dmg; domeFlash = 0.25; domeSince = 0;
   ring(e.x, Math.min(e.y, GROUND_Y), 22, "#7fe8ff", 0.3);
 }
@@ -1778,15 +1896,7 @@ function update(dt) {
   }
 
   domeSince += dt; domeFlash = Math.max(0, domeFlash - dt);
-  const ab = META.domeAbilities.slice(0, 3);
-  if (ab.includes("regen") && domeSince >= 4 && domeHp < domeMax) domeHp = Math.min(domeMax, domeHp + 3 * dt);
-  if (ab.includes("repulse")) {
-    repulseCd -= dt;
-    if (repulseCd <= 0 && enemies.some((e) => !e.dead && domeNear(e))) {
-      for (const e of enemies) if (!e.dead) { knock(e, 70); damage(e, 15, "force"); }
-      ring(DOME.cx, DOME.cy, DOME.ry, "#b07cff", 0.5); repulseCd = 14 * abCdM();
-    }
-  }
+  abilityTick(dt);
 
   for (const e of enemies) if (!e.dead && e.y >= 0) markSeen(e);                 // entrato nella schermata
   if (alerts.length) { alerts[0].t -= dt; if (alerts[0].t <= 0) alerts.shift(); }
@@ -1796,14 +1906,14 @@ function update(dt) {
   enemies = enemies.filter((e) => !e.dead);
   floaters = floaters.filter((f) => f.life > 0);
 
-  if (domeHp <= 0) { domeHp = 0; state = "lost"; return; }
+  if (domeHp <= 0 && !tryBackup()) { domeHp = 0; state = "lost"; return; }
   if (waveTime >= 0 && !queue.length && !enemies.length) endWave();
 }
 
 function winLevel() {
   state = "won";
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
-  sealGain = sealReward(mode, campLevel, domeHp >= domeMax);
+  sealGain = sealReward(mode, campLevel, domeHp >= domeMax && !AB.backupUsed);   // con il Backup attivato il premio della cupola non si prende
   saveProgress();
   selLevel = clamp(campLevel + 1, 1, maxSelectable());
 }
@@ -1821,7 +1931,7 @@ function nextOrRetry() {
 }
 function toMenu() { state = "menu"; selLevel = clamp(selLevel, 1, maxSelectable()); }
 // schermata dell’albero: sezione (player | turrets | barrier), torretta scelta, nodo in attesa del secondo tocco
-let treeTab = "turrets", treeSel = "sky", treeArm = null;   // treeSel: id della torretta o "types" (sezione condivisa)
+let treeTab = "turrets", treeSel = "sky", treeArm = null, barrierTab = "nodes";   // treeSel: id della torretta o "types" (sezione condivisa)
 function openTree() { if (!treeOpen()) return; state = "tree"; treeArm = null; }
 function closeTree() { state = "menu"; treeArm = null; }
 function tapNode(n) {                            // primo tocco: seleziona; secondo tocco: compra (i Sigilli non si rimborsano, per ora)
@@ -1910,12 +2020,12 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.8.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout] },
+    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities } },
     settings: { targeting: settings.targeting, aim: settings.aim } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -1944,7 +2054,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.seen = d.seen;
-  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout;
+  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities;
   settings.targeting = d.targeting; settings.aim = d.aim;
   saveProgress(); saveSettings(); selLevel = maxSelectable();
 }

@@ -89,6 +89,13 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     g.w.__ev("treeSel = 'laser'; tapNode(TREE.laser[1])"); g.frame(); g.save("22-albero-acquisto.png");
     g.w.__ev("treeTab = 'player'; treeArm = null"); g.frame(); g.save("23-albero-guardiano.png");
     g.w.__ev("treeTab = 'barrier'"); g.frame(); g.save("24-albero-barriera.png");
-    g.w.__ev("treeTab = 'turrets'; treeSel = 'types'"); g.frame(); g.save("26-albero-tipi.png"); }
+    g.w.__ev("treeTab = 'turrets'; treeSel = 'types'"); g.frame(); g.save("26-albero-tipi.png");
+    g.w.__ev("treeTab = 'barrier'; barrierTab = 'abilities'"); g.frame(); g.save("27-albero-abilita.png"); }
+  { // abilità in battaglia: gas della Congelante, onda della Repulsiva, mine, bordo della Riflettente, immunità accumulate
+    const g = game({ progress: { cleared: 45, seen: ALL_SEEN, tree: { "ab:freeze": 2, "ab:reflect": 1, "ab:mines": 1 } }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[60, 470], [110, 440], [250, 450], [300, 480], [180, 400], [140, 330]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev("fireAbility({ id: 'freeze', v: abVal('freeze', 3) }); fireAbility({ id: 'mines', v: abVal('mines', 3) }); fireAbility({ id: 'reflect', v: abVal('reflect', 1) }); domeShield = 3;");
+    g.frame(40); ev("fireAbility({ id: 'repulse', v: abVal('repulse', 3) })"); g.frame(12); g.save("28-abilita-battaglia.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
 }

@@ -1,6 +1,6 @@
 // Curva della campagna oltre il 30 con l'albero dei Sigilli: per ogni livello i bot partono con l'albero "atteso",
 // cioè con i Sigilli presi fino a lì (in Standard: 1 per livello dal 31 più, in media, metà dei premi della cupola al 100%)
-// spesi da una strategia semplice (prima i nodi condivisi, poi danno e barriera, poi il resto).
+// spesi da una strategia semplice (prima i nodi condivisi, poi danno e barriera, poi il resto); dal 40 i bot usano le tre abilità d’ingresso.
 // Uso: node tests/tools/curva.js <livelli> [partite per bot, default 20] [primo seme, default 1] [Sigilli per livello, default 1.5] [sostituzioni JSON]
 const { play, makeGame } = require("../bot.js");
 const LVS = process.argv[2].split(",").map(Number), N = +(process.argv[3] || 20), S0 = +(process.argv[4] || 1), PER = +(process.argv[5] || 1.5);
@@ -13,7 +13,7 @@ const sealsAt = (L) => Math.floor(PER * Math.max(0, L - 31));
 // strategia di spesa: costo del prossimo livello × peso; vince il più basso (pari: ordine dell'albero)
 const SPEND = `(() => {
   const W = (n) => n.id === "types:all" || n.id === "player:std:dmg" || n.id === "barrier:cards" ? 1 : n.id === "barrier:hp" || n.id === "barrier:red" ? 1.3
-    : n.id.startsWith("types:dmg") ? 2.5 : /:std:dmg$/.test(n.id) ? 4 : n.id === "barrier:cd" ? 99 : n.kind === "level" ? 6 : 3;
+    : n.id.startsWith("types:dmg") ? 2.5 : /:std:dmg$/.test(n.id) ? 4 : n.kind === "ability" ? (n.free ? 3 : 99) : n.kind === "level" ? 6 : 3;
   for (;;) {
     let best = null, bw = Infinity;
     for (const n of Object.values(TREE_NODE)) if (nodeState(n) === "ready") { const w = nodeCost(n) * W(n); if (w < bw) { bw = w; best = n; } }

@@ -153,6 +153,13 @@ function scenes(turretIds) {
     { progress: PS, setup: "openTree(); treeSel = 'laser'; tapNode(TREE.laser[1]);", frames: 1 }, ["treeScreen", "treeNodeRow"]);
   add(1, "albero-guardiano", "Albero dei Sigilli · Guardiano", "Le 6 carte bloccate del guardiano e i 3 nodi delle sue carte.", { progress: PS, setup: "openTree(); treeTab = 'player';", frames: 1 }, ["treeScreen"]);
   add(1, "albero-barriera", "Albero dei Sigilli · Barriera", "Spina Vita % → Riduzione danno e rami (nodi a livelli); abilità nella fase 3.", { progress: PS, setup: "openTree(); treeTab = 'barrier';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
+  add(1, "albero-abilita", "Albero dei Sigilli · Abilità", "Tre gruppi (Resistere, Controllo, Offesa): pallino per equipaggiare una abilità per gruppo, righe per i livelli.",
+    { progress: Object.assign({}, PS, { cleared: 45 }), setup: "openTree(); treeTab = 'barrier'; barrierTab = 'abilities';", frames: 1 }, ["treeScreen", "treeAbilities", "treeNodeRow"]);
+  add(1, "abilita-battaglia", "Abilità della barriera in battaglia", "Gas della Congelante, mine della Minata, bordo della Riflettente, onda della Repulsiva, immunità accumulate.",
+    { progress: { cleared: 45, seen: ALL_SEEN, tree: { "ab:freeze": 2, "ab:reflect": 1, "ab:mines": 1 } },
+      setup: START(45) + " queue = []; enemies.length = 0; " + [[60, 470], [110, 440], [250, 450], [300, 480], [180, 400], [140, 330]].map(([x, y]) => FOE("shell", x, y, {})).join(" ") +
+        " fireAbility({ id: 'freeze', v: abVal('freeze', 3) }); fireAbility({ id: 'mines', v: abVal('mines', 3) }); fireAbility({ id: 'reflect', v: abVal('reflect', 1) }); domeShield = 3; __cat.step(40); fireAbility({ id: 'repulse', v: abVal('repulse', 3) });",
+      each: "if (Math.random() < 0.01) fireAbility({ id: 'repulse', v: abVal('repulse', 3) });", frames: 12 }, ["FX.domeGas", "FX.domeWave", "FX.domeAura", "FX.shieldCount", "FX.aeroMine"]);
   add(1, "albero-tipi", "Albero dei Sigilli · Tipi", "Sezione condivisa delle torrette: danno per tipo, di tutte le torrette, durata degli stati.", { progress: PS, setup: "openTree(); treeSel = 'types';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
@@ -242,6 +249,10 @@ function tiles(M) {
     vortex: ["FX.vortex({ x: 0, y: 0, spin: T * 4 }, 32);", [-36, -36, 72, 72], 2],
     portals: ["FX.portals({ t: 4 }, { x: -34, y: 0 }, 22, { x: 36, y: 0 });", [-60, -28, 120, 56], 2],
     guardBullet: ["[[false, false, false, null], [false, false, true, null], [false, true, false, null], [true, false, false, null]].forEach(([charged, clone, fan], i) => FX.guardBullet({ x: -24 + i * 16, y: 6, vx: 0, vy: -1 }, charged, clone, fan, false));", [-32, -16, 64, 32], 3],
+    domeWave: ["const o = { t: 0.6 - (T % 1), side: Math.floor(T) % 2 ? 1 : -1 }; if (o.t > 0) FX.domeWave(o);", [0, 380, 360, 200], 1],
+    domeGas: ["FX.domeGas(60 + 80 * ((T * 0.25) % 1), 1);", [0, 330, 360, 250], 1],
+    domeAura: ["DRAW.drawDomeEdge(); FX.domeAura(['#e8eefc', '#ff8a3d', '#ffd166', '#3fe0a0'][Math.floor(T) % 4]);", [0, 440, 360, 140], 1],
+    shieldCount: ["FX.shieldCount(0, 0, 1 + Math.floor(T) % 5);", [-12, -12, 24, 24], 4],
   };
   for (const k of M.fxKeys) { const t = FXT[k] || ["", [-20, -20, 40, 40], 2]; add("fx:" + k, "FX." + k, t[0], t[1], t[2], true, { fx: k, missing: !FXT[k] }); }
   add("parte:thunderDraw", "thunderDraw (sfere del Thunderbolt)", "DRAW.thunderDraw({ st: { sph: [{ x: -14, y: 0 }, { x: 14, y: 0 }] } });", [-28, -14, 56, 28], 3);

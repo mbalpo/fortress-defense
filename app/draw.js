@@ -54,6 +54,10 @@ function drawDomeEdge() {
   ctx.lineWidth = 2 + domeFlash * 8;
   ctx.strokeStyle = frac > 0.35 ? "rgba(127,232,255," + (0.35 + 0.4 * frac + domeFlash) + ")" : "rgba(255,110,110," + (0.5 + domeFlash) + ")";
   ctx.stroke();
+  if (AB.gasT > 0) FX.domeGas(AB.gasH, AB.gasT);
+  // abilità attive: bordo colorato (riflettente argento, ustionante arancione, potenziante oro, rigenerazione verde)
+  const tint = AB.reflectT > 0 ? "#e8eefc" : AB.burnT > 0 ? "#ff8a3d" : AB.powerT > 0 ? "#ffd166" : AB.regenT > 0 ? "#3fe0a0" : null;
+  if (tint) FX.domeAura(tint);
 }
 function drawGround() {
   ctx.fillStyle = "#14203f"; ctx.fillRect(0, GROUND_Y, W, GROUND_H);
@@ -239,6 +243,7 @@ function drawFortress() {
   ctx.fillStyle = frac > 0.35 ? "#3fe0a0" : "#ff5a5a"; ctx.fillRect(10, y + 9, (W - 20) * frac, 8);
   ctx.strokeStyle = "#2c4272"; ctx.lineWidth = 1; ctx.strokeRect(10, y + 9, W - 20, 8);
   txt("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13, 10, "#e8eefc", "center", "700");
+  if (domeShield > 0) FX.shieldCount(W - 30, y + 13, domeShield);                // immunità accumulate (Impenetrabile)
 }
 function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, W, H); }
 
@@ -465,20 +470,21 @@ function upgradeScreen() {
 
 /* ---------- ALBERO DEI SIGILLI ---------- */
 const TREE_TABS = [["player", "Guardiano"], ["turrets", "Torrette"], ["barrier", "Barriera"]];
-function treeNodeRow(n, y) {
+function treeNodeRow(n, y, x0, w0) {
+  const X = x0 || 16, Wd = w0 || 328, R = X + Wd;      // posizione e larghezza della riga
   const st = nodeState(n), L = nodeLv(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
   const full = st === "max", stroke = full ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
-  button(16, y, 328, 40, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
-  txt(n.name, 26, y + 13, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
+  button(X, y, Wd, 40, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
+  txt(n.name, X + 10, y + 13, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
   let sub = n.sub, subC = "#6f82ad";
-  if (n.kind === "level") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
+  if (n.kind === "level" || n.kind === "ability") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
   if (armed) { sub = "Tocca di nuovo per spendere " + nodeCost(n) + " ◆"; subC = "#ffd166"; }
-  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
+  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" || n.kind === "ability" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
   else if (full && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
-  txt(sub, 26, y + 29, 10, subC, "left", "500");
-  if (n.max > 1) txt(L + "/" + n.max, 300, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
-  if (full) txt("✓", 332, y + 20, 15, "#3fe0a0", "right", "800");
-  else txt(nodeCost(n) + " ◆", 334, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
+  txt(sub, X + 10, y + 29, 10, subC, "left", "500");
+  if (n.max > 1) txt(L + "/" + n.max, R - 44, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
+  if (full) txt("✓", R - 12, y + 20, 15, "#3fe0a0", "right", "800");
+  else txt(nodeCost(n) + " ◆", R - 10, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
 }
 function treeScreen() {
   dim(0.92);
@@ -511,13 +517,35 @@ function treeScreen() {
       rows(TREE[treeSel], 212);
     }
   } else {
-    txt("Barriera · Vita % → Riduzione danno → rami", 16, 98, 12, "#9fb4d9", "left", "700");
-    rows(TREE.barrier, 112);
-    const y = 112 + TREE.barrier.length * 45 + 8;
-    ["Abilità della barriera (dal livello " + CAMPAIGN.barrierUnlock + ") e loro cooldown: fase 3.",
-      "Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + "."]
-      .forEach((l, i) => txt(l, 16, y + i * 18, 10, "#6f82ad", "left", "500"));
+    [["nodes", "Potenziamenti"], ["abilities", "Abilità"]].forEach(([id, label], i) => {
+      const on = barrierTab === id;
+      button(16 + i * 168, 88, 160, 26, label, () => { barrierTab = id; treeArm = null; },
+        { size: 11, fill: on ? "rgba(201,162,255,0.14)" : "rgba(18,30,58,0.92)", stroke: on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
+    });
+    if (barrierTab === "nodes") {
+      txt("Vita % → Riduzione danno → rami", 16, 128, 12, "#9fb4d9", "left", "700");
+      rows(TREE.barrier, 140);
+      txt("Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + ".", 16, 140 + TREE.barrier.length * 45 + 8, 10, "#6f82ad", "left", "500");
+    } else treeAbilities();
   }
+}
+// abilità della barriera: tre gruppi, un pallino per equipaggiare (una per gruppo), la riga per comprare i livelli
+function treeAbilities() {
+  const open = abilitiesOpen(), eq = equippedAbilities();
+  txt(open ? "Una abilità per gruppo · tocca il pallino per equipaggiarla" : "Si equipaggiano completando il livello " + CAMPAIGN.barrierUnlock, 16, 128, 11, open ? "#9fb4d9" : "#ff9a5a", "left", "600");
+  let y = 140;
+  AB_GROUPS.forEach(([g, label, ids]) => {
+    txt(label, 16, y + 8, 12, "#c9a2ff", "left", "800"); y += 18;
+    ids.forEach((id) => {
+      const n = TREE_NODE["ab:" + id], on = eq[g] === id, can = open && nodeLv(n) > 0;
+      button(16, y, 30, 40, "", () => { if (can) equipAbility(id); treeArm = null; }, { stroke: on ? "#c9a2ff" : "#2c4272" });
+      disc(31, y + 20, 7, on ? "#c9a2ff" : can ? "#2c4272" : "#18233f");
+      if (on) disc(31, y + 20, 3.5, "#070b16");
+      treeNodeRow(n, y, 50, 294);
+      y += 44;
+    });
+    y += 4;
+  });
 }
 
 function drawCrosshair(x, y) {                  // mira manuale: mirino nel punto premuto
@@ -707,6 +735,31 @@ const FX = {
     ctx.strokeStyle = charged ? "#fff6b0" : TYPES.physical.color; ctx.lineWidth = charged ? 3.4 : fan || frag ? 1.4 : 2.2; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(o.x - o.vx * (charged ? 12 : 7), o.y - o.vy * (charged ? 12 : 7)); ctx.lineTo(o.x, o.y); ctx.stroke();
     ctx.globalAlpha = 1;
+  },
+  domeWave(o) {                                  // barriera · Repulsiva: onda d’urto su metà cupola (o.side −1 sinistra, 1 destra), si allarga e svanisce
+    const k = 1 - o.t / 0.6, a0 = o.side < 0 ? Math.PI : Math.PI * 1.5;
+    ctx.globalAlpha = clamp(o.t / 0.6, 0, 1); ctx.strokeStyle = "#b07cff"; ctx.lineWidth = 6 - 3 * k;
+    ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + 6 + 60 * k, DOME.ry + 6 + 60 * k, 0, a0, a0 + Math.PI / 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  },
+  domeGas(h, t) {                                // barriera · Congelante: fascia di gas alta h sopra il bordo, svanisce nell’ultimo secondo
+    ctx.globalAlpha = 0.22 * clamp(t, 0, 1);
+    ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + h, DOME.ry + h, 0, Math.PI, Math.PI * 2); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI * 2, Math.PI, true);
+    ctx.fillStyle = "#9fe8ff"; ctx.fill();
+    ctx.globalAlpha = 0.5 * clamp(t, 0, 1);
+    for (let i = 0; i < 18; i++) {               // fiocchi che salgono piano
+      const a = Math.PI * (1.04 + 0.92 * ((i * 0.37) % 1)), r = (((i * 0.61) + clock * 0.15) % 1) * h;
+      disc(DOME.cx + (DOME.rx + r) * Math.cos(a), DOME.cy + (DOME.ry + r) * Math.sin(a), 1.6, "#e8f8ff");
+    }
+    ctx.globalAlpha = 1;
+  },
+  domeAura(color) {                              // barriera · bordo di un’abilità attiva (Riflettente, Ustionante, Potenziante, Rigenerazione)
+    ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + 3, DOME.ry + 3, 0, Math.PI, Math.PI * 2);
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.45 + 0.25 * Math.sin(clock * 8); ctx.stroke(); ctx.globalAlpha = 1;
+  },
+  shieldCount(x, y, n) {                         // barriera · immunità accumulate: scudo con il numero
+    poly([[x - 7, y - 8], [x + 7, y - 8], [x + 7, y], [x, y + 8], [x - 7, y]], "#e8eefc", "#7fe8ff", 1.2);
+    txt(String(n), x, y - 1, 9, "#070b16", "center", "800");
   },
 };
 
