@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.4.1 — muri 10, 20 e 30 al 30%
+
+Decisione di Marco: con il pool libero i muri erano troppo punitivi; i livelli 10, 20 e 30 si devono superare in circa il 30% delle partite. Leve e valori di Claude.
+
+- `app/index.html`: vita base del boss finale in una tabella `FINAL_BOSS_HP` = { 10: 400, 20: 2250, 30: 1450 } (prima 800, 2800, 2900); oltre il 30
+  +100 ogni 10 livelli (provvisoria, ora 1550 al 40 e 1650 al 50 invece di 3000 e 3100). Nuova `WALL_ENEMY_HP` = { 10: 0.93 }: al livello 10 i nemici normali
+  hanno il 93% della vita (al 10 solo il 37% dei bot arrivava al boss: abbassare solo il boss non bastava, restava sotto il 20%).
+- Prove (pool libero, 200-400 partite per variante, semi diversi da quelli della misura finale): boss ×1 / ×0,7 / ×0,5 / ×0,35 → livello 20: 15% / 35% / 50% / 57%,
+  livello 30: 4,5% / 13% / 31% / 44%, livello 10 fermo intorno al 19%; al 10 con boss ×0,5 e nemici ×0,9 33-42%, ×0,93 30%; al 20 boss ×0,8 31%; al 30 boss ×0,55 26%.
+- **Misura finale** (800 partite, semi 1-400 per bot, gli stessi della 1.4.0): **10 33,0%** · **20 28,0%** · **30 31,3%** (prima 9,9%, 18,1%, 4,9%).
+  `l30.js`: arrivano all’ondata 20 in 446, 469 e 404 su 800. Livello 9 circa 36% (200 partite). Gli altri livelli non cambiano.
+- DESIGN.md: § 5 formula del boss e nuova voce “Muri al 30%” con i numeri; § 10 vita del boss finale; § 11 tolta la decisione aperta “Difficoltà con il pool libero”.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.4.1.
+
+Test: `npm test`, 26 test, tutti verdi. Screenshot non rifatti: nessuna schermata cambiata.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (disegni non cambiati: cambia solo l’hash dei file).
+
+Checklist: togliere “Difficoltà con il pool libero: muri al 20 (18%) e al 30 (5%) da decidere”; nuova voce “Muri 10/20/30 al 30% (§ 5): da verificare giocando,
+anche in Epica (non misurata)”.
+
 ## 1.4.0 — Sigilli e albero dei potenziamenti: design e carte bloccate
 
 Testo di Marco dal progetto su claude.ai, inserito in DESIGN.md; nel codice solo il blocco delle carte (l’albero, i Sigilli e il loro salvataggio non esistono ancora).

@@ -84,7 +84,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   - difficoltà effettiva `effD`: piena fino a 20, al **30%** tra 20 e 30 (la potenza del giocatore è ferma fino al boss del 30),
     piena dal 31 *(provvisoria: dal 31 serviranno equipaggiamento, barriera e chip)*;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
-  - mini-boss: vita 480, danno 9; boss finale: vita 800 al 10, 2800 al 20, poi +100 ogni 10 livelli, danno 8. **[da rivedere]**
+  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30, poi +100 ogni 10 livelli (provvisoria), danno 8 (`FINAL_BOSS_HP`);
+    al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
 - Esito attuale (vittorie dei bot): livelli 1-5 100% · 8 circa 40-60% · **10 circa 25-30% (muro)** · 11-15 circa 60-80% (sollievo dopo lo sblocco) ·
@@ -105,6 +106,11 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   25 50,8% → 55,8% · **30 4,9% → 22,3%**. Al 10 il calo è vicino al rumore; al **20 e al 30 la vittoria si dimezza o crolla**, mentre l’ondata media
   resta quasi uguale (20: 16,9 e 16,9; 30: 15,7 e 16,0): i bot arrivano all’ondata 20 (469 su 800 al 20, 404 al 30) ma non battono il boss finale
   (vincono 145 e 39). Il muro dei boss finali, a tetto lv2 e lv3, dipende dalle carte bloccate. Nessun numero della difficoltà cambiato: decisione aperta (§ 11).
+- **Muri al 30%** **[deciso]** (Marco: con il pool libero erano troppo punitivi): i livelli 10, 20 e 30 si devono superare in circa il **30%** delle partite.
+  Leve scelte da Claude: vita del boss finale (al 10 ×0,5, al 20 ×0,8, al 30 ×0,5 rispetto a prima) e, solo al 10, vita dei nemici normali ×0,93,
+  perché lì si muore anche prima del boss (con il solo boss più debole il 10 restava sotto il 20%). Misura 1.4.1 (pool libero, 800 partite, stessi semi di sopra):
+  **10 33,0%** · **20 28,0%** · **30 31,3%** (prima 9,9%, 18,1%, 4,9%); arrivano all’ondata 20: 446, 469, 404 su 800. Il livello 9 misura circa 36% (200 partite):
+  il 10 resta un gradino, non un muro più alto. Gli altri livelli non cambiano. In Epica valgono gli stessi numeri per livello (non misurato).
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -327,7 +333,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Combo del guardiano, letture di Claude: “torretta di lv2” = basta la torretta al livello 2, il guardiano può essere al livello 1;
   “scelta chain X” = la torretta ha la voce lv1 di quella chain  **[da rivedere]**
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
-- Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita 800 al livello 10, 2800 al 20, 2900 al 30 (oltre il 30 provvisoria), danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
+- Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita base 400 al livello 10, 2250 al 20, 1450 al 30 (oltre il 30 provvisoria; § 5), danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
 
 Interpretazioni di Claude **confermate**: Disruption Drone lv3 “aumento intervallo del danneggiamento” = danneggia più spesso (ogni 0,6 s);
 Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 px → 480 px con 3 pile); Hive, un “colpo” è una raffica
@@ -339,7 +345,6 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale), calibrazione con il pool libero. **Moduli** (§ 15): vedi sotto.
-- **Difficoltà con il pool libero**: con le carte bloccate le vittorie dei bot scendono al 18% al livello 20 e al 5% al 30 (§ 5). Da decidere se abbassare i boss finali (o la curva dal 20), cambiare le carte bloccate o accettare muri più duri.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.

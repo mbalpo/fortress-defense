@@ -160,8 +160,12 @@ function waveSpec(n, D) {
 const TYPE_KEYS = ["fire", "energy", "electric", "force", "physical"];
 const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed: 20, r: 24, dmg: 9, boss: true, look: "ship",
   kbRes: 0.4 + 0.1 * ((lv * 7 + n / 5) % 5), statRes: 0.25 + 0.1 * ((lv * 3 + n / 5) % 4) });   // resistenze variabili: spinte 40-80%, stati 25-55%
-// vita del boss finale: sale in fretta fino al 20, poi piano, perché la potenza del giocatore resta ferma finché non arrivano equipaggiamento e chip (oltre il 30 provvisoria)
-const finalBossHp = (lv) => lv <= 20 ? 800 * (1 + 2.5 * (lv / 10 - 1)) : 2800 + 100 * (lv / 10 - 2);
+// vita base del boss finale, tarata con i bot sul pool libero perché i muri 10, 20 e 30 si superino circa nel 30% delle partite
+// (scelta di Marco); oltre il 30 provvisoria: +100 ogni 10 livelli
+const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
+const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] + 100 * (lv / 10 - 3);
+// vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
+const WALL_ENEMY_HP = { 10: 0.93 };
 const finalBossDef = (lv) => ({ type: TYPE_KEYS[(lv / 10) % 5], hp: finalBossHp(lv), speed: 14, r: 34, dmg: 8, boss: true, final: true, look: "mothership", kbRes: 0.85, statRes: 0.6 });   // vita che cresce con il livello
 const hasMiniBosses = () => mode === "epic" || campLevel >= CAMPAIGN.bossFrom;   // in Epica fin dal livello 1
 const hasFinalBoss = () => campLevel % CAMPAIGN.finalBossEvery === 0;
@@ -1570,7 +1574,7 @@ function startWave(n) {
 }
 
 function spawn(q) {
-  const d = q.def || ENEMY_DEFS[q.enemy], D = curDiff(), hp = d.hp * levelHp(D) * waveHp(wave);
+  const d = q.def || ENEMY_DEFS[q.enemy], D = curDiff(), hp = d.hp * levelHp(D) * waveHp(wave) * (d.final ? 1 : WALL_ENEMY_HP[campLevel] || 1);
   enemies.push({
     def: d, boss: !!d.boss, final: !!d.final, kbRes: d.kbRes || 0, statRes: d.statRes || 0, x: q.x, y: -d.r, hp, maxHp: hp,
     speed: d.speed * levelSpeed(D) * waveSpeed(wave), curSpeed: 0, dmg: d.dmg * levelDmg(D) * waveDmg(wave),
@@ -1747,7 +1751,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.4.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 1, CODE_PREFIX = "FD1:";
 const $id = (id) => document.getElementById(id);
 function makeSave() {
