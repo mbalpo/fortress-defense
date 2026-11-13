@@ -3,6 +3,40 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.5.0 — Sigilli e albero dei potenziamenti, fase 1
+
+Richiesta di Marco: cominciare a costruire Sigilli, barriera e albero; fase 1 = la parte già decisa (Sigilli, salvataggio, nodi di sblocco, torrette equipaggiate).
+Costi dei nodi e alcune letture sono di Claude, segnati come provvisori o da rivedere in DESIGN.md § 16.
+
+- **Premi di Sigilli** (`sealReward`, chiamata da `winLevel`): Standard dal livello 31 (`CAMPAIGN.sealsFrom`), 1 per livello; Epica 3, dal livello 1. Primo completamento,
+  poi una sola volta con la cupola al 100% a fine livello (`domeHp >= domeMax`), per livello e modalità. Il premio della cupola si prende solo con un completamento successivo al primo
+  (lettura da confermare, § 16). Schermata di vittoria: riga dei Sigilli presi e suggerimento per il premio rimasto (`sealLines`).
+- **Albero, fase 1**: `TREE` generato da `TREE_LOCKS` (`buildTree`): per torretta chain 3 nodi in sequenza, lv2 dell’altra chain, level up lv2, Sblocco permanente
+  (richiede tutti gli altri); guardiano 6 nodi. Costi provvisori `SEAL_COST` (chain 1, 1, 2; altre 1; permanente 3). `nodeState`, `buyNode`; `locked()` ora guarda anche
+  i nodi comprati (`progress.tree`), quindi carte e combo bloccate escono dopo l’acquisto.
+- **Torrette equipaggiate**: `progress.loadout` (massimo 4, solo con lo Sblocco permanente, `toggleEquip`). In `startRun` vanno nei primi slot liberi dopo `META.startTurrets`
+  e ognuna salta una delle prime scelte (`skipLeft` in `endWave`); non escono più come carta (già in campo). La riga di `META.startTurrets` è rimasta identica (la usano 15 test).
+- **Schermata dell’albero** (`state = "tree"`, `treeScreen`, `treeNodeRow` in draw.js; `openTree`, `closeTree`, `tapNode` in index.html): sezioni Guardiano, Torrette, Barriera;
+  primo tocco seleziona, secondo compra; tocco su uno Sblocco permanente comprato = equipaggia/togli; Esc o “Menu” per uscire. Menu: pulsante “Albero dei Sigilli · N ◆”
+  (spento fino al 31), riga “Liv 31 — Sigilli e albero dei potenziamenti” tra gli sblocchi, righe gialle accorciate per farci stare tutto.
+- **Salvataggio**: `SAVE_VERSION` 2; `progress` ha anche `seals`, `claims`, `tree`, `loadout` (`cleanSeals` tiene solo i valori validi). Un file o codice della versione 1
+  si importa con Sigilli a zero; il riepilogo dell’importazione e il pannello mostrano Sigilli e nodi. Chiave di `localStorage` invariata.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.5.0. `ASSETS` invariato.
+- **Test**: nuovo `tests/seals.js`: 10 casi di premio (30 niente; 31 primo, rigiocato, al 100%, ancora; 32 primo già perfetto poi rigiocato; Epica 1); acquisto con due tocchi,
+  sequenza della chain, Sigilli insufficienti, carta e combo (Colpi ramificati) offerte solo dopo lo sblocco; Sblocco permanente dopo gli altri nodi; equipaggiamento (limite 4,
+  serve lo sblocco); partita con 2 torrette equipaggiate: slot occupati, ondate 1 e 2 senza carte, la 3 con le carte, le torrette non escono come carta, 17 carte + 2 = 19;
+  apertura dell’albero solo dal 31, sezioni senza errori, Esc; salvataggio: valori non validi scartati, esportazione v2, importazione v1, codice andata e ritorno, vecchio formato in memoria.
+  Totale 27 test, tutti verdi (`npm test`).
+- **Screenshot** (`npm run screenshots`, 6 nuovi): 20 menu con l’albero, 21 albero · torrette, 22 acquisto in attesa, 23 guardiano, 24 barriera, 25 vittoria con Sigilli.
+  Controllati: testi dentro i 360 px. Corretti in corsa: riga gialla del menu che usciva a destra e righe degli sblocchi sovrapposte.
+- Bilanciamento: non cambiato e non rimisurato (i bot partono senza Sigilli, quindi i livelli 1-50 si giocano come prima con il pool libero).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (6 scene nuove: vittoria con Sigilli, menu con l’albero, albero · torrette, acquisto, guardiano, barriera; 46 scene).
+
+Checklist: nuove voci “Albero dei Sigilli, fase 1: provarlo sul telefono dal livello 31”, “Costi dei nodi (provvisori: 1-1-2, 1, 3) da decidere”,
+“Premio della cupola al 100%: confermare la lettura (solo da un completamento successivo al primo)”, “Sblocco permanente: richiede tutti gli altri nodi della torretta? (lettura di Claude)”,
+“Torrette equipaggiate e carte sbloccate valgono anche nei livelli 1-30? (lettura di Claude: sì)”; togliere “Sigilli: flusso” se presente come da costruire.
+
 ## 1.4.1 — muri 10, 20 e 30 al 30%
 
 Decisione di Marco: con il pool libero i muri erano troppo punitivi; i livelli 10, 20 e 30 si devono superare in circa il 30% delle partite. Leve e valori di Claude.

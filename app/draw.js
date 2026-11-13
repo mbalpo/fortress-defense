@@ -394,23 +394,36 @@ function menuScreen() {
   const eu = epicUnlocked();
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
     () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
+  const to = treeOpen();
+  button(60, 358, 240, 36, to ? "Albero dei Sigilli · " + progress.seals + " ◆" : "Albero dei Sigilli · dal livello " + CAMPAIGN.sealsFrom, openTree,
+    { size: to ? 13 : 12, stroke: to ? "#c9a2ff" : "#2c3a5f", color: to ? "#e8eefc" : "#6f82ad" });
   const rows = [["Torri e guardiano al livello 2", 10], ["Torri e guardiano al livello 3", 20], ["Equipaggiamento del guardiano", CAMPAIGN.equipUnlock],
-    ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
-  txt("Sblocchi (a fine livello)", 36, 378, 12, "#9fb4d9", "left", "700");
-  rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 400 + i * 20, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
-  txt("Dal livello 11: mini-boss alle ondate 5, 10, 15", 36, 504, 11, "#ffd166", "left", "500");
-  txt("In Epica i mini-boss ci sono fin dal livello 1", 36, 519, 11, "#ffd166", "left", "500");
-  txt("Livelli 10, 20, 30…: boss finale all’ondata 20", 36, 534, 11, "#ffd166", "left", "500");
+    ["Sigilli e albero dei potenziamenti", CAMPAIGN.sealsFrom], ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
+  txt("Sblocchi (a fine livello)", 36, 412, 12, "#9fb4d9", "left", "700");
+  rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 430 + i * 17, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
+  txt("Mini-boss: ondate 5, 10, 15 dal livello 11 (Epica: sempre)", 36, 532, 10, "#ffd166", "left", "500");
+  txt("Boss finale all’ondata 20 dei livelli 10, 20, 30…", 36, 546, 10, "#ffd166", "left", "500");
   button(60, 562, 240, 36, "Salvataggio · esporta o importa", openSave, { size: 13, stroke: "#7fa0e0" });
   txt("Invio = Standard · E = Epica · ←/→ = livello · M = mira", W / 2, 614, 11, "#5f7299", "center", "500");
   txt("v" + APP_VERSION, W - 8, 632, 9, "#3a4a70", "right", "500");
 }
+// riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
+function sealLines() {
+  const g = sealGain; if (!g || g.why === "none") return [];
+  const one = (n) => n + (n === 1 ? " Sigillo" : " Sigilli");
+  if (g.why === "first") return ["+" + one(g.got) + " ◆ (" + one(progress.seals) + ")", g.next ? "Rigiocalo con la cupola al 100%: +" + one(g.got) : ""].filter(Boolean);
+  if (g.why === "full") return ["Cupola al 100%: +" + one(g.got) + " ◆ (" + one(progress.seals) + ")"];
+  if (g.why === "needFull") return ["Sigilli già riscossi: rigiocalo con la cupola al 100%"];
+  return ["Sigilli di questo livello già riscossi"];
+}
 function wonScreen() {
+  const sl = sealLines(), dy = sl.length ? 18 * sl.length + 8 : 0;       // i pulsanti scendono sotto le righe dei Sigilli
   overlay("LIVELLO SUPERATO", ["Livello " + campLevel + " completato" + (mode === "epic" ? " (Epica)" : ""), "Cupola: " + Math.ceil(domeHp) + "/" + domeMax], "#3fe0a0");
+  sl.forEach((l, i) => txt(l, W / 2, 282 + i * 18, i ? 11 : 13, i ? "#9fb4d9" : "#c9a2ff", "center", i ? "500" : "700"));
   const more = mode === "standard" && campLevel < CAMPAIGN.maxLevel;
-  button(60, 300, 240, 48, more ? "Livello " + (campLevel + 1) : "Rigioca", nextOrRetry, { size: 16, stroke: "#3fe0a0" });
-  if (more) button(60, 360, 240, 48, "Rigioca il livello " + campLevel, retry, { size: 14 });
-  button(60, more ? 420 : 360, 240, 48, "Menu", toMenu, { size: 14 });
+  button(60, 300 + dy, 240, 48, more ? "Livello " + (campLevel + 1) : "Rigioca", nextOrRetry, { size: 16, stroke: "#3fe0a0" });
+  if (more) button(60, 360 + dy, 240, 48, "Rigioca il livello " + campLevel, retry, { size: 14 });
+  button(60, (more ? 420 : 360) + dy, 240, 48, "Menu", toMenu, { size: 14 });
 }
 function lostScreen() {
   overlay("CUPOLA DISTRUTTA", ["Livello " + campLevel + " · ondata " + wave + " di " + N_WAVES], "#ff5a5a");
@@ -450,6 +463,56 @@ function upgradeScreen() {
   txt("Torri fino al lv " + towerCap() + (campLevel >= CAMPAIGN.maxMaxedFrom ? " · al massimo: " + maxedCount() + "/" + CAMPAIGN.maxMaxed : ""), W / 2, 140 + options.length * 122 + 12, 11, "#6f82ad", "center", "500");
 }
 
+/* ---------- ALBERO DEI SIGILLI ---------- */
+const TREE_TABS = [["player", "Guardiano"], ["turrets", "Torrette"], ["barrier", "Barriera"]];
+function treeNodeRow(n, y) {
+  const st = nodeState(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
+  const stroke = st === "owned" ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
+  button(16, y, 328, 42, "", () => tapNode(n), { stroke, fill: st === "owned" ? "rgba(63,224,160,0.10)" : "rgba(18,30,58,0.92)" });
+  txt(n.name, 28, y + 15, 13, st === "req" ? "#6f82ad" : "#e8eefc", "left", "700");
+  let sub = n.sub, subC = "#6f82ad";
+  if (armed) { sub = "Tocca di nuovo per spendere " + n.cost + " ◆"; subC = "#ffd166"; }
+  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli altri nodi della torretta" : "Prima il nodo sopra";
+  else if (st === "owned" && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
+  txt(sub, 28, y + 31, 10, subC, "left", "500");
+  if (st === "owned") txt("✓", 330, y + 21, 16, "#3fe0a0", "right", "800");
+  else txt(n.cost + " ◆", 332, y + 21, 13, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
+}
+function treeScreen() {
+  dim(0.92);
+  txt("ALBERO DEI SIGILLI", W / 2, 28, 20, "#e8eefc", "center", "800");
+  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo da spendere" : " Sigilli da spendere"), W / 2, 52, 12, "#c9a2ff", "center", "700");
+  TREE_TABS.forEach(([id, label], i) => {
+    const on = treeTab === id;
+    button(16 + i * 112, 66, 104, 32, label, () => { treeTab = id; treeArm = null; },
+      { size: 12, fill: on ? "rgba(201,162,255,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
+  });
+  if (treeTab === "player") {
+    txt("Guardiano · carte bloccate da sbloccare", 16, 122, 12, "#9fb4d9", "left", "700");
+    TREE.player.forEach((n, i) => treeNodeRow(n, 138 + i * 48));
+    txt("Potenziamenti delle carte: in arrivo (fase 2)", W / 2, 438, 11, "#6f82ad", "center", "500");
+  } else if (treeTab === "turrets") {
+    TURRET_ORDER.forEach((id, i) => {
+      const x = 16 + (i % 4) * 84, y = 108 + Math.floor(i / 4) * 52, d = TURRETS[id], c = TYPES[d.type].color, on = treeSel === id;
+      const own = TREE[id].filter(nodeOwned).length;
+      button(x, y, 78, 46, "", () => { treeSel = id; treeArm = null; }, { stroke: on ? c : "#2c4272", fill: on ? "rgba(201,162,255,0.12)" : "rgba(18,30,58,0.92)" });
+      ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, 40, 42); ctx.clip(); TURRET_ART[id](x + 22, y + 40, c); ctx.restore();
+      txt(own + "/" + TREE[id].length, x + 60, y + 17, 11, own ? "#e8eefc" : "#6f82ad", "center", "700");
+      if (progress.loadout.includes(id)) txt("in campo", x + 60, y + 33, 9, "#c9a2ff", "center", "700");
+      else if (progress.tree[id + ":perm"]) txt("libera", x + 60, y + 33, 9, "#3fe0a0", "center", "700");
+    });
+    const d = TURRETS[treeSel];
+    txt(d.name, 16, 276, 14, TYPES[d.type].color, "left", "800");
+    txt("Equipaggiate " + progress.loadout.length + "/4", 344, 276, 11, "#9fb4d9", "right", "600");
+    TREE[treeSel].forEach((n, i) => treeNodeRow(n, 292 + i * 48));
+  } else {
+    txt("Barriera", 16, 122, 14, "#e8eefc", "left", "800");
+    ["In arrivo (fasi 2 e 3, DESIGN.md § 16):", "· Vita % → Riduzione danno", "· Vita fissa, cooldown delle abilità, carte in più,", "  ignorare un colpo",
+      "· Abilità dal livello " + CAMPAIGN.barrierUnlock + ": Resistere, Controllo, Offesa"].forEach((l, i) => txt(l, 16, 150 + i * 22, 12, i ? "#9fb4d9" : "#6f82ad", "left", "500"));
+  }
+  button(60, 590, 240, 40, "Menu", closeTree, { size: 14 });
+}
+
 function drawCrosshair(x, y) {                  // mira manuale: mirino nel punto premuto
   ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
   ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
@@ -467,7 +530,7 @@ function draw() {
   for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
   ctx.globalAlpha = 1;
 
-  if (state !== "menu" && state !== "save") {
+  if (state !== "menu" && state !== "save" && state !== "tree") {
     drawDomeFill(); drawGround();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
@@ -483,6 +546,7 @@ function draw() {
       ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
       txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
       if (manual && wave === 1) txt("Tieni premuto sul bersaglio per sparare", W / 2, 290, 12, "#9fb4d9", "center", "600");
+      if (skipNote) txt("Scelta già usata da una torretta equipaggiata", W / 2, 290, 12, "#c9a2ff", "center", "600");
       if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       else if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       ctx.globalAlpha = 1;
@@ -493,6 +557,7 @@ function draw() {
   else if (state === "won") wonScreen();
   else if (state === "lost") lostScreen();
   else if (state === "pause") pauseScreen();
+  else if (state === "tree") treeScreen();
 }
 
 /* ---------- TORRETTE CON DISEGNO PROPRIO, PROIETTILI ED EFFETTI ---------- */

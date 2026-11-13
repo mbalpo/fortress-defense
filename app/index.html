@@ -132,6 +132,7 @@ const CAMPAIGN = {
   smallUntil: 10,                          // fino a questa difficoltà solo nemici "piccoli"
   epicUnlock: 50, epicOffset: 30,          // Epica: difficoltà = livello + 30
   equipUnlock: 30, barrierUnlock: 40,      // sblocchi registrati, funzioni non ancora costruite
+  sealsFrom: 31, sealsStandard: 1, sealsEpic: 3,   // Sigilli: dal livello 31 in Standard (1), da subito in Epica (3); DESIGN.md § 16
 };
 const UP_W = { std: 1, chain: 0.4, combo: 0.4, lu: 2 };   // chain e combo escono meno degli standard
 const diffOf = (lv, epic) => lv + (epic ? CAMPAIGN.epicOffset : 0);
@@ -438,7 +439,29 @@ const TREE_LOCKS = {
   tesla:   ["over1", "over2", "over3", "orbSlow", "stun"],
   vortex:  ["stat1", "stat2", "stat3", "whT", "twin"],
 };
-const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unlocked[who] || []).includes(id);
+const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unlocked[who] || []).includes(id) && !progress.tree[who + ":" + id];
+
+// Albero dei Sigilli, fase 1: solo i nodi di sblocco (DESIGN.md § 16), generati da TREE_LOCKS.
+// Chain da 3 voci: 3 nodi in sequenza; le altre carte bloccate: un nodo ciascuna; torrette: “Sblocco permanente” finale, dopo tutti gli altri.
+// Costi in Sigilli [Claude, provvisori]. Un nodo comprato vale 1 (i nodi a più livelli arriveranno con la fase 2).
+const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3 };
+const CAT_NAME = { lu: "Level up", std: "Standard" };
+function buildTree(who) {
+  const def = who === "player" ? PLAYER_DEF : TURRETS[who], ups = TREE_LOCKS[who].map((id) => def.ups.find((u) => u.id === id));
+  const whole = ups.find((u) => u.cat === "chain" && def.ups.filter((v) => v.chain === u.chain).every((v) => TREE_LOCKS[who].includes(v.id))).chain;
+  const nodes = [];
+  ups.filter((u) => u.chain === whole && u.cat === "chain").sort((a, b) => a.lv - b.lv).forEach((u, i, arr) =>
+    nodes.push({ id: who + ":" + u.id, who, card: u.id, kind: "chain", name: u.name, sub: "Chain " + arr[0].name + " · voce lv" + u.lv,
+      cost: SEAL_COST.chain[i], req: i ? [who + ":" + arr[i - 1].id] : [] }));
+  for (const u of ups) if (u.chain !== whole || u.cat !== "chain")
+    nodes.push({ id: who + ":" + u.id, who, card: u.id, kind: "card", name: u.name, cost: SEAL_COST.card, req: [],
+      sub: u.cat === "chain" ? "Chain " + def.ups.find((v) => v.chain === u.chain && v.lv === 1).name + " · voce lv" + u.lv : CAT_NAME[u.cat] + " lv" + u.lv });
+  if (who !== "player") nodes.push({ id: who + ":perm", who, kind: "perm", name: "Sblocco permanente", sub: "Si equipaggia prima dell’ondata 1",
+    cost: SEAL_COST.perm, req: nodes.map((n) => n.id) });
+  return nodes;
+}
+const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree(w)]));
+const TREE_IDS = new Set(Object.values(TREE).flat().map((n) => n.id));
 
 /* =====================================================================
    GEOMETRIA E STATO
@@ -464,7 +487,7 @@ function toggleAim() { settings.aim = settings.aim === "auto" ? "manual" : "auto
 let manual = false;
 const aim = { x: W / 2, y: 200, down: false };
 
-let state = "menu";            // menu | play | upgrade | pause | won | lost | save
+let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree
 let mode = "standard";
 let clock = 0;
 let wave = 1, waveTime = 0, queue = [];
@@ -487,17 +510,57 @@ const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
 // avanzamento della campagna (salvato sul dispositivo)
 const PROGRESS_KEY = "fortress-progress-v1";
 // seen = nemici già incontrati in tutta la campagna (chiave = aspetto: navicella, meteora…, nave aliena, nave madre)
-const progress = { cleared: 0, seen: [] };
+// seals = Sigilli da spendere · claims = premi già riscossi ("s31" primo completamento Standard del 31, "s31p" premio della barriera al 100%, "e5"… Epica)
+// tree = nodi comprati { "sky:burn1": 1 } · loadout = torrette equipaggiate prima dell’ondata 1 (con lo sblocco permanente, al massimo 4)
+const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [] };
+// Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
+function cleanSeals(p) {
+  const tree = {};
+  if (p && p.tree && typeof p.tree === "object") for (const k in p.tree) if (TREE_IDS.has(k) && p.tree[k]) tree[k] = 1;
+  const claims = p && Array.isArray(p.claims) ? [...new Set(p.claims.filter((k) => typeof k === "string" && /^[se]\d{1,3}p?$/.test(k)))] : [];
+  const loadout = p && Array.isArray(p.loadout) ? [...new Set(p.loadout.filter((id) => tree[id + ":perm"]))].slice(0, 4) : [];
+  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, claims, tree, loadout };
+}
 try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
   if (p && Number.isFinite(p.cleared)) progress.cleared = clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel);
   if (p && Array.isArray(p.seen)) progress.seen = p.seen.filter((k) => typeof k === "string" && k !== "ship" && k !== "mothership").slice(0, 50);   // vecchie scoperte generiche dei boss, non più valide
+  Object.assign(progress, cleanSeals(p));
 } catch (e) { /* storage non disponibile: si riparte da zero */ }
 function saveProgress() { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {} }
 const maxSelectable = () => Math.min(progress.cleared + 1, CAMPAIGN.maxLevel);
-let campLevel = 1, selLevel = maxSelectable(), bossBonus = 0, bonusLeft = 0, bonusMode = false, rewards = null;
+let campLevel = 1, selLevel = maxSelectable(), bossBonus = 0, bonusLeft = 0, bonusMode = false, rewards = null, skipLeft = 0, skipNote = false;
 const towerCap = () => CAMPAIGN.towerCaps.reduce((c, [n, cap]) => progress.cleared >= n ? cap : c, 1);
 const epicUnlocked = () => progress.cleared >= CAMPAIGN.epicUnlock;
+const treeOpen = () => progress.cleared >= CAMPAIGN.sealsFrom || progress.claims.length > 0;   // l’albero si apre completando il livello 31
+
+/* ---------- ALBERO DEI SIGILLI: acquisto dei nodi e torrette equipaggiate ---------- */
+const nodeOwned = (n) => !!progress.tree[n.id];
+// owned · ready (si può comprare) · req (manca un nodo precedente) · poor (Sigilli insufficienti)
+const nodeState = (n) => nodeOwned(n) ? "owned" : n.req.some((r) => !progress.tree[r]) ? "req" : progress.seals < n.cost ? "poor" : "ready";
+function buyNode(n) {
+  if (nodeState(n) !== "ready") return false;
+  progress.seals -= n.cost; progress.tree[n.id] = 1; saveProgress(); return true;
+}
+function toggleEquip(id) {
+  if (!progress.tree[id + ":perm"]) return false;
+  const i = progress.loadout.indexOf(id);
+  if (i >= 0) progress.loadout.splice(i, 1); else if (progress.loadout.length < 4) progress.loadout.push(id); else return false;
+  saveProgress(); return true;
+}
+// premio di Sigilli a fine livello: primo completamento, oppure (una sola volta) una rigiocata con la cupola al 100%
+function sealReward(m, lv, full) {
+  const epic = m === "epic";
+  if (!epic && lv < CAMPAIGN.sealsFrom) return { got: 0, why: "none" };
+  const key = (epic ? "e" : "s") + lv, n = epic ? CAMPAIGN.sealsEpic : CAMPAIGN.sealsStandard;
+  if (!progress.claims.includes(key)) { progress.claims.push(key); progress.seals += n; return { got: n, why: "first", next: !progress.claims.includes(key + "p") }; }
+  if (!progress.claims.includes(key + "p")) {
+    if (!full) return { got: 0, why: "needFull" };
+    progress.claims.push(key + "p"); progress.seals += n; return { got: n, why: "full" };
+  }
+  return { got: 0, why: "done" };
+}
+let sealGain = null;
 const curDiff = () => diffOf(campLevel, mode === "epic");
 const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
 const randEnemy = () => { const l = living(); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
@@ -1554,6 +1617,14 @@ function startRun(m) {
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3;
   slots = [null, null, null, null];
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
+  // torrette equipaggiate con lo sblocco permanente (DESIGN.md § 16): ognuna consuma una delle prime scelte dopo le ondate.
+  // META.startTurrets resta lo sblocco a mano per le prove e non consuma scelte.
+  skipLeft = 0; skipNote = false; sealGain = null;
+  for (const id of progress.loadout) {
+    const f = slots.indexOf(null);
+    if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
+    slots[f] = makeShooter(TURRETS[id], SLOT_X[f], GROUND_Y - 14); skipLeft++;
+  }
   startWave(1);
 }
 
@@ -1659,11 +1730,15 @@ function update(dt) {
 
 function winLevel() {
   state = "won";
-  if (mode === "standard" && campLevel > progress.cleared) { progress.cleared = campLevel; saveProgress(); }
+  if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
+  sealGain = sealReward(mode, campLevel, domeHp >= domeMax);
+  saveProgress();
   selLevel = clamp(campLevel + 1, 1, maxSelectable());
 }
 function endWave() {
   if (wave >= N_WAVES) { winLevel(); return; }
+  skipNote = false;
+  if (skipLeft > 0) { skipLeft--; skipNote = true; startWave(wave + 1); return; }   // scelta già usata da una torretta equipaggiata
   bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null;
   options = rollOptions();
   if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else state = "upgrade";
@@ -1673,6 +1748,15 @@ function nextOrRetry() {
   if (mode === "standard" && campLevel < CAMPAIGN.maxLevel) { selLevel = campLevel + 1; startRun("standard"); } else retry();
 }
 function toMenu() { state = "menu"; selLevel = clamp(selLevel, 1, maxSelectable()); }
+// schermata dell’albero: sezione (player | turrets | barrier), torretta scelta, nodo in attesa del secondo tocco
+let treeTab = "turrets", treeSel = "sky", treeArm = null;
+function openTree() { if (!treeOpen()) return; state = "tree"; treeArm = null; }
+function closeTree() { state = "menu"; treeArm = null; }
+function tapNode(n) {                            // primo tocco: seleziona; secondo tocco: compra (i Sigilli non si rimborsano, per ora)
+  if (nodeOwned(n)) { if (n.kind === "perm") toggleEquip(n.who); treeArm = null; return; }
+  if (treeArm !== n.id) { treeArm = n.id; return; }
+  buyNode(n); treeArm = null;
+}
 // pausa: il gioco si ferma (update gira solo in "play") e si apre il riepilogo
 let pauseTab = "enemies", pauseQuit = false;
 function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; aim.down = false; pauseQuit = false; }
@@ -1695,6 +1779,7 @@ cv.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   const p = toLogical(e);
   for (const b of buttons) if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) { b.onTap(); return; }
+  if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
   if (state === "play") {
     dragging = true;
     if (manual) { aim.x = p.x; aim.y = Math.min(p.y, GROUND_Y - 50); aim.down = true; } else player.targetX = p.x;
@@ -1712,7 +1797,8 @@ cv.addEventListener("pointercancel", stopDrag);
 window.addEventListener("keydown", (e) => {
   if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
   const k = e.key.toLowerCase();
-  if (state === "save") { if (k === "escape") closeSave(); return; }   // mentre si scrive nel pannello i tasti non comandano il gioco
+  if (state === "save") { if (k === "escape") closeSave(); return; }
+  if (state === "tree") { if (k === "escape") closeTree(); return; }   // mentre si scrive nel pannello i tasti non comandano il gioco
   if (state === "menu" && (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d"))
     selLevel = clamp(selLevel + (k === "arrowright" || k === "d" ? 1 : -1), 1, maxSelectable());
   if (k === "arrowleft" || k === "a") keys.left = 1;
@@ -1751,12 +1837,12 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.4.1";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 1, CODE_PREFIX = "FD1:";
+const APP_VERSION = "1.5.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, seen: [...progress.seen] },
+    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout] },
     settings: { targeting: settings.targeting, aim: settings.aim } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -1777,6 +1863,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
   return {
     cleared: clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel),
     seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 50) : [],
+    ...cleanSeals(p),                            // versione 1: niente Sigilli, si parte da zero
     targeting: s.targeting === "highest" ? "highest" : "closest",
     aim: s.aim === "manual" ? "manual" : "auto",
     exportedAt: typeof d.exportedAt === "string" && !isNaN(Date.parse(d.exportedAt)) ? d.exportedAt : null,
@@ -1784,17 +1871,19 @@ function parseSave(text) {                      // controlla tutto prima di tocc
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.seen = d.seen;
+  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout;
   settings.targeting = d.targeting; settings.aim = d.aim;
   saveProgress(); saveSettings(); selLevel = maxSelectable();
 }
 let pendingSave = null;
+const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + " e " + Object.keys(p.tree).length + " nodi dell’albero";
 function refreshSavePanel(msg, isErr) {
-  $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · mira " + AIM_LABEL[settings.aim];
+  $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · " + sealsLabel(progress) + " · mira " + AIM_LABEL[settings.aim];
   $id("confirmBox").hidden = !pendingSave;
   if (pendingSave) {
     const when = pendingSave.exportedAt ? " del " + new Date(pendingSave.exportedAt).toLocaleDateString("it-IT") : "";
     $id("confirmText").textContent = "Il salvataggio" + when + " ha " + pendingSave.cleared + " livelli completati e " + pendingSave.seen.length +
-      " nemici scoperti. Sostituisce i progressi attuali (" + progress.cleared + " livelli, " + progress.seen.length + " nemici).";
+      " nemici scoperti, " + sealsLabel(pendingSave) + ". Sostituisce i progressi attuali (" + progress.cleared + " livelli, " + progress.seen.length + " nemici, " + sealsLabel(progress) + ").";
   }
   const m = $id("saveMsg"); m.textContent = msg || ""; m.classList.toggle("err", !!isErr);
 }

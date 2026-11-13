@@ -65,7 +65,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento, albero e abilità della barriera **non sono ancora costruiti**. **[deciso]**
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**; dell’albero c’è la fase 1 (§ 16). **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -125,9 +125,12 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 - Menu → “Salvataggio · esporta o importa”: file JSON (sul telefono si apre la condivisione) o codice `FD1:…` (base64 del JSON).
   Import da file o codice incollato, con riepilogo e conferma prima di sostituire. Dati non validi rifiutati senza toccare i progressi. **[deciso]**
-- Formato: `{ game: "fortress-defense", version: 1, appVersion, exportedAt, progress: { cleared, seen }, settings: { targeting, aim } }`.
+- Formato (versione 2, dalla 1.5.0): `{ game: "fortress-defense", version: 2, appVersion, exportedAt, progress: { cleared, seen, seals, claims, tree, loadout }, settings: { targeting, aim } }`.
+  `seals` = Sigilli da spendere; `claims` = premi riscossi (`s31` primo completamento Standard del 31, `s31p` premio della cupola al 100%, `e5`… Epica);
+  `tree` = nodi comprati (`{ "sky:burn1": 1 }`); `loadout` = torrette equipaggiate. Un salvataggio della versione 1 si importa con Sigilli e albero vuoti;
+  valori non validi (nodi sconosciuti, torrette equipaggiate senza sblocco, più di 4) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso.
-- `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti), `fortress-proto-v1` (impostazioni).
+- `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
 - PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
 
@@ -344,7 +347,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale), calibrazione con il pool libero. **Moduli** (§ 15): vedi sotto.
+- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale). Letture di Claude nella fase 1 da confermare (§ 16): premio della cupola solo da un completamento successivo al primo, Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
@@ -367,7 +370,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
+Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli, fasi 2 e 3 (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
 (rigenerazione e repulsione oggi sono segnaposto a mano in `META`, diversi dalle definizioni del § 16: vanno sostituiti) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
@@ -571,6 +574,21 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - Sblocco della chain **Colpi esplosivi** (3 nodi, in sequenza); lv2 **Frenesia furiosa**; level up lv1 **Colpo pesante**; level up lv2 **Rimbalzo**.
 - Potenziamenti: carta standard **Danno maggiorato**; riduzione del malus di **+1 proiettile**; colpi aggiuntivi del **Ventaglio**.
 - Restano libere: chain Frenesia (lv1, Carica rapida, lv3), Ventaglio, Perforazione II, Cadenza maggiorata, le tre carte standard.
+
+### Fase 1 costruita (1.5.0)
+- **Premi** come sopra. Lettura applicata: il premio della cupola al 100% si prende solo con un completamento **successivo** al primo (anche se il primo era già perfetto). **[da rivedere]** (la lettura era da confermare)
+- **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
+  **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
+  Ogni nodo ha un solo livello (i nodi a più livelli arrivano con la fase 2).
+- **Costi** **[provvisorio]**: chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 9 Sigilli, il guardiano 7, tutto l’albero di fase 1 106.
+  In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
+- **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). Nessun rimborso per ora (proposta di rimborso totale ancora aperta, § 11).
+- **Torrette equipaggiate**: si scelgono toccando lo Sblocco permanente già comprato (al massimo 4); valgono in **tutti i livelli e le modalità**, come le carte sbloccate
+  (lettura **[Claude] [da rivedere]**). Ognuna occupa il primo slot libero e salta una delle prime scelte dopo le ondate (all’annuncio dell’ondata: “Scelta già usata da una torretta
+  equipaggiata”). `META.startTurrets` resta lo sblocco a mano per le prove e non salta scelte.
+- **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
+  La schermata di vittoria mostra i Sigilli presi e, se resta, il premio della cupola al 100%.
+- **Mancano** (fasi 2 e 3): potenziamenti delle carte standard, sezione condivisa per tipo, spina e nodi della barriera, tetti, abilità della barriera.
 
 ### Regole generali
 - I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]**

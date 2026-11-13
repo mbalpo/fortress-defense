@@ -32,6 +32,8 @@ const T = [
   ["combo.js", "combo del guardiano: sblocco e effetti delle 11 combo", [/kVortex\s+con vortex .* ✓/, /combo con chain bloccata dall’albero: kThunder, kBeam, kWheel, kTesla ✓/, /carta: Guardiano · Combo .* ✓/, /thunder\s+scattate .* ✓/,
     /con mini-raggi e debuff .* ✓/, /con Scarica distruttiva .* ✓/, /mine create .* ✓/, /Ramificazione II .* ✓/, /nuovo bersaglio .* ✓/,
     /mini-droni: 3 .* ✓/, /manuale: .* ✓/, /frammentazioni: .* ✓/, /con Colpo pesante\s+colpi caricati .* ✓/]],
+  ["seals.js", "Sigilli e albero: premi, nodi, torrette equipaggiate, salvataggio v2", [/totale 10 Sigilli .* ✓/, /combo Colpi ramificati: .* ✓/,
+    /carte scelte in una partita: 17 .* ✓/, /Esc → stato menu .* ✓/, /versione 1 importata: .* ✓/, /codice FD1 andata e ritorno: .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
 ];
