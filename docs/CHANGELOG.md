@@ -3,6 +3,36 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.6.0 — albero dei Sigilli, fase 2: nodi a livelli
+
+Richiesta di Marco: fase 2 (nodi numerici e spina della barriera). Struttura dal § 16 di DESIGN.md; tutti i valori sono di Claude, provvisori.
+
+- **Nodi a livelli** (`index.html`): ogni nodo ha `max` e `costs` (livello L+1 = L+1 Sigilli); `progress.tree` ora salva il livello (gli sblocchi restano a 1).
+  `nodeLv`, `treeLv`, `nodeCost`; `nodeState` con “max” e la regola dei livelli (un nodo non supera il livello dei nodi da cui dipende). Formato del salvataggio invariato
+  (versione 2): i livelli oltre il massimo vengono riportati al massimo.
+- **Carte standard**: 3 nodi per torretta (5 livelli) e 3 per il guardiano (Danno maggiorato 5, +1 proiettile 3, Ventaglio ampliato 3). Tabella `STD_KIND` e funzioni
+  `stdB` (bonus in %), `stdR` (ricarica), `stdM` (malus), `stdC` (bonus a numero); `makeShooter` legge i livelli in `s.sb` all’inizio della partita.
+  Tutte le formule delle 36 carte standard ora passano da queste funzioni; senza albero i valori sono identici a prima (stessi test, stessi numeri).
+- **Sezione “Tipi”** (12ª casella della griglia delle torrette): danno per tipo, di tutte le torrette (`s.tb` in `dmgM`, solo torrette), durata degli stati (`statDur`
+  in `slow`, `burn`, `weaken`, `para`, `vuln`, distruzione, bruciatura della Sky Guard, scia combustibile).
+- **Barriera**: Vita %, Riduzione danno, Vita fissa, Riduzione cooldown abilità, Ignorare un colpo; `domeRed()` e `abCdM()` con i tetti `TREE_CAP` (40% e 60%).
+  Il nodo “più carte (+cadenza)” non è costruito (definizione aperta).
+- **Schermata**: pulsante “‹ Menu” in alto (spazio per 9 nodi), griglia delle torrette su 2 righe con la casella “Tipi”, righe dei nodi con livello, effetto attuale → successivo e costo;
+  sezione Barriera con i 5 nodi, ciò che manca e i tetti.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.6.0.
+- **Test**: `tests/seals.js`, nuova parte “Fase 2”: numero di nodi; costi 1-5 e stato “max”; regola dei livelli; danno della Sky Guard (carta al 5, Fire 2, tutte 1 = ×2,0125);
+  malus al 3 e al 5; Railgun e Hive al 5; bonus del tipo solo per le torrette; senza albero valori di prima; cupola 130 di vita, riduzione e tetto; 10% di colpi ignorati
+  (4000 prove); durata degli stati ×1,3; Ventaglio a 7 proiettili; livelli oltre il massimo. `tests/newfx.js`: aggiornato il frammento della distruzione
+  (`e.destrT = 5 * statDur`). 27 test, tutti verdi.
+- **Misura con i bot** (200 partite per caso): livello 40 / 50 senza albero 3,0% / 0,5%; solo sblocchi 9,0% / 2,0%; nodi a livelli al 3 63,5% / 42,5%; albero pieno 88,0% / 72,0%.
+  L’albero intero costa 808 Sigilli, oggi se ne prendono al massimo 340 (40 in Standard): numeri in DESIGN.md § 16. Nessun numero della difficoltà cambiato.
+- Screenshot: rifatti 21-24 e nuovo 26 (sezione Tipi); controllati, testi accorciati per stare nei 360 px.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (nuova scena “Albero dei Sigilli · Tipi”, scene dell’albero con nodi a livelli; 47 scene).
+
+Checklist: nuove voci “Fase 2 dell’albero: valori provvisori (carte ×1,4 per livello, tipi +6%, barriera) da rivedere”, “Livelli 31-50: con i Sigilli di oggi quasi impossibili
+(3% al 40 senza albero): decidere costi, Sigilli o difficoltà”, “Durata degli stati: nodo globale o per tipo?”, “Nodo più carte (+cadenza): definire”.
+
 ## 1.5.0 — Sigilli e albero dei potenziamenti, fase 1
 
 Richiesta di Marco: cominciare a costruire Sigilli, barriera e albero; fase 1 = la parte già decisa (Sigilli, salvataggio, nodi di sblocco, torrette equipaggiate).

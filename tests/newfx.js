@@ -9,7 +9,7 @@ const common = (h) => P(h,
   ["if (prob && Math.random() < prob) {", "if (prob && Math.random() < prob) { window.__boom = (window.__boom || 0) + 1;"],
   ["this.hit.add(e); damage(e, dmg, \"physical\", false, \"player\"); knock(e, kb);", "this.hit.add(e); damage(e, dmg, \"physical\", false, \"player\"); knock(e, kb); window.__kb = Math.max(window.__kb || 0, kb);"],
   ["function discharge(e, d) {", "function discharge(e, d) { window.__dis = (window.__dis || 0) + 1;"],
-  ["e.destrT = 5; e.destrN = Math.min(max, e.destrN + 1);", "e.destrT = 5; e.destrN = Math.min(max, e.destrN + 1); window.__stack = Math.max(window.__stack || 0, e.destrN);"],
+  ["e.destrT = 5 * statDur; e.destrN = Math.min(max, e.destrN + 1);", "e.destrT = 5 * statDur; e.destrN = Math.min(max, e.destrN + 1); window.__stack = Math.max(window.__stack || 0, e.destrN);"],
   ["e.y = 2; moved = true; }", "e.y = 2; moved = true; window.__top = (window.__top || 0) + 1; }"],
   ["if (moved) { ring(", "if (moved) { window.__tp = (window.__tp || 0) + 1; ring("]);
 function scenario(name, playerUps, disrUps, frames = 5400, seed = 4) {

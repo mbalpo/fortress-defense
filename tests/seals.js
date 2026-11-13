@@ -2,7 +2,8 @@
 // torrette equipaggiate e scelte saltate, salvataggio versione 2 con migrazione dalla 1.
 const { makeGame } = require("./bot.js");
 const ok = (c) => c ? "✓" : "✗ ERRORE";
-const patch = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+const patch = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();")
+  .replace("function playerBullet(p, x, y, t, dmg, ang, o) {", "function playerBullet(p, x, y, t, dmg, ang, o) { if (o && o.fan) window.__fan = (window.__fan || 0) + 1;");
 const fresh = (cleared, extra) => {
   const prog = Object.assign({ cleared, seen: [] }, extra || {});
   const g = makeGame({ patch, cleared, storage: { "fortress-progress-v1": JSON.stringify(prog) } }); g.frame();
@@ -36,8 +37,9 @@ console.log("— Albero: acquisto dei nodi e carte sbloccate —");
   const offered = (id) => ev(`(() => { const s = makeShooter(TURRETS.sky, 100, 500); return eligible(s).some((u) => u.id === "${id}"); })()`);
   console.log("prima: Missili incendiari offerta:", offered("burn1"), ok(offered("burn1") === false));
   const st = (i) => ev(`nodeState(TREE.sky[${i}])`);
-  console.log("nodi della Sky Guard:", ev("TREE.sky.map((n) => n.card || n.kind).join(' ')"), "| costi:", ev("TREE.sky.map((n) => n.cost).join(' ')"),
-    ok(ev("TREE.sky.map((n) => n.card || n.kind).join(' ')") === "burn1 burn2 burn3 splitB again perm"));
+  const ids = "TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.card || n.kind).join(' ')";
+  console.log("sblocchi della Sky Guard:", ev(ids), "| costi:", ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.costs[0]).join(' ')"),
+    ok(ev(ids) === "burn1 burn2 burn3 splitB again perm"));
   console.log("stato iniziale: lv1", st(0), "| lv2", st(1), "| finale", st(5), ok(st(0) === "ready" && st(1) === "req" && st(5) === "req"));
   ev("openTree(); treeSel = 'sky'; tapNode(TREE.sky[0])");
   console.log("primo tocco: in attesa, Sigilli", ev("progress.seals"), ok(ev("treeArm") === "sky:burn1" && ev("progress.seals") === 4));
@@ -103,4 +105,50 @@ console.log("— Salvataggio versione 2 —");
   const code = ev("makeCode()"); ev("progress.seals = 0; progress.tree = {}"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice FD1 andata e ritorno: Sigilli", ev("progress.seals"), "| nodi", ev("Object.keys(progress.tree).join()"), ok(ev("progress.seals") === 5 && ev("progress.tree['sky:burn1']") === 1));
   const old = fresh(20, {}); console.log("vecchio formato in memoria (senza Sigilli): Sigilli", old.ev("progress.seals"), "| errori:", old.g.errors.length, ok(old.ev("progress.seals") === 0 && !old.g.errors.length));
+}
+
+console.log("— Fase 2: nodi a livelli —");
+{
+  const { ev } = fresh(40, { seals: 100 });
+  console.log("nodi: Sky Guard", ev("TREE.sky.length"), "| guardiano", ev("TREE.player.length"), "| tipi", ev("TREE.types.length"), "| barriera", ev("TREE.barrier.length"),
+    "| carte standard della Sky Guard:", ev("TREE.sky.filter((n) => n.kind === 'level').map((n) => n.id).join(' ')"),
+    ok(ev("TREE.sky.length") === 9 && ev("TREE.player.length") === 9 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 5));
+  const costs = []; for (let i = 0; i < 6; i++) { const before = ev("progress.seals"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); }
+  console.log("Danno maggiorato della Sky Guard, livelli 1-5 e oltre: costi", costs.join(" "), "| stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
+    ok(costs.join() === "1,2,3,4,5,0" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));
+  ev("buyNode(TREE_NODE['barrier:hp'])"); ev("buyNode(TREE_NODE['barrier:red'])");
+  console.log("Riduzione danno oltre il livello di Vita %:", ev("nodeState(TREE_NODE['barrier:red'])"), "| dopo Vita % al 2:", (ev("buyNode(TREE_NODE['barrier:hp'])"), ev("nodeState(TREE_NODE['barrier:red'])")),
+    ok(ev("treeLv('barrier:red')") === 1 && ev("nodeState(TREE_NODE['barrier:red'])") === "ready"));
+  ev("progress.tree['barrier:hp'] = 1"); console.log("regola dei livelli con Vita % al 1:", ev("nodeState(TREE_NODE['barrier:red'])"), ok(ev("nodeState(TREE_NODE['barrier:red'])") === "req"));
+}
+{
+  const set = (tree) => fresh(40, { tree }).ev;
+  const e1 = set({ "sky:std:dmg": 5, "sky:std:msl": 3, "rail:std:pierce": 5, "rail:std:cd": 5, "hive:std:hits": 5, "tesla:std:bounce": 5, "types:dmg:fire": 2, "types:all": 1 });
+  const v = (c) => +(+e1(c)).toFixed(4);
+  console.log("Sky Guard, 1 pila di Danno al livello 5 + Fire 2 + tutte 1: danno ×" + v("(() => { const s = makeShooter(TURRETS.sky, 0, 0); s.up.dmg = 1; return dmgM(s); })()"),
+    "(atteso 1,75 × 1,15 = " + (1.75 * 1.15).toFixed(4) + ")", ok(v("(() => { const s = makeShooter(TURRETS.sky, 0, 0); s.up.dmg = 1; return dmgM(s); })()") === +(1.75 * 1.15).toFixed(4)));
+  console.log("+1 missile al livello 3: malus", v("stdM(makeShooter(TURRETS.sky, 0, 0), 'msl', 0.85)"), "| Teslacoil +1 rimbalzo al 5:", v("stdM(makeShooter(TURRETS.tesla, 0, 0), 'bounce', 0.85)"),
+    ok(v("stdM(makeShooter(TURRETS.sky, 0, 0), 'msl', 0.85)") === 1 && v("stdM(makeShooter(TURRETS.tesla, 0, 0), 'bounce', 0.85)") === 1.1));
+  console.log("Railgun al 5: perforazione per pila", v("stdC(makeShooter(TURRETS.rail, 0, 0), 'pierce', 1)"), "| ricarica per pila", v("stdR(makeShooter(TURRETS.rail, 0, 0), 'cd', 0.88)"),
+    "| Hive colpi per pila", v("stdC(makeShooter(TURRETS.hive, 0, 0), 'hits', 2)"),
+    ok(v("stdC(makeShooter(TURRETS.rail, 0, 0), 'pierce', 1)") === 3 && v("stdR(makeShooter(TURRETS.rail, 0, 0), 'cd', 0.88)") === 0.76 && v("stdC(makeShooter(TURRETS.hive, 0, 0), 'hits', 2)") === 6));
+  console.log("bonus del tipo: Laser (Energy) ×" + v("makeShooter(TURRETS.laser, 0, 0).tb"), "| guardiano ×" + v("makeShooter(PLAYER_DEF, 0, 0).tb"),
+    ok(v("makeShooter(TURRETS.laser, 0, 0).tb") === 1.03 && v("makeShooter(PLAYER_DEF, 0, 0).tb") === 1));
+  const e0 = set({}); console.log("senza albero: danno ×" + (+e0("(() => { const s = makeShooter(TURRETS.sky, 0, 0); s.up.dmg = 1; return dmgM(s); })()")).toFixed(2), "| malus", e0("stdM(makeShooter(TURRETS.sky, 0, 0), 'msl', 0.85)"),
+    ok(+e0("(() => { const s = makeShooter(TURRETS.sky, 0, 0); s.up.dmg = 1; return dmgM(s); })()") === 1.25 && e0("stdM(makeShooter(TURRETS.sky, 0, 0), 'msl', 0.85)") === 0.85));
+}
+{
+  const ev = fresh(40, { tree: { "barrier:hp": 2, "barrier:red": 2, "barrier:flat": 1, "barrier:ignore": 5, "types:status": 5, "player:fan": 3, "player:std:proj": 3 } }).ev;
+  ev("startRun('standard'); queue = []; enemies.length = 0; spawn({ enemy: 'drone', x: 180 })");
+  console.log("cupola: vita", ev("domeMax"), "(attesa 100 × 1,2 + 10 = 130) | riduzione", ev("domeRed()"), ok(ev("domeMax") === 130 && Math.abs(ev("domeRed()") - 0.06) < 1e-9));
+  console.log("con META.domeReduction 0,35: riduzione", ev("META.domeReduction = 0.35; domeRed()"), "(tetto 0,4)", ok(ev("domeRed()") === 0.4));
+  const ign = ev("(() => { META.domeReduction = 0; const e = enemies[0]; e.dmg = 1; let n = 0; for (let i = 0; i < 4000; i++) { const h = domeHp; domeHit(e); if (domeHp === h) n++; domeHp = 1e6; } return n / 4000; })()");
+  console.log("Ignorare un colpo al 5: colpi ignorati", (ign * 100).toFixed(1) + "% (atteso 10)", ok(Math.abs(ign - 0.1) < 0.02));
+  console.log("Durata degli stati al 5: rallentamento di 1 s →", ev("(() => { const e = enemies[0]; e.slowT = 0; slow(e, 1); return e.slowT; })()"), "s", ok(Math.abs(ev("(() => { const e = enemies[0]; e.slowT = 0; slow(e, 1); return e.slowT; })()") - 1.3) < 1e-9));
+  const fan = ev("(() => { window.__fan = 0; player.up.fan = 1; player.cd = 0; enemies[0].y = 300; playerTick(player, 0.016); return window.__fan; })()");
+  console.log("Ventaglio ampliato al 3: proiettili secondari per salva", fan, "| malus di +1 proiettile al 3:", ev("stdM(player, 'proj', 0.85)"), ok(fan === 7 && ev("stdM(player, 'proj', 0.85)") === 1));
+}
+{
+  const ev = fresh(40, { tree: { "sky:std:dmg": 9, "barrier:hp": 2.7, "player:fan": 8 } }).ev;
+  console.log("livelli oltre il massimo dal salvataggio:", ev("JSON.stringify(progress.tree)"), ok(ev("JSON.stringify(progress.tree)") === '{"sky:std:dmg":5,"barrier:hp":2,"player:fan":3}'));
 }

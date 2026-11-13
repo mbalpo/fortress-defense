@@ -466,51 +466,58 @@ function upgradeScreen() {
 /* ---------- ALBERO DEI SIGILLI ---------- */
 const TREE_TABS = [["player", "Guardiano"], ["turrets", "Torrette"], ["barrier", "Barriera"]];
 function treeNodeRow(n, y) {
-  const st = nodeState(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
-  const stroke = st === "owned" ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
-  button(16, y, 328, 42, "", () => tapNode(n), { stroke, fill: st === "owned" ? "rgba(63,224,160,0.10)" : "rgba(18,30,58,0.92)" });
-  txt(n.name, 28, y + 15, 13, st === "req" ? "#6f82ad" : "#e8eefc", "left", "700");
+  const st = nodeState(n), L = nodeLv(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
+  const full = st === "max", stroke = full ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
+  button(16, y, 328, 40, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
+  txt(n.name, 26, y + 13, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
   let sub = n.sub, subC = "#6f82ad";
-  if (armed) { sub = "Tocca di nuovo per spendere " + n.cost + " ◆"; subC = "#ffd166"; }
-  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli altri nodi della torretta" : "Prima il nodo sopra";
-  else if (st === "owned" && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
-  txt(sub, 28, y + 31, 10, subC, "left", "500");
-  if (st === "owned") txt("✓", 330, y + 21, 16, "#3fe0a0", "right", "800");
-  else txt(n.cost + " ◆", 332, y + 21, 13, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
+  if (n.kind === "level") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
+  if (armed) { sub = "Tocca di nuovo per spendere " + nodeCost(n) + " ◆"; subC = "#ffd166"; }
+  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
+  else if (full && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
+  txt(sub, 26, y + 29, 10, subC, "left", "500");
+  if (n.max > 1) txt(L + "/" + n.max, 300, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
+  if (full) txt("✓", 332, y + 20, 15, "#3fe0a0", "right", "800");
+  else txt(nodeCost(n) + " ◆", 334, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
 }
 function treeScreen() {
   dim(0.92);
-  txt("ALBERO DEI SIGILLI", W / 2, 28, 20, "#e8eefc", "center", "800");
-  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo da spendere" : " Sigilli da spendere"), W / 2, 52, 12, "#c9a2ff", "center", "700");
+  button(8, 8, 62, 30, "‹ Menu", closeTree, { size: 12 });
+  txt("ALBERO DEI SIGILLI", W / 2 + 22, 18, 16, "#e8eefc", "center", "800");
+  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo da spendere" : " Sigilli da spendere"), W / 2 + 22, 36, 11, "#c9a2ff", "center", "700");
   TREE_TABS.forEach(([id, label], i) => {
     const on = treeTab === id;
-    button(16 + i * 112, 66, 104, 32, label, () => { treeTab = id; treeArm = null; },
+    button(16 + i * 112, 50, 104, 30, label, () => { treeTab = id; treeArm = null; },
       { size: 12, fill: on ? "rgba(201,162,255,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
   });
+  const rows = (list, y0) => list.forEach((n, i) => treeNodeRow(n, y0 + i * 45));
   if (treeTab === "player") {
-    txt("Guardiano · carte bloccate da sbloccare", 16, 122, 12, "#9fb4d9", "left", "700");
-    TREE.player.forEach((n, i) => treeNodeRow(n, 138 + i * 48));
-    txt("Potenziamenti delle carte: in arrivo (fase 2)", W / 2, 438, 11, "#6f82ad", "center", "500");
+    txt("Guardiano · sblocchi e carte standard", 16, 98, 12, "#9fb4d9", "left", "700");
+    rows(TREE.player, 112);
   } else if (treeTab === "turrets") {
-    TURRET_ORDER.forEach((id, i) => {
-      const x = 16 + (i % 4) * 84, y = 108 + Math.floor(i / 4) * 52, d = TURRETS[id], c = TYPES[d.type].color, on = treeSel === id;
-      const own = TREE[id].filter(nodeOwned).length;
-      button(x, y, 78, 46, "", () => { treeSel = id; treeArm = null; }, { stroke: on ? c : "#2c4272", fill: on ? "rgba(201,162,255,0.12)" : "rgba(18,30,58,0.92)" });
-      ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, 40, 42); ctx.clip(); TURRET_ART[id](x + 22, y + 40, c); ctx.restore();
-      txt(own + "/" + TREE[id].length, x + 60, y + 17, 11, own ? "#e8eefc" : "#6f82ad", "center", "700");
-      if (progress.loadout.includes(id)) txt("in campo", x + 60, y + 33, 9, "#c9a2ff", "center", "700");
-      else if (progress.tree[id + ":perm"]) txt("libera", x + 60, y + 33, 9, "#3fe0a0", "center", "700");
+    [...TURRET_ORDER, "types"].forEach((id, i) => {
+      const x = 12 + (i % 6) * 56, y = 88 + Math.floor(i / 6) * 48, on = treeSel === id, nodes = TREE[id];
+      const c = id === "types" ? "#c9a2ff" : TYPES[TURRETS[id].type].color, own = nodes.reduce((a, n) => a + nodeLv(n), 0), all = nodes.reduce((a, n) => a + n.max, 0);
+      button(x, y, 52, 44, "", () => { treeSel = id; treeArm = null; }, { stroke: on ? c : "#2c4272", fill: on ? "rgba(201,162,255,0.12)" : "rgba(18,30,58,0.92)" });
+      if (id === "types") txt("Tipi", x + 26, y + 17, 12, "#c9a2ff", "center", "800");
+      else { ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, 48, 32); ctx.clip(); TURRET_ART[id](x + 26, y + 32, c); ctx.restore(); }
+      txt(progress.loadout.includes(id) ? "in campo" : own + "/" + all, x + 26, y + 38, 9, progress.loadout.includes(id) ? "#c9a2ff" : own ? "#e8eefc" : "#6f82ad", "center", "700");
     });
-    const d = TURRETS[treeSel];
-    txt(d.name, 16, 276, 14, TYPES[d.type].color, "left", "800");
-    txt("Equipaggiate " + progress.loadout.length + "/4", 344, 276, 11, "#9fb4d9", "right", "600");
-    TREE[treeSel].forEach((n, i) => treeNodeRow(n, 292 + i * 48));
+    if (treeSel === "types") { txt("Sezione condivisa · solo torrette", 16, 198, 13, "#c9a2ff", "left", "800"); rows(TREE.types, 212); }
+    else {
+      const d = TURRETS[treeSel];
+      txt(d.name, 16, 198, 13, TYPES[d.type].color, "left", "800");
+      txt("Equipaggiate " + progress.loadout.length + "/4", 344, 198, 11, "#9fb4d9", "right", "600");
+      rows(TREE[treeSel], 212);
+    }
   } else {
-    txt("Barriera", 16, 122, 14, "#e8eefc", "left", "800");
-    ["In arrivo (fasi 2 e 3, DESIGN.md § 16):", "· Vita % → Riduzione danno", "· Vita fissa, cooldown delle abilità, carte in più,", "  ignorare un colpo",
-      "· Abilità dal livello " + CAMPAIGN.barrierUnlock + ": Resistere, Controllo, Offesa"].forEach((l, i) => txt(l, 16, 150 + i * 22, 12, i ? "#9fb4d9" : "#6f82ad", "left", "500"));
+    txt("Barriera · Vita % → Riduzione danno → rami", 16, 98, 12, "#9fb4d9", "left", "700");
+    rows(TREE.barrier, 112);
+    const y = 112 + TREE.barrier.length * 45 + 8;
+    ["Da definire: torretta o guardiano con più carte (+cadenza).", "Abilità della barriera (dal livello " + CAMPAIGN.barrierUnlock + ") e loro cooldown: fase 3.",
+      "Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + "."]
+      .forEach((l, i) => txt(l, 16, y + i * 18, 10, "#6f82ad", "left", "500"));
   }
-  button(60, 590, 240, 40, "Menu", closeTree, { size: 14 });
 }
 
 function drawCrosshair(x, y) {                  // mira manuale: mirino nel punto premuto

@@ -65,7 +65,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**; dell’albero c’è la fase 1 (§ 16). **[deciso]**
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**; dell’albero ci sono le fasi 1 e 2 (§ 16). **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -347,7 +347,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale). Letture di Claude nella fase 1 da confermare (§ 16): premio della cupola solo da un completamento successivo al primo, Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
+- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale). Valori della fase 2 tutti provvisori (§ 16); con i Sigilli di oggi i livelli 31-50 sono quasi impossibili (misura in § 16). Letture di Claude nella fase 1 da confermare (§ 16): premio della cupola solo da un completamento successivo al primo, Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
@@ -370,7 +370,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli, fasi 2 e 3 (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
+Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli, fase 3 e nodo “più carte” (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
 (rigenerazione e repulsione oggi sono segnaposto a mano in `META`, diversi dalle definizioni del § 16: vanno sostituiti) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
@@ -579,7 +579,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Premi** come sopra. Lettura applicata: il premio della cupola al 100% si prende solo con un completamento **successivo** al primo (anche se il primo era già perfetto). **[da rivedere]** (la lettura era da confermare)
 - **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
   **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
-  Ogni nodo ha un solo livello (i nodi a più livelli arrivano con la fase 2).
+  Ogni nodo di sblocco ha un solo livello.
 - **Costi** **[provvisorio]**: chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 9 Sigilli, il guardiano 7, tutto l’albero di fase 1 106.
   In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
 - **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). Nessun rimborso per ora (proposta di rimborso totale ancora aperta, § 11).
@@ -588,7 +588,31 @@ Regole di calcolo **[Claude] [da rivedere]**:
   equipaggiata”). `META.startTurrets` resta lo sblocco a mano per le prove e non salta scelte.
 - **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
   La schermata di vittoria mostra i Sigilli presi e, se resta, il premio della cupola al 100%.
-- **Mancano** (fasi 2 e 3): potenziamenti delle carte standard, sezione condivisa per tipo, spina e nodi della barriera, tetti, abilità della barriera.
+
+### Fase 2 costruita (1.6.0) · valori **[Claude] [provvisorio]**
+- **Nodi a livelli**: livello da 0 a max; il livello L+1 costa L+1 Sigilli (1, 2, 3, 4, 5: 15 per un nodo da 5 livelli). Regola dei livelli applicata: un nodo non supera
+  il livello dei nodi da cui dipende (es. Riduzione danno al 2 solo con Vita % almeno al 2).
+- **Carte standard delle torrette** (3 nodi per torretta, 5 livelli): con il nodo al livello L, per ogni pila della carta:
+  bonus in % (danno, raggio, durata, altezza, percorso) ×(1 + 0,4·L), fino a ×3 al 5 (Danno maggiorato da +25% a +75% per pila);
+  ricarica (Ricarica ridotta, la parte “ricarica” di Più rapido) ×(1 + 0,2·L) (−12% → −24% per pila);
+  bonus a numero (+1 perforazione della Railgun, Più colpi dell’Hive) ×(1 + 0,4·L) arrotondato (Railgun 1 → 3, Hive 2 → 6);
+  malus (+1 missile, sfera, drone, proiettile, rimbalzo) −1/3 per livello: zero al 3, poi diventa bonus (−15% → +10% al 5; Laser −20% → +13,3%).
+  Le carte con malus restano “+1” (il numero non cresce).
+- **Guardiano**: Danno maggiorato come le torrette (5 livelli); +1 proiettile: solo riduzione del malus (3 livelli, zero al 3); Ventaglio ampliato: +1 proiettile secondario
+  per livello (3 livelli, da 4 a 7, sempre entro ±0,6 rad). +1 perforazione resta senza nodo.
+- **Sezione condivisa “Tipi”** (solo torrette, 5 livelli ciascuno): danno di un tipo +6% per livello (5 nodi), danno di tutte le torrette +3%, **durata degli stati +6%**
+  (un solo nodo globale: la domanda “per tipo o globale” resta aperta). La durata vale per gli stati delle torrette (rallentamento, bruciatura, indebolimento, paralisi,
+  vulnerabilità, distruzione, scia combustibile) e quindi anche per le combo del guardiano che usano gli effetti delle torrette.
+- **Barriera** (5 livelli ciascuno): Vita % +10% → Riduzione danno −3% → da qui Vita fissa +10, Riduzione cooldown abilità −5% (oggi vale solo per la repulsione segnaposto
+  di `META`), Ignorare un colpo 2% per livello (normali e boss insieme, nodi 6 e 7 fusi). Vita della cupola = base × (1 + Vita %) + Vita fissa.
+  **Tetti** sul totale: riduzione del danno **40%**, riduzione del cooldown **60%** (sopra i massimi dell’equipaggiamento, −30% e −50%).
+  Il nodo “torretta o guardiano con più carte (+cadenza)” **non è costruito**: la definizione è aperta.
+- Costo dell’albero intero: sblocchi 106, carte standard 495 (torrette) + 27 (guardiano), Tipi 105, Barriera 75: **808 Sigilli**. Oggi se ne prendono al massimo 340
+  (40 in Standard dal 31 al 50, 300 in Epica).
+- **Misura con i bot** (1.6.0, 200 partite per caso, livelli 40 e 50): senza albero **3,0%** e **0,5%**; solo sblocchi 9,0% e 2,0%; tutti i nodi a livelli al 3 (394 Sigilli) 63,5% e 42,5%;
+  albero pieno (808) 88,0% e 72,0%. Con i Sigilli prendibili oggi in Standard (al massimo 40) i livelli dal 31 al 50 restano quasi impossibili: va deciso se abbassare i costi,
+  dare più Sigilli o rivedere la difficoltà dal 31 (che è provvisoria e aspetta anche l’equipaggiamento).
+- **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
 
 ### Regole generali
 - I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]**

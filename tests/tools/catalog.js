@@ -108,7 +108,7 @@ const crowd = (n, y0) => Array.from({ length: n }, (_, i) => FOE(KINDS[i % 5], 3
 const P1 = { cleared: 23, seen: ALL_SEEN };
 // progressi con Sigilli e nodi dell’albero (DESIGN.md § 16)
 const PS = { cleared: 36, seen: ALL_SEEN, seals: 7, claims: ["s31", "s32", "s33", "s34", "s35", "s36", "s31p", "s33p"], loadout: ["sky"],
-  tree: { "sky:burn1": 1, "sky:burn2": 1, "sky:burn3": 1, "sky:splitB": 1, "sky:again": 1, "sky:perm": 1, "laser:sweep1": 1, "player:boom1": 1, "player:punch": 1 } };
+  tree: { "sky:burn1": 1, "sky:burn2": 1, "sky:burn3": 1, "sky:splitB": 1, "sky:again": 1, "sky:perm": 1, "laser:sweep1": 1, "player:boom1": 1, "player:punch": 1, "sky:std:dmg": 3, "sky:std:msl": 1, "laser:std:dmg": 2, "types:dmg:fire": 2, "types:all": 1, "barrier:hp": 2, "barrier:red": 1, "barrier:flat": 1, "player:std:dmg": 2, "player:fan": 1 } };
 // effetti di ogni torretta: potenziamenti accesi per far vedere più disegni (le torrette nuove usano il caso base)
 const FX_UPS = {
   sky: { split1: 1, burn1: 1, fire: 1 }, laser: { multi1: 1, sweep1: 1 }, disr: { dst1: 1, blast: 1 }, aero: { salvo1: 1, mine1: 1 },
@@ -151,8 +151,9 @@ function scenes(turretIds) {
     { progress: PS, setup: "openTree();", frames: 1 }, ["treeScreen", "treeNodeRow"]);
   add(1, "albero-acquisto", "Albero dei Sigilli · acquisto", "Primo tocco su un nodo: chiede il secondo tocco per spendere i Sigilli.",
     { progress: PS, setup: "openTree(); treeSel = 'laser'; tapNode(TREE.laser[1]);", frames: 1 }, ["treeScreen", "treeNodeRow"]);
-  add(1, "albero-guardiano", "Albero dei Sigilli · Guardiano", "Le 6 carte bloccate del guardiano.", { progress: PS, setup: "openTree(); treeTab = 'player';", frames: 1 }, ["treeScreen"]);
-  add(1, "albero-barriera", "Albero dei Sigilli · Barriera", "Sezione ancora da costruire (fasi 2 e 3).", { progress: PS, setup: "openTree(); treeTab = 'barrier';", frames: 1 }, ["treeScreen"]);
+  add(1, "albero-guardiano", "Albero dei Sigilli · Guardiano", "Le 6 carte bloccate del guardiano e i 3 nodi delle sue carte.", { progress: PS, setup: "openTree(); treeTab = 'player';", frames: 1 }, ["treeScreen"]);
+  add(1, "albero-barriera", "Albero dei Sigilli · Barriera", "Spina Vita % → Riduzione danno e rami (nodi a livelli); abilità nella fase 3.", { progress: PS, setup: "openTree(); treeTab = 'barrier';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
+  add(1, "albero-tipi", "Albero dei Sigilli · Tipi", "Sezione condivisa delle torrette: danno per tipo, di tutte le torrette, durata degli stati.", { progress: PS, setup: "openTree(); treeSel = 'types';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);

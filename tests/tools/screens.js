@@ -84,10 +84,11 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
 { // albero dei Sigilli (DESIGN.md § 16): menu con l’albero aperto, le tre sezioni, acquisto in attesa, vittoria con Sigilli
   const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
   const prog = { cleared: 36, seen: ALL_SEEN, seals: 7, claims: ["s31", "s32", "s33", "s34", "s35", "s36", "s31p", "s33p"],
-    tree: { "sky:burn1": 1, "sky:burn2": 1, "sky:burn3": 1, "sky:splitB": 1, "sky:again": 1, "sky:perm": 1, "laser:sweep1": 1, "player:boom1": 1, "player:punch": 1 }, loadout: ["sky"] };
+    tree: { "sky:burn1": 1, "sky:burn2": 1, "sky:burn3": 1, "sky:splitB": 1, "sky:again": 1, "sky:perm": 1, "laser:sweep1": 1, "player:boom1": 1, "player:punch": 1, "sky:std:dmg": 3, "sky:std:msl": 1, "laser:std:dmg": 2, "types:dmg:fire": 2, "types:all": 1, "barrier:hp": 2, "barrier:red": 1, "barrier:flat": 1, "player:std:dmg": 2, "player:fan": 1 }, loadout: ["sky"] };
   { const g = game({ progress: prog, src }); g.save("20-menu-sigilli.png"); g.w.__ev("openTree()"); g.frame(); g.save("21-albero-torrette.png");
     g.w.__ev("treeSel = 'laser'; tapNode(TREE.laser[1])"); g.frame(); g.save("22-albero-acquisto.png");
     g.w.__ev("treeTab = 'player'; treeArm = null"); g.frame(); g.save("23-albero-guardiano.png");
-    g.w.__ev("treeTab = 'barrier'"); g.frame(); g.save("24-albero-barriera.png"); }
+    g.w.__ev("treeTab = 'barrier'"); g.frame(); g.save("24-albero-barriera.png");
+    g.w.__ev("treeTab = 'turrets'; treeSel = 'types'"); g.frame(); g.save("26-albero-tipi.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
 }
