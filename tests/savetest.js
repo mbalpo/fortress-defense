@@ -16,6 +16,7 @@ function game(storage) {
       w.addEventListener("error", (e) => errors.push(e.message));
     } });
   const w = dom.window, d = w.document;
+  d.getElementById("splash").click();             // schermata iniziale: tocco su “Start”
   const frame = () => { t += 16.7; const cb = rafCb; rafCb = null; cb(t); };
   const tap = (x, y) => { const e = new w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; d.getElementById("c").dispatchEvent(e); };
   const click = (id) => d.getElementById(id).click();

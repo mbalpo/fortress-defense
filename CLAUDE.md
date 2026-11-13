@@ -18,7 +18,7 @@ Tower defense personale di Marco, PWA offline ispirata a *Galaxy Defense: Fortre
 DATI (`TYPES`, `RESIST`, `ENEMY_DEFS`, `waveSpec`, `CAMPAIGN`, `LV`/`effD`, `bossDef`, `finalBossHp`, `META`) → POTENZIAMENTI (`S`/`C`/`L`/`K`, `PLAYER_DEF` con le combo,
 `TURRETS` con `ups`) → STATO → STATI E DANNO → TORRETTE (una funzione per torretta, tabella `BEHAV`) → GUARDIANO (`PLAYER`, `FRENZY`, `playerTick`, `playerBullet`; combo con `comboOn`, `guardProc`) →
 MOTORE DEI POTENZIAMENTI (`eligible`, `rollOptions`, `describe`, `pick`) → LOGICA (`startRun`, `startWave`, `spawn`, `update`, `endWave`) →
-DISEGNO (`TURRET_ART`, `drawEnemy`, indicatori, HUD, menu, pausa, avvisi) → INPUT → SALVATAGGIO → avvio. Il service worker si registra in un secondo `<script>`.
+DISEGNO (`TURRET_ART`, `drawEnemy`, indicatori, HUD, menu, pausa, avvisi) → INPUT → SALVATAGGIO → avvio. Schermata iniziale (controllo aggiornamenti, “Start”) e registrazione del service worker stanno in un secondo `<script>`.
 - Canvas logico 360×640. Testi con `txt()`, testi a colori con `segs()`, pulsanti del canvas con `button()` (si attivano su `pointerdown`).
 - Nuova torretta: voce in `TURRETS`, funzione di tiro in `BEHAV`, disegno in `TURRET_ART`; poi DESIGN.md (`npm run design-lists`).
 - Nuovo potenziamento: voce `S`/`C`/`L` nella lista `ups` (`C` con catena e livello, `L` con livello) e uso con `has(s, id)` / `N(s, id)`.
@@ -35,5 +35,5 @@ DISEGNO (`TURRET_ART`, `drawEnemy`, indicatori, HUD, menu, pausa, avvisi) → IN
 5. Salvataggio: non rompere la compatibilità. Se cambia il formato alza `SAVE_VERSION` e gestisci la migrazione in `parseSave`.
 6. Ogni lavoro finisce con una voce in `docs/CHANGELOG.md`: cosa è cambiato, test eseguiti, e “Checklist”: voci da aggiungere o togliere
    nella checklist su claude.ai (Marco la porta al progetto).
-7. Pubblicazione: alza `APP_VERSION`; se cambiano i file in `app/`, aggiorna `ASSETS` e `CACHE` in `sw.js`. Vedi `docs/DEPLOY.md`.
+7. Pubblicazione: alza `APP_VERSION` e `VERSION` in `sw.js` (stesso numero, `swtest.js` lo controlla); se cambia l’elenco dei file in `app/`, aggiorna `ASSETS`. Vedi `docs/DEPLOY.md`.
 8. Git: un commit per lavoro, messaggio in italiano.

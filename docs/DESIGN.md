@@ -114,8 +114,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Formato: `{ game: "fortress-defense", version: 1, appVersion, exportedAt, progress: { cleared, seen }, settings: { targeting, aim } }`.
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso.
 - `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti), `fortress-proto-v1` (impostazioni).
-- PWA: `manifest.json`, `sw.js` (risponde dalla cache e aggiorna in background: la versione nuova arriva all’avvio successivo), icone.
-  Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html); se cambia l’elenco dei file, aggiornare `ASSETS` e `CACHE` in `sw.js`.
+- PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
+  Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
 
 ## 8. Guardiano e torrette *(generato)*
 
@@ -352,7 +352,8 @@ Ranger · equipaggiamento · più guardiani da scegliere prima del combattimento
 (rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti · chip ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
-salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
+salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero ·
+schermata iniziale con controllo aggiornamenti e tocco per iniziare (§ 7).
 
 ## 14. Strumenti di lavoro
 

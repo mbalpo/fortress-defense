@@ -15,6 +15,7 @@ function game({ progress, settings, src }) {
       w.HTMLCanvasElement.prototype.getContext = function (...a) { const c = orig.apply(this, a); if (c && !c.__w) { const f = c.fillText.bind(c); c.fillText = (s, ...r) => { texts.push(String(s)); return f(s, ...r); }; c.__w = true; } return c; };
     } });
   const w = dom.window, cv = w.document.getElementById("c");
+  w.document.getElementById("splash").click();   // schermata iniziale: tocco su “Start”
   const g = { w, texts,
     frame: (n = 1) => { for (let i = 0; i < n; i++) { texts.length = 0; t += 16.7; const cb = rafCb; rafCb = null; cb(t); } },
     key: (k) => w.dispatchEvent(new w.KeyboardEvent("keydown", { key: k })),

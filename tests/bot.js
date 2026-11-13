@@ -24,6 +24,7 @@ function makeGame({ seed = 1, patch = (h) => h, cleared = 50, level = 10, settin
     },
   });
   const w = dom.window; let t = 0;
+  w.document.getElementById("splash").click();   // schermata iniziale: tocco su “Start”
   const g = {
     texts, errors, win: w,
     frame() { t += 16.7; const cb = rafCb; rafCb = null; cb(t); },

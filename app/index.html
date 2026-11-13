@@ -39,10 +39,26 @@
   .card .confirm p { margin: 0 0 10px; font-size: 13px; }
   .card .msg { min-height: 18px; margin: 6px 0 0; color: #3fe0a0; font-size: 13px; }
   .card .msg.err { color: #ff8a8a; }
+  /* schermata iniziale: copre il gioco finché non si tocca “Start” (intanto controlla gli aggiornamenti) */
+  #splash { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+    padding: 24px; background: #070b16; color: #e8eefc; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  #splash[hidden] { display: none; }
+  #splash h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: .04em; text-align: center; }
+  #splash img { width: min(62vw, 36vh, 260px); height: auto; border-radius: 22%; }
+  #splashMsg { min-height: 40px; margin: 0; display: flex; align-items: center; color: #9fb4d9; font-size: 16px; font-weight: 600; }
+  #splash.ready { cursor: pointer; }
+  #splash.ready #splashMsg { color: #3fe0a0; font-size: 26px; font-weight: 800; letter-spacing: .06em; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
 </style>
 </head>
 <body>
 <canvas id="c" aria-label="Campo di battaglia"></canvas>
+<div id="splash" role="button" aria-label="Fortress Defense">
+  <h1>FORTRESS DEFENSE</h1>
+  <img src="icon-512.png" alt="" width="512" height="512">
+  <p id="splashMsg" role="status"></p>
+</div>
 <div id="savePanel" class="panel" hidden>
   <div class="card" role="dialog" aria-labelledby="saveTitle">
     <h2 id="saveTitle">Salvataggio</h2>
@@ -2235,6 +2251,7 @@ const stopDrag = () => { dragging = false; aim.down = false; };
 cv.addEventListener("pointerup", stopDrag);
 cv.addEventListener("pointercancel", stopDrag);
 window.addEventListener("keydown", (e) => {
+  if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
   const k = e.key.toLowerCase();
   if (state === "save") { if (k === "escape") closeSave(); return; }   // mentre si scrive nel pannello i tasti non comandano il gioco
   if (state === "menu" && (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d"))
@@ -2275,7 +2292,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 1, CODE_PREFIX = "FD1:";
 const $id = (id) => document.getElementById(id);
 function makeSave() {
@@ -2380,10 +2397,66 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-// installabile e giocabile offline: il service worker funziona solo in HTTPS (o su localhost)
-if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
-}
+/* SCHERMATA INIZIALE E AGGIORNAMENTI
+   Installabile e giocabile offline: il service worker funziona solo in HTTPS (o su localhost).
+   All’avvio, se online, chiede al browser se c’è un nuovo sw.js (attesa massima CHECK_MS). Se c’è: “Aggiornamento in corso…”,
+   la versione nuova scarica i file, si attiva e la pagina si ricarica. Poi (o subito: niente di nuovo, offline, tempo scaduto,
+   ricarico già fatto) compare “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo qui, mai durante una partita. */
+(() => {
+  const CHECK_MS = 3000;          // attesa massima del controllo (provvisorio)
+  const UPDATE_MS = 20000;        // se lo scaricamento si blocca, dopo questo tempo si gioca con la versione attuale (provvisorio)
+  const RELOAD_KEY = "fortress-update-reload";
+  const splash = document.getElementById("splash"), msg = document.getElementById("splashMsg");
+  let ready = false, updating = false, reloading = false;
+
+  function showStart() {
+    if (ready || reloading) return;
+    ready = true; splash.classList.add("ready"); msg.textContent = "Start";
+  }
+  function enter() { if (!ready || splash.hidden) return; splash.hidden = true; }
+  splash.addEventListener("click", enter);
+  window.addEventListener("keydown", (e) => { if (!splash.hidden && (e.key === "Enter" || e.key === " ")) enter(); });
+
+  let reloaded = false;
+  try { reloaded = sessionStorage.getItem(RELOAD_KEY) === "1"; sessionStorage.removeItem(RELOAD_KEY); } catch (e) {}
+
+  const swOk = "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  if (!swOk) { showStart(); return; }
+  const sw = navigator.serviceWorker;
+  const hadController = !!sw.controller;          // senza controller è la prima installazione: nulla da aggiornare
+  const reg = sw.register("sw.js");
+  if (reloaded || !hadController || navigator.onLine === false) { reg.catch(() => {}); showStart(); return; }
+
+  const timer = setTimeout(() => { if (!updating) showStart(); }, CHECK_MS);
+  function reload() {
+    if (ready || reloading) return;               // “Start” già mostrato: si tiene la versione attuale fino al prossimo avvio
+    reloading = true;
+    try { sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) {}
+    location.reload();
+  }
+  function applyUpdate(worker) {
+    if (!worker || updating || ready) return;
+    updating = true; clearTimeout(timer);
+    msg.textContent = "Aggiornamento in corso…";
+    const giveUp = setTimeout(showStart, UPDATE_MS);
+    const step = () => {
+      if (worker.state === "installed") worker.postMessage({ type: "skipWaiting" });   // versione in attesa: attivala
+      else if (worker.state === "activated") { clearTimeout(giveUp); reload(); }
+      else if (worker.state === "redundant") { clearTimeout(giveUp); showStart(); }     // installazione fallita
+    };
+    worker.addEventListener("statechange", step);
+    sw.addEventListener("controllerchange", () => { clearTimeout(giveUp); reload(); });
+    step();
+  }
+  reg.then(async (r) => {
+    if (r.waiting) return applyUpdate(r.waiting);          // già scaricata in un avvio precedente, in attesa
+    if (r.installing) return applyUpdate(r.installing);    // il browser la sta già scaricando
+    r.addEventListener("updatefound", () => applyUpdate(r.installing));
+    await r.update();
+    if (r.installing || r.waiting) applyUpdate(r.installing || r.waiting);
+    else if (!updating) { clearTimeout(timer); showStart(); }
+  }).catch(() => { if (!updating) { clearTimeout(timer); showStart(); } });
+})();
 </script>
 </body>
 </html>

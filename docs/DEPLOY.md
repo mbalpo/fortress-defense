@@ -19,9 +19,13 @@ INSTALLARE SUL TELEFONO
   Dopo il primo avvio con connessione, il gioco funziona anche offline.
 
 AGGIORNARE
-  Sostituisci i file sul sito. L'app scarica la versione nuova al primo avvio con
-  connessione e la usa dall'avvio successivo (la versione è scritta in basso nel menu).
-  Se aggiungi o togli file, aggiorna l'elenco ASSETS e il nome CACHE in sw.js.
+  Prima di caricare, alza APP_VERSION in index.html e VERSION in sw.js (stesso numero):
+  se sw.js non cambia, il browser non vede l'aggiornamento.
+  Sostituisci i file sul sito. Alla prossima apertura con connessione la schermata iniziale
+  mostra "Aggiornamento in corso…", scarica la versione nuova e ricarica; poi compare "Start"
+  (la versione è scritta in basso nel menu). Offline, o se il controllo supera 3 secondi,
+  compare subito "Start" con la versione già installata.
+  Se aggiungi o togli file, aggiorna anche l'elenco ASSETS in sw.js.
 
 SALVATAGGIO
   Menu → "Salvataggio · esporta o importa".

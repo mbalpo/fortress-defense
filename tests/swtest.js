@@ -13,18 +13,26 @@ const caches = {
   keys: async () => [...store.keys()], delete: async (n) => store.delete(n),
   match: async (req) => { for (const m of store.values()) { const r = m.get(norm(req)); if (r) return r; } return undefined; },
 };
-const handlers = {};
-const self = { addEventListener: (t, f) => { handlers[t] = f; }, skipWaiting: () => {}, clients: { claim: async () => {} }, location: { origin: "https://example.com" } };
-vm.runInNewContext(code, { self, caches, fetch: (r) => net(r), URL, Response: { error: () => ({ ok: false, body: "ERRORE" }) }, Promise, console });
+const handlers = {}, reloadReqs = [];
+let skips = 0;
+const self = { addEventListener: (t, f) => { handlers[t] = f; }, skipWaiting: () => { skips++; }, clients: { claim: async () => {} }, location: { origin: "https://example.com" } };
+class Request { constructor(url, o) { this.url = url; this.cache = (o || {}).cache; reloadReqs.push(this); } }
+vm.runInNewContext(code, { self, caches, fetch: (r) => net(r), URL, Request, Response: { error: () => ({ ok: false, body: "ERRORE" }) }, Promise, console });
+const VERSION = (code.match(/const VERSION = "([^"]+)"/) || [])[1], CACHE = "fortress-" + VERSION;
+const appVersion = (fs.readFileSync(require("path").join(__dirname, "..", "app", "index.html"), "utf8").match(/const APP_VERSION = "([^"]+)"/) || [])[1];
 async function fire(type, extra) { const ev = { waits: [], waitUntil(p) { this.waits.push(p); }, respondWith(p) { this.resp = p; }, ...extra }; handlers[type](ev); const r = ev.resp ? await ev.resp : undefined; await Promise.all(ev.waits); return { ev, r }; }
 const get = (url, mode) => fire("fetch", { request: { method: "GET", url: new URL(url, BASE).href, mode: mode || "no-cors" } });
 (async () => {
   store.set("fortress-0.9.0", new Map());                   // una versione vecchia rimasta in cache
+  console.log("versione in sw.js:", VERSION, "| APP_VERSION:", appVersion, ok(VERSION && VERSION === appVersion));
   await fire("install");
-  const cached = [...store.get("fortress-1.0.0").keys()].map((u) => u.replace(BASE, "") || "./");
+  const cached = [...store.get(CACHE).keys()].map((u) => u.replace(BASE, "") || "./");
   console.log("installazione → file in cache:", cached.join(", "), ok(cached.length === 7));
+  console.log("installazione → file chiesti al sito saltando la cache HTTP:", reloadReqs.filter((r) => r.cache === "reload").length, ok(reloadReqs.length === 7 && reloadReqs.every((r) => r.cache === "reload")));
   await fire("activate");
-  console.log("attivazione → cache rimaste:", [...store.keys()].join(", "), ok(store.size === 1 && store.has("fortress-1.0.0")));
+  console.log("attivazione → cache rimaste:", [...store.keys()].join(", "), ok(store.size === 1 && store.has(CACHE)));
+  skips = 0; handlers.message({ data: { type: "skipWaiting" } }); handlers.message({ data: { type: "altro" } }); handlers.message({ data: null });
+  console.log("messaggio skipWaiting → attivazione immediata:", skips, ok(skips === 1));
   server["index.html"] = "versione 2";                       // pubblico un aggiornamento
   const a = await get("index.html", "navigate");
   const b = await get("index.html", "navigate");

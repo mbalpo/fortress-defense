@@ -1,12 +1,19 @@
 // Fortress Defense · service worker
-// Strategia: risponde subito dalla cache (il gioco parte anche offline) e intanto scarica la versione nuova,
-// che verrà usata all'avvio successivo. Cambiare CACHE solo se cambia l'elenco dei file.
-const CACHE = "fortress-1.0.0";
+// Strategia: risponde subito dalla cache (il gioco parte anche offline).
+// Ad ogni pubblicazione alzare VERSION (uguale ad APP_VERSION in index.html): se sw.js non cambia, il browser
+// non vede l’aggiornamento. La versione nuova scarica tutti i file in una cache nuova; la schermata iniziale
+// del gioco la attiva e ricarica la pagina. Se cambia l’elenco dei file, aggiornare anche ASSETS.
+const VERSION = "1.2.0";
+const CACHE = "fortress-" + VERSION;
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./icon-180.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: "reload" salta la cache HTTP del browser: i file arrivano davvero dal sito
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
+
+// la schermata iniziale chiede di attivare subito una versione rimasta in attesa
+self.addEventListener("message", (e) => { if (e.data && e.data.type === "skipWaiting") self.skipWaiting(); });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys()
