@@ -2,6 +2,22 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
+## 1.2.4 — Moduli: destinatari e barriera (solo documentazione)
+
+DESIGN.md § 15 e § 11; nessuna modifica a codice, test o sezioni *(generato)*.
+
+- Marco approva percentuali, limiti e refresh della tabella dei valori.
+- **Destinatari** **[deciso]**: gli effetti 3, 5, 6, 9, 12, 13 e 18 valgono **solo per il guardiano** (prima: guardiano e torrette). Solo 23-28 e
+  30 toccano le torrette; l’eccezione ai beneficiari è ristretta di conseguenza.
+- **Effetto 11** (barriera) ricalibrato **[Claude] [da rivedere]**: vita da +8% a +50% della base e danno subito da −3% a −15%, al posto di
+  +5…+30 di vita e −0,1…−0,5 per colpo (troppo bassi: il danno dei nemici cresce con il livello, una riduzione fissa diventa nulla).
+- § 11, difficoltà dal livello 31: riportata la crescita attuale dei nemici (tutto lineare e lento) e l’indicazione di Marco: oltre il 30 nemici
+  più numerosi e più forti di base, con una curva di incremento.
+
+Test: nessuno (solo documentazione).
+
+Checklist: nuova voce “Curva dei nemici oltre il 30: più numerosi e più forti di base (§ 11)”.
+
 ## 1.2.3 — valori dei Moduli (solo documentazione)
 
 DESIGN.md § 15 e § 11; nessuna modifica a codice, test o sezioni *(generato)*.

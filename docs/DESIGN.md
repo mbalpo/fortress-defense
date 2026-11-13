@@ -335,6 +335,9 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: riprende a salire piena, ma equipaggiamento, barriera e chip non esistono ancora: da ricalibrare quando arrivano.
+  Oggi vita, danno, numero e velocità dei nemici crescono tutti, in modo lineare e lento: dal livello 30 al 50 vita ×1,29, danno ×1,16,
+  numero ×1,09 (al 100: vita ×2,0, danno ×1,57, numero ×1,32 rispetto al 30). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono
+  diventare **sia più numerosi sia più forti di base**, con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Resistenze dei nemici normali**: la tabella attuale è un segnaposto di Claude.
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
@@ -455,7 +458,7 @@ dare direttamente rarità alte).
 | 8 | Durata dei debuff | +10% | +18% | +27% | +38% | +50% |
 | 9 | Danni per Modulo installato | +0,3% | +0,5% | +0,7% | +0,9% | +1,2% |
 | 10 | Immunità ai primi danni / contrattacco / colpi | 5 / 50% / 3 | 8 / 100% / 4 | 12 / 150% / 5 | 16 / 200% / 6 | 20 / 300% / 8 |
-| 11 | Vita barriera / danno subito per colpo | +5 / −0,1 | +10 / −0,2 | +15 / −0,3 | +22 / −0,4 | +30 / −0,5 |
+| 11 | Vita barriera (% della base) / danno subito | +8% / −3% | +15% / −5% | +25% / −8% | +35% / −11% | +50% / −15% |
 | 12 | Danni / per carta scelta | −10% / +0,4% | −6% / +0,6% | −3% / +0,8% | +2% / +1% | +5% / +1,2% |
 | 13 | Danni ai nemici vicini alla barriera | +5% | +9% | +14% | +20% | +28% |
 | 14 | Immunità sotto il 20% di vita | 1,5 s | 2 s | 3 s | 4 s | 5 s |
@@ -473,21 +476,23 @@ dare direttamente rarità alte).
 | 30 | Probabilità torrette dal lv2 | 10% | 25% | 45% | 70% | 100% |
 
 Regole di calcolo **[Claude] [da rivedere]**:
-- Tutti i “+X% danni” dei Moduli si **sommano in un solo bonus** (non si moltiplicano tra loro), poi moltiplicano il danno. Gli effetti senza
-  destinatario (3, 5, 6, 9, 12, 13, 18) valgono per guardiano e torrette; 2, 4, 17 e 19 solo per il guardiano; 23-28 solo per le torrette.
+- Tutti i “+X% danni” dei Moduli si **sommano in un solo bonus** (non si moltiplicano tra loro), poi moltiplicano il danno.
+- Destinatari **[deciso]**: 2-9, 12, 13, 17-20 valgono **solo per il guardiano**; 23-28 solo per le torrette.
 - Critico (1): danno ×1,5, come il Colpo critico della Railgun; vale per i proiettili del guardiano.
 - Vicino alla fortezza (5) e alla barriera (13): entro 80 px dalla barriera. Il 5 conta al massimo 10 nemici.
 - Cadenza (7): riduce l’intervallo tra le salve (0,15 s → 0,1275 s con un ancestrale). Sta su arma e guanti: al massimo −30% con due ancestrali.
 - Durata dei debuff (8): un solo allungamento per nemico e per stato, alla prima salva che lo colpisce mentre ha lo stato.
 - Immunità ai primi danni (10): la barriera ignora i primi X danni della battaglia; i primi colpi nemici ricevono il contrattacco, una volta per battaglia.
-- Riduzione del danno (11): ogni colpo fa almeno 0,5.
+- Barriera (11): vita e riduzione in **percentuale**, così restano utili anche quando i nemici fanno più danno. Sta su armatura e stivali: con
+  due ancestrali la vita raddoppia (100 → 200 oggi) e il danno subito scende del 30%. Prima proposta (+5…+30 di vita, −0,1…−0,5 per colpo)
+  scartata: al livello 50 un asteroide all’ondata 20 fa circa 15 di danno e −0,5 era quasi nulla.
 - Immunità sotto il 20% (14): una volta per battaglia.
 - Vita ripristinata (16): al massimo 4 volte per battaglia (3 mini-boss e il boss), quindi il tetto per partita è implicito.
 - % della vita massima (20): un tiro per salva, sul primo nemico colpito; al massimo il doppio del danno del guardiano (14 oggi).
 - Probabilità (22, 29, 30): si tira una volta a inizio battaglia (22 a ogni ondata); su pezzi diversi le probabilità si sommano fino al 100%.
 - **Fusione di un equip con Moduli inseriti**: i Moduli tornano in inventario. **[deciso]**
 - **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. **[deciso]**
-  Eccezione **[deciso]**: alcuni effetti dei Moduli valgono anche o solo per le torrette (3, 23-28, 30 e i danni generici; vedi le regole di calcolo).
+  Eccezione **[deciso]**: gli effetti dei Moduli 23-28 (danni delle torrette) e 30 (torrette dal lv2) valgono per le torrette.
 - **Vincoli di design**: nessun effetto dà scelte o carte in più da prendere (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
   Eccezione **[deciso]**: sono ammessi gli effetti che cambiano quali carte compaiono o da che livello si parte (21 refresh, 22 quattro carte
   tra cui scegliere, 29 e 30 partenza dal livello 2). Nota: partire dal livello 2 equivale a un level up gratis, cioè una scelta risparmiata
