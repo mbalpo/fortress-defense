@@ -2,6 +2,23 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
+## 1.2.3 — valori dei Moduli (solo documentazione)
+
+DESIGN.md § 15 e § 11; nessuna modifica a codice, test o sezioni *(generato)*.
+
+- Marco approva pesi e ripartizione dei pool: ora **[Claude]** accettati.
+- Risposte di Marco **[deciso]**: l’effetto 30 vale per **tutte le torrette** della battaglia; l’effetto 8 vale per le **salve del guardiano**.
+- **Effetto 29** (guardiano dal lv2, su testa e nucleo): nell’ancestrale arriva al **50%**, così servono due Moduli per renderlo certo.
+  Gli esclusivi 22 e 30 restano al 100%. **[deciso]**
+- Nuova tabella dei **valori X per rarità** dei 30 effetti e **regole di calcolo** (bonus ai danni sommati in un solo bonus, destinatari degli
+  effetti generici, critico ×1,5, distanze, limiti per battaglia) **[Claude] [da rivedere]**: valori di partenza da misurare con i bot.
+- Beneficiari: aggiunta l’eccezione per gli effetti dei Moduli che valgono per le torrette.
+
+Test: nessuno (solo documentazione).
+
+Checklist: togliere “Moduli: confermare pesi e ripartizione dei pool (§ 15)”; la voce “Moduli: valori X per rarità dei 30 effetti” diventa
+“Moduli: confermare valori X e regole di calcolo (§ 15)”.
+
 ## 1.2.2 — effetti dei Moduli (solo documentazione)
 
 Decisioni di Marco riportate in DESIGN.md § 15 e § 11; nessuna modifica a codice, test o sezioni *(generato)*.

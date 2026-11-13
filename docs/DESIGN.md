@@ -338,8 +338,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Resistenze dei nemici normali**: la tabella attuale è un segnaposto di Claude.
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
-- **Moduli** (§ 15): valori X per rarità di tutti i 30 effetti; pesi e ripartizione nei pool proposti da Claude, da confermare.
-  Effetto 30: vale per tutte le torrette della battaglia (ipotesi del testo) o una sola? Effetto 8: “salve” solo del guardiano o anche delle torrette?
+- **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
@@ -377,10 +376,11 @@ schermata iniziale con controllo aggiornamenti e tocco per iniziare (§ 7).
 - **Doppioni**: nello stesso pezzo non si installano due Moduli con lo stesso effetto; su pezzi diversi gli effetti si sommano
   (le probabilità hanno un tetto del 100%). **[deciso]**
 
-### Catalogo degli effetti dei Moduli **[deciso]** (valori X per rarità: da definire)
+### Catalogo degli effetti dei Moduli **[deciso]** (valori X: tabella più sotto)
 
-Gli effetti 4, 12 e 17 hanno una parte di danno che parte **negativa nel comune** e diventa **positiva dal leggendario**. Gli effetti 22, 29 e 30
-partono da una probabilità bassa nel comune e arrivano al **100% nell’ancestrale**.
+Gli effetti 4, 12 e 17 hanno una parte di danno che parte **negativa nel comune** e diventa **positiva dal leggendario**. Gli effetti 22 e 30
+(esclusivi) partono da una probabilità bassa nel comune e arrivano al **100% nell’ancestrale**; il 29, che sta su due pezzi, si ferma al **50%**,
+così per renderlo certo servono due Moduli ancestrali. **[deciso]**
 
 | # | Effetto | Peso |
 |---|---|---|
@@ -391,7 +391,7 @@ partono da una probabilità bassa nel comune e arrivano al **100% nell’ancestr
 | 5 | +X% danni per ogni nemico vicino alla fortezza | 3 |
 | 6 | +X% danni ai nemici con un debuff | 3 |
 | 7 | Cadenza di fuoco −X% (intervallo più breve tra una salva e l’altra) | 2 |
-| 8 | Le salve allungano del X% la durata dei debuff (una sola volta per nemico con uno stato) | 2 |
+| 8 | Le salve del guardiano allungano del X% la durata dei debuff (una sola volta per nemico con uno stato) | 2 |
 | 9 | +X% danni per ogni Modulo installato | 2 |
 | 10 | Immunità ai primi X danni e contrattacco pari al X% del danno del guardiano per i primi X colpi nemici | 1 |
 | 11 | Barriera +X vita e danno subito dalla barriera −X | 3 |
@@ -413,13 +413,13 @@ partono da una probabilità bassa nel comune e arrivano al **100% nell’ancestr
 | 27 | Danno energy +X% (torrette energy) | 3 |
 | 28 | Tutti i danni delle torrette +X% | 1 |
 | 29 | X% di probabilità che il guardiano parta dal livello 2 (si scelgono subito anche carte lv2; le lv1 restano) | 1 |
-| 30 | X% di probabilità che le torrette partano dal livello 2 (come sopra) | 1 |
+| 30 | X% di probabilità che tutte le torrette della battaglia partano dal livello 2 (come sopra) | 1 |
 
-**Pesi** **[Claude] [da rivedere]**: 3 = frequente, 2 = medio, 1 = raro (gli effetti più forti). La probabilità di un effetto è il suo peso diviso
+**Pesi** **[Claude]** (accettati da Marco): 3 = frequente, 2 = medio, 1 = raro (gli effetti più forti). La probabilità di un effetto è il suo peso diviso
 la somma dei pesi del pool (somme: arma 23, guanti 22, stivali 22, armatura 20, testa 18, nucleo 17; in testa e nucleo gli effetti rari pesano di più, perché ne
 contengono 4 su 9).
 
-### Pool per pezzo **[deciso]** (la regola) · ripartizione **[Claude] [da rivedere]**
+### Pool per pezzo **[deciso]** (la regola) · ripartizione **[Claude]** (accettata da Marco)
 
 Ogni pezzo ha un pool di **9 effetti**: **1 esclusivo** e 8 condivisi con altri pezzi. Con 30 effetti: 6 esclusivi e 24 condivisi, ognuno in 2 pool.
 
@@ -434,8 +434,60 @@ Ogni pezzo ha un pool di **9 effetti**: **1 esclusivo** e 8 condivisi con altri 
 
 Criterio: arma e guanti per l’attacco del guardiano, armatura e stivali per barriera e difesa, testa per le carte, nucleo per le torrette.
 I 5 tipi di danno e “tutti i danni” sono distribuiti in modo che ogni tipo stia in 2 pezzi.
+
+### Valori X per rarità **[Claude] [da rivedere]**
+
+Valori di partenza, da misurare con i bot quando l’equipaggiamento esiste nel codice. Riferimenti usati: barriera 100 di vita, colpi nemici da
+1,5 a 9 (mini-boss 9), guardiano 7 di danno ogni 0,15 s, carte “+1 proiettile” a −15%, repulsione ogni 14 s, fino a 4 torrette, 19-28 carte
+per partita, al massimo 30 Moduli installati (6 pezzi ancestrali). Criterio: dal comune all’ancestrale il valore cresce circa di 5 volte,
+e anche gli slot passano da 1 a 5, quindi un pezzo ancestrale pieno vale circa 25 comuni (la fusione ne chiede 625: per questo i drop devono
+dare direttamente rarità alte).
+
+| # | Effetto (in breve) | Comune | Raro | Epico | Leggendario | Ancestrale |
+|---|---|---|---|---|---|---|
+| 1 | Probabilità di critico | 3% | 5% | 8% | 11% | 15% |
+| 2 | Danno del guardiano | +5% | +9% | +14% | +20% | +28% |
+| 3 | Danni per torre piazzata (max 4) | +1,5% | +2,5% | +4% | +5,5% | +7% |
+| 4 | +1 proiettile, danno del guardiano | −20% | −12% | −5% | +3% | +10% |
+| 5 | Danni per nemico vicino alla fortezza (max 10) | +1% | +1,5% | +2% | +3% | +4% |
+| 6 | Danni ai nemici con un debuff | +5% | +9% | +14% | +20% | +28% |
+| 7 | Cadenza del guardiano | −3% | −5% | −8% | −11% | −15% |
+| 8 | Durata dei debuff | +10% | +18% | +27% | +38% | +50% |
+| 9 | Danni per Modulo installato | +0,3% | +0,5% | +0,7% | +0,9% | +1,2% |
+| 10 | Immunità ai primi danni / contrattacco / colpi | 5 / 50% / 3 | 8 / 100% / 4 | 12 / 150% / 5 | 16 / 200% / 6 | 20 / 300% / 8 |
+| 11 | Vita barriera / danno subito per colpo | +5 / −0,1 | +10 / −0,2 | +15 / −0,3 | +22 / −0,4 | +30 / −0,5 |
+| 12 | Danni / per carta scelta | −10% / +0,4% | −6% / +0,6% | −3% / +0,8% | +2% / +1% | +5% / +1,2% |
+| 13 | Danni ai nemici vicini alla barriera | +5% | +9% | +14% | +20% | +28% |
+| 14 | Immunità sotto il 20% di vita | 1,5 s | 2 s | 3 s | 4 s | 5 s |
+| 15 | Cooldown abilità della barriera | −5% | −9% | −13% | −18% | −25% |
+| 16 | Vita ripristinata per mini-boss o boss | 2% | 3% | 5% | 7% | 10% |
+| 17 | +1 penetrazione, danno del guardiano | −15% | −9% | −4% | +2% | +8% |
+| 18 | Danni ai nemici sopra il 70% di vita | +6% | +11% | +16% | +23% | +32% |
+| 19 | Danno da esplosione del guardiano | +8% | +14% | +22% | +30% | +40% |
+| 20 | % della vita massima del bersaglio | 0,3% | 0,5% | 0,8% | 1,1% | 1,5% |
+| 21 | Refresh delle scelte per battaglia | 1 | 1 | 2 | 2 | 3 |
+| 22 | Probabilità di 4 carte | 10% | 25% | 45% | 70% | 100% |
+| 23-27 | Danno di un tipo (torrette) | +6% | +11% | +17% | +24% | +32% |
+| 28 | Tutti i danni delle torrette | +4% | +7% | +11% | +15% | +20% |
+| 29 | Probabilità guardiano dal lv2 | 5% | 12% | 22% | 35% | 50% |
+| 30 | Probabilità torrette dal lv2 | 10% | 25% | 45% | 70% | 100% |
+
+Regole di calcolo **[Claude] [da rivedere]**:
+- Tutti i “+X% danni” dei Moduli si **sommano in un solo bonus** (non si moltiplicano tra loro), poi moltiplicano il danno. Gli effetti senza
+  destinatario (3, 5, 6, 9, 12, 13, 18) valgono per guardiano e torrette; 2, 4, 17 e 19 solo per il guardiano; 23-28 solo per le torrette.
+- Critico (1): danno ×1,5, come il Colpo critico della Railgun; vale per i proiettili del guardiano.
+- Vicino alla fortezza (5) e alla barriera (13): entro 80 px dalla barriera. Il 5 conta al massimo 10 nemici.
+- Cadenza (7): riduce l’intervallo tra le salve (0,15 s → 0,1275 s con un ancestrale). Sta su arma e guanti: al massimo −30% con due ancestrali.
+- Durata dei debuff (8): un solo allungamento per nemico e per stato, alla prima salva che lo colpisce mentre ha lo stato.
+- Immunità ai primi danni (10): la barriera ignora i primi X danni della battaglia; i primi colpi nemici ricevono il contrattacco, una volta per battaglia.
+- Riduzione del danno (11): ogni colpo fa almeno 0,5.
+- Immunità sotto il 20% (14): una volta per battaglia.
+- Vita ripristinata (16): al massimo 4 volte per battaglia (3 mini-boss e il boss), quindi il tetto per partita è implicito.
+- % della vita massima (20): un tiro per salva, sul primo nemico colpito; al massimo il doppio del danno del guardiano (14 oggi).
+- Probabilità (22, 29, 30): si tira una volta a inizio battaglia (22 a ogni ondata); su pezzi diversi le probabilità si sommano fino al 100%.
 - **Fusione di un equip con Moduli inseriti**: i Moduli tornano in inventario. **[deciso]**
 - **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. **[deciso]**
+  Eccezione **[deciso]**: alcuni effetti dei Moduli valgono anche o solo per le torrette (3, 23-28, 30 e i danni generici; vedi le regole di calcolo).
 - **Vincoli di design**: nessun effetto dà scelte o carte in più da prendere (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
   Eccezione **[deciso]**: sono ammessi gli effetti che cambiano quali carte compaiono o da che livello si parte (21 refresh, 22 quattro carte
   tra cui scegliere, 29 e 30 partenza dal livello 2). Nota: partire dal livello 2 equivale a un level up gratis, cioè una scelta risparmiata
