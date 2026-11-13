@@ -3,6 +3,41 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.4.0 — Sigilli e albero dei potenziamenti: design e carte bloccate
+
+Testo di Marco dal progetto su claude.ai, inserito in DESIGN.md; nel codice solo il blocco delle carte (l’albero, i Sigilli e il loro salvataggio non esistono ancora).
+
+- **DESIGN.md**: le 10 modifiche di Marco (§ 2 torrette equipaggiate dal 31; § 3 combo e carte bloccate; § 4 sblocchi a fine livello e progressione salvata;
+  § 5 misure da rifare con il pool libero; § 11 voce Sigilli; § 13 albero dei Sigilli e segnaposto di `META`; § 15 Sigilli e beneficiari; nuovo **§ 16 Sigilli e albero dei potenziamenti**).
+  Corretto il refuso “scegliibile” → “sceglibile”. Aggiunti da Claude: § 5 numeri della prima misura con il pool libero; § 11 decisione aperta
+  “Difficoltà con il pool libero”; § 16 dove stanno blocchi e controlli nel codice.
+- **Carte bloccate dal livello 1** (`app/index.html`): nuova tabella `TREE_LOCKS` (guardiano e 11 torrette, come la tabella del § 16) e funzione `locked`;
+  `eligible` non propone le carte bloccate (anche i level up), `comboReady` non accetta una combo la cui voce chain è bloccata
+  (Colpi ramificati, Mira amplificata, Mini-drone di scorta, Colpo caricato). Nuovo campo `META.unlocked` (`{ sky: ["burn1", …] }`), dove scriverà l’albero;
+  oggi vuoto, quindi **in gioco si usa il pool libero**. Commento di `META.domeAbilities`: rigenerazione e repulsione sono segnaposto diversi dal § 16 (non sostituiti: i numeri delle nuove abilità sono ancora da decidere).
+- Salvataggio: **formato invariato** (`SAVE_VERSION` resta 1): i Sigilli non sono ancora salvati. Andrà alzato quando arrivano saldo, nodi e premi riscossi (§ 4).
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.4.0. `ASSETS` invariato.
+- **Test**: `tests/rev2.js`, nuova parte “Pool libero”: per ogni entità controlla che le voci bloccate esistano; la forma dei blocchi (una chain intera da 3 voci,
+  un lv2 dell’altra chain, un level up lv2; il guardiano anche il level up lv1); nessuna carta standard bloccata; ogni voce chain libera di lv N > 1 ha una voce libera di lv N−1
+  (quindi ogni lv3 ha un lv2 libero); level up liberi almeno 2-1-1 per le torrette e 1-1-1 per il guardiano (Colpo pesante è bloccato per decisione del § 16);
+  che con il solo pool libero si arrivi al lv3 con 12 potenziamenti (20 prove con scelte a caso) e che una carta bloccata non venga mai offerta; che sbloccate in `META.unlocked` tornino disponibili.
+  Provato al contrario: con un level up lv1 bloccato al posto del lv2 il controllo fallisce. `tests/combo.js`: nuovo caso “chain non sbloccata” per ogni combo
+  e controllo che le combo bloccate siano proprio Thunderbolt, Beam, Firewheel Drone e Teslacoil; gli altri casi ora sbloccano la chain in `META.unlocked`.
+- **Strumenti**: `calib2.js` accetta numero di partite per bot e primo seme (`node tests/tools/calib2.js <livelli> [sostituzioni] [partite] [seme]`; nel commento la sostituzione per il pool completo);
+  `l30.js` accetta il numero di partite per bot.
+- **Bilanciamento** (stessi bot e semi, pool libero → completo; 120 partite, 800 sui muri 10, 20, 30): 1 100% → 100% · 5 95,0% → 95,8% · 8 49,2% → 51,7% ·
+  **10 9,9% → 11,9%** · 11 83,3% → 89,2% · 15 76,7% → 76,7% · **20 18,1% → 37,1%** · 25 50,8% → 55,8% · **30 4,9% → 22,3%**.
+  `l30.js` (pool libero, 800 partite): al 20 arrivano all’ondata 20 in 469 e vincono 145; al 30 arrivano 404 e vincono 39: il muro è il boss finale.
+  Il pool completo al 10 dà di nuovo 11,9%, come la misura della revisione torri 2 (stessi semi). Nessun numero della difficoltà cambiato.
+
+Test: `npm test`, 26 test, tutti verdi. Screenshot non rifatti: nessuna schermata cambiata.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (disegni non cambiati: si rigenera perché è cambiato l’hash di `index.html` e `sw.js`).
+
+Checklist: nuove voci “Sigilli e albero dei potenziamenti (§ 16): costi, livelli dei nodi, tetti, nodi della barriera, rimborso”, “Carte bloccate (§ 16):
+rivedere la tabella di Claude”, “Difficoltà con il pool libero: muri al 20 (18%) e al 30 (5%) da decidere (§ 5, § 11)”; togliere “Da quando cadono i Sigilli”
+(deciso: dal livello 31).
+
 ## 1.3.0 — catalogo grafico e disegno in un modulo condiviso
 
 Decisioni di Marco: pagina che riusa il codice di disegno, rigenerazione automatica, aggiornamento sempre dichiarato qui.

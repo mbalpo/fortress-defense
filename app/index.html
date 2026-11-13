@@ -170,13 +170,14 @@ const waveSpeed = (n) => 1 + 0.012 * (n - 1);
 const waveDmg   = (n) => 1 + 0.04 * (n - 1);
 const MODES = { standard: { label: "Standard" }, epic: { label: "Epica" } };
 
-// Sblocchi permanenti (per ora a mano).
-// Esempio: startTurrets: ["sky", "rail"], domeAbilities: ["regen", "repulse"]
+// Sblocchi permanenti (per ora a mano). È qui che scriverà l’albero dei Sigilli (DESIGN.md § 16).
+// Esempio: startTurrets: ["sky", "rail"], domeAbilities: ["regen", "repulse"], unlocked: { sky: ["burn1", "burn2"] }
 const META = {
   startTurrets: [],        // vuoto = si parte senza torrette
   domeHp: 100,
   domeReduction: 0,        // 0..1: riduzione del danno subito dalla cupola
-  domeAbilities: [],       // fino a 3 tra: "regen", "repulse"
+  domeAbilities: [],       // fino a 3 tra: "regen", "repulse" (segnaposto: le abilità del § 16 sono diverse)
+  unlocked: {},            // carte di TREE_LOCKS sbloccate con i Sigilli, per entità: { player: [...], sky: [...] }
 };
 
 /* =====================================================================
@@ -415,6 +416,25 @@ const TURRETS = {
 };
 Object.keys(TURRETS).forEach((k) => { TURRETS[k].id = k; });
 const TURRET_ORDER = Object.keys(TURRETS);
+
+// Carte bloccate dall’albero dei Sigilli (DESIGN.md § 16): non escono, dal livello 1, finché non sono in META.unlocked.
+// Torrette: chain da 3 voci · un lv2 dell’altra chain · un level up lv2 [Claude, da rivedere]. Guardiano: chain Colpi esplosivi,
+// Frenesia furiosa, Colpo pesante, Rimbalzo [deciso]. Le combo che richiedono una voce bloccata escono solo dopo lo sblocco.
+const TREE_LOCKS = {
+  player:  ["boom1", "boomP", "boom3", "fspd", "punch", "ricochet"],
+  sky:     ["burn1", "burn2", "burn3", "splitB", "again"],
+  laser:   ["sweep1", "sweep2", "sweep3", "multiW", "exploit"],
+  disr:    ["tp1", "tp2", "tp3", "dstB", "amp"],
+  aero:    ["salvo1", "salvoK", "salvo2", "mineK", "echo"],
+  thunder: ["fork1", "fork2", "forkW", "paraD", "vuln"],
+  beam:    ["amp1", "amp2", "amp3", "pull", "feed"],
+  wheel:   ["mini1", "miniB", "miniD", "trailR", "stoke"],
+  hive:    ["seed1", "seed2", "seed3", "waveR", "kami"],
+  rail:    ["split1", "split2", "mass", "boomR", "stun"],
+  tesla:   ["over1", "over2", "over3", "orbSlow", "stun"],
+  vortex:  ["stat1", "stat2", "stat3", "whT", "twin"],
+};
+const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unlocked[who] || []).includes(id);
 
 /* =====================================================================
    GEOMETRIA E STATO
@@ -1427,10 +1447,11 @@ function eligible(s) {
   if (s.used >= 3) {      // serve un level up per procedere
     if (cap < 3 && s.level >= cap) return out;                       // livello successivo non ancora sbloccato
     if (s.level === 3 && campLevel >= CAMPAIGN.maxMaxedFrom && maxedCount() >= CAMPAIGN.maxMaxed) return out;   // già 2 al massimo
-    for (const u of ups) if (u.cat === "lu" && u.lv <= s.level && !has(s, u.id)) out.push(u);
+    for (const u of ups) if (u.cat === "lu" && u.lv <= s.level && !has(s, u.id) && !locked(s.id, u.id)) out.push(u);
     return out;
   }
   for (const u of ups) {
+    if (locked(s.id, u.id)) continue;                                 // carta dell’albero dei Sigilli non ancora sbloccata
     if (u.cat === "std") { if (N(s, u.id) < 3) out.push(u); }
     else if (u.cat === "chain") {
       if (has(s, u.id) || u.lv > s.level) continue;                   // le chain lv2/lv3 solo se la torre è al livello 2/3
@@ -1445,7 +1466,7 @@ function eligible(s) {
 const partner = (id) => slots.find((t) => t && t.id === id) || null;
 function comboReady(u) {
   const t = partner(u.needs);
-  return !!t && (typeof u.cond === "number" ? t.level >= u.cond : has(t, u.cond));
+  return !!t && (typeof u.cond === "number" ? t.level >= u.cond : has(t, u.cond) && !locked(t.id, u.cond));
 }
 function applyUp(s, u) {
   s.up[u.id] = N(s, u.id) + 1;
@@ -1726,7 +1747,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.4.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 1, CODE_PREFIX = "FD1:";
 const $id = (id) => document.getElementById(id);
 function makeSave() {

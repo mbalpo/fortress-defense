@@ -9,7 +9,7 @@ const patch = (h) => P(h,
   ["function guardFrag(p, b, dmg) {", "function guardFrag(p, b, dmg) { window.__frag = (window.__frag || 0) + 1;"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, PLAYER_DEF, GROUND_Y, SLOT_X, eligible, describe, applyUp, rollOptions,
-  guardProc, guardWheel, comboOn, player: () => player, slots: () => slots, setManual: (v) => { manual = v; }, aim,
+  guardProc, guardWheel, comboOn, META, TREE_LOCKS, player: () => player, slots: () => slots, setManual: (v) => { manual = v; }, aim,
   hold: () => { queue = []; enemies.length = 0; } };
 })();`]);
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -38,13 +38,16 @@ console.log("— Sblocco delle combo —");
   const { X } = setup(); let good = true; const msg = [];
   for (const [id, tid] of Object.entries(COMBOS)) {
     const u = X.PLAYER_DEF.ups.find((v) => v.id === id);
-    const offered = (glv, tlv, chain, used) => {
+    const offered = (glv, tlv, chain, used, keepLock) => {
       const k = setup(); k.guard({}, glv); k.p.used = used || 0;
+      if (!keepLock) k.X.META.unlocked[tid] = [u.cond];              // chain sbloccata con i Sigilli (se è bloccata)
       if (tlv) k.tower(tid, chain ? { [u.cond]: 1 } : {}, tlv);
       return k.X.eligible(k.p).some((v) => v.id === id);
     };
     const chain = typeof u.cond === "string";
+    const lockedCond = chain && X.TREE_LOCKS[tid].includes(u.cond);
     const cases = [
+      ["chain non sbloccata", offered(u.lv, chain ? 1 : 2, chain, 0, true), !lockedCond],
       ["senza torretta", offered(3, 0), false],
       ["condizione non soddisfatta", offered(3, chain ? 3 : 1, false), false],
       ["condizione soddisfatta", offered(u.lv, chain ? 1 : 2, chain), true],
@@ -53,8 +56,11 @@ console.log("— Sblocco delle combo —");
     ];
     const bad = cases.filter(([, got, exp]) => got !== exp);
     if (bad.length) { good = false; msg.push(id + ": " + bad.map((b) => b[0]).join(", ")); }
-    console.log(id.padEnd(9), "con", tid.padEnd(8), "|", (chain ? "chain " + u.cond : "torretta lv" + u.cond).padEnd(15), "| guardiano lv" + u.lv, "|", u.name, bad.length ? "✗ " + bad.map((b) => b[0]).join(", ") : "✓");
+    console.log(id.padEnd(9), "con", tid.padEnd(8), "|", (chain ? "chain " + u.cond : "torretta lv" + u.cond).padEnd(15), "| guardiano lv" + u.lv, "|", lockedCond ? "bloccata" : "libera  ", "|", u.name, bad.length ? "✗ " + bad.map((b) => b[0]).join(", ") : "✓");
   }
+  // DESIGN.md § 3: bloccate finché la chain non è sbloccata solo le combo di Thunderbolt, Beam, Firewheel Drone e Teslacoil
+  const lockedCombos = Object.entries(COMBOS).filter(([id, tid]) => { const u = X.PLAYER_DEF.ups.find((v) => v.id === id); return typeof u.cond === "string" && X.TREE_LOCKS[tid].includes(u.cond); }).map(([id]) => id);
+  console.log("combo con chain bloccata dall’albero:", lockedCombos.join(", "), ok(lockedCombos.join() === "kThunder,kBeam,kWheel,kTesla"));
   // la combo conta come scelta del guardiano e la carta dice con quale torretta
   const k = setup(); k.tower("sky", {}, 2); const u = k.X.PLAYER_DEF.ups.find((v) => v.id === "kSky");
   const d = k.X.describe({ kind: "up", who: k.p, up: u }); k.X.applyUp(k.p, u);

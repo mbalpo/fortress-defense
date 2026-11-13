@@ -6,7 +6,7 @@ const patch = (h) => P(h,
   ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],               // il guardiano non spara: si misura solo la torre
   ["function railBoom(s, x, y, avail, dmg0) {", "function railBoom(s, x, y, avail, dmg0) { (window.__rb = window.__rb || []).push(Math.round(y));"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
-window.__x = { damage, spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, PLAYER_DEF, GROUND_Y, cdOf,
+window.__x = { damage, spawn, eligible, applyUp, TREE_LOCKS, META, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, PLAYER_DEF, GROUND_Y, cdOf,
   laserFire, beamFire, wheelFire, hiveDrone, railShot, teslaBoom, teslaChargeT, vortex, hold: () => { queue = []; enemies.length = 0; } };
 })();`]);
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -31,6 +31,49 @@ console.log("— Regola delle chain e dei level up —");
     const shapes = Object.values(chains).map((c) => c.slice(1).join("-")).sort();
     const good = shapes.join(" ") === "1-1-1 1-2-1" && lu[1] === 2 && lu[2] === 2 && lu[3] >= 1 && !d.ups.some((u) => u.prov);
     console.log((d.name || "").padEnd(20), "chain:", shapes.join(" "), "| level up lv1-2-3:", lu.slice(1).join("-"), ok(good));
+  }
+}
+
+console.log("— Pool libero: carte bloccate dall’albero dei Sigilli (DESIGN.md § 16) —");
+{
+  const { X } = setup();
+  for (const d of [X.PLAYER_DEF, ...Object.values(X.TURRETS)]) {
+    const lk = X.TREE_LOCKS[d.id] || [], byId = Object.fromEntries(d.ups.map((u) => [u.id, u])), errs = [];
+    if (lk.some((id) => !byId[id])) errs.push("voce inesistente");
+    const free = d.ups.filter((u) => !lk.includes(u.id));
+    // struttura dei blocchi: una chain intera da 3 voci, un lv2 dell’altra chain, un level up lv2 (guardiano: anche il level up lv1, § 16)
+    const lkChain = lk.map((id) => byId[id]).filter((u) => u && u.cat === "chain"), chains = [...new Set(lkChain.map((u) => u.chain))];
+    const whole = chains.find((c) => d.ups.filter((u) => u.chain === c).every((u) => lk.includes(u.id)) && d.ups.filter((u) => u.chain === c).length === 3);
+    const other = lkChain.filter((u) => u.chain !== whole);
+    const lkLu = lk.map((id) => byId[id]).filter((u) => u && u.cat === "lu").map((u) => u.lv).sort().join("-");
+    if (!whole || other.length !== 1 || other[0].lv !== 2) errs.push("chain bloccate");
+    if (lkLu !== (d.id === "player" ? "1-2" : "2")) errs.push("level up bloccati " + lkLu);
+    if (lk.some((id) => byId[id] && byId[id].cat === "std")) errs.push("carta standard bloccata");
+    // ogni voce chain libera di lv N > 1 ha una voce libera di lv N−1 nella stessa chain (quindi ogni lv3 ha un lv2 libero)
+    for (const u of free) if (u.cat === "chain" && u.lv > 1 && !free.some((v) => v.chain === u.chain && v.lv === u.lv - 1)) errs.push(u.id + " senza lv" + (u.lv - 1) + " libero");
+    const freeChainLv3 = free.filter((u) => u.cat === "chain" && u.lv === 3).length;
+    if (freeChainLv3 < 1) errs.push("nessuna chain completa libera");
+    // level up rimasti: torrette 2 a lv1, 1 a lv2, 1 a lv3; guardiano 1 per livello (Colpo pesante è bloccato, § 16)
+    const lu = [1, 2, 3].map((l) => free.filter((u) => u.cat === "lu" && u.lv === l).length);
+    const need = d.id === "player" ? [1, 1, 1] : [2, 1, 1];
+    if (lu.some((n, i) => n < need[i])) errs.push("level up liberi " + lu.join("-"));
+    // con il solo pool libero si arriva al lv3 e a 12 potenziamenti (scelte a caso, 20 prove)
+    let maxed = 0;
+    for (let k = 0; k < 20; k++) {
+      const s = X.makeShooter(d, 180, X.GROUND_Y - 14); let n = 0, opts;
+      while ((opts = X.eligible(s)).length) {
+        const u = opts[Math.floor(Math.random() * opts.length)];
+        if (lk.includes(u.id)) { errs.push("offerta bloccata " + u.id); break; }
+        X.applyUp(s, u); n++;
+      }
+      if (s.done && s.level === 3 && n === 12) maxed++;
+    }
+    if (maxed < 20) errs.push("lv3 raggiunto " + maxed + "/20");
+    // sbloccate tutte, tornano tutte disponibili
+    X.META.unlocked[d.id] = lk.slice(); const s = X.makeShooter(d, 180, X.GROUND_Y - 14); s.level = 3;
+    const back = X.eligible(s).filter((u) => lk.includes(u.id) && u.cat === "chain" && u.lv === 1).length; delete X.META.unlocked[d.id];
+    if (back < 1) errs.push("sblocco senza effetto");
+    console.log((d.name || "").padEnd(20), "bloccate:", String(lk.length).padEnd(2), "| level up liberi lv1-2-3:", lu.join("-"), "| lv3 e 12 potenziamenti:", maxed + "/20", errs.length ? "✗ " + errs.join(", ") : "✓");
   }
 }
 

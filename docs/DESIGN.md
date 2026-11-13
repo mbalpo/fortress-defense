@@ -23,7 +23,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Schermo logico 360×640, sempre in verticale. In basso il suolo, sopra la **cupola** (semi-ellisse larga 344 px, alta 95 px al centro) che protegge
   guardiano e torrette. In fondo la barra della vita della cupola. **[deciso]** (altezza ridotta su richiesta)
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
-- Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). **[deciso]**
+- Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). Dal livello 31, le torrette sbloccate con i Sigilli si possono equipaggiare prima dell’ondata 1 (§ 16). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
 - **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando (mira automatica) e spara da solo. **[deciso]**
 - **Mira** (scelta nel menu, ricordata): automatica, oppure manuale = il guardiano resta fermo e spara solo mentre si tiene premuto;
@@ -55,6 +55,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   “Colpo” = una salva del guardiano (un tiro di probabilità per salva, così “+1 proiettile” e Ventaglio non moltiplicano l’effetto);
   “proiettile” = ogni singolo proiettile. Elenco in § 8. **[deciso]** (valori **[da rivedere]**, § 10)
 - **Combo tra due torrette**: nessuna definita. **(aperto, § 11)**
+- **Combo e carte bloccate**: le combo del guardiano che richiedono la voce lv1 di una chain (Thunderbolt, Beam, Firewheel Drone, Teslacoil) possono uscire solo dopo che quella chain è stata sbloccata con i Sigilli (§ 16). Disruption Drone e Aeroblast usano una chain che resta libera. **[deciso]**
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
 
@@ -63,7 +64,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - La campagna **prosegue oltre il livello 50** (lunghezza totale da definire); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello; in **Epica D = livello + 30** (formula da riverificare oltre il 50). **[deciso]**
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
-  **40 → abilità della barriera** (fino a 3), **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**. **[deciso]**
+  **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento, albero e abilità della barriera **non sono ancora costruiti**. **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -73,7 +75,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Budget di scelte: 19 per partita, **28 dal livello 11** con i 3 mini-boss. Servono 19 scelte per riempire tutto al tetto lv1, 39 al tetto lv2,
   64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39: per questo, con 28 scelte,
   **non si possono massimizzare più di 2 tra torri e guardiano** senza bisogno di una regola esplicita. **[deciso]**
-- Progressione salvata sul dispositivo: livelli completati e nemici scoperti; impostazioni (bersaglio, mira) a parte. **[deciso]**
+- Progressione salvata sul dispositivo: livelli completati, nemici scoperti, Sigilli (saldo, livelli dei nodi, premi già riscossi per livello e modalità); impostazioni (bersaglio, mira) a parte. Il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione (§ 7). **[deciso]**
 
 ## 5. Difficoltà e calibrazione
 
@@ -97,6 +99,12 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   25 dal 55,0% al 58,5%, 30 dal 23,5% al 23,0%: dentro il rumore. I bot scelgono le carte a caso o con regole semplici, e le combo escono di rado
   (peso 0,4 e condizioni), quindi la misura dice poco sulla loro forza vera. Nessun numero della difficoltà cambiato.
 - La difficoltà in **mira manuale non è misurata** (i bot giocano solo in automatico).
+- Le carte bloccate dall’albero (§ 16) valgono dal livello 1: tutte le misure sopra sono state fatte con il pool completo. Vanno rifatte con il **pool libero** (muri al 10, 20 e 30) prima di cambiare i numeri della difficoltà. **[da misurare]**
+- Prima misura con il pool libero (1.4.0; stessi bot e stessi semi, pool libero → pool completo; 120 partite per livello, 800 sui muri):
+  1 100% → 100% · 5 95,0% → 95,8% · 8 49,2% → 51,7% · **10 9,9% → 11,9%** · 11 83,3% → 89,2% · 15 76,7% → 76,7% · **20 18,1% → 37,1%** ·
+  25 50,8% → 55,8% · **30 4,9% → 22,3%**. Al 10 il calo è vicino al rumore; al **20 e al 30 la vittoria si dimezza o crolla**, mentre l’ondata media
+  resta quasi uguale (20: 16,9 e 16,9; 30: 15,7 e 16,0): i bot arrivano all’ondata 20 (469 su 800 al 20, 404 al 30) ma non battono il boss finale
+  (vincono 145 e 39). Il muro dei boss finali, a tetto lv2 e lv3, dipende dalle carte bloccate. Nessun numero della difficoltà cambiato: decisione aperta (§ 11).
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -330,7 +338,8 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Chip**: due famiglie, **Sigilli** e **Moduli** (§ 15). Da decidere da quando cadono i Sigilli (l’equipaggiamento arriva al 30). Se spendibili fin dall’inizio, la curva dal livello 20 va ricalibrata.
+- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16), rimborso dei Sigilli (proposta di Claude: totale), calibrazione con il pool libero. **Moduli** (§ 15): vedi sotto.
+- **Difficoltà con il pool libero**: con le carte bloccate le vittorie dei bot scendono al 18% al livello 20 e al 5% al 30 (§ 5). Da decidere se abbassare i boss finali (o la curva dal 20), cambiare le carte bloccate o accettare muri più duri.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
@@ -353,8 +362,8 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento e chip (§ 15) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
-(rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti ·
+Ranger · equipaggiamento e chip (§ 15) · albero dei Sigilli (§ 16) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
+(rigenerazione e repulsione oggi sono segnaposto a mano in `META`, diversi dalle definizioni del § 16: vanno sostituiti) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
 salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
@@ -371,7 +380,7 @@ salvataggio della partita in corso · audio e altre impostazioni · bilanciament
 
 ## 15. Equipaggiamento e chip (da costruire)
 
-- **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono per sbloccare o migliorare potenziamenti permanenti, carte e penalità; **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
+- **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono nell’albero dei potenziamenti permanenti (§ 16); **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
 - **Equipaggiamento**: 6 pezzi (testa, armatura, guanti, stivali, arma, nucleo). Ogni pezzo dà una statistica base (tipicamente attacco del personaggio) e ha slot per i Moduli. Si trova come drop casuale a fine livello assieme ai chip. **[deciso]**
 - **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
 - **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Ogni Modulo ha **un effetto**, preso dal pool del suo pezzo
@@ -495,7 +504,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - % della vita massima (20): un tiro per salva, sul primo nemico colpito; al massimo il doppio del danno del guardiano (14 oggi).
 - Probabilità (22, 29, 30): si tira una volta a inizio battaglia (22 a ogni ondata); su pezzi diversi le probabilità si sommano fino al 100%.
 - **Fusione di un equip con Moduli inseriti**: i Moduli tornano in inventario. **[deciso]**
-- **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. **[deciso]**
+- **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. Anche barriera e guardiano hanno un albero dei Sigilli (§ 16); i nodi “del tipo” valgono solo per le torrette. **[deciso]**
   Eccezione **[deciso]**: gli effetti dei Moduli 23-28 (danni delle torrette) e 30 (torrette dal lv2) valgono per le torrette.
 - **Vincoli di design**: nessun effetto dà scelte o carte in più da prendere (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
   Eccezione **[deciso]**: sono ammessi gli effetti che cambiano quali carte compaiono o da che livello si parte (21 refresh, 22 quattro carte
@@ -504,3 +513,64 @@ Regole di calcolo **[Claude] [da rivedere]**:
   il lv2, voci chain lv2) possono comparire fin dalla prima scelta; dopo i primi tre potenziamenti il primo level up può essere sia di lv1 sia
   di lv2. Le regole delle chain restano valide: la voce lv2 si propone solo dopo aver scelto la voce lv1 della stessa chain.
 - **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
+
+## 16. Sigilli e albero dei potenziamenti (da costruire)
+
+- **Valuta**: i Sigilli sono una sola valuta, spendibile in tutte le sezioni dell’albero. **[deciso]**
+- **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **3** per livello, dal livello 1 di Epica.
+  Si riscuotono al primo completamento. Non si riottengono completando di nuovo il livello, tranne **una sola volta per livello e modalità**, completandolo con la
+  **barriera al 100% a fine livello** (la vita si misura alla fine: contano anche cure e Backup). Ogni livello e modalità paga quindi al massimo due volte.
+  *(Se il primo completamento è già perfetto, il secondo premio resta riscuotibile con una rigiocata perfetta: lettura da confermare.)* Un solo premio ciascuno, della stessa entità.
+- **Struttura** **[deciso]**: una schermata con tre sezioni: **Barriera**, **Guardiano**, **Torrette** (con una sezione condivisa per tipo). Regola dei livelli (proposta di Marco): un nodo non supera il livello del nodo da cui dipende.
+- **Tetti** **[deciso]** il principio, valori **[Claude] [da rivedere]**: hanno un tetto sul totale (equip + albero) solo la **riduzione del cooldown delle abilità** e la **riduzione del danno subito**.
+  Il tetto sta sopra il massimo dell’equipaggiamento (cooldown −50%, danno −30%), così i nodi dell’albero servono anche a chi ha l’equip massimo. Nessuna abilità dura quanto il suo cooldown minimo. Gli altri bonus (danni di tipo, ecc.) non hanno tetto.
+
+### Barriera
+- **Spina** **[deciso]** (schema): Vita % → Riduzione danno. Da lì due rami.
+  - **Potenziamenti avanzati**: Vita fissa · Riduzione cooldown abilità · torretta o guardiano con più carte (+cadenza) · ignorare un colpo (nodi 6 e 7 fusi: nemici normali e boss).
+  - **Abilità** (fino a 3 equipaggiate dal livello 40; potenziabili nell’albero), in tre gruppi per ruolo, ognuno con un’abilità d’ingresso sempre sceglibile:
+    - **Resistere**: Rigenerazione · Barriera di backup · Barriera impenetrabile
+    - **Controllo**: Barriera repulsiva · Barriera congelante · Barriera riflettente
+    - **Offesa**: Barriera ustionante · Barriera minata · Barriera potenziante
+- Le abilità con cooldown hanno un ciclo base di 40 s (Impenetrabile: minimo 20 s). Descrizione di ciascuna come da Marco; i numeri per livello sono **[da rivedere]**.
+
+### Torrette
+- **Sezione condivisa per tipo** **[deciso]**: danno del tipo, durata degli status, danno di tutte le torrette. Valgono **solo per le torrette** (il guardiano ha già il suo albero e l’equipaggiamento).
+- **Nodi per ogni torretta (9)** **[deciso]**:
+  - sblocco della chain da 3 voci (3 nodi, in sequenza);
+  - sblocco di uno dei due lv2 dell’altra chain (1);
+  - sblocco di un level up lv2 (1);
+  - potenziamento delle 3 carte standard (3 nodi, con più livelli ciascuno): azzerano i malus e aumentano anche di molto i bonus, con l’obiettivo di restare efficaci fino a ~200 livelli di campagna;
+  - **sblocco permanente della torretta** (1, nodo finale).
+- **Sblocco permanente**: con il nodo acquistato la torretta si può equipaggiare prima dell’ondata 1, fino a 4. Ogni torretta equipaggiata consuma una scelta: le prime N scelte dopo le ondate vengono saltate,
+  così il totale resta 19 (28 dal livello 11) e la regola delle scelte non cambia. Le torrette già equipaggiate non escono più come carte. **[deciso]**
+- **Carte bloccate** (non disponibili fino all’acquisto, dal livello 1; i livelli 1-30 si giocano con il pool libero, vedi § 5) **[Claude] [da rivedere]**.
+  Criterio: si blocca la carta che aggiunge una meccanica o il salto di potenza maggiore; restano libere quelle numeriche.
+  Nel codice: tabella `TREE_LOCKS` (anche il guardiano) e sblocchi in `META.unlocked`, per ora a mano; controllo in `tests/rev2.js` (pool libero) e `tests/combo.js` (combo bloccate). **[Claude]**
+
+| Torretta | Chain da 3 voci bloccata | lv2 bloccato dell’altra chain | Level up lv2 bloccato |
+|---|---|---|---|
+| Sky Guard | Missili incendiari | Mini-missili esplosivi | Doppio impatto |
+| Laser | Raggio spazzante | Raggi debilitanti | Sfruttare i debuff |
+| Disruption Drone | Teletrasporto | Scarica distruttiva | Campo destabilizzante |
+| Aeroblast | Salva di schegge | Mine d’urto | Doppia esplosione |
+| Thunderbolt | Fulmini ramificati | Scossa continua | Fulmini corrosivi |
+| Beam | Raggio amplificato | Attrazione | Raggio vorace |
+| Firewheel Drone | Mini-droni | Scia combustibile | Fiamma crescente |
+| Hive | Sciame | Onda rallentante | Droni kamikaze |
+| Railgun | Proiettile diviso | Deflagrazione | Impatto stordente |
+| Teslacoil | Sovraccarico | Sfera rallentante | Esplosioni paralizzanti |
+| Gravity Vortex Gun | Buco nero statico | Varchi stabili | Secondo buco nero |
+
+### Guardiano **[deciso]** (9 nodi)
+- Sblocco della chain **Colpi esplosivi** (3 nodi, in sequenza); lv2 **Frenesia furiosa**; level up lv1 **Colpo pesante**; level up lv2 **Rimbalzo**.
+- Potenziamenti: carta standard **Danno maggiorato**; riduzione del malus di **+1 proiettile**; colpi aggiuntivi del **Ventaglio**.
+- Restano libere: chain Frenesia (lv1, Carica rapida, lv3), Ventaglio, Perforazione II, Cadenza maggiorata, le tre carte standard.
+
+### Regole generali
+- I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]**
+- **Da misurare con i bot**: muri 10/20/30 con il pool libero; potenza richiesta fino a 200 livelli (con la formula attuale la vita base dei nemici è ×1,9 al 100 e ×3,2 al 200 rispetto al 30, ma la curva oltre il 30 cambierà);
+  costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo.
+- **Aperti** (nodi della barriera): forma di Rigenerazione (la cura riporta sopra la soglia e le cariche si esauriscono in pochi colpi), Riflettente (oltre il 100% del danno subito), valore base di Ustionante e Minata
+  indipendente dalle torrette, lato della Repulsiva (casuale o dove ci sono più nemici), nuovo stato per “velocità di attacco” della Congelante, Potenziante (si somma o moltiplica), tetti di Backup,
+  partenza sfalsata dei cooldown, definizione del nodo “carte” (parità, cosa conta), fusione dei nodi 6 e 7, se i nodi “del tipo” sono per tipo o globali per la durata degli status.
