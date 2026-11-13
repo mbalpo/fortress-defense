@@ -2,6 +2,18 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
+## 1.2.5 — partenza dal livello 2 (solo documentazione)
+
+DESIGN.md § 15, testo di Marco **[deciso]**; nessuna modifica a codice, test o sezioni *(generato)*.
+
+- Sostituito il paragrafo “Eccezione” dei vincoli di design: partire dal livello 2 (effetti 29 e 30) non cambia il numero di potenziamenti
+  (12 per entità) né di level up; l’entità resta di lv2 fino al level up successivo. Le carte di lv2 possono comparire dalla prima scelta,
+  il primo level up può essere di lv1 o di lv2, le regole delle chain restano valide. Tolta la nota di Claude sul “level up gratis”.
+
+Test: nessuno (solo documentazione).
+
+Checklist: nessuna voce da aggiungere o togliere.
+
 ## 1.2.4 — Moduli: destinatari e barriera (solo documentazione)
 
 DESIGN.md § 15 e § 11; nessuna modifica a codice, test o sezioni *(generato)*.

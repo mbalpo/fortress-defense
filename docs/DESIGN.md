@@ -495,6 +495,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
   Eccezione **[deciso]**: gli effetti dei Moduli 23-28 (danni delle torrette) e 30 (torrette dal lv2) valgono per le torrette.
 - **Vincoli di design**: nessun effetto dà scelte o carte in più da prendere (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
   Eccezione **[deciso]**: sono ammessi gli effetti che cambiano quali carte compaiono o da che livello si parte (21 refresh, 22 quattro carte
-  tra cui scegliere, 29 e 30 partenza dal livello 2). Nota: partire dal livello 2 equivale a un level up gratis, cioè una scelta risparmiata
-  per quel pezzo: va misurato l’effetto sul budget del § 4.
+  tra cui scegliere, 29 e 30 partenza dal livello 2). Partire dal livello 2 non cambia il numero di potenziamenti (12 per entità) né il numero
+  di level up: l’entità resta di lv2 fino al level up successivo, quindi ne ha due di lv2. Le carte di lv2 (level up lv2, combo che richiedono
+  il lv2, voci chain lv2) possono comparire fin dalla prima scelta; dopo i primi tre potenziamenti il primo level up può essere sia di lv1 sia
+  di lv2. Le regole delle chain restano valide: la voce lv2 si propone solo dopo aver scelto la voce lv1 della stessa chain.
 - **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
