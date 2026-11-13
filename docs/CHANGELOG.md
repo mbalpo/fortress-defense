@@ -3,6 +3,37 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.7.0 — curva fino al livello 200 e albero sulla lunga durata
+
+Richieste di Marco: i livelli 40 e 50 non devono essere così difficili; la campagna deve arrivare almeno al 200, con un albero che cresca a lungo e tetti più alti
+sui nodi del danno; il nodo “più carte (+cadenza)” diventa “chi ha più carte scelte fa +5/10/15/20/25% di danno”. La curva oltre il 30 non era stata alzata:
+era la formula provvisoria di prima (piena dal 31), mai tarata con l’albero.
+
+- **Campagna**: `CAMPAIGN.maxLevel` da 50 a 200. `tests/bot.js` legge il massimo dal gioco (prima era scritto 50).
+- **Curva dal 31**: `effD` sale di 0,2 per livello (`EFF_SLOPE_31`) invece di 1. **Boss finali dal 40**: 1450 × (1 + 1,1 · n^0,35), n = decine dopo il 40
+  (1450 al 40, 3045 al 50, 4436 al 100, 5659 al 200; prima 1550, 1650, 2150, 3150). Livelli 1-30 invariati.
+- **Albero**: costo per livello 1 + ⌊(L − 1)/5⌋ (prima L); Danno maggiorato di torrette e guardiano, danno per tipo, danno di tutte le torrette e Vita % fino al
+  livello 20 (prima 5). Albero intero 1202 Sigilli.
+- **Nodo “Più carte, più danno”** (Barriera, dopo Riduzione danno, 5 livelli, +5% per livello): `markTop` in `applyUp` segna chi ha più pile di potenziamenti (a parità tutti,
+  con zero nessuno), `dmgM` moltiplica per `cardsBonus`. Letture di Claude in DESIGN.md § 16. Tolta dalla schermata la riga “Da definire”.
+- **Nuovo strumento** `tests/tools/curva.js`: i bot giocano un livello con l’albero atteso (Sigilli dal 31 al livello prima, 1,5 per livello di default, spesi da una
+  strategia fissa). Uso: `node tests/tools/curva.js <livelli> [partite per bot] [primo seme] [Sigilli per livello] [sostituzioni]`.
+- **Prove** (80-200 partite per caso): pendenza 0,3 / 0,2 / 0,12 → livello 75: 76% / 80% / 91%, livello 200 (muro): 14% / 40% / 73%; boss +30% o +60% per decina
+  → muri irregolari e troppo duri verso il 200; boss con √ → media 32,5% ma 40% all’inizio e 10-26% dopo il 130; scelto n^0,35.
+- **Misura finale** (200 partite per muro): muri dal 40 al 200 in media **32,6%** (da 13,5% al 190 a 49% al 100); tra i muri 38,5-90%
+  (31 38,5%, 45 73,8%, 85 90%, 195 61,3%). Con 1 solo Sigillo per livello i muri scendono (100: 20%, 200: 11%). Tutti i numeri in DESIGN.md § 16.
+  Differenza per tipo del boss: Physical 13-27%, Electric 43-48% (il guardiano è Physical; resistenze segnaposto).
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.7.0.
+- **Test**: `tests/seals.js`: costi 1×5, 2×5, 3×5, 4×5 per un nodo da 20 (totale 50) e stato “max”; livelli massimi (20, 5, 20, 20, 20, 5); nuova parte
+  “Più carte, più danno” (nessuna carta, una carta, parità, sorpasso, nodo assente); controllo dei livelli oltre il massimo portato a 25. 27 test, tutti verdi.
+- Screenshot: rifatti; controllata la sezione Barriera con 6 nodi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (stesse 47 scene; cambiano i testi dell’albero).
+
+Checklist: nuove voci “Curva dal 31 (pendenza 0,2) e boss dal 40: verificare giocando; rifarla con l’equipaggiamento”, “Più carte, più danno: letture
+(pile, parità) da confermare”, “Muri con boss Physical più duri (13-27%): rivedere con le resistenze vere”; togliere “Livelli 31-50 quasi impossibili” e
+“Nodo più carte (+cadenza): definire”.
+
 ## 1.6.0 — albero dei Sigilli, fase 2: nodi a livelli
 
 Richiesta di Marco: fase 2 (nodi numerici e spina della barriera). Struttura dal § 16 di DESIGN.md; tutti i valori sono di Claude, provvisori.

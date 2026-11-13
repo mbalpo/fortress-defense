@@ -35,7 +35,7 @@ function makeGame({ seed = 1, patch = (h) => h, cleared = 50, level = 10, settin
     click(x, y) { const e = new w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; w.document.getElementById("c").dispatchEvent(e); },
   };
   g.frame(); g.frame();
-  const start = Math.min(cleared + 1, 50);
+  const start = Math.min(cleared + 1, +/maxLevel: (\d+)/.exec(SRC)[1]);
   for (let i = start; i > level; i--) g.press("ArrowLeft");
   for (let i = start; i < level; i++) g.press("ArrowRight");
   g.frame();

@@ -112,10 +112,13 @@ console.log("— Fase 2: nodi a livelli —");
   const { ev } = fresh(40, { seals: 100 });
   console.log("nodi: Sky Guard", ev("TREE.sky.length"), "| guardiano", ev("TREE.player.length"), "| tipi", ev("TREE.types.length"), "| barriera", ev("TREE.barrier.length"),
     "| carte standard della Sky Guard:", ev("TREE.sky.filter((n) => n.kind === 'level').map((n) => n.id).join(' ')"),
-    ok(ev("TREE.sky.length") === 9 && ev("TREE.player.length") === 9 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 5));
-  const costs = []; for (let i = 0; i < 6; i++) { const before = ev("progress.seals"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); }
-  console.log("Danno maggiorato della Sky Guard, livelli 1-5 e oltre: costi", costs.join(" "), "| stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
-    ok(costs.join() === "1,2,3,4,5,0" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));
+    ok(ev("TREE.sky.length") === 9 && ev("TREE.player.length") === 9 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 6));
+  const costs = []; for (let i = 0; i < 21; i++) { const before = ev("progress.seals"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); }
+  console.log("Danno maggiorato della Sky Guard, livelli 1-20 e oltre: costi", costs.join(""), "(totale " + costs.reduce((a, b) => a + b) + ") | stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
+    ok(costs.join("") === "111112222233333444440" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));
+  console.log("livelli massimi: Danno maggiorato", ev("TREE_NODE['sky:std:dmg'].max"), "| +1 missile", ev("TREE_NODE['sky:std:msl'].max"), "| Danno Fire", ev("TREE_NODE['types:dmg:fire'].max"),
+    "| tutte", ev("TREE_NODE['types:all'].max"), "| Vita %", ev("TREE_NODE['barrier:hp'].max"), "| Più carte", ev("TREE_NODE['barrier:cards'].max"),
+    ok(ev("[TREE_NODE['sky:std:dmg'].max, TREE_NODE['sky:std:msl'].max, TREE_NODE['types:dmg:fire'].max, TREE_NODE['types:all'].max, TREE_NODE['barrier:hp'].max, TREE_NODE['barrier:cards'].max].join()") === "20,5,20,20,20,5"));
   ev("buyNode(TREE_NODE['barrier:hp'])"); ev("buyNode(TREE_NODE['barrier:red'])");
   console.log("Riduzione danno oltre il livello di Vita %:", ev("nodeState(TREE_NODE['barrier:red'])"), "| dopo Vita % al 2:", (ev("buyNode(TREE_NODE['barrier:hp'])"), ev("nodeState(TREE_NODE['barrier:red'])")),
     ok(ev("treeLv('barrier:red')") === 1 && ev("nodeState(TREE_NODE['barrier:red'])") === "ready"));
@@ -149,6 +152,22 @@ console.log("— Fase 2: nodi a livelli —");
   console.log("Ventaglio ampliato al 3: proiettili secondari per salva", fan, "| malus di +1 proiettile al 3:", ev("stdM(player, 'proj', 0.85)"), ok(fan === 7 && ev("stdM(player, 'proj', 0.85)") === 1));
 }
 {
-  const ev = fresh(40, { tree: { "sky:std:dmg": 9, "barrier:hp": 2.7, "player:fan": 8 } }).ev;
-  console.log("livelli oltre il massimo dal salvataggio:", ev("JSON.stringify(progress.tree)"), ok(ev("JSON.stringify(progress.tree)") === '{"sky:std:dmg":5,"barrier:hp":2,"player:fan":3}'));
+  const ev = fresh(40, { tree: { "sky:std:dmg": 25, "barrier:hp": 2.7, "player:fan": 8 } }).ev;
+  console.log("livelli oltre il massimo dal salvataggio:", ev("JSON.stringify(progress.tree)"), ok(ev("JSON.stringify(progress.tree)") === '{"sky:std:dmg":20,"barrier:hp":2,"player:fan":3}'));
+}
+
+console.log("— Nodo “Più carte, più danno” —");
+{
+  const ev = fresh(40, { tree: { "barrier:cards": 3 } }).ev;
+  ev("startRun('standard'); slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14); slots[1] = makeShooter(TURRETS.rail, SLOT_X[1], GROUND_Y - 14); markTop()");
+  const m = (w) => +(+ev(`dmgM(${w})`)).toFixed(4);
+  console.log("nessuna carta: guardiano ×" + m("player"), "| Sky Guard ×" + m("slots[0]"), ok(m("player") === 1 && m("slots[0]") === 1));
+  ev("applyUp(slots[0], TURRETS.sky.ups.find((u) => u.id === 'rad'))");
+  console.log("1 carta alla Sky Guard (livello 3: +15%): Sky Guard ×" + m("slots[0]"), "| Railgun ×" + m("slots[1]"), "| guardiano ×" + m("player"), ok(m("slots[0]") === 1.15 && m("slots[1]") === 1 && m("player") === 1));
+  ev("applyUp(player, PLAYER_DEF.ups.find((u) => u.id === 'pierce'))");
+  console.log("pari (1 e 1): Sky Guard ×" + m("slots[0]"), "| guardiano ×" + m("player"), "| Railgun ×" + m("slots[1]"), ok(m("slots[0]") === 1.15 && m("player") === 1.15 && m("slots[1]") === 1));
+  ev("applyUp(player, PLAYER_DEF.ups.find((u) => u.id === 'pierce'))");
+  console.log("guardiano davanti (2 contro 1): Sky Guard ×" + m("slots[0]"), "| guardiano ×" + m("player"), ok(m("slots[0]") === 1 && m("player") === 1.15));
+  const e0 = fresh(40, {}).ev; e0("startRun('standard'); applyUp(player, PLAYER_DEF.ups.find((u) => u.id === 'pierce'))");
+  console.log("senza il nodo: guardiano in testa ×" + (+e0("dmgM(player)")).toFixed(2), ok(+e0("dmgM(player)") === 1));
 }

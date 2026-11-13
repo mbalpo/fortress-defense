@@ -514,7 +514,7 @@ function treeScreen() {
     txt("Barriera · Vita % → Riduzione danno → rami", 16, 98, 12, "#9fb4d9", "left", "700");
     rows(TREE.barrier, 112);
     const y = 112 + TREE.barrier.length * 45 + 8;
-    ["Da definire: torretta o guardiano con più carte (+cadenza).", "Abilità della barriera (dal livello " + CAMPAIGN.barrierUnlock + ") e loro cooldown: fase 3.",
+    ["Abilità della barriera (dal livello " + CAMPAIGN.barrierUnlock + ") e loro cooldown: fase 3.",
       "Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + "."]
       .forEach((l, i) => txt(l, 16, y + i * 18, 10, "#6f82ad", "left", "500"));
   }

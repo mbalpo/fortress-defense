@@ -123,7 +123,7 @@ const N_WAVES = 20;
    CAMPAGNA
    ===================================================================== */
 const CAMPAIGN = {
-  maxLevel: 50,
+  maxLevel: 200,                           // campagna lunga: almeno 200 livelli (Marco)
   towerCaps: [[0, 1], [10, 2], [20, 3]],   // [livelli completati, livello massimo delle torri]
   bossFrom: 11, bossWaves: [5, 10, 15],    // mini-boss dal livello 11 (dopo il 10), a queste ondate
   bossCards: 3,                            // carte a caso ricevute (e applicate subito) per ogni mini-boss sconfitto
@@ -139,8 +139,10 @@ const diffOf = (lv, epic) => lv + (epic ? CAMPAIGN.epicOffset : 0);
 // Scalatura per difficoltà D (livello standard, o livello+30 in Epica). Tarata solo fino a D≈30.
 const LV = { hp0: 0.42, hpSlope: 0.08, hpSlopeHi: 0.02, dmg: 0.01, speed: 0.002, count: 0.005 };
 // fino a D=10 la vita sale in fretta (da nemici deboli al "muro"); dopo sale piano, perché le scelte per partita non crescono
-// difficoltà effettiva: tra il 20 e il 30 sale piano (la potenza del giocatore è ferma fino al boss del 30, dopo arrivano equipaggiamento e chip); dal 31 riprende piena (provvisoria)
-const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + (D - 30);
+// difficoltà effettiva: tra il 20 e il 30 sale piano (la potenza del giocatore è ferma fino al boss del 30); dal 31 sale di 0,2 per livello,
+// tarata con i bot che spendono i Sigilli attesi nell’albero (1,5 per livello dal 31) perché i livelli tra un muro e l’altro restino intorno al 60-80%
+const EFF_SLOPE_31 = 0.2;
+const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_SLOPE_31 * (D - 30);
 const levelHp    = (D) => { D = effD(D); return D <= 10 ? LV.hp0 + LV.hpSlope * (D - 1) : LV.hp0 + LV.hpSlope * 9 + LV.hpSlopeHi * (D - 10); };
 const levelDmg   = (D) => 1 + LV.dmg * (effD(D) - 1);
 const levelSpeed = (D) => 1 + LV.speed * (effD(D) - 1);
@@ -161,10 +163,10 @@ function waveSpec(n, D) {
 const TYPE_KEYS = ["fire", "energy", "electric", "force", "physical"];
 const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed: 20, r: 24, dmg: 9, boss: true, look: "ship",
   kbRes: 0.4 + 0.1 * ((lv * 7 + n / 5) % 5), statRes: 0.25 + 0.1 * ((lv * 3 + n / 5) % 4) });   // resistenze variabili: spinte 40-80%, stati 25-55%
-// vita base del boss finale, tarata con i bot sul pool libero perché i muri 10, 20 e 30 si superino circa nel 30% delle partite
-// (scelta di Marco); oltre il 30 provvisoria: +100 ogni 10 livelli
+// vita base del boss finale, tarata con i bot perché i muri si superino circa nel 30% delle partite (scelta di Marco):
+// 10, 20, 30 sul pool libero; dal 40 con l’albero atteso, 1450 × (1 + 1,1 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
-const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] + 100 * (lv / 10 - 3);
+const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.1 * Math.pow(Math.max(0, lv / 10 - 4), 0.35));
 // vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
 const WALL_ENEMY_HP = { 10: 0.93 };
 const finalBossDef = (lv) => ({ type: TYPE_KEYS[(lv / 10) % 5], hp: finalBossHp(lv), speed: 14, r: 34, dmg: 8, boss: true, final: true, look: "mothership", kbRes: 0.85, statRes: 0.6 });   // vita che cresce con il livello
@@ -446,11 +448,13 @@ const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unloc
 // Fase 1, sblocchi (generati da TREE_LOCKS): chain da 3 voci in sequenza, le altre carte bloccate, “Sblocco permanente” dopo tutti gli altri.
 // Fase 2, nodi numerici: carte standard di ogni torretta e del guardiano, sezione condivisa per tipo, spina e rami della barriera.
 // Costi e valori [Claude, provvisori].
-const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3, level: [1, 2, 3, 4, 5] };
+const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3 };
+// nodi a livelli: il livello L costa 1 + ⌊(L − 1) / 5⌋ Sigilli (1 per i livelli 1-5, 2 per i 6-10, 3 per gli 11-15, 4 per i 16-20)
+const levelCost = (L) => 1 + Math.floor((L - 1) / 5);
 const CAT_NAME = { lu: "Level up", std: "Standard" };
 // potenziamento delle carte standard: per livello del nodo, bonus in % e a numero ×(1 + 0,4·L), riduzioni della ricarica ×(1 + 0,2·L),
 // malus −1/3 per livello (zero al 3, poi diventa bonus)
-const STD_BOOST = { bonus: 0.4, reduce: 0.2, max: 5 };
+const STD_BOOST = { bonus: 0.4, reduce: 0.2, max: 5, maxDmg: 20 };   // i nodi del danno arrivano al 20 (crescita lunga, campagna fino a 200 e oltre)
 const STD_KIND = { dmg: ["pct", 0.25], msl: ["mal", 0.15], rad: ["pct", 0.3], "vortex:rad": ["pct", 0.25], bounce: ["mal", 0.15], "laser:bounce": ["mal", 0.2],
   dur: ["pct", 0.3], height: ["pct", 0.3], proj: ["mal", 0.15], fast: ["fast", 0.1], sph: ["mal", 0.15], cd: ["red", 0.12], drone: ["mal", 0.15],
   hits: ["cnt", 2], pierce: ["cnt", 1], len: ["pct", 0.3] };
@@ -465,9 +469,9 @@ function stdFx(kind, v, L) {                    // effetto per pila della carta 
   const m = v * (1 - L / 3); return m > 1e-9 ? "danno −" + pctS(m) : m < -1e-9 ? "danno +" + pctS(-m) : "nessun malus";
 }
 // valori dei nodi della sezione per tipo e della barriera, per livello
-const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02 };
+const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02, cards: 0.05 };
 const TREE_CAP = { red: 0.4, abCd: 0.6 };      // tetti sul totale (equipaggiamento + albero): riduzione del danno e del cooldown delle abilità
-const lvNode = (id, who, name, max, fx, req) => ({ id, who, kind: "level", name, max, costs: SEAL_COST.level.slice(0, max), req: req || [], fx });
+const lvNode = (id, who, name, max, fx, req) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)), req: req || [], fx });
 function buildTree(who) {
   const def = who === "player" ? PLAYER_DEF : TURRETS[who], ups = TREE_LOCKS[who].map((id) => def.ups.find((u) => u.id === id));
   const whole = ups.find((u) => u.cat === "chain" && def.ups.filter((v) => v.chain === u.chain).every((v) => TREE_LOCKS[who].includes(v.id))).chain;
@@ -482,21 +486,23 @@ function buildTree(who) {
     req: nodes.map((n) => n.id) }, SEAL_COST.perm));
   // fase 2: carte standard (guardiano: Danno maggiorato, malus di +1 proiettile, colpi del Ventaglio)
   for (const u of def.ups.filter((v) => v.cat === "std" && (who !== "player" || v.id !== "pierce"))) {
-    const [k, v] = stdKind(who, u.id), max = who === "player" && u.id === "proj" ? 3 : STD_BOOST.max;
+    const [k, v] = stdKind(who, u.id), max = who === "player" && u.id === "proj" ? 3 : u.id === "dmg" ? STD_BOOST.maxDmg : STD_BOOST.max;
     nodes.push(lvNode(who + ":std:" + u.id, who, u.name, max, (L) => stdFx(k, v, L) + (k === "mal" ? "" : " per pila")));
   }
   if (who === "player") nodes.push(lvNode("player:fan", who, "Ventaglio ampliato", 3, (L) => (4 + L) + " proiettili secondari"));
   return nodes;
 }
 const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree(w)]));
-TREE.types = [...TYPE_KEYS.map((t) => lvNode("types:dmg:" + t, "types", "Danno " + TYPES[t].name, 5, (L) => "danno +" + pctS(TREE_VAL.typeDmg * L))),
-  lvNode("types:all", "types", "Danno di tutte le torrette", 5, (L) => "danno +" + pctS(TREE_VAL.allDmg * L)),
+TREE.types = [...TYPE_KEYS.map((t) => lvNode("types:dmg:" + t, "types", "Danno " + TYPES[t].name, 20, (L) => "danno +" + pctS(TREE_VAL.typeDmg * L))),
+  lvNode("types:all", "types", "Danno di tutte le torrette", 20, (L) => "danno +" + pctS(TREE_VAL.allDmg * L)),
   lvNode("types:status", "types", "Durata degli stati", 5, (L) => "durata +" + pctS(TREE_VAL.statDur * L))];
-TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 5, (L) => "vita +" + pctS(TREE_VAL.hpPct * L)),
+TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + pctS(TREE_VAL.hpPct * L)),
   lvNode("barrier:red", "barrier", "Riduzione danno", 5, (L) => "danno subito −" + pctS(TREE_VAL.red * L), ["barrier:hp"]),
   lvNode("barrier:flat", "barrier", "Vita fissa", 5, (L) => "vita +" + TREE_VAL.hpFlat * L, ["barrier:red"]),
   lvNode("barrier:cd", "barrier", "Riduzione cooldown abilità", 5, (L) => "cooldown −" + pctS(TREE_VAL.abCd * L), ["barrier:red"]),
-  lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"])];
+  lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"]),
+  // Marco: la torretta o il guardiano con più carte scelte nella partita ha +5/10/15/20/25% di danno (a parità: tutti quelli in testa)
+  lvNode("barrier:cards", "barrier", "Più carte, più danno", 5, (L) => "chi ha più carte: danno +" + pctS(TREE_VAL.cards * L), ["barrier:red"])];
 const TREE_NODE = Object.fromEntries(Object.values(TREE).flat().map((n) => [n.id, n]));
 const TREE_IDS = new Set(Object.keys(TREE_NODE));
 
@@ -613,7 +619,14 @@ const stdB = (s, id, v) => v * (1 + STD_BOOST.bonus * SB(s, id));               
 const stdR = (s, id, f) => 1 - (1 - f) * (1 + STD_BOOST.reduce * SB(s, id));       // fattore della ricarica per pila
 const stdM = (s, id, m) => 1 - (1 - m) * (1 - SB(s, id) / 3);                      // fattore del malus per pila (1 dal livello 3, poi oltre)
 const stdC = (s, id, v) => Math.round(v * (1 + STD_BOOST.bonus * SB(s, id)));      // bonus a numero intero per pila
-const dmgM = (s) => (1 + stdB(s, "dmg", 0.25) * N(s, "dmg")) * (1 + stdB(s, "fast", 0.1) * N(s, "fast")) * (s.tb || 1);
+const dmgM = (s) => (1 + stdB(s, "dmg", 0.25) * N(s, "dmg")) * (1 + stdB(s, "fast", 0.1) * N(s, "fast")) * (s.tb || 1) * (s.top ? cardsBonus : 1);
+// nodo “Più carte, più danno”: s.top = ha più carte di tutti (ricalcolato a ogni carta presa); cardsBonus fissato a inizio partita
+let cardsBonus = 1;
+const cardCount = (s) => Object.values(s.up).reduce((a, n) => a + n, 0);
+function markTop() {
+  const all = [player, ...slots].filter(Boolean), best = Math.max(...all.map(cardCount));
+  for (const s of all) s.top = best > 0 && cardCount(s) === best;
+}
 const rangeOf = (s) => s.def.range * (1 + (has(s, "reach") ? 0.3 : 0) + (has(s, "reach2") ? 0.3 : 0));
 const cdOf = (s) => s.def.reload * Math.pow(stdR(s, "cd", 0.88), N(s, "cd")) * Math.pow(stdR(s, "fast", 0.9), N(s, "fast"))
   * (has(s, "reload") ? 0.85 : 1) * (has(s, "quick") ? 0.8 : 1);
@@ -1592,6 +1605,7 @@ function applyUp(s, u) {
   s.up[u.id] = N(s, u.id) + 1;
   if (u.cat === "lu") { if (s.level < 3) { s.level++; s.used = 0; } else s.done = true; }
   else s.used++;
+  if (player && slots) markTop();
 }
 
 function rollOptions() {
@@ -1668,7 +1682,7 @@ function startRun(m) {
   enemies = []; ents = []; floaters = [];
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp")) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0; repulseCd = 6;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan");
-  statDur = 1 + TREE_VAL.statDur * treeLv("types:status");
+  statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
   slots = [null, null, null, null];
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
   // torrette equipaggiate con lo sblocco permanente (DESIGN.md § 16): ognuna consuma una delle prime scelte dopo le ondate.
@@ -1896,7 +1910,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.7.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {

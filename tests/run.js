@@ -34,7 +34,7 @@ const T = [
     /mini-droni: 3 .* ✓/, /manuale: .* ✓/, /frammentazioni: .* ✓/, /con Colpo pesante\s+colpi caricati .* ✓/]],
   ["seals.js", "Sigilli e albero: premi, nodi, torrette equipaggiate, salvataggio v2, nodi a livelli", [/totale 10 Sigilli .* ✓/, /combo Colpi ramificati: .* ✓/,
     /carte scelte in una partita: 17 .* ✓/, /Esc → stato menu .* ✓/, /versione 1 importata: .* ✓/, /codice FD1 andata e ritorno: .* ✓/,
-    /costi 1 2 3 4 5 0 .* ✓/, /regola dei livelli .* ✓/, /danno ×2\.0125 .* ✓/, /senza albero: danno ×1\.25 .* ✓/, /cupola: vita 130 .* ✓/, /Ignorare un colpo .* ✓/,
+    /costi 111112222233333444440 .* ✓/, /livelli massimi: .* ✓/, /pari \(1 e 1\): .* ✓/, /guardiano davanti .* ✓/, /regola dei livelli .* ✓/, /danno ×2\.0125 .* ✓/, /senza albero: danno ×1\.25 .* ✓/, /cupola: vita 130 .* ✓/, /Ignorare un colpo .* ✓/,
     /Durata degli stati .* ✓/, /Ventaglio ampliato al 3: .* 7 .* ✓/, /livelli oltre il massimo .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
