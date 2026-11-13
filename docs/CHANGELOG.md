@@ -2,6 +2,25 @@
 
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 
+## 1.2.1 — design di equipaggiamento e chip (solo documentazione)
+
+Decisioni di Marco riportate in DESIGN.md; nessuna modifica a codice, test o sezioni *(generato)* (§ 8, § 9).
+
+- § 4: la campagna **prosegue oltre il livello 50** (lunghezza da definire); formula di Epica (D = livello + 30) da riverificare oltre il 50.
+  Sblocchi: aggiunto **60 → Ranger (ipotesi di Marco) [da rivedere]**.
+- § 11: la voce “Chip a fine livello” diventa “Chip”: due famiglie, **Sigilli** e **Moduli** (nomi provvisori), da decidere da quando cadono
+  i Sigilli. Ranger: ipotesi di sblocco al livello 60, funzionamento da discutere. Nuove voci: idea messa da parte (Modulo “+1 vita barriera per
+  nemico ucciso”, da riprendere con un tetto) e nomi definitivi delle famiglie di chip.
+- § 13: “equipaggiamento” e “chip” uniti in “equipaggiamento e chip (§ 15)”.
+- Nuovo § 15 “Equipaggiamento e chip (da costruire)”: Sigilli e Moduli; 6 pezzi di equipaggiamento con statistica base e slot; 5 rarità
+  (comune, raro, epico, leggendario, ancestrale) con slot 1-2-3-4-5; Moduli per tipo di pezzo e loro categorie di bonus; fusione 5 uguali → 1
+  della rarità successiva per tutte le rarità, sia equip sia Moduli; i Moduli di un equip fuso tornano in inventario; beneficiari; vincoli di
+  design **[Claude]** accettati; cosa misurare con i bot.
+
+Test: nessuno (solo documentazione).
+
+Checklist: già aggiornata su claude.ai, nessuna voce da aggiungere.
+
 ## 1.2.0 — schermata iniziale e aggiornamenti
 
 - **Schermata iniziale** (pannello HTML sopra il gioco): “FORTRESS DEFENSE” in alto, icona grande sotto. All’avvio, se online e con l’app già

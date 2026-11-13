@@ -60,10 +60,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ## 4. Campagna e progressione
 
-- 50 livelli selezionabili (fino a “completati + 1”). Il livello di difficoltà D è il numero del livello; in **Epica D = livello + 30**. **[deciso]**
+- La campagna **prosegue oltre il livello 50** (lunghezza totale da definire); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello; in **Epica D = livello + 30** (formula da riverificare oltre il 50). **[deciso]**
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
-  **40 → abilità della barriera** (fino a 3), **50 → Epica**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**. **[deciso]**
+  **40 → abilità della barriera** (fino a 3), **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento e abilità della barriera **non sono ancora costruiti**. **[deciso]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -330,13 +330,14 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Chip a fine livello** (come nel gioco originale): potenziamenti permanenti di torrette e guardiano, sblocco di carte chain/combo/level up,
-  rimozione delle penalità delle carte “+1 proiettile/rimbalzo”. Da progettare. Se spendibili fin dall’inizio, la curva dal livello 20 va ricalibrata.
-- **Ranger**: sblocco e funzionamento non ancora discussi (aiutanti ai lati del guardiano; nel gioco originale escono dalle uova).
+- **Chip**: due famiglie, **Sigilli** e **Moduli** (§ 15). Da decidere da quando cadono i Sigilli (l’equipaggiamento arriva al 30). Se spendibili fin dall’inizio, la curva dal livello 20 va ricalibrata.
+- **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: riprende a salire piena, ma equipaggiamento, barriera e chip non esistono ancora: da ricalibrare quando arrivano.
 - **Resistenze dei nemici normali**: la tabella attuale è un segnaposto di Claude.
+- **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
+- **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
@@ -348,8 +349,8 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
-(rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti · chip ·
+Ranger · equipaggiamento e chip (§ 15) · più guardiani da scegliere prima del combattimento · abilità della barriera e mine
+(rigenerazione e repulsione esistono, oggi impostate a mano in `META`) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
 salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero ·
@@ -359,3 +360,15 @@ schermata iniziale con controllo aggiornamenti e tocco per iniziare (§ 7).
 
 - **Checklist di revisione** (artefatto su claude.ai, gestita dal progetto): https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX
 - **Modifiche dal lato codice**: `docs/CHANGELOG.md`, con le voci della checklist da aggiornare.
+
+## 15. Equipaggiamento e chip (da costruire)
+
+- **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono per sbloccare o migliorare potenziamenti permanenti, carte e penalità; **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
+- **Equipaggiamento**: 6 pezzi (testa, armatura, guanti, stivali, arma, nucleo). Ogni pezzo dà una statistica base (tipicamente attacco del personaggio) e ha slot per i Moduli. Si trova come drop casuale a fine livello assieme ai chip. **[deciso]**
+- **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
+- **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Danno bonus globali: % danno per tipo, vita della barriera, immunità parziale, effetti speciali su guardiano e barriera che non toccano le carte (es. danno maggiore con barriera sotto il 30%, +% vita barriera per mini-boss sconfitto, immunità ai primi colpi). **[deciso]** (categoria; gli esempi non sono valori definitivi)
+- **Fusione**: si fondono sia gli equip sia i Moduli: **5 pezzi uguali (stesso tipo e rarità) danno 1 pezzo della rarità successiva, per tutte le rarità**. **[deciso]**
+- **Fusione di un equip con Moduli inseriti**: i Moduli tornano in inventario. **[deciso]**
+- **Beneficiari**: equip e Moduli potenziano personaggio e barriera; le torrette beneficiano dei potenziamenti sbloccati con i Sigilli. **[deciso]**
+- **Vincoli di design**: nessun effetto dà scelte, carte o livelli gratis (il budget di scelte del § 4 resta valido); i bonus dello stesso tipo si sommano; gli effetti sulla vita della barriera hanno un tetto per partita; i bonus al danno sono in percentuale. **[Claude]** (accettati da Marco)
+- **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità, potenza totale dell’equipaggiamento completo. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
