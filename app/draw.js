@@ -136,14 +136,50 @@ function drawTurret(s) {
   const b = BEHAV[s.id]; if (b.draw) b.draw(s);
 }
 function drawPlayer() {
-  if (comboOn(player, "kHive")) { ctx.globalAlpha = 0.45; guardianShape(W - player.x); ctx.globalAlpha = 1; }   // Clone speculare
+  if (comboOn(player, "kHive")) { ctx.globalAlpha = 0.45; guardianShape(W - player.x, true); ctx.globalAlpha = 1; }   // Clone speculare (specchiato)
   guardianShape(player.x);
+  // livello e carte sotto il guardiano, come per le torrette: segue il guardiano, una riga più in alto delle torrette e nel suo colore
+  const p = player;
+  txt("L" + p.level + (p.done ? " ★" : " " + p.used + "/3"), clamp(p.x, 16, W - 16), GROUND_Y + 8, 9, p.done ? "#ffd166" : "#e8eefc", "center", "800");
 }
-function guardianShape(x) {
-  const y = GROUND_Y, f = frenzyOn(player);
-  ctx.beginPath(); ctx.moveTo(x, y - 34); ctx.lineTo(x + 14, y - 2); ctx.lineTo(x, y - 8); ctx.lineTo(x - 14, y - 2); ctx.closePath();
-  ctx.fillStyle = f ? "#6a3a2a" : "#2a3f6e"; ctx.fill();
-  ctx.lineWidth = 1.5; ctx.strokeStyle = f ? "#ff9a5a" : TYPES.physical.color; ctx.stroke();
+// guardiano: soldato futuristico visto di spalle (guarda i nemici), elmetto integrale e tuta spaziale; braccio destro alzato e teso
+// che finisce in un cannone cibernetico (la bocca è GUN, da lì partono i colpi), il sinistro piegato che lo afferra. mirror: clone specchiato
+function guardianShape(x, mirror) {
+  const g = GROUND_Y, f = frenzyOn(player), d = mirror ? -1 : 1, X = (v) => x + d * v;
+  const suit = f ? "#5a3426" : "#2a3f6e", suit2 = f ? "#80492f" : "#3d5a9a", trim = f ? "#ff9a5a" : TYPES.physical.color, dark = "#0d1530";
+  const glowC = f ? "#ffb347" : "#7fe8ff";
+  const limb = (pts, w) => {                     // arto: contorno scuro e colore della tuta
+    for (const [c, lw] of [[dark, w + 2], [suit2, w]]) {
+      ctx.strokeStyle = c; ctx.lineWidth = lw; ctx.beginPath(); pts.forEach(([a, b], k) => k ? ctx.lineTo(X(a), g + b) : ctx.moveTo(X(a), g + b)); ctx.stroke();
+    }
+  };
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  // gambe e stivali
+  limb([[-3, -13], [-4, -4]], 4.2); limb([[3, -13], [4, -4]], 4.2);
+  ctx.fillStyle = dark; rr(x - 8, g - 4, 7, 4, 1.5); ctx.fill(); rr(x + 1, g - 4, 7, 4, 1.5); ctx.fill();
+  // zaino e busto
+  ctx.fillStyle = dark; rr(x - 8, g - 27, 16, 12, 3); ctx.fill();
+  ctx.fillStyle = suit2; rr(x - 6.5, g - 27, 13, 15, 4); ctx.fill(); ctx.strokeStyle = trim; ctx.lineWidth = 1.1; ctx.stroke();
+  ctx.fillStyle = trim; ctx.fillRect(x - 5.5, g - 14.5, 11, 1.5);                      // cintura
+  ctx.fillStyle = dark; rr(x - 3.5, g - 24, 7, 7, 1.5); ctx.fill();                     // zaino
+  disc(x, g - 20.5, 1.5, glowC, 0.95);
+  // elmetto integrale visto da dietro: calotta, visore che si intravede ai lati, antenna
+  disc(x, g - 31, 5.2, suit2); ctx.strokeStyle = trim; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(x, g - 31, 5.2, 0, 6.2832); ctx.stroke();
+  ctx.strokeStyle = glowC; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(x, g - 31.5, 5.2, -0.45, 0.25); ctx.stroke(); ctx.beginPath(); ctx.arc(x, g - 31.5, 5.2, Math.PI - 0.25, Math.PI + 0.45); ctx.stroke();
+  ctx.strokeStyle = trim; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(X(-2.5), g - 35.5); ctx.lineTo(X(-4.5), g - 40); ctx.stroke();
+  disc(X(-4.5), g - 40, 1, f ? "#ffd166" : "#ff7a3d");
+  // braccio destro alzato e teso: finisce nel cannone cibernetico (la bocca è GUN, da lì partono i colpi)
+  const gx = X(GUN.dx), gy = g + GUN.dy;
+  limb([[6, -25], [GUN.dx + 0.5, -40]], 4.4);
+  ctx.fillStyle = dark; rr(gx - 4, g - 47, 8, 8, 2); ctx.fill();                       // attacco del cannone
+  ctx.strokeStyle = trim; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = suit2; rr(gx - 2.6, gy + 1, 5.2, 9, 1.5); ctx.fill(); ctx.stroke();   // canna
+  ctx.strokeStyle = glowC; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(gx, gy + 3); ctx.lineTo(gx, g - 41); ctx.stroke();   // linea di energia
+  disc(gx, gy + 0.5, 2.3, glowC, 0.95); disc(gx, gy + 0.5, 1, "#ffffff");               // bocca
+  // braccio sinistro piegato: gomito verso l’esterno, la mano afferra l’attacco del cannone
+  limb([[-6, -25], [-11, -36], [GUN.dx - 4, -44]], 4);
+  disc(X(GUN.dx - 4), g - 44, 2.5, suit); ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(GUN.dx - 4), g - 44, 2.5, 0, 6.2832); ctx.stroke();
 }
 // indicatori sopra il nemico: rallentamento, paralisi, indebolimento, vulnerabilità, bruciatura
 const STATUS_ICONS = [

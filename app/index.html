@@ -1516,6 +1516,8 @@ const FRENZY = { fill: [30, 25], dur: [8, 12], rate: 1.8, rateFast: 2, dmg: 1.35
 const frenzyDur = (p) => FRENZY.dur[has(p, "fdur") ? 1 : 0];
 // guardiano: cadenza alta e danno basso per colpo; portata totale; tutti i proiettili di una salva vanno sullo stesso bersaglio
 const PLAYER = { dmg: 7, interval: 0.15, range: 9999 };
+// bocca del cannone del guardiano (braccio destro alzato), rispetto ai piedi: da qui partono i colpi; il clone la ha specchiata
+const GUN = { dx: 7, dy: -56 };
 function frenzyOn(p) { return (p.st.frenzyT || 0) > 0; }
 function playerTick(p, dt) {
   // la frenesia scorre solo mentre si combatte: se ci sono nemici a schermo o se si sta premendo; altrimenti va in pausa
@@ -1529,7 +1531,7 @@ function playerTick(p, dt) {
   }
   p.st.paused = frenzyOn(p) && !engaged;
   p.cd -= dt; if (p.cd > 0) return;
-  const cnt = 1 + N(p, "proj"), pos = { x: p.x, y: GROUND_Y - 30 };
+  const cnt = 1 + N(p, "proj"), pos = { x: p.x + GUN.dx, y: GROUND_Y + GUN.dy };
   let t = null, ang = -Math.PI / 2;
   if (pressing) t = nearestTo(press.x, press.y, PRESS_PICK);   // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
   else {
@@ -1553,7 +1555,7 @@ function playerTick(p, dt) {
     playerBullet(p, pos.x, pos.y, t, raw * (has(p, "punch") ? 3 : 2) * beamAmp(p, t, true), ang, { charged: N(partner("tesla"), "bounce") });
   if (comboOn(p, "kHive")) {                 // Clone speculare: specchia ogni salva del guardiano (posizione e direzione riflesse rispetto al centro),
     // anche se da quel lato non ci sono nemici; nessun bersaglio proprio; ventaglio, chain e level up sì, combo no
-    const cx = W - p.x, ca = Math.PI - aim0;
+    const cx = W - pos.x, ca = Math.PI - aim0;        // bocca del cannone specchiata
     for (let k = 0; k < cnt; k++) playerBullet(p, cx + (k - (cnt - 1) / 2) * 7, pos.y, null, dmg0 * 0.5, ca, { clone: true });
     if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * 0.3, ca - d, { clone: true, fan: true });
   }
@@ -2084,7 +2086,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.9.2";
+const APP_VERSION = "1.9.3";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {

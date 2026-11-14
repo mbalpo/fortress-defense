@@ -3,6 +3,33 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.9.3 — disegno del guardiano e sua etichetta
+
+Richiesta di Marco: il guardiano come soldato futuristico con elmetto integrale e tuta simil-spaziale, braccia alzate, il sinistro leggermente piegato che afferra il destro,
+il destro teso che finisce con un cannone cibernetico da cui partono i colpi; livello e carte sotto di lui come per le torrette (Marco indeciso se farli seguire il guardiano o lasciarli al centro).
+
+- **Disegno** (`guardianShape` in draw.js): soldato visto di spalle (guarda i nemici, quindi il destro è a destra dello schermo), elmetto con antenna e visore luminoso ai lati, tuta con zaino,
+  cintura e luce; braccia con contorno scuro; cannone con attacco, canna, linea di energia e bocca luminosa. Frenesia: tuta e luci arancioni. Il Clone speculare usa lo stesso disegno
+  specchiato (`guardianShape(x, true)`), trasparente come prima. Statico: il cannone punta sempre in alto (parti mobili ancora da decidere, § 11).
+- **Bocca del cannone** (`GUN` = { dx: 7, dy: −56 } in index.html): i colpi del guardiano (anche Ventaglio e Colpo caricato) partono da lì, 26 px più in alto e 7 px a destra di prima;
+  quelli del clone dalla bocca specchiata.
+- **Etichetta** “L2 1/3” (“★” al massimo) sotto i piedi: **segue il guardiano**, resta dentro lo schermo, in bianco e una riga più in alto delle etichette delle torrette,
+  così non si sovrappongono quando passa sopra uno slot. Scelta di Claude: fissa al centro sarebbe stata allineata con le torrette ma staccata dal guardiano, che si sposta
+  per tutta la larghezza. Si cambia facilmente se Marco preferisce il centro.
+- DESIGN.md: § 10 nuovo punto “Guardiano (disegno, revisione 4)”, § 11 stato del punto sulla grafica, § 5 misura.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.9.3.
+
+**Misure con i bot** (stessi semi della 1.9.0, 800 partite per muro): 10 35,8% · 20 27,5% · 30 32,9% (1.9.0: 32,6% · 29,9% · 29,0%). Scarti di 2-4 punti, al limite del rumore;
+comprendono anche il clone della 1.9.2, che i bot prendono di rado. Nessun numero della difficoltà cambiato.
+
+**Test**: nessun test nuovo (solo disegno e punto di partenza dei colpi); i controlli di `tiro.js` sul clone specchiato valgono anche con la bocca del cannone. `npm test`: 31 test, tutti verdi.
+Screenshot rifatti e controllati (02 battaglia, 09 e 09b, 11 clone); controllato anche un ingrandimento del guardiano normale, in frenesia e del clone.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (tessere del guardiano più alte, nuova tessera “Clone speculare”; 50 scene, 75 tessere).
+
+Checklist: nuove voci “Guardiano: disegno nuovo da vedere sul telefono”, “Etichetta del guardiano: che segue il guardiano o fissa al centro?”; aggiornare “Ridisegno di guardiano
+e torrette” in “Ridisegno: guardiano fatto (statico); parti mobili e torrette da decidere”.
+
 ## 1.9.2 — mirino premendo, clone che specchia le salve, rimbalzi fermati dalla cupola, avvisi di sblocco
 
 Richieste di Marco dopo la 1.9.1; scelte sue tra le proposte di Claude: mirino “insegue se vicino” (45 px), avviso anche al 30, ridisegno di guardiano e torrette rimandato.

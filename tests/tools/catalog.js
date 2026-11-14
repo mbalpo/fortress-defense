@@ -215,8 +215,9 @@ function tiles(M) {
   const add = (voce, label, code, box, zoom, anim, extra) => T.push({ key: "t" + T.length, voce, label, code, box, zoom, anim: !!anim, ...(extra || {}) });
   for (const id of M.turretIds)
     add("arte:" + id, M.turrets[id].name, `ctx.translate(0, -GROUND_Y); DRAW.drawTurret({ id: "${id}", x: 0, level: 2, used: 1, done: false, def: TURRETS["${id}"], st: {}, up: {} });`, [-22, -36, 44, 62], 3);
-  add("guardiano", "Guardiano", "ctx.translate(0, -GROUND_Y); player.st.frenzyT = 0; DRAW.guardianShape(0);", [-20, -40, 40, 44], 3);
-  add("guardiano-frenesia", "Guardiano in frenesia", "ctx.translate(0, -GROUND_Y); const f = player.st.frenzyT; player.st.frenzyT = 5; DRAW.guardianShape(0); player.st.frenzyT = f;", [-20, -40, 40, 44], 3);
+  add("guardiano", "Guardiano", "ctx.translate(0, -GROUND_Y); player.st.frenzyT = 0; DRAW.guardianShape(0);", [-20, -54, 40, 58], 3);
+  add("guardiano-frenesia", "Guardiano in frenesia", "ctx.translate(0, -GROUND_Y); const f = player.st.frenzyT; player.st.frenzyT = 5; DRAW.guardianShape(0); player.st.frenzyT = f;", [-20, -54, 40, 58], 3);
+  add("guardiano-clone", "Clone speculare (specchiato, trasparente)", "ctx.translate(0, -GROUND_Y); player.st.frenzyT = 0; ctx.globalAlpha = 0.45; DRAW.guardianShape(0, true); ctx.globalAlpha = 1;", [-20, -54, 40, 58], 3);
   const foe = (def, extra) => `DRAW.drawEnemy(Object.assign({ def: ${def}, x: 0, y: 0, hp: 1, maxHp: 1, flash: 0, shape: DRAW.ICON_SHAPE, rot: 0.4, boss: false }, ${JSON.stringify(extra || {})}));`;
   const ebox = (r, top) => [-(1.7 * r + 4), -(top || 2.8 * r + 6), 2 * (1.7 * r + 4), (top || 2.8 * r + 6) + 1.4 * r + 4];
   for (const k of M.enemyKeys) { const d = M.enemies[k]; add("nemico:" + k, M.lookName[d.look] + " (" + k + ")", foe(`ENEMY_DEFS["${k}"]`), ebox(d.r), 3, false, { look: d.look }); }
