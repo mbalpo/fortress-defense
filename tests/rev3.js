@@ -7,7 +7,7 @@ const patch = (h) => P(h,
   ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],
   ["  busy(s, 1);\n  spawnEnt({ t: dur, dead: false,", "  window.__rays = rays; busy(s, 1);\n  spawnEnt({ t: dur, dead: false,"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
-window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, ORB_RX, W, trace, laserFire, slots: () => slots,
+window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, W, SLOT_X, trace, laserFire, wheelFire, slots: () => slots,
   thunderTick: BEHAV.thunder.tick, fireAbility, ABILITIES, abVal, hold: () => { queue = []; enemies.length = 0; } };
 })();`]);
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -18,12 +18,13 @@ function setup() {
   const run = (n) => { for (let i = 0; i < n; i++) { g.frame(); g.texts.length = 0; } };
   return { g, X, mk, run };
 }
+const inDomePad = (X, x, y, p) => ((x - X.DOME.cx) / (X.DOME.rx + p)) ** 2 + ((y - X.DOME.cy) / (X.DOME.ry + p)) ** 2;
 const inDome = (X, x, y) => ((x - X.DOME.cx) / X.DOME.rx) ** 2 + ((y - X.DOME.cy) / X.DOME.ry) ** 2;
 
 console.log("— cupola larga —");
 {
   const { g, X, mk, run } = setup();
-  console.log("profilo: rx", X.DOME.rx, "ry", X.DOME.ry, "| sfere del Thunderbolt su rx", X.ORB_RX, ok(X.DOME.rx === 215 && X.DOME.ry === 95 && X.ORB_RX === 172));
+  console.log("profilo: rx", X.DOME.rx, "ry", X.DOME.ry, "| un solo profilo (niente ORB_RX):", !("ORB_RX" in X), ok(X.DOME.rx === 215 && X.DOME.ry === 95 && !("ORB_RX" in X)));
   const e = mk("wisp", 9, 400); e.speed = 60; let y0 = -1;
   for (let i = 0; i < 600 && e.y !== y0; i++) { y0 = e.y; e.x = 9; run(1); }
   console.log("nemico a x 9 (r 9) che scende → si ferma a y", e.y.toFixed(1), "(suolo a", X.GROUND_Y + ") | tocca la cupola prima del suolo:", e.y + 9 < X.GROUND_Y,
@@ -63,10 +64,19 @@ console.log("— laser e cupola —");
 console.log("— sfere del Thunderbolt e Barriera minata —");
 {
   const { g, X, run } = setup();
-  const s = X.makeShooter(X.TURRETS.thunder, 180, X.GROUND_Y - 14); s.up.sph = 3; X.slots()[0] = s; run(30);
-  const sp = s.st.sph || [], xs = sp.map((o) => o.x);
-  const onOld = sp.every((o) => Math.abs(((o.x - X.DOME.cx) / X.ORB_RX) ** 2 + ((o.y - X.DOME.cy) / X.DOME.ry) ** 2 - 1) < 1e-6);
-  console.log("sfere:", sp.length, "| sul profilo 172:", onOld, "| x da", Math.min(...xs).toFixed(0), "a", Math.max(...xs).toFixed(0), ok(sp.length === 4 && onOld && Math.min(...xs) >= 0 && Math.max(...xs) <= 360));
+  for (const n of [0, 2, 3]) {                  // 1, 3 e 4 sfere: 20 s di movimento, controllo a ogni fotogramma
+    const s = X.makeShooter(X.TURRETS.thunder, 180, X.GROUND_Y - 14); s.up.sph = n; X.slots()[0] = s;
+    let xmin = 1e9, xmax = -1e9, worst = 0, ends = 0, pairs = Infinity;
+    for (let f = 0; f < 1200; f++) {
+      run(1); const sp = s.st.sph || [];
+      for (const o of sp) { xmin = Math.min(xmin, o.x); xmax = Math.max(xmax, o.x); worst = Math.max(worst, Math.abs(inDome(X, o.x, o.y) - 1)); if (o.x < 13 || o.x > 347) ends++; }
+      for (let i = 0; i < sp.length; i++) for (let j = i + 1; j < sp.length; j++) pairs = Math.min(pairs, Math.hypot(sp[i].x - sp[j].x, sp[i].y - sp[j].y));
+    }
+    const cnt = (s.st.sph || []).length;
+    console.log(`sfere: ${cnt} | x da ${xmin.toFixed(1)} a ${xmax.toFixed(1)} | scarto massimo dal profilo 215: ${worst.toExponential(1)} | arrivano ai capi: ${ends > 0}` + (cnt > 1 ? ` | si incrociano (come prima): ${pairs < 6}` : ""),
+      ok(cnt === n + 1 && xmin >= 12 - 1e-6 && xmax <= 348 + 1e-6 && worst < 1e-9 && ends > 0));
+    X.slots()[0] = null;
+  }
   const before = X.ents().length;
   X.fireAbility({ id: "mines", v: X.abVal("mines", 5) });
   const mines = X.ents().slice(before).filter((m) => m.x !== undefined);
@@ -74,4 +84,30 @@ console.log("— sfere del Thunderbolt e Barriera minata —");
   console.log("Barriera minata al 5: mine", mines.length, "| x da", Math.min(...mx).toFixed(0), "a", Math.max(...mx).toFixed(0), "| y da", Math.min(...mines.map((m) => m.y)).toFixed(0), "a", Math.max(...mines.map((m) => m.y)).toFixed(0),
     ok(mines.length >= 4 && Math.min(...mx) >= 0 && Math.max(...mx) <= 360));
   console.log("errori JS:", g.errors[0] || "nessuno");
+}
+console.log("— Firewheel Drone e cupola —");
+{
+  for (const [label, up] of [["Durata ×3", { dur: 3 }], ["Mini-droni, Scatto, Durata ×3", { mini1: 1, miniB: 1, dash: 1, dur: 3 }], ["Scia di fuoco, Presidio, Durata ×3", { trail1: 1, trail3: 1, stay: 1, dur: 3 }]]) {
+    let out = 0, total = 0, back = 0, bounces = 0, minK = Infinity;
+    for (let slot = 0; slot < 4; slot++) for (let seed = 0; seed < 8; seed++) {
+      const { g, X, mk, run } = setup(); mk("drone", 180, 150).speed = 0;                 // un nemico a schermo: la torretta lancia
+      const s = X.makeShooter(X.TURRETS.wheel, X.SLOT_X[slot], X.GROUND_Y - 14); s.level = 3; Object.assign(s.up, up);
+      for (let i = 0; i < seed * 7; i++) g.win.Math.random();          // lanci diversi (angoli casuali del gioco)
+      const before = X.ents().length; X.wheelFire(s);
+      const D = X.ents().slice(before).filter((o) => o.trail);
+      const st = D.map(() => ({ wasOut: false, lastA: null }));
+      for (let f = 0; f < 1200 && D.some((d) => !d.dead); f++) {
+        run(1);
+        D.forEach((d, i) => { if (d.dead) return; const pad = d.trail && i > 0 && up.mini1 ? 3 : 5, k = inDomePad(X, d.x, d.y, pad);
+          if (k > 1) st[i].wasOut = true; else if (st[i].wasOut) back++;
+          if (st[i].wasOut) minK = Math.min(minK, k);
+          if (st[i].lastA !== null && st[i].wasOut && Math.abs(d.a - st[i].lastA) > 1e-9 && k < 1.08 && d.x > 23 && d.x < 337 && d.y > 61) bounces++;
+          st[i].lastA = d.a; });
+      }
+      total += D.length; out += st.filter((x) => x.wasOut).length;
+      if (g.errors.length) console.log("errori JS:", g.errors[0]);
+    }
+    console.log(`Firewheel ${label.padEnd(30)} droni ${total} (4 slot × 8 lanci) | usciti dalla cupola: ${out} | rimbalzi sulla cupola: ${bounces} | rientri: ${back} | minimo fuori: ${minK.toFixed(3)}`,
+      ok(total > 0 && out === total && bounces > 0 && back === 0 && minK > 1));
+  }
 }

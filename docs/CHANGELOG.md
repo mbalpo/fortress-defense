@@ -3,6 +3,49 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.9.1 — sfere del Thunderbolt sul profilo nuovo, Firewheel che rimbalza sulla cupola
+
+Correzione di Marco dopo la 1.9.0 (testi di DESIGN.md § 10 e § 11 forniti da lui). Nessun numero della difficoltà cambiato.
+
+- **Un solo profilo della cupola**: tolto `ORB_RX`; nuova `domeK(x, y, pad)` (distanza normalizzata dalla cupola allargata di `pad`).
+- **Sfere del Thunderbolt**: girano su `DOME` (215 × 95), solo sull’arco visibile: `th` tra `ORB_A` e `ORB_B`, cioè x da 12 a 348 (cos th tra −0,78 e +0,78).
+  Stessa velocità (0,55 rad/s) e stesso avanti-indietro; le partenze sfalsate di prima (0,5 + 0,9·k) sono riportate in proporzione sull’arco più corto (`orbStart`), così con 4 sfere
+  la quarta non si sovrappone alla terza su un capo. Sfere pungenti (`aura`) e disegno leggono `o.x`/`o.y`: seguono da soli.
+- **Firewheel Drone**: il drone parte da dentro la cupola ed esce (`out`); da lì il bordo (allargato del nucleo: 5 px, 3 px per i mini-droni) è un muro: riflessione sulla normale
+  dell’ellisse e ritorno all’ultima posizione fuori. Vale per i mini-droni (lettura di Claude) e, poiché usano la stessa funzione, anche per il Mini-drone di scorta della combo del guardiano.
+  Scia e danno invariati.
+- DESIGN.md § 10: frase sulle sfere sostituita nel punto “Cupola larga (revisione 3)”, nuovo punto “Firewheel Drone (revisione 3)”. § 11: il punto “Guardiano” da sostituire
+  **non c’era** (la 1.9.0 non lo aveva aggiunto): il testo “Guardiano e torrette (grafica)” è stato aggiunto come punto nuovo.
+- Nota: il Firewheel non ha una carta “+1 rimbalzo” (le sue standard sono Danno, Durata, Fiamme più ampie); i test usano le standard e le chain.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.9.1.
+
+**Controllo: oggetti mobili e cupola** (nessuna modifica, decide Marco). Misurato con tutte le torrette al livello 3 e le combo del guardiano: partite vere al livello 30 (9 partite × 2 min)
+e caso peggiore con 11 nemici immortali fermi a contatto con la cupola su tutto l’arco (9 prove × 40 s); “rientri” = oggetti usciti dalla cupola che poi ci rientrano.
+
+| Oggetto | Attraversa la cupola? | Problema visibile? |
+|---|---|---|
+| Mini-missili della Sky Guard (Frammentazione) | **Sì**: nascono fuori, all’impatto, e inseguono un nemico a caso, anche dall’altra parte (92 rientri su 686 missili nel caso peggiore, 0 nelle partite vere) | Sì, quando i nemici sono sulla cupola |
+| Missili principali della Sky Guard | No: partono da dentro ed escono verso il bersaglio | No |
+| Droni dell’Hive | No dal fuori, ma **restano dentro**: si fermano a 45 px dal bersaglio, quindi con i nemici sulla cupola volano dentro di essa (196 su 199 non escono mai) | Sì, con i nemici a contatto |
+| Mini-drone di scorta (combo Firewheel) | No: dalla 1.9.1 rimbalza come il Firewheel (0 rientri) | No |
+| Buco nero del Gravity Vortex Gun | No: percorso dritto da dentro verso fuori (0 rientri) | No |
+| Wormhole | No: varchi fermi (ingresso sul primo nemico toccato, uscita a fine percorso) | No |
+| Proiettili della Railgun (anche divisi) | No: linee dritte verso l’alto (0 rientri) | No |
+| Colpi e schegge dell’Aeroblast | Colpi no; **schegge raramente** (1 rientro su 20 nelle partite vere): partono dall’esplosione in direzioni a ventaglio | Poco |
+| Proiettili del guardiano e del Clone | No nelle prove (0 su circa 50.000); possibile in teoria con Rimbalzo, che cerca un nemico entro 180 px e lo raggiunge in linea retta | No |
+| Sfera del Teslacoil (rimbalzi) | No nelle prove (0 su 173); possibile in teoria tra due nemici lontani sulla cupola | No |
+| Mine (Aeroblast, Posamine, Barriera minata) | No: ferme, nascono fuori (punto d’impatto o bordo + 10 px) | No |
+
+**Test** — `tests/rev3.js`: profilo unico (niente `ORB_RX`); 1, 3 e 4 sfere per 20 s, a ogni fotogramma sul profilo 215 (scarto < 1e−15) con x tra 12,0 e 348,0, arrivano ai capi;
+Firewheel lanciato da ognuno dei 4 slot, 8 lanci per slot, con Durata ×3, con Mini-droni e Scatto, con Scia e Presidio: tutti escono, rimbalzano sulla cupola (28-164 rimbalzi), 0 rientri.
+Tolto il controllo “sfere sul profilo 172”. `npm test`: 30 test, tutti verdi.
+
+Screenshot: nuovi 32 (Thunderbolt, 1 sfera), 33 (3 sfere), 34 (Firewheel con Mini-droni e Scia); controllati.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (scene del Thunderbolt e del Firewheel con il comportamento nuovo; 49 scene, 73 tessere).
+
+Checklist: nuove voci “Sfere del Thunderbolt sul nuovo profilo: provare”, “Drone del Firewheel che rimbalza sulla cupola: provare”, “Oggetti che attraversano la cupola: decidere dopo la tabella”.
+
 ## 1.9.0 — cupola larga, cristalli più lenti, tiro verticale, carte al rilascio, schermo acceso
 
 Richieste di Marco (testi di DESIGN.md forniti da lui); valori segnati **[Claude]** in DESIGN.md: 60 px/s, 215 px, 0,6 s, modalità del Wake Lock, lettura della frenesia.

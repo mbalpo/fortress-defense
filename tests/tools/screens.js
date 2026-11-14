@@ -113,5 +113,17 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("for (const [x, y] of [[90, 330], [180, 300], [280, 340]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
     ev("const a = makeShooter(TURRETS.aero, SLOT_X[2], GROUND_Y - 14); a.level = 3; Object.assign(a.up, { mine1: 1, mine2: 1 }); slots[2] = a;");
     g.frame(150); ev("fireAbility({ id: 'mines', v: abVal('mines', 5) })"); g.frame(10); g.save("31-mine-cupola.png"); }
+  for (const [name, sph] of [["32-thunderbolt-1-sfera.png", 0], ["33-thunderbolt-3-sfere.png", 2]]) {   // 1.9.1: sfere sul profilo della cupola, solo sull’arco visibile
+    const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[90, 250], [250, 220]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev(`const t = makeShooter(TURRETS.thunder, SLOT_X[1], GROUND_Y - 14); t.level = 3; Object.assign(t.up, { sph: ${sph}, aura: 1 }); slots[1] = t;`);
+    g.frame(sph ? 200 : 140); g.save(name); }
+  { // 1.9.1: Firewheel con le sue chain, il drone rimbalza sul bordo della cupola
+    const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[60, 380], [300, 400], [180, 200]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev("const w = makeShooter(TURRETS.wheel, SLOT_X[0], GROUND_Y - 14); w.level = 3; Object.assign(w.up, { mini1: 1, miniB: 1, trail1: 1, trail3: 1, dur: 3 }); slots[0] = w;");
+    g.frame(230); g.save("34-firewheel-cupola.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
 }

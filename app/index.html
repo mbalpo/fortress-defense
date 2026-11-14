@@ -537,9 +537,11 @@ const TREE_IDS = new Set(Object.keys(TREE_NODE));
 const FORT_H = 26, GROUND_H = 30;
 const GROUND_Y = H - FORT_H - GROUND_H;
 const SLOT_X = [1, 2, 3, 4].map((i) => W * i / 5);       // 4 punti equidistanti
-// cupola: raggio orizzontale 215 px, più larga dello schermo (esce di 35 px per lato); vale per contatto, laser, mine e domeNear
+// cupola: raggio orizzontale 215 px, più larga dello schermo (esce di 35 px per lato); un solo profilo per contatto, laser, mine, domeNear,
+// sfere del Thunderbolt (solo sull’arco visibile) e rimbalzi del Firewheel
 const DOME = { cx: W / 2, cy: GROUND_Y, rx: 215, ry: 95 };
-const ORB_RX = 172;                            // le sfere del Thunderbolt girano sul profilo di prima, così non escono dallo schermo
+// distanza “normalizzata” dal centro della cupola allargata di pad: < 1 dentro, > 1 fuori
+const domeK = (x, y, pad) => ((x - DOME.cx) / (DOME.rx + (pad || 0))) ** 2 + ((y - DOME.cy) / (DOME.ry + (pad || 0))) ** 2;
 const PLAYER_SPEED = 520, PLAYER_MIN = 26, PLAYER_MAX = W - 26;
 
 const SETTINGS_KEY = "fortress-proto-v1";
@@ -1036,15 +1038,21 @@ function mine(s, x, y) {
 }
 
 // ---------- 5. THUNDERBOLT (electric) ----------
+// le sfere girano avanti e indietro sul bordo della cupola, solo sull’arco visibile: x da ORB_X0 a W − ORB_X0
+const ORB_X0 = 12, ORB_A = Math.PI + Math.acos((W / 2 - ORB_X0) / DOME.rx), ORB_B = 3 * Math.PI - ORB_A, ORB_L = ORB_B - ORB_A;
+function orbStart(k) {                           // partenza sfalsata: stesse distanze di prima (0,5 + 0,9·k su un arco di π − 0,3), riportate sull’arco nuovo
+  const u = (0.35 + 0.9 * k) * ORB_L / (Math.PI - 0.3), m = u % (2 * ORB_L);
+  return m <= ORB_L ? { th: ORB_A + m, dir: 1 } : { th: ORB_A + 2 * ORB_L - m, dir: -1 };
+}
 function thunderTick(s, dt) {
   const cnt = 1 + N(s, "sph"), sp = s.st.sph = s.st.sph || [];
-  while (sp.length < cnt) sp.push({ th: Math.PI + 0.5 + sp.length * 0.9, dir: 1, aura: 0 });
+  while (sp.length < cnt) sp.push(Object.assign(orbStart(sp.length), { aura: 0 }));
   sp.length = cnt;
   for (const o of sp) {
     o.th += o.dir * 0.55 * dt;
-    if (o.th > 2 * Math.PI - 0.15) { o.th = 2 * Math.PI - 0.15; o.dir = -1; }
-    if (o.th < Math.PI + 0.15) { o.th = Math.PI + 0.15; o.dir = 1; }
-    o.x = DOME.cx + ORB_RX * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
+    if (o.th > ORB_B) { o.th = ORB_B; o.dir = -1; }
+    if (o.th < ORB_A) { o.th = ORB_A; o.dir = 1; }
+    o.x = DOME.cx + DOME.rx * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
     if (has(s, "aura")) {
       o.aura -= dt;
       if (o.aura <= 0) { o.aura = 0.6; for (const e of living()) if (dist(e.x, e.y, o.x, o.y) <= 60 + e.def.r) damage(e, 6 * dmgM(s), "electric", false, "thunder"); }
@@ -1183,7 +1191,8 @@ function wheelDrone(s, x, y, a, o) {
   const base = o.mini ? 170 : 140, bm = has(s, "trailB") ? 1.6 : 1;          // Fiamme intense: solo le bruciature di questa torre
   const trailOn = has(s, "trail1") && !o.mini, trailT = has(s, "trail3") ? 4 : 2;
   if (!o.free) busy(s, 1);                       // free: mini-drone della combo del guardiano, non tiene ferma la torretta
-  return spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, hit: new Set(), dead: false,
+  const pad = o.mini ? 3 : 5;                    // il nucleo del drone: è lui che rimbalza sul bordo della cupola
+  return spawnEnt({ x, y, a, t: o.dur, still: 0, stayed: false, rot: 0, trail: [], dist: 0, hit: new Set(), out: false, dead: false,
     update(dt) {
       this.rot += 8 * dt;
       // Fiamma crescente: +10% di danno per ogni nemico diverso colpito da questo drone, fino a ×2
@@ -1206,10 +1215,19 @@ function wheelDrone(s, x, y, a, o) {
         return;
       }
       if (this.t > 0) {
-        const sp = base * (has(s, "dash") && !touching ? 1.8 : 1), mv = sp * dt;
+        const sp = base * (has(s, "dash") && !touching ? 1.8 : 1), mv = sp * dt, px = this.x, py = this.y;
         this.x += Math.cos(this.a) * mv; this.y += Math.sin(this.a) * mv; this.dist += mv;
         if (this.x < 22) { this.x = 22; this.a = Math.PI - this.a; } else if (this.x > W - 22) { this.x = W - 22; this.a = Math.PI - this.a; }
         if (this.y < 60) { this.y = 60; this.a = -this.a; } else if (this.y > GROUND_Y - 36) { this.y = GROUND_Y - 36; this.a = -this.a; }
+        // cupola: il drone parte da dentro ed esce; da fuori il bordo è un muro (riflessione sulla normale dell’ellisse)
+        if (domeK(this.x, this.y, pad) > 1) this.out = true;
+        else if (this.out) {
+          const rx = DOME.rx + pad, ry = DOME.ry + pad;
+          let nx = (px - DOME.cx) / (rx * rx), ny = (py - DOME.cy) / (ry * ry); const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+          let vx = Math.cos(this.a), vy = Math.sin(this.a); const d = vx * nx + vy * ny;
+          if (d < 0) { vx -= 2 * d * nx; vy -= 2 * d * ny; this.a = Math.atan2(vy, vx); }
+          this.x = px; this.y = py;                  // resta sull’ultima posizione fuori dalla cupola
+        }
         if (trailOn && this.dist > 22) { this.dist = 0; this.trail.push({ x: this.x, y: this.y, t: trailT }); }
       }
       for (const p of this.trail) {
@@ -2040,7 +2058,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.9.0";
+const APP_VERSION = "1.9.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {
