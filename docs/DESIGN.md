@@ -64,7 +64,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. L’equipaggiamento **non è ancora costruito**; albero e abilità della barriera sì (fasi 1-3, § 16). **[deciso]**
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. L’equipaggiamento **non è ancora costruito** (regole decise in § 15); albero e abilità della barriera sì (fasi 1-3, § 16). **[deciso]**
 - **Avviso di sblocco**: al primo completamento in Standard dei livelli 10, 20, 30, 31, 40 e 50 compare, sopra la schermata di vittoria, un avviso con ciò che si è sbloccato;
   si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’equipaggiamento è annunciato come “in arrivo”. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
@@ -381,6 +381,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
+- **Equipaggiamento** (§ 15): decisi statistica base, drop, inventario e rimozione dei Moduli. Aperti: valori provvisori (statistica base, quantità e rarità dei drop), schema della schermata (proposta di Claude in fase di costruzione).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
 - **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
@@ -413,6 +414,14 @@ salvataggio della partita in corso · audio e altre impostazioni · bilanciament
 
 - **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono nell’albero dei potenziamenti permanenti (§ 16); **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
 - **Equipaggiamento**: 6 pezzi (testa, armatura, guanti, stivali, arma, nucleo). Ogni pezzo dà una statistica base (tipicamente attacco del personaggio) e ha slot per i Moduli. Si trova come drop casuale a fine livello assieme ai chip. **[deciso]**
+- **Statistica base per pezzo** **[deciso]** (divisa per ruolo, come i pool dei Moduli): **arma, guanti e testa** → danno del guardiano %; **armatura e stivali** → vita della barriera %;
+  **nucleo** → danno di tutte le torrette %. Si somma agli altri bonus dello stesso tipo. Valori per rarità **[Claude] [provvisorio]** (da misurare con i bot):
+  arma +6 / +10 / +15 / +21 / +28%; guanti e testa +4 / +7 / +11 / +15 / +20%; armatura e stivali +6 / +10 / +15 / +21 / +28% della vita base; nucleo +4 / +7 / +11 / +15 / +20%
+  (comune → ancestrale).
+- **Drop** **[deciso]**: a **ogni vittoria dal livello 30** in poi (il 30 compreso), anche rigiocando un livello già completato, in Standard ed Epica. Quantità per vittoria
+  **[Claude] [provvisorio]**: 1 pezzo e da 1 a 2 Moduli; la rarità migliora con la difficoltà D (Epica quindi dà rarità più alte). Tabelle di rarità da tarare con i bot.
+- **Inventario** **[deciso]**: **nessun limite** a pezzi e Moduli (servono per le fusioni); un oggetto si può scartare a mano, senza compenso.
+- **Moduli installati** **[deciso]**: si tolgono **gratis e senza perdite**, tornano in inventario e si possono installare in un altro pezzo dello stesso tipo.
 - **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
 - **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Ogni Modulo ha **un effetto**, preso dal pool del suo pezzo
   (catalogo e pool sotto); la rarità decide il valore X. **[deciso]**
@@ -543,7 +552,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   di level up: l’entità resta di lv2 fino al level up successivo, quindi ne ha due di lv2. Le carte di lv2 (level up lv2, combo che richiedono
   il lv2, voci chain lv2) possono comparire fin dalla prima scelta; dopo i primi tre potenziamenti il primo level up può essere sia di lv1 sia
   di lv2. Le regole delle chain restano valide: la voce lv2 si propone solo dopo aver scelto la voce lv1 della stessa chain.
-- **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
+- **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, statistica base dei pezzi per rarità, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
 
 ## 16. Sigilli e albero dei potenziamenti (da costruire)
 

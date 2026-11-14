@@ -3,6 +3,25 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione — regole dell’equipaggiamento (nessuna versione nuova)
+
+Solo DESIGN.md, nessun cambiamento al gioco.
+
+- **Controllo dei level up lv1** (richiesta di Marco): ogni torretta e il guardiano hanno già 2 level up lv1 nel codice (`tests/rev2.js`).
+  La seconda si vede poco per tre motivi: un level up fa salire la torretta, quindi le due lv1 sono in alternativa; fino al livello 10 il tetto è lv1,
+  quindi la seconda non può più uscire (dopo il 20 vale come level up lv2 → lv3); le 3 carte si estraggono a caso da tutto il mucchio.
+  Il *Colpo pesante* del guardiano è bloccato dall’albero dei Sigilli (§ 16). Nessuna modifica.
+- **§ 15 Equipaggiamento**, risposte di Marco: statistica base divisa per ruolo (arma, guanti, testa → danno del guardiano; armatura, stivali → vita della barriera;
+  nucleo → danno delle torrette); drop a ogni vittoria dal 30, anche rigiocando; inventario senza limiti, scarto a mano; Moduli rimovibili gratis.
+  Valori provvisori di Claude: statistica base per rarità, 1 pezzo e 1-2 Moduli per vittoria.
+- § 4, § 11: aggiornati i rimandi.
+
+**Test**: `npm test` (solo documenti).
+
+Catalogo grafico: non cambiato.
+
+Checklist: nuova voce “Equipaggiamento: valori provvisori della statistica base e dei drop da confermare”; togliere eventuali voci su statistica base, drop, inventario e rimozione dei Moduli.
+
 ## 1.9.3 — disegno del guardiano e sua etichetta
 
 Richiesta di Marco: il guardiano come soldato futuristico con elmetto integrale e tuta simil-spaziale, braccia alzate, il sinistro leggermente piegato che afferra il destro,
