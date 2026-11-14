@@ -15,7 +15,7 @@ function ups(list) {
   out.push("- **Level up** — " + (lu.length ? lu.map((u) => `lv${u.lv} ${u.name}: ${u.desc}${u.prov ? " *(provvisorio)*" : ""}`).join(" · ") : "nessuno."));
   out.push(`- id nel codice: ${list.map((u) => u.id).join(", ")}`);
 }
-out.push("### Guardiano", "", "Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto spara in verticale, senza bersaglio.");
+out.push("### Guardiano", "", "Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto insegue il nemico nel mirino (entro 45 px) o spara in verticale.");
 ups(parseUps(block("const PLAYER_DEF")));
 // combo del guardiano: K(id, torretta, condizione, livello del guardiano, nome, descrizione)
 const TNAME = Object.fromEntries([...src.matchAll(/^  (\w+): \{ name: "([^"]+)"/gm)].map((x) => [x[1], x[2]]));

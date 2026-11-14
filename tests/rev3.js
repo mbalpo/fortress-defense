@@ -7,7 +7,7 @@ const patch = (h) => P(h,
   ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],
   ["  busy(s, 1);\n  spawnEnt({ t: dur, dead: false,", "  window.__rays = rays; busy(s, 1);\n  spawnEnt({ t: dur, dead: false,"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
-window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, W, SLOT_X, trace, laserFire, wheelFire, slots: () => slots,
+window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, W, SLOT_X, trace, laserFire, wheelFire, playerBullet, player: () => player, slots: () => slots,
   thunderTick: BEHAV.thunder.tick, fireAbility, ABILITIES, abVal, hold: () => { queue = []; enemies.length = 0; } };
 })();`]);
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -110,4 +110,16 @@ console.log("— Firewheel Drone e cupola —");
     console.log(`Firewheel ${label.padEnd(30)} droni ${total} (4 slot × 8 lanci) | usciti dalla cupola: ${out} | rimbalzi sulla cupola: ${bounces} | rientri: ${back} | minimo fuori: ${minK.toFixed(3)}`,
       ok(total > 0 && out === total && bounces > 0 && back === 0 && minK > 1));
   }
+}
+console.log("— colpi del guardiano che rimbalzano e cupola —");
+for (const clone of [false, true]) {
+  const { g, X, mk, run } = setup(); const p = X.player(); p.up.ricochet = 1;
+  const A = mk("shell", 60, 400), B = mk("shell", 150, 540);           // B è un nemico finto dentro la cupola, solo per far passare il rimbalzo dentro
+  A.speed = B.speed = 0; const hA = A.hp, hB = B.hp;
+  const before = X.ents().length; X.playerBullet(p, 60, 300, A, 10, Math.PI / 2, clone ? { clone: true } : null);
+  const b = X.ents()[before]; let last = null, inside = 0;
+  for (let i = 0; i < 120 && !b.dead; i++) { run(1); if (!b.dead) { last = { x: b.x, y: b.y }; if (inDome(X, b.x, b.y) < 1) inside++; } }
+  console.log((clone ? "rimbalzo del clone" : "rimbalzo del guardiano verso un punto dentro la cupola") + ": A colpito", A.hp < hA, "| B (dentro) colpito", B.hp < hB,
+    "| si ferma al passaggio del bordo: ultima posizione fuori, fine appena dentro, a", last ? Math.hypot(b.x - last.x, b.y - last.y).toFixed(1) : "-", "px (un passo) | fotogrammi visibili dentro:", inside,
+    ok(A.hp < hA && B.hp === hB && b.dead && inside === 0 && last && inDome(X, last.x, last.y) > 1 && inDome(X, b.x, b.y) <= 1 && Math.hypot(b.x - last.x, b.y - last.y) <= 10.5));
 }

@@ -392,8 +392,8 @@ function menuScreen() {
   button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
   txt("Livello " + selLevel, W / 2, 150, 24, "#e8eefc", "center", "800");
   txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
-  txt("Il guardiano spara da solo; tenendo premuto segue il dito", W / 2, 208, 11, "#6f82ad", "center", "500");
-  txt("e spara in verticale", W / 2, 224, 11, "#6f82ad", "center", "500");
+  txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
+  txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
   button(60, 254, 240, 46, "Standard", () => startRun("standard"), { size: 16, stroke: "#3fe0a0" });
   const eu = epicUnlocked();
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
@@ -547,6 +547,25 @@ function treeAbilities() {
   });
 }
 
+function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
+  ctx.strokeStyle = locked ? "#ffd166" : "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
+  ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
+  ctx.moveTo(x, y - 18); ctx.lineTo(x, y - 6); ctx.moveTo(x, y + 6); ctx.lineTo(x, y + 18); ctx.stroke(); ctx.globalAlpha = 1;
+}
+function unlockScreen() {                       // avviso di sblocco sopra la schermata di vittoria: si chiude solo con “Ho capito” (o Invio)
+  buttons.length = 0;                            // i pulsanti della vittoria sotto non rispondono finché l’avviso è aperto
+  dim(0.82);
+  const n = unlockNotes.length, h = 96 + n * 22 + unlockNotes.reduce((a, u) => a + 30 + u.lines.length * 17, 0), y0 = Math.max(70, 330 - h / 2);
+  rr(16, y0, 328, h, 10); ctx.fillStyle = "rgba(14,24,48,0.97)"; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#ffd166"; ctx.stroke();
+  txt(n > 1 ? "Nuovi sblocchi" : "Nuovo sblocco", W / 2, y0 + 30, 20, "#ffd166", "center", "800");
+  let y = y0 + 66;
+  for (const u of unlockNotes) {
+    txt(u.title, W / 2, y, 15, "#e8eefc", "center", "700"); y += 24;
+    for (const l of u.lines) { txt(l, W / 2, y, 12, "#b9c8e6", "center", "500"); y += 17; }
+    y += 22;
+  }
+  button(90, y0 + h - 60, 180, 44, "Ho capito", closeUnlocks, { size: 15, stroke: "#ffd166" });
+}
 function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
   ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700");
 }
@@ -563,6 +582,7 @@ function draw() {
     drawDomeFill(); drawGround();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
+    if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
     enemies.forEach(drawEnemy);
     for (const o of ents) o.draw();
     drawDomeEdge(); drawFortress();
@@ -581,7 +601,7 @@ function draw() {
   }
   if (state === "menu" || state === "save") menuScreen();          // il pannello del salvataggio sta sopra al menu
   else if (state === "upgrade") upgradeScreen();
-  else if (state === "won") wonScreen();
+  else if (state === "won") { wonScreen(); if (unlockNotes.length) unlockScreen(); }
   else if (state === "lost") lostScreen();
   else if (state === "pause") pauseScreen();
   else if (state === "tree") treeScreen();
@@ -778,6 +798,6 @@ const FX = {
 
 // quello che serve fuori: il gioco usa draw, FX, thunderDraw e teslaDraw; il catalogo anche il resto
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
-  drawTurret, drawPlayer, guardianShape, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
+  drawTurret, drawPlayer, guardianShape, drawCrosshair, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
   menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button };
 }

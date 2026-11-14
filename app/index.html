@@ -554,6 +554,8 @@ try {
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
 // tiro verticale: mentre il dito è premuto sul campo il guardiano lo segue e spara dritto in alto, senza bersaglio
 let pressing = false;
+const press = { x: W / 2, y: 300 };              // mirino: il punto premuto (non più in basso di 50 px sopra il suolo)
+const PRESS_PICK = 45;                           // un nemico entro questa distanza dal mirino diventa il bersaglio dei colpi
 // scelta delle carte: si sceglie al rilascio sulla stessa carta; i tocchi sono ignorati per CARD_LOCK s dalla comparsa della schermata
 const CARD_LOCK = 0.6;
 let cardsAt = -1e9, cardPress = null;
@@ -610,6 +612,17 @@ function saveProgress() { try { localStorage.setItem(PROGRESS_KEY, JSON.stringif
 const maxSelectable = () => Math.min(progress.cleared + 1, CAMPAIGN.maxLevel);
 let campLevel = 1, selLevel = maxSelectable(), bossBonus = 0, bonusLeft = 0, bonusMode = false, rewards = null, skipLeft = 0, skipNote = false;
 const towerCap = () => CAMPAIGN.towerCaps.reduce((c, [n, cap]) => progress.cleared >= n ? cap : c, 1);
+// avvisi di sblocco a fine livello (primo completamento in Standard): titolo e righe; si chiudono a mano
+const UNLOCKS = [
+  { lv: 10, title: "Torri e guardiano al livello 2", lines: ["Le carte level up ora portano torri e", "guardiano fino al livello 2.", "Dal livello 11 arrivano i mini-boss."] },
+  { lv: 20, title: "Torri e guardiano al livello 3", lines: ["Le carte level up ora portano torri e", "guardiano fino al livello 3."] },
+  { lv: CAMPAIGN.equipUnlock, title: "Equipaggiamento del guardiano", lines: ["Testa, armatura, guanti, stivali, arma e nucleo.", "In arrivo in un prossimo aggiornamento."] },
+  { lv: CAMPAIGN.sealsFrom, title: "Sigilli e albero dei potenziamenti", lines: ["Completando i livelli guadagni Sigilli:", "spendili nell’albero, dal menu."] },
+  { lv: CAMPAIGN.barrierUnlock, title: "Abilità della barriera", lines: ["Fino a 3 abilità della cupola in battaglia:", "sceglile nell’albero, Barriera · Abilità."] },
+  { lv: CAMPAIGN.epicUnlock, title: "Modalità Epica", lines: ["Livelli con difficoltà +" + CAMPAIGN.epicOffset + " e più Sigilli:", "scegli “Epica” nel menu."] },
+];
+let unlockNotes = [];
+const closeUnlocks = () => { unlockNotes = []; };
 const epicUnlocked = () => progress.cleared >= CAMPAIGN.epicUnlock;
 const treeOpen = () => progress.cleared >= CAMPAIGN.sealsFrom || progress.claims.length > 0;   // l’albero si apre completando il livello 31
 
@@ -1518,7 +1531,8 @@ function playerTick(p, dt) {
   p.cd -= dt; if (p.cd > 0) return;
   const cnt = 1 + N(p, "proj"), pos = { x: p.x, y: GROUND_Y - 30 };
   let t = null, ang = -Math.PI / 2;
-  if (!pressing) {                           // mentre si preme: nessun bersaglio, i colpi vanno dritti in alto (ang = −90°)
+  if (pressing) t = nearestTo(press.x, press.y, PRESS_PICK);   // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
+  else {
     t = pickTargets(pos, PLAYER.range, 1)[0];
     if (!t) { p.cd = 0; return; }
   }
@@ -1531,42 +1545,49 @@ function playerTick(p, dt) {
     aero: comboOn(p, "kAero") && Math.random() < 0.05, thunder: comboOn(p, "kThunder") && Math.random() < 0.05 };
   const any = proc.laser || proc.disr || proc.aero || proc.thunder;
   for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 && any ? { proc } : null);
-  if (has(p, "fan")) {                       // proiettili secondari a ventaglio, danno minore
-    const base = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;
-    const nf = 4 + (p.fanX || 0);                 // Ventaglio ampliato (albero): proiettili in più, sempre entro ±0,6 rad
-    for (const d of nf === 4 ? [-0.6, -0.3, 0.3, 0.6] : Array.from({ length: nf }, (_, i) => -0.6 + 1.2 * i / (nf - 1)))
-      playerBullet(p, pos.x, pos.y, null, dmg * 0.3, base + d, { fan: true });
-  }
+  const aim0 = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;     // direzione della salva (il clone la specchia)
+  if (has(p, "fan"))                         // proiettili secondari a ventaglio, danno minore
+    for (const d of fanOffsets(p)) playerBullet(p, pos.x, pos.y, null, dmg * 0.3, aim0 + d, { fan: true });
   if (comboOn(p, "kWheel") && Math.random() < 0.03) guardWheel(p);
   if (comboOn(p, "kTesla") && (p.st.shots = (p.st.shots || 0) + 1) % 40 === 0)     // Colpo caricato: ×2 (×3 in tutto con Colpo pesante)
     playerBullet(p, pos.x, pos.y, t, raw * (has(p, "punch") ? 3 : 2) * beamAmp(p, t, true), ang, { charged: N(partner("tesla"), "bounce") });
-  if (comboOn(p, "kHive")) {                 // Clone speculare: posizione specchiata rispetto al centro; mentre si preme spara in verticale
-    const cpos = { x: W - p.x, y: pos.y }, ct = pressing ? null : pickTargets(cpos, PLAYER.range, 1)[0];
-    for (let k = 0; k < cnt; k++) playerBullet(p, cpos.x + (k - (cnt - 1) / 2) * 7, cpos.y, ct, dmg0 * 0.5, Math.PI - ang, { clone: true });
+  if (comboOn(p, "kHive")) {                 // Clone speculare: specchia ogni salva del guardiano (posizione e direzione riflesse rispetto al centro),
+    // anche se da quel lato non ci sono nemici; nessun bersaglio proprio; ventaglio, chain e level up sì, combo no
+    const cx = W - p.x, ca = Math.PI - aim0;
+    for (let k = 0; k < cnt; k++) playerBullet(p, cx + (k - (cnt - 1) / 2) * 7, pos.y, null, dmg0 * 0.5, ca, { clone: true });
+    if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * 0.3, ca - d, { clone: true, fan: true });
   }
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
 }
+// Ventaglio: scarti angolari dei proiettili secondari (4 di base; Ventaglio ampliato dell’albero: di più, sempre entro ±0,6 rad)
+function fanOffsets(p) {
+  const nf = 4 + (p.fanX || 0);
+  return nf === 4 ? [-0.6, -0.3, 0.3, 0.6] : Array.from({ length: nf }, (_, i) => -0.6 + 1.2 * i / (nf - 1));
+}
 // t = bersaglio da inseguire (oppure null: il colpo va dritto lungo ang); o = tipo di proiettile:
-// fan = secondario del ventaglio; clone = del Clone speculare (solo perforazione e rimbalzo, nessun effetto);
+// fan = secondario del ventaglio; clone = del Clone speculare (chain e level up del guardiano sì, combo no);
 // frag = frammento della combo Railgun (skip: nemici già colpiti dal proiettile da cui nasce); charged = Colpo caricato (Teslacoil: numero di rimbalzi ereditati); proc = combo da attivare al primo impatto
 function playerBullet(p, x, y, t, dmg, ang, o) {
   o = o || {};
   const fan = !!o.fan, clone = !!o.clone, frag = !!o.frag, charged = o.charged != null;
   let pierce = fan || frag ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0);
   let bounces = fan || frag ? 0 : (has(p, "ricochet") ? 1 : 0) + (charged ? o.charged : 0);
-  const prob = fan || clone || frag || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
+  const prob = fan || frag || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
   const rad = 30 * (1 + (has(p, "boom3") ? 0.3 : 0));
-  const kb = fan || clone || frag || !has(p, "punch") ? 0 : (frenzyOn(p) ? 4.5 : 1.5);   // il knockback cresce in frenesia (basso per colpo: i colpi sono molti)
+  const kb = fan || frag || !has(p, "punch") ? 0 : (frenzyOn(p) ? 4.5 : 1.5);   // il knockback cresce in frenesia (basso per colpo: i colpi sono molti)
   // combo per proiettile (non per il clone): danno extra da fuoco o force, frammentazione
   const fire = !clone && comboOn(p, "kSky"), force = !clone && comboOn(p, "kVortex");
   let canFrag = !clone && !fan && !frag && comboOn(p, "kRail"), proc = o.proc || null;
   const l = t ? (dist(t.x, t.y, x, y) || 1) : 1;
   spawnEnt({ x, y, vx: t ? (t.x - x) / l : Math.cos(ang), vy: t ? (t.y - y) / l : Math.sin(ang),
-    t: t || null, life: fan || frag ? 0.7 : 6, hit: new Set(o.skip || []), dead: false,
+    t: t || null, life: fan || frag ? 0.7 : 6, hit: new Set(o.skip || []), reb: false, out: false, dead: false,
     update(dt) {
       this.life -= dt; if (this.life <= 0) { this.dead = true; return; }
       if (this.t && !this.t.dead) { const d = dist(this.t.x, this.t.y, this.x, this.y) || 1; this.vx = (this.t.x - this.x) / d; this.vy = (this.t.y - this.y) / d; }
       this.x += this.vx * 600 * dt; this.y += this.vy * 600 * dt;
+      if (this.reb) {                            // dopo un rimbalzo il colpo non attraversa la cupola: se la rientra si ferma sul bordo
+        if (domeK(this.x, this.y, 0) > 1) this.out = true; else if (this.out) { this.dead = true; return; }
+      }
       for (const e of living()) {
         if (this.hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 3) continue;
         this.hit.add(e); damage(e, dmg, "physical", false, "player"); knock(e, kb);
@@ -1581,7 +1602,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
         if (pierce > 0) { pierce--; this.t = null; }
         else if (bounces > 0) {
           const nx = nearestTo(this.x, this.y, 180, this.hit);
-          if (nx) { bounces--; this.t = nx; this.life = Math.max(this.life, 1.5); } else this.dead = true;
+          if (nx) { bounces--; this.t = nx; this.reb = true; this.out = domeK(this.x, this.y, 0) > 1; this.life = Math.max(this.life, 1.5); } else this.dead = true;
         } else this.dead = true;
         break;
       }
@@ -1747,7 +1768,7 @@ function markSeen(e) {
   progress.seen.push(k); saveProgress(); alerts.push({ def: e.def, t: ALERT_T });
 }
 function startRun(m) {
-  alerts = [];
+  alerts = []; unlockNotes = [];
   pressing = false;
   mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
@@ -1942,7 +1963,9 @@ function update(dt) {
 
 function winLevel() {
   state = "won";
+  const before = progress.cleared;
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
+  unlockNotes = UNLOCKS.filter((u) => before < u.lv && progress.cleared >= u.lv);
   sealGain = sealReward(mode, campLevel, domeHp >= domeMax && !AB.backupUsed);   // con il Backup attivato il premio della cupola non si prende
   saveProgress();
   selLevel = clamp(campLevel + 1, 1, maxSelectable());
@@ -1997,14 +2020,15 @@ cv.addEventListener("pointerdown", (e) => {
   }
   if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
   if (state === "play") {
-    dragging = true; pressing = true; player.targetX = p.x;     // il guardiano segue il dito e, finché si preme, spara in verticale
+    dragging = true; pressing = true; player.targetX = p.x; setPress(p);   // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
 cv.addEventListener("pointermove", (e) => {
   if (!dragging || state !== "play") return;
-  player.targetX = toLogical(e).x;
+  const p = toLogical(e); player.targetX = p.x; setPress(p);
 });
+function setPress(p) { press.x = p.x; press.y = Math.min(p.y, GROUND_Y - 50); }
 const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
 const stopDrag = () => { dragging = false; pressing = false; };
 cv.addEventListener("pointerup", (e) => {
@@ -2033,6 +2057,8 @@ window.addEventListener("keydown", (e) => {
   else if (state === "upgrade" && (k === "1" || k === "2" || k === "3")) pick(+k - 1);
   else if (state === "menu" && (k === "enter" || k === " ")) startRun("standard");
   else if (state === "menu" && k === "e") { if (epicUnlocked()) startRun("epic"); }
+  else if (state === "won" && unlockNotes.length && (k === "enter" || k === " " || k === "escape")) closeUnlocks();   // prima si chiude l’avviso
+  else if (state === "won" && unlockNotes.length) return;
   else if (state === "won" && (k === "enter" || k === " ")) nextOrRetry();
   else if (state === "lost" && (k === "enter" || k === " ")) retry();
   else if ((state === "won" || state === "lost") && k === "m") toMenu();
@@ -2058,7 +2084,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.9.1";
+const APP_VERSION = "1.9.2";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {

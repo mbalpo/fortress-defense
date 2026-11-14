@@ -25,8 +25,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
 - Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). Dal livello 31, le torrette sbloccate con i Sigilli si possono equipaggiare prima dell’ondata 1 (§ 16). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
-- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale e spara **sempre in verticale**, così si indirizzano i colpi spostandolo; al rilascio torna la mira automatica. **[deciso]**
-- **Mira**: solo automatica; non c’è più la mira manuale né il mirino, e nel menu non c’è più la scelta. Tutti i proiettili del guardiano mentre si preme vanno dritti in alto, senza bersaglio. Le torrette sparano sempre da sole. **[deciso]**
+- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; nel punto premuto c’è un **mirino**: se un nemico è entro 45 px dal mirino i colpi lo inseguono (è il bersaglio, quindi valgono anche le combo legate al bersaglio, come la Mira amplificata), altrimenti vanno **dritti in alto**. Al rilascio torna la mira automatica. **[deciso]** (mirino che assegna un bersaglio, rev. 4) · 45 px e comportamento “insegue se vicino” **[deciso]** (scelto da Marco tra le proposte di Claude)
+- **Mira**: nel menu non c’è più la scelta; senza premere è automatica, premendo vale il mirino (punto sopra). Il mirino è tornato anche perché il cambio di modalità sia evidente. Le torrette sparano sempre da sole. **[deciso]**
 - **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”; il guardiano lo usa quando non si preme. **[deciso]**
 - **Frenesia** (chain del guardiano): la barra si carica nel tempo e parte da sola; va in pausa se non ci sono nemici a schermo e nessun dito premuto, cioè scorre anche mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]** (lettura della pressione **[Claude]**)
 - **Pausa**: pulsante in alto (o Esc/P), si attiva da sola se si cambia app. Due schede: “Nemici del livello” e “Torri e potenziamenti”.
@@ -65,6 +65,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
   **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. L’equipaggiamento **non è ancora costruito**; albero e abilità della barriera sì (fasi 1-3, § 16). **[deciso]**
+- **Avviso di sblocco**: al primo completamento in Standard dei livelli 10, 20, 30, 31, 40 e 50 compare, sopra la schermata di vittoria, un avviso con ciò che si è sbloccato;
+  si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’equipaggiamento è annunciato come “in arrivo”. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -143,7 +145,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ### Guardiano
 
-Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto spara in verticale, senza bersaglio.
+Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto insegue il nemico nel mirino (entro 45 px) o spara in verticale.
 - **Standard** (max 3 pile): +1 perforazione (I colpi trapassano un nemico in più); Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%).
 - **Chain · Frenesia** — lv1 Frenesia: Barra carica → fuoco e danno maggiori · lv2 Carica rapida: Carica in 25 s invece di 30 · lv2 Frenesia furiosa: Cadenza in frenesia ×2 (da ×1,8) · lv3 Frenesia prolungata: La frenesia dura 12 s invece di 8
 - **Chain · Colpi esplosivi** — lv1 Colpi esplosivi: 10% di esplosione ad area sul colpo · lv2 Più esplosioni: Probabilità di esplosione maggiore · lv3 Esplosioni potenziate: Più probabilità e più raggio
@@ -335,13 +337,15 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   Mira amplificata = +25% al secondo sullo stesso bersaglio, fino a +50% in 2 s, si azzera cambiando bersaglio (vale anche per il Ventaglio);
   Mini-drone di scorta = 3% per salva; mini-drone della torretta (durata, danno, Mini-droni incendiari e potenziati, Fiamme roventi) che parte dal guardiano;
   al massimo 3 insieme; non ferma la ricarica della torretta e non conta per Raffreddamento;
-  Clone speculare = stessa cadenza e stesso numero di proiettili del guardiano (non il Ventaglio), 50% del danno senza combo, perforazione e Rimbalzo sì,
-  esplosioni, knockback e combo no; in automatico sceglie il proprio bersaglio dalla posizione specchiata (mentre si preme spara in verticale); disegnato trasparente;
+  Clone speculare (revisione 4) = specchia ogni salva del guardiano: posizione e direzione riflesse rispetto al centro, senza un bersaglio proprio e senza seguire l’impostazione del bersaglio,
+  anche se da quel lato non ci sono nemici (premendo specchia allo stesso modo). Stessa cadenza e stessi proiettili, 50% del danno; replica Ventaglio, chain e level up del guardiano
+  (perforazione, Rimbalzo, esplosioni, Colpo pesante con il suo knockback, frenesia), **non le combo** **[deciso]**; disegnato trasparente;
   Proiettili frammentati = 10% per proiettile (non Ventaglio), una volta per proiettile: due frammenti al 50% del danno verso i nemici più vicini
   non ancora colpiti (entro 200 px, altrimenti a ±20°), senza perforazione né rimbalzo;
   Colpo caricato = un proiettile in più ogni 40 salve, danno ×2 (×3 in tutto con Colpo pesante, scelta di Marco); eredita i “+1 rimbalzo” della
   Teslacoil (senza il −15%) oltre al Rimbalzo del guardiano; disegnato più grande e giallo  **[da rivedere]**
-- Tiro verticale (revisione 3): mentre si preme il guardiano non sceglie bersagli, tutti i suoi proiettili partono in direzione verticale e proseguono fino al bordo dello schermo. Ventaglio e le altre combo valgono come prima. Il Clone speculare spara in verticale dalla posizione specchiata. **[deciso]** (clone) · dettagli **[Claude]**
+- Tiro premendo (revisione 4, prima “tiro verticale”): se il mirino aggancia un nemico entro 45 px i proiettili lo inseguono, altrimenti partono in verticale e proseguono fino al bordo dello schermo; il mirino diventa giallo quando aggancia. Ventaglio e combo come in automatico (il Ventaglio si apre attorno alla direzione della salva). Il Clone speculare specchia la salva. **[deciso]** · colore del mirino **[Claude]**
+- Rimbalzo del guardiano e del Clone (revisione 4): un proiettile che, dopo un rimbalzo, rientra nella cupola si ferma sul bordo (sparisce al passaggio). Vale anche per il Colpo caricato. **[deciso]**
 - Combo del guardiano, nomi delle carte (Marco ha dato solo gli effetti): Proiettili incendiari, Laser rotante, Colpi distruttivi, Posamine,
   Colpi ramificati, Mira amplificata, Mini-drone di scorta, Clone speculare, Proiettili frammentati, Colpo caricato, Proiettili gravitazionali  **[da rivedere]**
 - Combo del guardiano, letture di Claude: “torretta di lv2” = basta la torretta al livello 2, il guardiano può essere al livello 1;

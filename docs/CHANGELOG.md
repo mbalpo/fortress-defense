@@ -3,6 +3,36 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.9.2 — mirino premendo, clone che specchia le salve, rimbalzi fermati dalla cupola, avvisi di sblocco
+
+Richieste di Marco dopo la 1.9.1; scelte sue tra le proposte di Claude: mirino “insegue se vicino” (45 px), avviso anche al 30, ridisegno di guardiano e torrette rimandato.
+
+- **Mirino**: tornato `drawCrosshair` nel punto premuto (`press`, non più in basso di 50 px sopra il suolo). Premendo, il nemico più vicino al mirino entro 45 px (`PRESS_PICK`)
+  è il bersaglio della salva: i colpi lo inseguono e valgono le combo legate al bersaglio (Mira amplificata del Beam); senza, colpi dritti in alto come nella 1.9.0.
+  Il mirino diventa giallo quando aggancia (**[Claude]**). Testo di aiuto del menu aggiornato. Le combo di stato (Colpi distruttivi, Posamine, Colpi ramificati, Laser rotante)
+  già scattavano anche senza bersaglio, al primo impatto: ora funzionano allo stesso modo con il bersaglio agganciato.
+- **Clone speculare**: specchia ogni salva del guardiano (posizione e direzione riflesse), senza un bersaglio proprio e senza l’impostazione del bersaglio, anche se da quel lato
+  non ci sono nemici; premendo specchia allo stesso modo. Replica Ventaglio (nuova `fanOffsets`, condivisa con il guardiano), esplosioni dei Colpi esplosivi, knockback del Colpo pesante,
+  perforazione, Rimbalzo e frenesia; **niente combo**. Danno 50% come prima.
+- **Rimbalzi**: un proiettile del guardiano o del clone che dopo un rimbalzo rientra nella cupola si ferma (sparisce al passaggio del bordo); vale anche per il Colpo caricato.
+- **Avvisi di sblocco**: `UNLOCKS` (10, 20, 30, 31, 40, 50) e `unlockNotes`, calcolati in `winLevel` al primo completamento in Standard. `unlockScreen` (draw.js) si disegna sopra la
+  vittoria e ne disattiva i pulsanti; si chiude con “Ho capito”, Invio o Esc. Al 30 l’equipaggiamento è “in arrivo in un prossimo aggiornamento” (non è costruito). Testi **[Claude]**.
+- DESIGN.md: § 2 (guardiano e mira con il mirino), § 4 (avviso di sblocco), § 8 rigenerato (riga del guardiano), § 10 (Clone speculare rev. 4, tiro premendo rev. 4, rimbalzi del guardiano).
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.9.2.
+- Ridisegno di guardiano e torrette (§ 11): non toccato, resta da decidere.
+
+**Test** — `tiro.js`: mirino su un nemico → tutti i colpi del guardiano hanno quel bersaglio, quelli del clone nessuno e direzione specchiata salva per salva; clone in automatico con
+nemici solo a sinistra → stesse salve del guardiano, verso destra, e 4 colpi di Ventaglio per salva come il guardiano. `rev3.js`: rimbalzo del guardiano e del clone verso un punto dentro
+la cupola → si ferma al passaggio del bordo, il nemico finto dentro non viene colpito. Nuovo `sblocchi.js`: avviso giusto ai livelli 10, 20, 30, 31, 40, 50, nessun avviso per un livello
+già completato, per il 12 e in Epica; il pulsante sotto non risponde; Invio chiude e poi avvia il livello dopo; “Ho capito” chiude. `npm test`: 31 test, tutti verdi.
+
+Screenshot: nuovi 09b (mirino), 35 (avviso al 40), 36 (avviso al 10); controllati.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (scena “Tiro premendo, mirino”, nuova scena “Avviso di sblocco”, tessera `drawCrosshair` tornata; 50 scene, 74 tessere).
+
+Checklist: nuove voci “Mirino premendo (aggancio entro 45 px, colore giallo): provare”, “Clone che specchia le salve, con Ventaglio e chain: provare”,
+“Rimbalzi del guardiano fermati dalla cupola: provare”, “Avvisi di sblocco ai livelli 10-50: rivedere i testi”, “Ridisegno di guardiano e torrette: decidere i punti aperti del § 11”.
+
 ## 1.9.1 — sfere del Thunderbolt sul profilo nuovo, Firewheel che rimbalza sulla cupola
 
 Correzione di Marco dopo la 1.9.0 (testi di DESIGN.md § 10 e § 11 forniti da lui). Nessun numero della difficoltà cambiato.

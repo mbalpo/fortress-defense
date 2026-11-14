@@ -39,7 +39,8 @@ console.log("Schermate in " + OUT + ":");
   [1, 3, 5].forEach((n, i) => put(90 + i * 90, 330, { destrN: n, destrT: 99 }));
   g.frame(130); g.save("08-indicatori-stato.png"); }
 { const g = game({ progress: { cleared: 13, seen: ALL_SEEN } }); g.key("Enter"); g.frame(330);
-  const cv = g.w.document.getElementById("c"); const e = new g.w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = 110; e.clientY = 400; cv.dispatchEvent(e); g.frame(40); g.save("09-tiro-verticale.png"); }
+  const cv = g.w.document.getElementById("c"); const e = new g.w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = 110; e.clientY = 400; cv.dispatchEvent(e); g.frame(40); g.save("09-tiro-verticale.png");
+  const m = new g.w.Event("pointermove", { bubbles: true }); m.clientX = 200; m.clientY = 180; cv.dispatchEvent(m); g.frame(30); g.save("09b-mirino.png"); }
 { // combo del guardiano: carte, effetti in battaglia, elenco nella pausa
   const src = SRC.replace("requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, SLOT_X, GROUND_Y, PLAYER_DEF, guardProc, guardWheel, living, spawn, enemies: () => enemies,
@@ -125,5 +126,8 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("for (const [x, y] of [[60, 380], [300, 400], [180, 200]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
     ev("const w = makeShooter(TURRETS.wheel, SLOT_X[0], GROUND_Y - 14); w.level = 3; Object.assign(w.up, { mini1: 1, miniB: 1, trail1: 1, trail3: 1, dur: 3 }); slots[0] = w;");
     g.frame(230); g.save("34-firewheel-cupola.png"); }
+  { const g = game({ progress: { cleared: 39, seen: ALL_SEEN }, src }), ev = g.w.__ev;     // 1.9.2: avviso di sblocco sopra la vittoria
+    ev("selLevel = 40; startRun('standard')"); g.frame(60); ev("winLevel()"); g.frame(); g.save("35-avviso-sblocco.png");
+    ev("unlockNotes = UNLOCKS.slice(0, 1)"); g.frame(); g.save("36-avviso-sblocco-10.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
 }

@@ -129,8 +129,10 @@ function scenes(turretIds) {
     { progress: P1, setup: START(23) + " startWave(5);", each: REPEAT, frames: 8 }, ["draw"]);
   add(1, "avviso", "Avviso “Nuovo nemico”", "Al primo incontro: nome, tipo di danno, debolezze e resistenze.",
     { progress: { cleared: 0, seen: [] }, setup: START(1) + " for (let i = 0; i < 2000 && !alerts.length; i++) __cat.step(1); __cat.step(20);", check: "alerts.length > 0", each: GO_ON }, ["drawAlert", "enemyIcon"]);
-  add(1, "tiro-verticale", "Tiro verticale", "Tenendo premuto il guardiano segue il dito e spara dritto in alto, senza bersaglio.",
-    { progress: P1, setup: START(14) + " __cat.step(330); pressing = true; player.targetX = 110;", each: GO_ON + " pressing = true; player.targetX = 110;", frames: 40 }, ["drawPlayer"]);
+  add(1, "tiro-verticale", "Tiro premendo, mirino", "Tenendo premuto il guardiano segue il dito: mirino nel punto premuto (giallo se aggancia un nemico entro 45 px, che diventa il bersaglio), altrimenti colpi dritti in alto.",
+    { progress: P1, setup: START(14) + " __cat.step(330); pressing = true; player.targetX = 110; press.x = 110; press.y = 170;", each: GO_ON + " pressing = true; player.targetX = 110;", frames: 40 }, ["drawPlayer", "drawCrosshair"]);
+  add(1, "sblocco", "Avviso di sblocco", "A fine livello (primo completamento in Standard dei livelli 10, 20, 30, 31, 40, 50), sopra la vittoria; si chiude solo con “Ho capito”.",
+    { progress: { cleared: 39, seen: [] }, setup: START(40) + " __cat.step(60); winLevel();", frames: 1 }, ["unlockScreen"]);
   add(1, "cupola", "Cupola danneggiata", "Sotto il 35% bordo e barra diventano rossi.",
     { progress: P1, setup: START(20), each: "domeHp = 25; if (state === 'upgrade') pick(0);", frames: 240 }, ["drawDomeFill", "drawDomeEdge", "drawFortress"]);
   add(1, "pausa-nemici", "Pausa · Nemici del livello", "Nemici del livello con resistenze, debolezze e ondate.",
@@ -259,6 +261,7 @@ function tiles(M) {
   add("parte:thunderDraw", "thunderDraw (sfere del Thunderbolt)", "DRAW.thunderDraw({ st: { sph: [{ x: -14, y: 0 }, { x: 14, y: 0 }] } });", [-28, -14, 56, 28], 3);
   add("parte:teslaDraw", "teslaDraw (carica del Teslacoil)", "DRAW.teslaDraw({ x: 0, y: 20, st: { charge: 0.7 - (T % 0.7), chargeT: 0.7 } });", [-18, -18, 36, 36], 4, true);
   add("parte:ballLightning", "ballLightning (fulmine globulare)", "DRAW.ballLightning(0, 0, 10, T);", [-26, -26, 52, 52], 3, true);
+  add("parte:drawCrosshair", "drawCrosshair (mirino: libero e agganciato)", "DRAW.drawCrosshair(-22, 0, false); DRAW.drawCrosshair(22, 0, true);", [-44, -22, 88, 44], 3);
   add("parte:drawFloater", "drawFloater (numeri: normale, debolezza, resistenza)", "floaters.length = 0; const e = { x: 0, y: 10, def: { r: 0 } }; popup(e, 24, 1); popup(e, 36, 1.5); popup(e, 12, 0.5); floaters.forEach((f, i) => { const k = (T + i * 0.25) % 1; f.x = -34 + i * 34; f.y = 8 - k * 24; f.life = 0.7 - k * 0.7; DRAW.drawFloater(f); }); ctx.globalAlpha = 1; floaters.length = 0;", [-50, -24, 100, 40], 2.5, true);
   return T;
 }
