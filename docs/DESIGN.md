@@ -372,7 +372,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: tarata nella 1.7.0 con il solo albero dei Sigilli (pendenza 0,2 e boss finali, § 5). Quando arriva l’equipaggiamento
-  il giocatore avrà più potenza: la curva andrà rialzata. Oggi vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
+  il giocatore avrà più potenza: la curva andrà rialzata, ma solo in parte: con l’equipaggiamento atteso i muri devono stare intorno al 50% (§ 15, **[deciso]**). Oggi vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
   vita ×1,49, danno ×1,28, numero ×1,15. Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
@@ -381,7 +381,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
-- **Equipaggiamento** (§ 15): decisi statistica base, drop, inventario e rimozione dei Moduli. Aperti: valori provvisori (statistica base, quantità e rarità dei drop), schema della schermata (proposta di Claude in fase di costruzione).
+- **Equipaggiamento** (§ 15): decisi statistica base, drop, inventario e rimozione dei Moduli. Aperti: valori provvisori (tabella delle rarità, colori), schema della schermata (proposta di Claude in fase di costruzione).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
 - **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
@@ -417,9 +417,26 @@ salvataggio della partita in corso · audio e altre impostazioni · bilanciament
 - **Statistica base per pezzo** **[deciso]** (divisa per ruolo, come i pool dei Moduli): **arma, guanti e testa** → danno del guardiano %; **armatura e stivali** → vita della barriera %;
   **nucleo** → danno di tutte le torrette %. Si somma agli altri bonus dello stesso tipo. Valori per rarità **[Claude] [provvisorio]** (da misurare con i bot):
   arma +6 / +10 / +15 / +21 / +28%; guanti e testa +4 / +7 / +11 / +15 / +20%; armatura e stivali +6 / +10 / +15 / +21 / +28% della vita base; nucleo +4 / +7 / +11 / +15 / +20%
-  (comune → ancestrale).
-- **Drop** **[deciso]**: a **ogni vittoria dal livello 30** in poi (il 30 compreso), anche rigiocando un livello già completato, in Standard ed Epica. Quantità per vittoria
-  **[Claude] [provvisorio]**: 1 pezzo e da 1 a 2 Moduli; la rarità migliora con la difficoltà D (Epica quindi dà rarità più alte). Tabelle di rarità da tarare con i bot.
+  (comune → ancestrale). Valori accettati da Marco come punto di partenza. Con tutti i pezzi ancestrali: guardiano +68%, barriera +56%, torrette +20%, prima dei Moduli.
+- **Drop** **[deciso]**: a **ogni vittoria dal livello 30** in poi (il 30 compreso), anche rigiocando un livello già completato, in Standard ed Epica.
+  Quantità per vittoria **[deciso]**: **2 pezzi e da 2 a 3 Moduli** (il terzo al 50% **[Claude]**); in Epica un Modulo in più **[Claude]**.
+  Tipo del pezzo e del Modulo a caso, con la stessa probabilità per i 6 tipi **[Claude]**.
+- **Rarità dei drop** **[deciso]** (Marco: tabella “avara”, le rarità alte arrivano tardi e conta la fusione) · valori **[Claude] [provvisorio]**.
+  Stessa tabella per pezzi e Moduli; D è la difficoltà (in Epica D = livello + 30). Percentuali:
+
+| D | Comune | Raro | Epico | Leggendario | Ancestrale |
+|---|---|---|---|---|---|
+| 30-59 | 80 | 18 | 2 | – | – |
+| 60-99 | 55 | 30 | 13 | 2 | – |
+| 100-139 | 35 | 35 | 22 | 7 | 1 |
+| 140-179 | 20 | 35 | 30 | 12 | 3 |
+| 180 e oltre | 10 | 30 | 35 | 19 | 6 |
+
+- **Colori della rarità** **[deciso]**: ogni rarità ha il suo colore, pieno per pezzi e Moduli, tranne l’**ancestrale, iridescente** (sfumatura che cambia colore).
+  Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
+  leggendario rosso `#ff4d6a`, ancestrale iridescente.
+- **Obiettivo di bilanciamento** **[deciso]**: l’equipaggiamento deve essere **premiante** e aiutare a superare i muri: con l’equipaggiamento atteso
+  i muri dal 40 in poi passano dal **30% circa al 50% circa** di vittorie dei bot. La curva dal 31 (§ 5) quindi non va rialzata fino a riassorbire tutto l’equipaggiamento.
 - **Inventario** **[deciso]**: **nessun limite** a pezzi e Moduli (servono per le fusioni); un oggetto si può scartare a mano, senza compenso.
 - **Moduli installati** **[deciso]**: si tolgono **gratis e senza perdite**, tornano in inventario e si possono installare in un altro pezzo dello stesso tipo.
 - **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)

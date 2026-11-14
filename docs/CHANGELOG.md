@@ -13,14 +13,17 @@ Solo DESIGN.md, nessun cambiamento al gioco.
   Il *Colpo pesante* del guardiano è bloccato dall’albero dei Sigilli (§ 16). Nessuna modifica.
 - **§ 15 Equipaggiamento**, risposte di Marco: statistica base divisa per ruolo (arma, guanti, testa → danno del guardiano; armatura, stivali → vita della barriera;
   nucleo → danno delle torrette); drop a ogni vittoria dal 30, anche rigiocando; inventario senza limiti, scarto a mano; Moduli rimovibili gratis.
-  Valori provvisori di Claude: statistica base per rarità, 1 pezzo e 1-2 Moduli per vittoria.
+  Statistica base per rarità (proposta di Claude) accettata come punto di partenza.
+- **Valori dell’equipaggiamento**, risposte di Marco: 2 pezzi e 2-3 Moduli per vittoria (Epica +1 Modulo); tabella delle rarità “avara” per difficoltà
+  (valori di Claude, l’ancestrale compare dal D 100); valori X dei Moduli confermati come partenza, da tarare con i bot; obiettivo: con l’equipaggiamento atteso
+  i muri dal 40 passano dal 30% al 50% circa; un colore per rarità, pieno, ancestrale iridescente (colori di Claude: grigio, verde, blu, rosso).
 - § 4, § 11: aggiornati i rimandi.
 
 **Test**: `npm test` (solo documenti).
 
 Catalogo grafico: non cambiato.
 
-Checklist: nuova voce “Equipaggiamento: valori provvisori della statistica base e dei drop da confermare”; togliere eventuali voci su statistica base, drop, inventario e rimozione dei Moduli.
+Checklist: nuove voci “Equipaggiamento: tabella delle rarità e colori da confermare”, “Equipaggiamento: muri al 50% con l’equip atteso, da misurare”; togliere eventuali voci su statistica base, drop, inventario e rimozione dei Moduli.
 
 ## 1.9.3 — disegno del guardiano e sua etichetta
 
