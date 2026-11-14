@@ -10,7 +10,7 @@ function capTest(cleared, level, expectPicks, expectMaxChainLv) {
   const g = makeGame({ seed: 4, patch, cleared, level }); g.key("Enter"); g.frame(); const r = seeded(3);
   let screens = 0;
   for (let f = 0; f < 700000 && screens < 79; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 120);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 120);
     g.frame(); const T = g.texts, cards = parseCards(T);
     if (cards) { screens++; let i = cards.findIndex((c) => c.head.startsWith("Sky Guard")); if (i < 0) i = 0; g.key(String(i + 1)); }
     if (T.includes("Ricompensa mini-boss") && T.includes("Continua")) g.key("1");
@@ -32,7 +32,7 @@ function bossTest(level, label) {
   const g = makeGame({ seed: 6, patch, cleared: level - 1, level }); g.key("Enter"); g.frame(); const r = seeded(2);
   let bossWaves = new Set(), bonus = 0, prevBonus = false, wave = 1, rewardWave = [];
   for (let f = 0; f < 200000; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 300);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 300);
     g.frame(); const T = g.texts;
     for (const s of T) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) wave = +m[1]; }
     if (T.includes("MINI-BOSS")) bossWaves.add(wave);
@@ -52,7 +52,7 @@ function maxTest(level) {
   const g = makeGame({ seed: 8, patch, cleared: level - 1, level }); g.key("Enter"); g.frame(); const r = seeded(5);
   const cnt = {}; let screens = 0;
   for (let f = 0; f < 900000 && screens < 120; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 300);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 300);
     g.frame(); const T = g.texts, cards = parseCards(T);
     if (cards) {
       screens++;

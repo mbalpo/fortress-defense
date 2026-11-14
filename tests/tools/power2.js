@@ -10,7 +10,7 @@ function measure(id, extra) {
   const g = makeGame({ seed: 11, patch, cleared: 9, level: 10 }); g.key("Enter"); g.frame();
   const r = seeded(2); let wave = 1;
   for (let f = 0; f < 18000; f++) {            // 5 minuti
-    if (f % 90 === 0) g.click(30 + r() * 300, 400);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 400);
     g.frame();
     for (const s of g.texts) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) wave = Math.max(wave, +m[1]); }
     if (g.texts.includes("LIVELLO SUPERATO")) { wave = 21; break; }

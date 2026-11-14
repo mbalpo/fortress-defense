@@ -9,9 +9,10 @@ console.log("con sblocchi META:", res.join(" "), "| errori:", errs.length ? errs
 const g = makeGame({ seed: 2 }); g.key("Enter"); g.frame(); const r = seeded(4);
 let up = false, tapped = false, ok = false;
 for (let f = 0; f < 8000 && !ok; f++) {
-  if (f % 90 === 0 && !up) g.click(30 + r() * 300, 300);
+  if (f % 90 === 0 && !up) g.tap(30 + r() * 300, 300);
   g.frame(); const T = g.texts;
-  if (T.includes("Scegli un potenziamento") && !tapped) { up = true; g.click(100, 26); g.click(180, 140 + 122 + 50); tapped = true; }
+  if (T.includes("Scegli un potenziamento") && !tapped) {        // carte: si sceglie al rilascio, dopo 0,6 s dalla comparsa
+    up = true; g.click(100, 26); for (let i = 0; i < 40; i++) g.frame(); g.click(180, 140 + 122 + 50); g.up(180, 140 + 122 + 50); tapped = true; }
   if (tapped && T.includes("Ondata 2/20")) ok = true;
   T.length = 0;
 }

@@ -9,7 +9,7 @@ const patch = (h) => P(h,
   ["function guardFrag(p, b, dmg) {", "function guardFrag(p, b, dmg) { window.__frag = (window.__frag || 0) + 1;"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, PLAYER_DEF, GROUND_Y, SLOT_X, eligible, describe, applyUp, rollOptions,
-  guardProc, guardWheel, comboOn, META, TREE_LOCKS, player: () => player, slots: () => slots, setManual: (v) => { manual = v; }, aim,
+  guardProc, guardWheel, comboOn, META, TREE_LOCKS, player: () => player, slots: () => slots, setPressing: (v) => { pressing = v; },
   hold: () => { queue = []; enemies.length = 0; } };
 })();`]);
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -174,13 +174,14 @@ console.log("— Hive: Clone speculare —");
     ok(pA.length > 10 && pB.length > 10 && near(ratio, 0.5, 1e-3) && fireB === 0));
 }
 {
-  const { X, p, mk, tower, guard, run, log, place } = setup(); tower("hive", {}, 2); guard({ kHive: 1, pierce: 1 }); place(100); X.setManual(true);
-  const C = mk(300, 300), D = mk(60, 300);
-  X.aim.x = 60; X.aim.y = 300; X.aim.down = true; run(2);
-  const onC = byType(log(), "physical", "player").filter((x) => x.e === C), onD = byType(log(), "physical", "player").filter((x) => x.e === D);
-  console.log("manuale: mira a sinistra (60, 300) → colpi del clone sul punto specchiato (300, 300):", onC.length, "| del guardiano sul bersaglio:", onD.length,
-    "| danno clone/guardiano:", onC.length && onD.length ? (onC[0].base / onD[0].base).toFixed(2) : "-",
-    ok(onC.length > 5 && onD.length > 5 && near(onC[0].base / onD[0].base, 0.5, 1e-3)));
+  const { X, p, mk, tower, guard, run, log, place } = setup(); tower("hive", {}, 2); guard({ kHive: 1, pierce: 1 }); place(100); X.setPressing(true);
+  const C = mk(260, 300), D = mk(100, 300), E = mk(180, 200);       // E non è sulla verticale di nessuno dei due
+  run(2);
+  const hits = (q) => byType(log(), "physical", "player").filter((x) => x.e === q);
+  const onC = hits(C), onD = hits(D), onE = hits(E);
+  console.log("tiro verticale (si preme, guardiano a x 100): colpi del clone sulla verticale specchiata (260):", onC.length, "| del guardiano sulla sua (100):", onD.length,
+    "| sul nemico fuori dalle due verticali:", onE.length, "| danno clone/guardiano:", onC.length && onD.length ? (onC[0].base / onD[0].base).toFixed(2) : "-",
+    ok(onC.length > 5 && onD.length > 5 && onE.length === 0 && near(onC[0].base / onD[0].base, 0.5, 1e-3)));
 }
 
 console.log("— Railgun: proiettili frammentati —");

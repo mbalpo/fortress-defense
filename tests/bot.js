@@ -30,9 +30,10 @@ function makeGame({ seed = 1, patch = (h) => h, cleared = 50, level = 10, settin
     frame() { t += 16.7; const cb = rafCb; rafCb = null; cb(t); },
     key(k) { w.dispatchEvent(new w.KeyboardEvent("keydown", { key: k })); },
     press(k) { w.dispatchEvent(new w.KeyboardEvent("keydown", { key: k })); w.dispatchEvent(new w.KeyboardEvent("keyup", { key: k })); },
-    up() { const e = new w.Event("pointerup", { bubbles: true }); w.document.getElementById("c").dispatchEvent(e); },
+    up(x, y) { const e = new w.Event("pointerup", { bubbles: true }); if (x != null) { e.clientX = x; e.clientY = y; } w.document.getElementById("c").dispatchEvent(e); },
     move(x, y) { const e = new w.Event("pointermove", { bubbles: true }); e.clientX = x; e.clientY = y; w.document.getElementById("c").dispatchEvent(e); },
     click(x, y) { const e = new w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; w.document.getElementById("c").dispatchEvent(e); },
+    tap(x, y) { g.click(x, y); g.up(x, y); },      // tocco breve (sposta il guardiano senza tenere premuto)
   };
   g.frame(); g.frame();
   const start = Math.min(cleared + 1, +/maxLevel: (\d+)/.exec(SRC)[1]);
@@ -48,7 +49,7 @@ function play(opts, policy, startKey = "Enter", maxFrames = 200000) {
   g.key(startKey); g.frame();
   let waveSeen = 1, result = null, picks = [];
   for (let f = 0; f < maxFrames && !result; f++) {
-    if (f % 90 === 0) g.click(30 + rng() * 300, 300);
+    if (f % 90 === 0) g.tap(30 + rng() * 300, 300);
     g.frame();
     const T = g.texts;
     for (const s of T) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) waveSeen = Math.max(waveSeen, +m[1]); }

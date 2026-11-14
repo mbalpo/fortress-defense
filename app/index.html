@@ -112,7 +112,7 @@ const RESIST = {
 const ATTACK_EVERY = 1.2;
 const ENEMY_DEFS = {
   drone:   { type: "electric", hp: 30,  speed: 50, r: 11, dmg: 2,   look: "saucer"   },   // navicella
-  wisp:    { type: "energy",   hp: 22,  speed: 72, r: 9,  dmg: 1.5, look: "shard"    },   // cristallo-cometa
+  wisp:    { type: "energy",   hp: 22,  speed: 60, r: 9,  dmg: 1.5, look: "shard"    },   // cristallo-cometa
   brute:   { type: "force",    hp: 140, speed: 28, r: 16, dmg: 6,   look: "asteroid" },   // asteroide
   spitter: { type: "fire",     hp: 60,  speed: 42, r: 13, dmg: 3,   look: "meteor"   },   // meteora infuocata
   shell:   { type: "physical", hp: 60,  speed: 34, r: 14, dmg: 4,   look: "rock"     },   // frammento roccioso
@@ -537,23 +537,25 @@ const TREE_IDS = new Set(Object.keys(TREE_NODE));
 const FORT_H = 26, GROUND_H = 30;
 const GROUND_Y = H - FORT_H - GROUND_H;
 const SLOT_X = [1, 2, 3, 4].map((i) => W * i / 5);       // 4 punti equidistanti
-const DOME = { cx: W / 2, cy: GROUND_Y, rx: 172, ry: 95 };
+// cupola: raggio orizzontale 215 px, più larga dello schermo (esce di 35 px per lato); vale per contatto, laser, mine e domeNear
+const DOME = { cx: W / 2, cy: GROUND_Y, rx: 215, ry: 95 };
+const ORB_RX = 172;                            // le sfere del Thunderbolt girano sul profilo di prima, così non escono dallo schermo
 const PLAYER_SPEED = 520, PLAYER_MIN = 26, PLAYER_MAX = W - 26;
 
 const SETTINGS_KEY = "fortress-proto-v1";
 const TARGET_LABEL = { closest: "Più vicino", highest: "Vita più alta" };
-const AIM_LABEL = { auto: "automatica", manual: "manuale" };
-const settings = { targeting: "closest", aim: "auto" };
+const settings = { targeting: "closest" };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
 try {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
   if (s && (s.targeting === "closest" || s.targeting === "highest")) settings.targeting = s.targeting;
-  if (s && (s.aim === "auto" || s.aim === "manual")) settings.aim = s.aim;
 } catch (e) { /* storage non disponibile: si gioca lo stesso */ }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
-function toggleAim() { settings.aim = settings.aim === "auto" ? "manual" : "auto"; saveSettings(); }
-// mira manuale: il guardiano sta fermo e spara solo mentre si preme; aim = punto premuto
-let manual = false;
-const aim = { x: W / 2, y: 200, down: false };
+// tiro verticale: mentre il dito è premuto sul campo il guardiano lo segue e spara dritto in alto, senza bersaglio
+let pressing = false;
+// scelta delle carte: si sceglie al rilascio sulla stessa carta; i tocchi sono ignorati per CARD_LOCK s dalla comparsa della schermata
+const CARD_LOCK = 0.6;
+let cardsAt = -1e9, cardPress = null;
+function cardsShown() { cardsAt = clock; cardPress = null; }
 
 let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree
 let mode = "standard";
@@ -748,14 +750,25 @@ function bolt(pts, color, life, w) {
     update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
     draw() { FX.bolt(this, pts, color, life, w); } });
 }
-function zone(x, y, r, life, apply, color) {
-  return spawnEnt({ x, y, r, t: life, dead: false,
-    update(dt) { this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
+// look = disegno proprio in FX (es. "teslaOrb"); altrimenti cerchio colorato
+function zone(x, y, r, life, apply, color, look) {
+  return spawnEnt({ x, y, r, t: life, age: 0, dead: false,
+    update(dt) { this.t -= dt; this.age += dt; if (this.t <= 0) { this.dead = true; return; }
       for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= this.r + e.def.r) apply(e, dt); },
-    draw() { FX.zone(this, color); } });
+    draw() { if (look) FX[look](this); else FX.zone(this, color); } });
 }
 
 // ---- raggi: tracciamento con rimbalzi sui bordi dello schermo ----
+// un tratto che parte fuori dalla cupola e la rientra si ferma sul suo bordo e il raggio non rimbalza più
+// (il primo tratto parte da dentro ed esce normalmente: una retta non rientra in un’ellisse da cui è uscita)
+function domeEntry(x, y, dx, dy) {               // distanza lungo la direzione a cui si entra nella cupola, o Infinity
+  const ux = (x - DOME.cx) / DOME.rx, uy = (y - DOME.cy) / DOME.ry, vx = dx / DOME.rx, vy = dy / DOME.ry;
+  const a = vx * vx + vy * vy, b = 2 * (ux * vx + uy * vy), c = ux * ux + uy * uy - 1;
+  if (c <= 0) return Infinity;                   // parte da dentro (o dal bordo): esce normalmente
+  const d = b * b - 4 * a * c; if (d < 0) return Infinity;
+  const t = (-b - Math.sqrt(d)) / (2 * a);
+  return t > 0 ? t : Infinity;
+}
 function trace(x, y, a, bounces) {
   const segs = []; let dx = Math.cos(a), dy = Math.sin(a), len = 0;
   for (let i = 0; i <= bounces && len < 1800; i++) {
@@ -763,6 +776,8 @@ function trace(x, y, a, bounces) {
     const ty = dy > 1e-6 ? (GROUND_Y - y) / dy : dy < -1e-6 ? -y / dy : Infinity;
     const t = Math.min(tx, ty);
     if (!isFinite(t) || t < 0.5) break;
+    const td = domeEntry(x, y, dx, dy);
+    if (td <= t) { segs.push({ x1: x, y1: y, x2: x + dx * td, y2: y + dy * td, dome: true }); break; }   // rientra nella cupola: si ferma
     const nx = x + dx * t, ny = y + dy * t;
     segs.push({ x1: x, y1: y, x2: nx, y2: ny }); len += t;
     if (tx <= ty) dx = -dx; else dy = -dy;
@@ -1029,7 +1044,7 @@ function thunderTick(s, dt) {
     o.th += o.dir * 0.55 * dt;
     if (o.th > 2 * Math.PI - 0.15) { o.th = 2 * Math.PI - 0.15; o.dir = -1; }
     if (o.th < Math.PI + 0.15) { o.th = Math.PI + 0.15; o.dir = 1; }
-    o.x = DOME.cx + DOME.rx * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
+    o.x = DOME.cx + ORB_RX * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
     if (has(s, "aura")) {
       o.aura -= dt;
       if (o.aura <= 0) { o.aura = 0.6; for (const e of living()) if (dist(e.x, e.y, o.x, o.y) <= 60 + e.def.r) damage(e, 6 * dmgM(s), "electric", false, "thunder"); }
@@ -1392,7 +1407,7 @@ function teslaBoom(s, x, y, bounces, hitSet) {
     for (const e of near) { hitSet.add(e); damage(e, dmg * 0.4, "electric", false, "tesla"); bolt(zigzag(x, y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5); }
   }
   if (has(s, "orb"))
-    zone(x, y, rad, has(s, "orbDur") ? 3.5 : 2, (e, dt) => { damage(e, 12 * dmgM(s) * (has(s, "orbD") ? 1.6 : 1) * dt, "electric", true, "tesla"); if (has(s, "orbSlow")) slow(e, 0.4); }, TYPES.electric.color);
+    zone(x, y, rad, has(s, "orbDur") ? 3.5 : 2, (e, dt) => { damage(e, 12 * dmgM(s) * (has(s, "orbD") ? 1.6 : 1) * dt, "electric", true, "tesla"); if (has(s, "orbSlow")) slow(e, 0.4); }, TYPES.electric.color, "teslaOrb");
   if (bounces > 0) {
     const nx = nearestTo(x, y, 170, hitSet);
     if (nx) teslaBall(s, x, y, nx, bounces - 1, hitSet);
@@ -1472,8 +1487,8 @@ const frenzyDur = (p) => FRENZY.dur[has(p, "fdur") ? 1 : 0];
 const PLAYER = { dmg: 7, interval: 0.15, range: 9999 };
 function frenzyOn(p) { return (p.st.frenzyT || 0) > 0; }
 function playerTick(p, dt) {
-  // la frenesia scorre solo mentre si combatte: in manuale se si sta premendo, in automatico se ci sono nemici a schermo; altrimenti va in pausa
-  const engaged = manual ? aim.down : living().length > 0;
+  // la frenesia scorre solo mentre si combatte: se ci sono nemici a schermo o se si sta premendo; altrimenti va in pausa
+  const engaged = pressing || living().length > 0;
   if (has(p, "frenzy1")) {
     if (frenzyOn(p)) { if (engaged) { p.st.frenzyT -= dt; if (p.st.frenzyT <= 0) { p.st.frenzyT = 0; p.st.charge = 0; } } }
     else {
@@ -1485,11 +1500,7 @@ function playerTick(p, dt) {
   p.cd -= dt; if (p.cd > 0) return;
   const cnt = 1 + N(p, "proj"), pos = { x: p.x, y: GROUND_Y - 30 };
   let t = null, ang = -Math.PI / 2;
-  if (manual) {
-    if (!aim.down) { p.cd = 0; return; }                    // spara solo mentre si preme
-    t = nearestTo(aim.x, aim.y, 45);                         // premendo su un nemico i colpi lo inseguono
-    ang = Math.atan2(aim.y - pos.y, aim.x - pos.x);          // altrimenti vanno dritti verso il punto premuto
-  } else {
+  if (!pressing) {                           // mentre si preme: nessun bersaglio, i colpi vanno dritti in alto (ang = −90°)
     t = pickTargets(pos, PLAYER.range, 1)[0];
     if (!t) { p.cd = 0; return; }
   }
@@ -1511,8 +1522,8 @@ function playerTick(p, dt) {
   if (comboOn(p, "kWheel") && Math.random() < 0.03) guardWheel(p);
   if (comboOn(p, "kTesla") && (p.st.shots = (p.st.shots || 0) + 1) % 40 === 0)     // Colpo caricato: ×2 (×3 in tutto con Colpo pesante)
     playerBullet(p, pos.x, pos.y, t, raw * (has(p, "punch") ? 3 : 2) * beamAmp(p, t, true), ang, { charged: N(partner("tesla"), "bounce") });
-  if (comboOn(p, "kHive")) {                 // Clone speculare: posizione (o direzione, in manuale) specchiata rispetto al centro
-    const cpos = { x: W - p.x, y: pos.y }, ct = manual ? null : pickTargets(cpos, PLAYER.range, 1)[0];
+  if (comboOn(p, "kHive")) {                 // Clone speculare: posizione specchiata rispetto al centro; mentre si preme spara in verticale
+    const cpos = { x: W - p.x, y: pos.y }, ct = pressing ? null : pickTargets(cpos, PLAYER.range, 1)[0];
     for (let k = 0; k < cnt; k++) playerBullet(p, cpos.x + (k - (cnt - 1) / 2) * 7, cpos.y, ct, dmg0 * 0.5, Math.PI - ang, { clone: true });
   }
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
@@ -1700,7 +1711,7 @@ function pick(i) {
   const opt = options[i]; if (!opt) return;
   applyOption(opt);
   options = [];
-  if (bonusLeft > 0) { giveBossRewards(); if (rewards.length) { bonusMode = true; return; } rewards = null; }
+  if (bonusLeft > 0) { giveBossRewards(); if (rewards.length) { bonusMode = true; cardsShown(); return; } rewards = null; }
   bonusMode = false;
   startWave(wave + 1);
 }
@@ -1719,7 +1730,7 @@ function markSeen(e) {
 }
 function startRun(m) {
   alerts = [];
-  manual = settings.aim === "manual"; aim.down = false;
+  pressing = false;
   mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp")) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
@@ -1809,9 +1820,11 @@ function fireAbility(a) {
   else if (a.id === "burn") { AB.burnT = v.dur; AB.burnDps = fireBurnDps(); }
   else if (a.id === "mines") {                                                      // mine lungo il bordo: quelle dell’Aeroblast in campo, o una base
     const src = slots.find((s) => s && s.id === "aero") || makeShooter(TURRETS.aero, W / 2, GROUND_Y - 14);
+    // con la cupola larga il bordo esce dallo schermo: le mine nascono solo sulla parte visibile (x da 10 a 350), proposta aperta (DESIGN.md § 11)
+    const R = DOME.rx + 10, a0 = Math.PI + Math.acos(Math.min(1, (DOME.cx - 10) / R)), a1 = 3 * Math.PI - a0;
     for (let i = 0; i < v.count; i++) {
-      const ang = Math.PI * (1.08 + 0.84 * i / Math.max(1, v.count - 1));
-      mine(src, DOME.cx + (DOME.rx + 10) * Math.cos(ang), DOME.cy + (DOME.ry + 10) * Math.sin(ang));
+      const ang = a0 + (a1 - a0) * i / Math.max(1, v.count - 1);
+      mine(src, DOME.cx + R * Math.cos(ang), DOME.cy + (DOME.ry + 10) * Math.sin(ang));
     }
   } else if (a.id === "power") { AB.powerT = v.dur; powerBonus = v.pct / 100; }
 }
@@ -1863,8 +1876,7 @@ function update(dt) {
   waveTime += dt;
   while (queue.length && queue[0].t <= waveTime) spawn(queue.shift());
 
-  if (manual) player.targetX = player.x;                 // in manuale il guardiano non si sposta
-  else if (keys.left || keys.right) player.targetX = clamp(player.x + (keys.right - keys.left) * 60, PLAYER_MIN, PLAYER_MAX);
+  if (keys.left || keys.right) player.targetX = clamp(player.x + (keys.right - keys.left) * 60, PLAYER_MIN, PLAYER_MAX);
   player.targetX = clamp(player.targetX, PLAYER_MIN, PLAYER_MAX);
   const dx = player.targetX - player.x, step = PLAYER_SPEED * dt;
   player.x += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
@@ -1923,7 +1935,7 @@ function endWave() {
   if (skipLeft > 0) { skipLeft--; skipNote = true; startWave(wave + 1); return; }   // scelta già usata da una torretta equipaggiata
   bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null;
   options = rollOptions();
-  if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else state = "upgrade";
+  if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else { state = "upgrade"; cardsShown(); }
 }
 function retry() { selLevel = campLevel; startRun(mode); }
 function nextOrRetry() {
@@ -1942,7 +1954,7 @@ function tapNode(n) {                            // primo tocco: seleziona; seco
 }
 // pausa: il gioco si ferma (update gira solo in "play") e si apre il riepilogo
 let pauseTab = "enemies", pauseQuit = false;
-function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; aim.down = false; pauseQuit = false; }
+function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; pressing = false; pauseQuit = false; }
 function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit = false; }
 
 /* DISEGNO: in draw.js (vedi in cima: const DRAW). */
@@ -1961,22 +1973,31 @@ function toLogical(e) {
 cv.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   const p = toLogical(e);
-  for (const b of buttons) if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) { b.onTap(); return; }
+  for (const b of buttons) if (inBtn(p, b)) {
+    if (b.release) { if (clock - cardsAt >= CARD_LOCK) cardPress = b; return; }   // carte: si sceglie al rilascio (e non subito dopo la comparsa)
+    b.onTap(); return;
+  }
   if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
   if (state === "play") {
-    dragging = true;
-    if (manual) { aim.x = p.x; aim.y = Math.min(p.y, GROUND_Y - 50); aim.down = true; } else player.targetX = p.x;
+    dragging = true; pressing = true; player.targetX = p.x;     // il guardiano segue il dito e, finché si preme, spara in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
 cv.addEventListener("pointermove", (e) => {
   if (!dragging || state !== "play") return;
-  const p = toLogical(e);
-  if (manual) { aim.x = p.x; aim.y = Math.min(p.y, GROUND_Y - 50); } else player.targetX = p.x;
+  player.targetX = toLogical(e).x;
 });
-const stopDrag = () => { dragging = false; aim.down = false; };
-cv.addEventListener("pointerup", stopDrag);
-cv.addEventListener("pointercancel", stopDrag);
+const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
+const stopDrag = () => { dragging = false; pressing = false; };
+cv.addEventListener("pointerup", (e) => {
+  stopDrag();
+  const c = cardPress; cardPress = null;
+  if (!c || state !== "upgrade") return;
+  const p = toLogical(e);                        // vale solo se il dito finisce sulla stessa carta su cui era partito
+  const b = buttons.find((o) => o.release && o.x === c.x && o.y === c.y && o.w === c.w && o.h === c.h);
+  if (b && inBtn(p, b)) b.onTap();
+});
+cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; });
 window.addEventListener("keydown", (e) => {
   if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
   const k = e.key.toLowerCase();
@@ -1994,7 +2015,6 @@ window.addEventListener("keydown", (e) => {
   else if (state === "upgrade" && (k === "1" || k === "2" || k === "3")) pick(+k - 1);
   else if (state === "menu" && (k === "enter" || k === " ")) startRun("standard");
   else if (state === "menu" && k === "e") { if (epicUnlocked()) startRun("epic"); }
-  else if (state === "menu" && k === "m") toggleAim();
   else if (state === "won" && (k === "enter" || k === " ")) nextOrRetry();
   else if (state === "lost" && (k === "enter" || k === " ")) retry();
   else if ((state === "won" || state === "lost") && k === "m") toMenu();
@@ -2020,13 +2040,13 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.8.0";
+const APP_VERSION = "1.9.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
     progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities } },
-    settings: { targeting: settings.targeting, aim: settings.aim } };
+    settings: { targeting: settings.targeting } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
 function parseSave(text) {                      // controlla tutto prima di toccare i progressi
@@ -2048,20 +2068,19 @@ function parseSave(text) {                      // controlla tutto prima di tocc
     seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 50) : [],
     ...cleanSeals(p),                            // versione 1: niente Sigilli, si parte da zero
     targeting: s.targeting === "highest" ? "highest" : "closest",
-    aim: s.aim === "manual" ? "manual" : "auto",
     exportedAt: typeof d.exportedAt === "string" && !isNaN(Date.parse(d.exportedAt)) ? d.exportedAt : null,
   };
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.seen = d.seen;
   progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities;
-  settings.targeting = d.targeting; settings.aim = d.aim;
+  settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
   saveProgress(); saveSettings(); selLevel = maxSelectable();
 }
 let pendingSave = null;
 const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + " e " + Object.keys(p.tree).length + " nodi dell’albero";
 function refreshSavePanel(msg, isErr) {
-  $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · " + sealsLabel(progress) + " · mira " + AIM_LABEL[settings.aim];
+  $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · " + sealsLabel(progress);
   $id("confirmBox").hidden = !pendingSave;
   if (pendingSave) {
     const when = pendingSave.exportedAt ? " del " + new Date(pendingSave.exportedAt).toLocaleDateString("it-IT") : "";
@@ -2144,8 +2163,29 @@ requestAnimationFrame(frame);
     if (ready || reloading) return;
     ready = true; splash.classList.add("ready"); msg.textContent = "Start";
   }
-  function enter() { if (!ready || splash.hidden) return; splash.hidden = true; }
+  function enter() { if (!ready || splash.hidden) return; splash.hidden = true; keepAwake(true); }
   splash.addEventListener("click", enter);
+
+  // SCHERMO SEMPRE ACCESO (Screen Wake Lock): richiesto dopo il tocco su “Start” (serve un gesto), rilasciato quando la pagina
+  // va in secondo piano e richiesto di nuovo al ritorno. Se il browser non lo supporta, o rifiuta, il gioco va avanti uguale.
+  const wake = { want: false, lock: null, asking: false };
+  async function keepAwake(start) {
+    if (start) wake.want = true;
+    if (!wake.want || wake.lock || wake.asking || document.hidden) return;
+    try {
+      if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+      wake.asking = true;
+      const l = await navigator.wakeLock.request("screen");
+      if (document.hidden) { l.release().catch(() => {}); return; }      // nel frattempo è andata in secondo piano
+      wake.lock = l;
+      l.addEventListener && l.addEventListener("release", () => { if (wake.lock === l) wake.lock = null; });
+    } catch (e) { /* non supportato o rifiutato: nessun errore */ }
+    finally { wake.asking = false; }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { const l = wake.lock; wake.lock = null; if (l) try { l.release().catch(() => {}); } catch (e) {} }
+    else keepAwake();
+  });
   window.addEventListener("keydown", (e) => { if (!splash.hidden && (e.key === "Enter" || e.key === " ")) enter(); });
 
   let reloaded = false;

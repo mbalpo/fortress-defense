@@ -1,0 +1,77 @@
+// Revisione 3 (DESIGN.md § 10): cupola larga 215 px, laser che non rientra nella cupola, cristalli più lenti,
+// sfere del Thunderbolt sul profilo di prima, mine della Barriera minata solo sulla parte visibile del bordo.
+const { makeGame } = require("./bot.js");
+const P = (h, ...pairs) => pairs.reduce((a, [x, y]) => { if (!a.includes(x)) throw new Error("manca: " + x.slice(0, 60)); return a.replace(x, y); }, h);
+const patch = (h) => P(h,
+  ["domeHp: 100,", "domeHp: 1000000,"], ["options = rollOptions();", "options = [];"],
+  ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],
+  ["  busy(s, 1);\n  spawnEnt({ t: dur, dead: false,", "  window.__rays = rays; busy(s, 1);\n  spawnEnt({ t: dur, dead: false,"],
+  ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
+window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, ORB_RX, W, trace, laserFire, slots: () => slots,
+  thunderTick: BEHAV.thunder.tick, fireAbility, ABILITIES, abVal, hold: () => { queue = []; enemies.length = 0; } };
+})();`]);
+const ok = (c) => c ? "✓" : "✗ ERRORE";
+function setup() {
+  const g = makeGame({ seed: 3, patch }); g.key("Enter"); g.frame(); const X = g.win.__x; X.hold();
+  const mk = (kind, x, y) => { X.spawn({ enemy: kind, x }); const e = X.enemies().slice(-1)[0]; e.x = x; e.y = y; e.hp = e.maxHp = 1e9; return e; };
+  mk("drone", 180, -500).speed = 0;               // fuori schermo: tiene aperta l’ondata
+  const run = (n) => { for (let i = 0; i < n; i++) { g.frame(); g.texts.length = 0; } };
+  return { g, X, mk, run };
+}
+const inDome = (X, x, y) => ((x - X.DOME.cx) / X.DOME.rx) ** 2 + ((y - X.DOME.cy) / X.DOME.ry) ** 2;
+
+console.log("— cupola larga —");
+{
+  const { g, X, mk, run } = setup();
+  console.log("profilo: rx", X.DOME.rx, "ry", X.DOME.ry, "| sfere del Thunderbolt su rx", X.ORB_RX, ok(X.DOME.rx === 215 && X.DOME.ry === 95 && X.ORB_RX === 172));
+  const e = mk("wisp", 9, 400); e.speed = 60; let y0 = -1;
+  for (let i = 0; i < 600 && e.y !== y0; i++) { y0 = e.y; e.x = 9; run(1); }
+  console.log("nemico a x 9 (r 9) che scende → si ferma a y", e.y.toFixed(1), "(suolo a", X.GROUND_Y + ") | tocca la cupola prima del suolo:", e.y + 9 < X.GROUND_Y,
+    ok(Math.abs(e.y - 517) < 2.5 && e.y + 9 < X.GROUND_Y));
+  const f = mk("shell", 180, 300); f.speed = 50; y0 = -1;
+  for (let i = 0; i < 600 && f.y !== y0; i++) { y0 = f.y; f.x = 180; run(1); }
+  console.log("al centro (r 14) si ferma a y", f.y.toFixed(1), "(prima come ora: 584 − 95 − 14 = 475)", ok(Math.abs(f.y - 475) < 2.5));
+  console.log("errori JS:", g.errors[0] || "nessuno");
+}
+console.log("— cristalli —");
+{
+  const { X } = setup();
+  console.log("velocità base dei cristalli (wisp):", X.ENEMY_DEFS.wisp.speed, "| vita", X.ENEMY_DEFS.wisp.hp, "| danno", X.ENEMY_DEFS.wisp.dmg, ok(X.ENEMY_DEFS.wisp.speed === 60 && X.ENEMY_DEFS.wisp.hp === 22 && X.ENEMY_DEFS.wisp.dmg === 1.5));
+}
+console.log("— laser e cupola —");
+{
+  const { g, X, mk } = setup(); mk("drone", 180, 250).speed = 0;
+  const s = X.makeShooter(X.TURRETS.laser, 180, X.GROUND_Y - 14); s.up.bounce = 3; X.laserFire(s);
+  const R = g.win.__rays[0].segs, last = R[R.length - 1];
+  console.log("laser al centro verso l’alto con 3 rimbalzi → tratti:", R.length, "| il secondo finisce sul bordo della cupola a y", last.y2.toFixed(1),
+    "(atteso", X.GROUND_Y - 95 + ")", ok(R.length === 2 && Math.abs(inDome(X, last.x2, last.y2) - 1) < 1e-6 && Math.abs(last.y2 - (X.GROUND_Y - 95)) < 0.5));
+  const first = R[0];
+  console.log("il primo tratto parte da dentro la cupola ed esce fino al bordo dello schermo: da y", first.y1.toFixed(0), "a", first.y2.toFixed(0), ok(inDome(X, first.x1, first.y1) < 1 && first.y2 === 0));
+  // raggio obliquo: rimbalza sul lato destro (sopra la cupola) e poi rientra
+  const T = X.trace(180, X.GROUND_Y - 22, -Math.PI / 2 + 0.5, 5);
+  const ends = T.map((q) => inDome(X, q.x2, q.y2).toFixed(3));
+  console.log("raggio obliquo con 5 rimbalzi → tratti:", T.length, "| fine dell’ultimo sul bordo:", ends[ends.length - 1], "| nessun tratto dentro la cupola dopo il primo:",
+    T.slice(1).every((q) => inDome(X, q.x1, q.y1) >= 1 - 1e-9 && inDome(X, (q.x1 + q.x2) / 2, (q.y1 + q.y2) / 2) > 1), ok(T.length < 6 && Math.abs(inDome(X, T[T.length - 1].x2, T[T.length - 1].y2) - 1) < 1e-6));
+  const s3 = X.makeShooter(X.TURRETS.laser, 180, X.GROUND_Y - 14); Object.assign(s3.up, { bounce: 2, multi1: 1, multi3: 1 }); X.laserFire(s3);
+  const M = g.win.__rays.slice(1).map((r) => r.segs), mEnd = M.map((q) => q[q.length - 1]);
+  console.log("mini-raggi lv3 → tratti:", M.map((q) => q.length).join(", "), "| finiscono sul bordo:", mEnd.every((q) => Math.abs(inDome(X, q.x2, q.y2) - 1) < 1e-6),
+    ok(M.every((q) => q.length > 1) && mEnd.every((q) => Math.abs(inDome(X, q.x2, q.y2) - 1) < 1e-6)));
+  const sw = X.trace(180, X.GROUND_Y - 22, -Math.PI, 0);
+  console.log("spazzata (nessun rimbalzo) orizzontale da dentro: un tratto fino al bordo dello schermo:", sw.length === 1 && sw[0].x2 === 0, ok(sw.length === 1 && sw[0].x2 === 0));
+  console.log("errori JS:", g.errors[0] || "nessuno");
+}
+console.log("— sfere del Thunderbolt e Barriera minata —");
+{
+  const { g, X, run } = setup();
+  const s = X.makeShooter(X.TURRETS.thunder, 180, X.GROUND_Y - 14); s.up.sph = 3; X.slots()[0] = s; run(30);
+  const sp = s.st.sph || [], xs = sp.map((o) => o.x);
+  const onOld = sp.every((o) => Math.abs(((o.x - X.DOME.cx) / X.ORB_RX) ** 2 + ((o.y - X.DOME.cy) / X.DOME.ry) ** 2 - 1) < 1e-6);
+  console.log("sfere:", sp.length, "| sul profilo 172:", onOld, "| x da", Math.min(...xs).toFixed(0), "a", Math.max(...xs).toFixed(0), ok(sp.length === 4 && onOld && Math.min(...xs) >= 0 && Math.max(...xs) <= 360));
+  const before = X.ents().length;
+  X.fireAbility({ id: "mines", v: X.abVal("mines", 5) });
+  const mines = X.ents().slice(before).filter((m) => m.x !== undefined);
+  const mx = mines.map((m) => m.x);
+  console.log("Barriera minata al 5: mine", mines.length, "| x da", Math.min(...mx).toFixed(0), "a", Math.max(...mx).toFixed(0), "| y da", Math.min(...mines.map((m) => m.y)).toFixed(0), "a", Math.max(...mines.map((m) => m.y)).toFixed(0),
+    ok(mines.length >= 4 && Math.min(...mx) >= 0 && Math.max(...mx) <= 360));
+  console.log("errori JS:", g.errors[0] || "nessuno");
+}

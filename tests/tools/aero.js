@@ -9,7 +9,7 @@ function run(label, extra, startTurrets, level) {
   const g = makeGame({ seed: 7, patch, cleared: level - 1, level }); g.key("Enter"); g.frame(); const r = seeded(4), X = g.win.__x;
   let frames = 0, inRange = 0, wave = 1;
   for (let f = 0; f < 60000; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 120);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 120);
     g.frame(); const T = g.texts;
     for (const s of T) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) wave = +m[1]; }
     if (X.state() === "play") { frames++; const a = X.slots().find((t) => t && t.id === "aero"); if (a && X.enemies().some((e) => !e.dead && e.y >= 0 && X.dist(e.x, e.y, a.x, a.y) <= X.rangeOf(a) + e.def.r)) inRange++; }

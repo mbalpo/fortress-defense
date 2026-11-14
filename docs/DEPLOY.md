@@ -35,7 +35,7 @@ SALVATAGGIO
   Importa da file o incollando il codice: prima di sostituire i progressi
   chiede conferma e mostra cosa contiene il salvataggio.
   Il salvataggio contiene livelli completati, nemici scoperti e impostazioni
-  (bersaglio, mira). Non contiene la partita in corso.
+  (bersaglio). Non contiene la partita in corso.
 
   I progressi stanno nel browser del dispositivo: disinstallare l'app o cancellare
   i dati del sito li elimina. Esporta prima di farlo.

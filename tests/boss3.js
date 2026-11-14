@@ -7,7 +7,7 @@ function run(label, cleared, level, key) {
   const g = makeGame({ seed: 6, patch, cleared, level }); g.key(key); g.frame(); const r = seeded(2);
   const mini = new Set(), fin = new Set(), banner = new Set(); let wave = 1, rew = 0, prevR = false, bigBar = false, end = "", maxHpSeen = 0;
   for (let f = 0; f < 260000; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 120);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 120);
     g.frame(); const T = g.texts;
     for (const s of T) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) wave = +m[1]; }
     if (T.includes("MINI-BOSS")) mini.add(wave); if (T.includes("BOSS FINALE")) fin.add(wave);

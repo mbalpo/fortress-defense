@@ -38,8 +38,8 @@ console.log("Schermate in " + OUT + ":");
   [{ slowT: 99 }, { paraT: 99 }, { weakT: 99 }, { vulnT: 99 }, { burnT: 99, burnDps: 0 }].forEach((st, i) => put(44 + i * 68, 200, st));
   [1, 3, 5].forEach((n, i) => put(90 + i * 90, 330, { destrN: n, destrT: 99 }));
   g.frame(130); g.save("08-indicatori-stato.png"); }
-{ const g = game({ progress: { cleared: 13, seen: ALL_SEEN }, settings: { targeting: "closest", aim: "manual" } }); g.key("Enter"); g.frame(330);
-  const cv = g.w.document.getElementById("c"); const e = new g.w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = 110; e.clientY = 170; cv.dispatchEvent(e); g.frame(40); g.save("09-mira-manuale.png"); }
+{ const g = game({ progress: { cleared: 13, seen: ALL_SEEN } }); g.key("Enter"); g.frame(330);
+  const cv = g.w.document.getElementById("c"); const e = new g.w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = 110; e.clientY = 400; cv.dispatchEvent(e); g.frame(40); g.save("09-tiro-verticale.png"); }
 { // combo del guardiano: carte, effetti in battaglia, elenco nella pausa
   const src = SRC.replace("requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, SLOT_X, GROUND_Y, PLAYER_DEF, guardProc, guardWheel, living, spawn, enemies: () => enemies,
@@ -97,5 +97,21 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("for (const [x, y] of [[60, 470], [110, 440], [250, 450], [300, 480], [180, 400], [140, 330]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); }");
     ev("fireAbility({ id: 'freeze', v: abVal('freeze', 3) }); fireAbility({ id: 'mines', v: abVal('mines', 3) }); fireAbility({ id: 'reflect', v: abVal('reflect', 1) }); domeShield = 3;");
     g.frame(40); ev("fireAbility({ id: 'repulse', v: abVal('repulse', 3) })"); g.frame(12); g.save("28-abilita-battaglia.png"); }
+  { // revisione 3: cupola larga, laser fermato dal bordo, sfera statica del Teslacoil, mine dell’Aeroblast e della Barriera minata
+    const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[180, 120], [40, 300], [330, 260]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev("const s = makeShooter(TURRETS.laser, SLOT_X[1], GROUND_Y - 14); s.level = 3; Object.assign(s.up, { bounce: 3, multi1: 1, multi3: 1 }); slots[1] = s;");
+    g.frame(40); g.save("29-laser-cupola.png"); }
+  { const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[120, 300], [150, 320], [250, 260]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev("const t = makeShooter(TURRETS.tesla, SLOT_X[0], GROUND_Y - 14); t.level = 3; Object.assign(t.up, { orb: 1, orbDur: 1, big: 1 }); slots[0] = t; teslaBoom(t, 135, 310, 0, new Set());");
+    g.frame(30); g.save("30-sfera-statica.png"); }
+  { const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[90, 330], [180, 300], [280, 340]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e7, maxHp: 1e7 }); }");
+    ev("const a = makeShooter(TURRETS.aero, SLOT_X[2], GROUND_Y - 14); a.level = 3; Object.assign(a.up, { mine1: 1, mine2: 1 }); slots[2] = a;");
+    g.frame(150); ev("fireAbility({ id: 'mines', v: abVal('mines', 5) })"); g.frame(10); g.save("31-mine-cupola.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
 }

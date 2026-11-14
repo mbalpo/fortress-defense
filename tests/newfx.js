@@ -23,7 +23,7 @@ function scenario(name, playerUps, disrUps, frames = 5400, seed = 4) {
   };
   const g = makeGame({ seed, patch }); g.key("Enter"); g.frame();
   const r = seeded(6);
-  for (let f = 0; f < frames; f++) { if (f % 120 === 0) g.click(30 + r() * 300, 300); g.frame(); g.texts.length = 0; }
+  for (let f = 0; f < frames; f++) { if (f % 120 === 0) g.tap(30 + r() * 300, 300); g.frame(); g.texts.length = 0; }
   const w = g.win, o = { fan: w.__fan, pierce: w.__pierce, bounce: w.__bounce, boom: w.__boom, kb: w.__kb, tp: w.__tp, top: w.__top, dis: w.__dis, stack: w.__stack };
   const shown = Object.entries(o).filter(([, v]) => v).map(([k, v]) => k + "=" + v).join(" ");
   console.log(name.padEnd(34), shown || "(nessun effetto)", g.errors.length ? "ERRORI " + g.errors[0] : "");

@@ -5,7 +5,7 @@ function run(towerHead, turretId, seed) {
   const r = seeded(3), seq = [], offers = [];
   let done = false;
   for (let f = 0; f < 400000 && !done; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 300);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 300);
     g.frame(); const T = g.texts;
     if (T.includes("LIVELLO SUPERATO")) done = true;
     const ui = T.lastIndexOf("Scegli un potenziamento");

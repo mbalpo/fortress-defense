@@ -120,7 +120,7 @@ function scenes(turretIds) {
   const S = [];
   const add = (sec, id, title, desc, cfg, fns) => S.push({ sec, id, title, desc, cfg, fns: fns || [] });
   // § 1 schermate del canvas
-  add(1, "menu", "Menu", "Livello, mira, Standard/Epica, sblocchi, salvataggio, versione.", { progress: P1 }, ["menuScreen", "button", "txt"]);
+  add(1, "menu", "Menu", "Livello, Standard/Epica, sblocchi, salvataggio, versione.", { progress: P1 }, ["menuScreen", "button", "txt"]);
   add(1, "battaglia", "Battaglia", "Livello 20, quattro torrette potenziate, ondate vere.",
     { progress: P1, setup: START(20) + TOWERS([["sky", 2, { split1: 1, fire: 1 }], ["laser", 2, { multi1: 1 }], ["hive", 2, { wave1: 1 }], ["rail", 2, { split1: 1 }]]) +
       " Object.assign(player.up, { dmg: 1, frenzy1: 1, fan: 1 });", each: GO_ON, frames: 330 }, ["draw", "drawHud", "drawTurret", "drawEnemy", "FX"]);
@@ -129,8 +129,8 @@ function scenes(turretIds) {
     { progress: P1, setup: START(23) + " startWave(5);", each: REPEAT, frames: 8 }, ["draw"]);
   add(1, "avviso", "Avviso “Nuovo nemico”", "Al primo incontro: nome, tipo di danno, debolezze e resistenze.",
     { progress: { cleared: 0, seen: [] }, setup: START(1) + " for (let i = 0; i < 2000 && !alerts.length; i++) __cat.step(1); __cat.step(20);", check: "alerts.length > 0", each: GO_ON }, ["drawAlert", "enemyIcon"]);
-  add(1, "mira", "Mira manuale", "Il guardiano sta fermo e spara dove si tiene premuto: mirino.",
-    { progress: P1, settings: { targeting: "closest", aim: "manual" }, setup: START(14) + " __cat.step(330); aim.x = 110; aim.y = 170; aim.down = true;", each: GO_ON + " aim.down = true;", frames: 40 }, ["drawCrosshair"]);
+  add(1, "tiro-verticale", "Tiro verticale", "Tenendo premuto il guardiano segue il dito e spara dritto in alto, senza bersaglio.",
+    { progress: P1, setup: START(14) + " __cat.step(330); pressing = true; player.targetX = 110;", each: GO_ON + " pressing = true; player.targetX = 110;", frames: 40 }, ["drawPlayer"]);
   add(1, "cupola", "Cupola danneggiata", "Sotto il 35% bordo e barra diventano rossi.",
     { progress: P1, setup: START(20), each: "domeHp = 25; if (state === 'upgrade') pick(0);", frames: 240 }, ["drawDomeFill", "drawDomeEdge", "drawFortress"]);
   add(1, "pausa-nemici", "Pausa · Nemici del livello", "Nemici del livello con resistenze, debolezze e ondate.",
@@ -230,6 +230,7 @@ function tiles(M) {
     ring: ["const life = 0.35, o = { t: life - (T % 0.6) }; if (o.t > 0) FX.ring(o, 0, 0, 30, TYPES.physical.color, life);", [-36, -36, 72, 72], 2],
     bolt: ["const pts = [{ x: -30, y: -30 }, { x: -12, y: -14 }, { x: -20, y: 2 }, { x: 4, y: 8 }, { x: -2, y: 22 }, { x: 26, y: 30 }], o = { t: 0.15 - (T % 0.4) }; if (o.t > 0) FX.bolt(o, pts, TYPES.electric.color, 0.15, 1.5);", [-36, -36, 72, 72], 2],
     zone: ["const o = { x: 0, y: 0, r: 30, t: 2 - (T % 2.4) }; if (o.t > 0) FX.zone(o, TYPES.electric.color);", [-36, -36, 72, 72], 2],
+    teslaOrb: ["const o = { x: 0, y: 0, r: 30, t: 2 - (T % 2.4), age: T }; if (o.t > 0) FX.teslaOrb(o);", [-36, -36, 72, 72], 2],
     missile: ["const a = -Math.PI / 2 + 0.6 * Math.sin(T * 2); FX.missile({ x: -12, y: 0, a }, false); FX.missile({ x: 14, y: 0, a }, true);", [-30, -20, 60, 40], 3],
     laserRays: ["FX.laserRays([{ segs: [{ x1: -40, y1: 30, x2: 40, y2: -30 }], w: 8 }, { segs: [{ x1: -40, y1: 38, x2: 40, y2: -8 }], w: 4.8 }]);", [-44, -36, 88, 80], 2],
     laserSweep: ["const a = -Math.PI + (T % 3) / 3 * Math.PI; FX.laserSweep({ segs: [{ x1: 0, y1: 30, x2: Math.cos(a) * 60, y2: 30 + Math.sin(a) * 60 }] }, 8);", [-64, -34, 128, 72], 1.5],
@@ -259,7 +260,6 @@ function tiles(M) {
   add("parte:teslaDraw", "teslaDraw (carica del Teslacoil)", "DRAW.teslaDraw({ x: 0, y: 20, st: { charge: 0.7 - (T % 0.7), chargeT: 0.7 } });", [-18, -18, 36, 36], 4, true);
   add("parte:ballLightning", "ballLightning (fulmine globulare)", "DRAW.ballLightning(0, 0, 10, T);", [-26, -26, 52, 52], 3, true);
   add("parte:drawFloater", "drawFloater (numeri: normale, debolezza, resistenza)", "floaters.length = 0; const e = { x: 0, y: 10, def: { r: 0 } }; popup(e, 24, 1); popup(e, 36, 1.5); popup(e, 12, 0.5); floaters.forEach((f, i) => { const k = (T + i * 0.25) % 1; f.x = -34 + i * 34; f.y = 8 - k * 24; f.life = 0.7 - k * 0.7; DRAW.drawFloater(f); }); ctx.globalAlpha = 1; floaters.length = 0;", [-50, -24, 100, 40], 2.5, true);
-  add("parte:drawCrosshair", "drawCrosshair (mira manuale)", "DRAW.drawCrosshair(0, 0);", [-22, -22, 44, 44], 3);
   return T;
 }
 

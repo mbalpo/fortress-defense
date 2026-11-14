@@ -3,6 +3,63 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.9.0 — cupola larga, cristalli più lenti, tiro verticale, carte al rilascio, schermo acceso
+
+Richieste di Marco (testi di DESIGN.md forniti da lui); valori segnati **[Claude]** in DESIGN.md: 60 px/s, 215 px, 0,6 s, modalità del Wake Lock, lettura della frenesia.
+
+- **Cristalli** (`wisp`): velocità base da 72 a 60 px/s. Vita, danno e numero invariati.
+- **Cupola larga**: `DOME.rx` da 172 a 215 px (altezza 95 invariata). Vale per il contatto dei nemici (`touchesDome`), `domeNear` (Repulsiva), il bordo del laser,
+  le mine della Barriera minata, il gas della Congelante e i disegni (bordo, riempimento, `FX.domeWave`, `FX.domeGas`, `FX.domeAura`), che leggono tutti `DOME`.
+  Le sfere del Thunderbolt girano su un valore separato, `ORB_RX` = 172, e restano nello schermo (x da 57 a 337 con 4 sfere). `FX.shieldCount` sta sulla barra della vita
+  e l’anello della barriera di Backup ha raggio `DOME.ry`: non cambiano.
+- **Barriera minata**: con il bordo largo le mine sarebbero nate da x −45 a 405. Ora nascono solo sulla parte visibile del bordo, da x 10 a 350 (y da circa 480 a 515):
+  segnalato in DESIGN.md § 11 come proposta aperta. Le mine dell’Aeroblast nascono dove esplodono i colpi, non sul bordo: invariate. Controllate con lo screenshot 31.
+- **Laser**: `trace` ferma un tratto che parte fuori dalla cupola e la rientra sul suo bordo (`domeEntry`, intersezione con l’ellisse), e da lì il raggio non rimbalza più.
+  Il primo tratto parte da dentro ed esce normalmente; vale per raggio principale e mini-raggi (lv3). Spazzata e Laser rotante non rimbalzano: invariati.
+- **Carte**: i pulsanti delle carte e “Continua” della ricompensa hanno `release` (in `button()`): si sceglie al `pointerup` solo se il dito era partito dalla stessa carta
+  e ci finisce sopra; i tocchi entro `CARD_LOCK` = 0,6 s dalla comparsa (`cardsShown()`, chiamata all’apertura delle carte e della ricompensa) sono ignorati. Tasti 1/2/3 immediati;
+  menu, albero, pausa, vittoria e sconfitta invariati (alla pressione).
+- **Schermo sempre acceso**: Screen Wake Lock nel secondo `<script>` (`keepAwake`), richiesto al tocco su “Start”, rilasciato con `visibilitychange` in secondo piano e richiesto
+  di nuovo al ritorno; senza `navigator.wakeLock` o con una richiesta rifiutata non succede nulla.
+- **Mira solo automatica**: tolti mira manuale (`manual`, `aim`, `toggleAim`, `AIM_LABEL`), `drawCrosshair`, il pulsante nel menu (al suo posto due righe di aiuto), il tasto M,
+  le righe “mira manuale” di HUD e pausa e “mira …” del pannello del salvataggio. Nuovo stato `pressing`: premendo sul campo (non sui pulsanti) il guardiano segue il dito
+  e spara a −90° senza bersaglio (anche senza nemici a schermo); al rilascio torna l’automatica. Il Clone speculare spara in verticale dalla posizione specchiata;
+  Ventaglio e combo come prima (il Ventaglio si apre attorno alla verticale; la Mira amplificata non cresce mentre si preme, perché non c’è un bersaglio).
+  Frenesia: scorre con nemici a schermo **o** dito premuto.
+- **Salvataggio**: `settings` esporta solo `targeting`; `parseSave` accetta file con `aim` e lo ignora. `SAVE_VERSION` invariato (2).
+- **Teslacoil**: la Sfera statica ha un disegno proprio, `FX.teslaOrb` (alone trasparente tremolante grande quanto l’area, contorno, 6 archi, nucleo piccolo semitrasparente);
+  `zone()` accetta un disegno proprio. Danno e area invariati.
+- **Generatore di DESIGN.md**: `tests/tools/design-lists.js` trovava solo i nemici con un solo spazio dopo `type: "…",`; corretta l’espressione: ora il § 9 elenca
+  `drone`, `wisp`, `brute`, `spitter`, `shell`. Riga del guardiano nel § 8 senza la mira manuale. § 8 e § 9 rigenerati.
+- DESIGN.md: testi di Marco in § 2, 4, 5, 7, 10, 11. DEPLOY.md: “impostazioni (bersaglio)”.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.9.0.
+
+**Test** — nuovi: `tests/tiro.js` (sostituisce `manual.js`: colpi del guardiano e del clone a −90° senza bersaglio premendo, il guardiano segue il dito, ritorno all’automatico
+al rilascio, colpi anche senza nemici, pulsanti Bersaglio e pausa esclusi, frenesia che scorre premendo senza nemici e si ferma al rilascio, frenesia in automatico),
+`tests/rev3.js` (profilo 215/95 e sfere su 172, nemico a x 9 con r 9 fermo a y 517,2 prima del suolo, al centro a 475, `wisp` 60, laser al centro che si ferma sul bordo dopo il primo
+rimbalzo, raggio obliquo, mini-raggi lv3, spazzata, sfere del Thunderbolt nello schermo, mine della Barriera minata tra x 10 e 350), `tests/carte.js` (tocchi ignorati subito e a 0,3 s,
+solo premere non sceglie, rilascio fuori o su un’altra carta annulla, rilascio sulla stessa carta sceglie, tasto 3 immediato, “Continua” con le stesse regole, menu/albero/pausa alla pressione).
+Aggiornati: `splash.js` (Wake Lock con un finto `navigator.wakeLock`: niente prima di “Start”, richiesto dopo, rilasciato in secondo piano, richiesto di nuovo, nessuna richiesta doppia,
+nessun errore se manca o è rifiutato), `menu.js` (niente “Mira” né tasto M; impostazioni salvate senza `aim`), `savetest.js` (esportazione senza `aim`, file con `aim: "manual"`
+accettato e ignorato), `combo.js` (clone in tiro verticale al posto della mira manuale), `rev1.js` (laser al centro con 2 rimbalzi: il raggio principale ha 2 tratti invece di 3,
+perché il secondo si ferma sulla cupola; i mini-raggi lv3 restano a 3 tratti, quindi il controllo dei loro rimbalzi resta), `final.js` (tocco sulla carta dopo 0,6 s con rilascio).
+`bot.js`: nuovo `tap()` (pressione e rilascio); i bot e i test che spostavano il guardiano con un tocco ora rilasciano il dito, così giocano in automatico come prima
+(stessi numeri casuali: la scelta delle mosse non cambia). `npm test`: 30 test, tutti verdi.
+
+Screenshot: 09 ora “tiro verticale”; nuovi 29 (laser fermato dalla cupola), 30 (Sfera statica), 31 (mine della Barriera minata e dell’Aeroblast). Controllati: menu senza “Mira”,
+carte, battaglia con la cupola larga, pausa, abilità.
+
+**Misure con i bot** (stessi bot e stessi semi, 1.8.0 → 1.9.0 sulla stessa macchina; 1.8.0 da una copia di `HEAD`): livelli 10 / 20 / 30 (800 partite) 32,0% → 32,6% ·
+28,9% → 29,9% · 31,8% → 29,0%; 8 / 15 / 25 (400 partite) 56,0% → 59,8% · 78,8% → 75,2% · 55,8% → 54,8%; muri dal 40 al 200 con `curva.js` (200 partite per muro) media
+30,9% → 32,1% (riferimento nel CHANGELOG 1.8.0: 31,1%), da 15,5% al 140 a 49,0% al 120, scarto più grande al 70 (33,5% → 41,0%). Tutto dentro o vicino al rumore:
+nessun numero della difficoltà cambiato. Numeri in DESIGN.md § 5.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (scena “Mira manuale” sostituita da “Tiro verticale”; tessera `drawCrosshair` tolta, nuova tessera `FX.teslaOrb`; 49 scene, 73 tessere).
+
+Checklist: nuove voci “Cristalli più lenti e cupola larga: provare in gioco e rimisurare i muri”, “Carte: azione al rilascio e blocco di 0,6 s, da provare sul telefono”,
+“Schermo sempre acceso: da provare sul telefono (le PWA installate su iOS hanno avuto problemi in alcune versioni)”, “Tiro verticale (clone, frenesia, esclusi pausa e bersaglio): da provare”,
+“Barriera minata con la cupola larga: verificare dove compaiono le mine”, “Sfera statica del Teslacoil: nuovo disegno”; togliere le voci sulla mira manuale, se ci sono.
+
 ## 1.8.0 — abilità della barriera (fase 3 dell’albero)
 
 Testo e risposte di Marco **[deciso]** nel § 16 di DESIGN.md (Rigenerazione rivista, Ustionante con il valore maggiore, mine dell’Aeroblast, Congelante, Potenziante che si somma,

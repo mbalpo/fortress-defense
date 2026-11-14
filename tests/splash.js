@@ -16,6 +16,19 @@ function page(sc) {
       w.addEventListener("error", (e) => errors.push(e.message));
       w.__reload = () => { log.reloads++; };
       if (sc.reloaded) w.sessionStorage.setItem("fortress-update-reload", "1");
+      if (sc.wake) {                                 // finto Screen Wake Lock: conta richieste e rilasci
+        log.wake = { req: 0, rel: 0, active: 0 };
+        const wl = { request: (type) => {
+          log.wake.req++;
+          if (sc.wake === "deny") return Promise.reject(Object.assign(new Error("negato"), { name: "NotAllowedError" }));
+          const l = new w.EventTarget(); l.type = type; l.released = false; log.wake.active++;
+          l.release = () => { if (!l.released) { l.released = true; log.wake.rel++; log.wake.active--; l.dispatchEvent(new w.Event("release")); } return Promise.resolve(); };
+          return Promise.resolve(l); } };
+        Object.defineProperty(w.navigator, "wakeLock", { value: wl, configurable: true });
+      }
+      let hidden = false;
+      Object.defineProperty(w.document, "hidden", { get: () => hidden, configurable: true });
+      w.__setHidden = (v) => { hidden = v; w.document.dispatchEvent(new w.Event("visibilitychange")); };
       Object.defineProperty(w.navigator, "onLine", { get: () => sc.online !== false, configurable: true });
       if (sc.sw === false) return;
       const mk = (state) => { const x = new w.EventTarget(); x.state = state; x.posted = [];
@@ -35,20 +48,36 @@ function page(sc) {
   return { w, d, log, texts, errors, frame,
     msg: () => d.getElementById("splashMsg").textContent, open: () => !sp.hidden,
     key: (k) => w.dispatchEvent(new w.KeyboardEvent("keydown", { key: k })),
-    tapSplash: () => sp.click(),
+    tapSplash: () => sp.click(), setHidden: (v) => w.__setHidden(v),
     tapCanvas: (x, y) => { const e = new w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; d.getElementById("c").dispatchEvent(e); },
     inMenu: () => { texts.length = 0; frame(); return texts.includes("FORTRESS DEFENSE"); },
   };
 }
 
 (async () => {
+  { // schermo sempre acceso (Screen Wake Lock)
+    const g = page({ sw: false, wake: true }); g.frame(); await wait(10);
+    const before = g.log.wake.req;
+    g.tapSplash(); await wait(10);
+    console.log("Wake Lock: prima di “Start” richieste", before, "| dopo il tocco:", g.log.wake.req, "attivo:", g.log.wake.active, ok(before === 0 && g.log.wake.req === 1 && g.log.wake.active === 1));
+    g.setHidden(true); await wait(10);
+    console.log("Wake Lock: in secondo piano → rilasciato:", g.log.wake.rel === 1 && g.log.wake.active === 0, ok(g.log.wake.rel === 1 && g.log.wake.active === 0));
+    g.setHidden(false); await wait(10); g.frame();
+    console.log("Wake Lock: di nuovo in primo piano → richiesto di nuovo:", g.log.wake.req === 2 && g.log.wake.active === 1, "| nel menu:", g.inMenu(), ok(g.log.wake.req === 2 && g.log.wake.active === 1));
+    g.setHidden(false); await wait(10);
+    console.log("Wake Lock: già attivo, nessuna richiesta doppia:", g.log.wake.req === 2, ok(g.log.wake.req === 2));
+    const h = page({ sw: false }); h.tapSplash(); h.setHidden(true); h.setHidden(false); await wait(10); h.frame();
+    const k = page({ sw: false, wake: "deny" }); k.tapSplash(); await wait(10); k.setHidden(true); k.setHidden(false); await wait(10); k.frame();
+    const errs = [...g.errors, ...h.errors, ...k.errors];
+    console.log("Wake Lock assente o rifiutato → gioco aperto:", !h.open() && !k.open() && h.inMenu() && k.inMenu(), "| errori JS:", errs.length ? errs[0] : "nessuno", ok(!h.open() && !k.open() && !errs.length));
+  }
   { // browser senza service worker (o pagina aperta da file): “Start” subito; i tasti non avviano il gioco finché non si entra
     const g = page({ sw: false });
     console.log("senza service worker → scritta:", g.msg(), ok(g.msg() === "Start"));
     g.key("Enter"); g.frame();
     console.log("Invio sul primo tocco → schermata chiusa:", !g.open(), "| ancora nel menu:", g.inMenu(), ok(!g.open() && g.inMenu()));
-    const h = page({ sw: false }); h.key("ArrowLeft"); h.key("e"); h.key("m"); h.frame();
-    console.log("altri tasti con la schermata aperta → ignorati:", h.inMenu() && h.open() && !h.texts.some((s) => s.startsWith("Mira: manuale")), ok(h.inMenu() && h.open() && !h.texts.some((s) => s.startsWith("Mira: manuale"))));
+    const h = page({ sw: false }); h.key("ArrowLeft"); h.key("e"); h.frame();
+    console.log("altri tasti con la schermata aperta → ignorati:", h.inMenu() && h.open(), ok(h.inMenu() && h.open()));
     h.tapSplash(); console.log("tocco sulla schermata → chiusa:", !h.open(), ok(!h.open()));
     console.log("errori JS:", [...g.errors, ...h.errors].length ? [...g.errors, ...h.errors][0] : "nessuno");
   }

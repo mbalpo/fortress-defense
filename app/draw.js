@@ -34,7 +34,7 @@ function txt(s, x, y, size, color, align, weight) {
 }
 function button(x, y, w, h, label, onTap, opts) {
   opts = opts || {};
-  buttons.push({ x, y, w, h, onTap });
+  buttons.push({ x, y, w, h, onTap, release: !!opts.release });   // release: si attiva al rilascio sullo stesso pulsante (carte)
   rr(x, y, w, h, 8); ctx.fillStyle = opts.fill || "rgba(18,30,58,0.92)"; ctx.fill();
   ctx.lineWidth = 1.5; ctx.strokeStyle = opts.stroke || "#2c4272"; ctx.stroke();
   if (label) txt(label, x + w / 2, y + h / 2 + 1, opts.size || 13, opts.color || "#e8eefc", "center");
@@ -220,7 +220,7 @@ function drawHud() {
     ctx.fillStyle = "#e8eefc"; ctx.fillRect(222, 18, 4, 16); ctx.fillRect(232, 18, 4, 16);
   }
   txt("Ondata " + wave + "/" + N_WAVES, W - 10, 26, 14, "#e8eefc", "right", "700");
-  txt("Nemici: " + (queue.length + enemies.length) + (manual ? " · mira manuale" : ""), 10, 62, 12, "#9fb4d9", "left", "500");
+  txt("Nemici: " + (queue.length + enemies.length) + "", 10, 62, 12, "#9fb4d9", "left", "500");
   txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
   const fb = enemies.find((e) => e.final && !e.dead);
   if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
@@ -347,7 +347,7 @@ function upText(s) {
 function pauseBuild() {
   let y = 106;
   txt("Ondata " + wave + "/" + N_WAVES + " · Cupola " + Math.ceil(domeHp) + "/" + domeMax + " · torri fino al lv " + towerCap(), 16, y, 11, "#9fb4d9", "left", "600"); y += 14;
-  txt("Bersaglio: " + TARGET_LABEL[settings.targeting] + " · Mira: " + (manual ? "manuale" : "automatica"), 16, y, 11, "#9fb4d9", "left", "600"); y += 20;
+  txt("Bersaglio: " + TARGET_LABEL[settings.targeting], 16, y, 11, "#9fb4d9", "left", "600"); y += 20;
   const list = [player, ...slots.filter(Boolean)];
   let size = 11, rows;
   for (size of [11, 10, 9]) {                    // se non ci sta, rimpicciolisce il testo
@@ -392,9 +392,8 @@ function menuScreen() {
   button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
   txt("Livello " + selLevel, W / 2, 150, 24, "#e8eefc", "center", "800");
   txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
-  const man = settings.aim === "manual";
-  button(60, 196, 240, 34, "Mira: " + AIM_LABEL[settings.aim], toggleAim, { size: 13, stroke: man ? "#ffd166" : "#2c4272" });
-  txt(man ? "Fermo: spara solo mentre tieni premuto sul bersaglio" : "Si muove trascinando e spara da solo", W / 2, 241, 10, "#6f82ad", "center", "500");
+  txt("Il guardiano spara da solo; tenendo premuto segue il dito", W / 2, 208, 11, "#6f82ad", "center", "500");
+  txt("e spara in verticale", W / 2, 224, 11, "#6f82ad", "center", "500");
   button(60, 254, 240, 46, "Standard", () => startRun("standard"), { size: 16, stroke: "#3fe0a0" });
   const eu = epicUnlocked();
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
@@ -409,7 +408,7 @@ function menuScreen() {
   txt("Mini-boss: ondate 5, 10, 15 dal livello 11 (Epica: sempre)", 36, 532, 10, "#ffd166", "left", "500");
   txt("Boss finale all’ondata 20 dei livelli 10, 20, 30…", 36, 546, 10, "#ffd166", "left", "500");
   button(60, 562, 240, 36, "Salvataggio · esporta o importa", openSave, { size: 13, stroke: "#7fa0e0" });
-  txt("Invio = Standard · E = Epica · ←/→ = livello · M = mira", W / 2, 614, 11, "#5f7299", "center", "500");
+  txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 614, 11, "#5f7299", "center", "500");
   txt("v" + APP_VERSION, W - 8, 632, 9, "#3a4a70", "right", "500");
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
@@ -448,7 +447,7 @@ function rewardScreen() {
     txt(o.desc, x + 52, y + 70, 12, "#b9c8e6", "left", "500");
     txt(o.note, x + 52, y + 92, 10, "#6f82ad", "left", "500");
   });
-  button(60, 140 + rewards.length * 122 + 4, 240, 48, "Continua", () => pick(0), { size: 16, stroke: "#ffd166" });
+  button(60, 140 + rewards.length * 122 + 4, 240, 48, "Continua", () => pick(0), { size: 16, stroke: "#ffd166", release: true });
 }
 function upgradeScreen() {
   dim(0.84);
@@ -457,7 +456,7 @@ function upgradeScreen() {
   txt("Scegli un potenziamento", W / 2, 116, 13, "#9fb4d9", "center", "500");
   options.forEach((opt, i) => {
     const x = 20, y = 140 + i * 122, w = 320, h = 110, o = describe(opt), c = TYPES[o.type].color;
-    button(x, y, w, h, "", () => pick(i), { stroke: c });
+    button(x, y, w, h, "", () => pick(i), { stroke: c, release: true });
     disc(x + 26, y + h / 2, 13, c);
     txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22, 11, c, "left", "700");
@@ -548,11 +547,6 @@ function treeAbilities() {
   });
 }
 
-function drawCrosshair(x, y) {                  // mira manuale: mirino nel punto premuto
-  ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
-  ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
-  ctx.moveTo(x, y - 18); ctx.lineTo(x, y - 6); ctx.moveTo(x, y + 6); ctx.lineTo(x, y + 18); ctx.stroke(); ctx.globalAlpha = 1;
-}
 function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
   ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700");
 }
@@ -569,7 +563,6 @@ function draw() {
     drawDomeFill(); drawGround();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
-    if (manual && aim.down && state === "play") drawCrosshair(aim.x, aim.y);   // mirino nel punto premuto
     enemies.forEach(drawEnemy);
     for (const o of ents) o.draw();
     drawDomeEdge(); drawFortress();
@@ -580,7 +573,6 @@ function draw() {
     if (state === "play" && waveTime < 0) {
       ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
       txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
-      if (manual && wave === 1) txt("Tieni premuto sul bersaglio per sparare", W / 2, 290, 12, "#9fb4d9", "center", "600");
       if (skipNote) txt("Scelta già usata da una torretta equipaggiata", W / 2, 290, 12, "#c9a2ff", "center", "600");
       if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       else if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
@@ -633,7 +625,28 @@ const FX = {
     ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     ctx.stroke(); ctx.globalAlpha = 1;
   },
-  zone(o, color) {                               // area a terra che dura (sfere del Teslacoil)
+  teslaOrb(o) {                                  // Teslacoil · Sfera statica: fulmine globulare grande quanto l’area, trasparente (non copre i nemici)
+    const k = Math.min(1, o.t / 0.5), age = o.age, r = o.r, x = o.x, y = o.y, c = TYPES.electric.color;
+    const fl = 0.75 + 0.25 * Math.sin(age * 43) * Math.sin(age * 17 + 1);
+    disc(x, y, r, c, 0.07 * fl * k);                                     // alone tremolante, appena velato
+    disc(x, y, r * 0.55, c, 0.06 * fl * k);
+    ctx.globalAlpha = 0.45 * fl * k; ctx.strokeStyle = c; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke();
+    ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.2; ctx.lineCap = "round";
+    for (let j = 0; j < 6; j++) {                                        // archi dal nucleo verso il bordo, che girano e tremano
+      const a0 = age * (j % 2 ? 3 : -2.5) + j * 1.047, len = r * (0.75 + 0.25 * Math.sin(age * 29 + j * 3));
+      ctx.globalAlpha = (0.35 + 0.45 * Math.abs(Math.sin(age * 23 + j))) * k;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a0) * 4, y + Math.sin(a0) * 4);
+      for (let i = 1; i <= 4; i++) {
+        const rr = 4 + (len - 4) * i / 4, aa = a0 + 0.3 * Math.sin(age * 61 + i * 2.3 + j);
+        ctx.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    disc(x, y, 4, "#fff6b0", 0.55 * k); disc(x, y, 2, "#ffffff", 0.8 * k);   // nucleo piccolo e semitrasparente
+  },
+  zone(o, color) {                               // area a terra che dura
     ctx.globalAlpha = 0.22 * Math.min(1, o.t / 0.5); ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832); ctx.fill();
     ctx.globalAlpha = 0.6 * Math.min(1, o.t / 0.5); ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
@@ -765,6 +778,6 @@ const FX = {
 
 // quello che serve fuori: il gioco usa draw, FX, thunderDraw e teslaDraw; il catalogo anche il resto
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
-  drawTurret, drawPlayer, guardianShape, drawCrosshair, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
+  drawTurret, drawPlayer, guardianShape, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
   menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button };
 }

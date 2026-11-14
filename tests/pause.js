@@ -39,7 +39,7 @@ console.log("— scheda Torri e potenziamenti —");
 {
   const g = makeGame({ seed: 5, patch, cleared: 20, level: 21 }); g.key("Enter"); const r = seeded(2); let picks = 0;
   for (let f = 0; f < 60000 && picks < 8; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 300);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 300);
     g.frame(); const T = g.texts;
     if (T.includes("Ricompensa mini-boss") && T.includes("Continua")) g.key("1");
     if (T.includes("Scegli un potenziamento")) { g.key("1"); picks++; }

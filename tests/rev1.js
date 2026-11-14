@@ -23,7 +23,7 @@ function setup() {
 }
 
 console.log("— Laser: rimbalzi e mini-raggi —");
-for (const [up, mainSegs, miniSegs, label] of [[{ bounce: 2, multi1: 1 }, 3, 1, "2 rimbalzi, mini-raggi lv1"], [{ bounce: 2, multi1: 1, multiW: 1, multi3: 1 }, 3, 3, "2 rimbalzi, mini-raggi lv3"]]) {
+for (const [up, mainSegs, miniSegs, label] of [[{ bounce: 2, multi1: 1 }, 2, 1, "2 rimbalzi, mini-raggi lv1"], [{ bounce: 2, multi1: 1, multiW: 1, multi3: 1 }, 2, 3, "2 rimbalzi, mini-raggi lv3"]]) {
   const { g, X, mk, tower } = setup(); mk(180, 250);
   X.laserFire(tower("laser", up)); const R = g.win.__rays;
   console.log(label.padEnd(28), "raggi:", R.length, "| segmenti principale:", R[0].segs.length, "| mini:", R[1].segs.length,

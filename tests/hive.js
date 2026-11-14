@@ -31,7 +31,7 @@ function run(label, ups, toggle, frames = 6000) {
   const X = g.win.__x, r = seeded(8); let maxUnique = 0, minUniqueWhenMany = 99, frames2 = 0;
   if (toggle) g.click(100, 26);
   for (let f = 0; f < frames; f++) {
-    if (f % 120 === 0) g.click(30 + r() * 300, 300);
+    if (f % 120 === 0) g.tap(30 + r() * 300, 300);
     g.frame(); g.texts.length = 0;
     const ds = X.ents().filter((o) => o.fire && o.t && !o.t.dead);
     if (ds.length >= 2 && X.enemies().filter((e) => !e.dead && e.y >= 0).length >= 2) {

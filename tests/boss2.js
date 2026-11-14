@@ -9,7 +9,7 @@ const X = g.win.__x;
 const total = () => [X.getPlayer(), ...X.getSlots()].filter(Boolean).reduce((a, s) => a + Object.values(s.up).reduce((p, q) => p + q, 0) + (s.id === "player" ? 0 : 0), 0) + X.getSlots().filter(Boolean).length;
 let before = null, screens = 0, wave = 1; const log = [];
 for (let f = 0; f < 200000; f++) {
-  if (f % 90 === 0) g.click(30 + r() * 300, 120);
+  if (f % 90 === 0) g.tap(30 + r() * 300, 120);
   g.frame(); const T = g.texts;
   for (const s of T) { const m = /^Ondata (\d+)\/20$/.exec(s); if (m) wave = +m[1]; }
   const ui = T.lastIndexOf("Scegli un potenziamento");

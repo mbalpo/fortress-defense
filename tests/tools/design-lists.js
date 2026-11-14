@@ -15,7 +15,7 @@ function ups(list) {
   out.push("- **Level up** — " + (lu.length ? lu.map((u) => `lv${u.lv} ${u.name}: ${u.desc}${u.prov ? " *(provvisorio)*" : ""}`).join(" · ") : "nessuno."));
   out.push(`- id nel codice: ${list.map((u) => u.id).join(", ")}`);
 }
-out.push("### Guardiano", "", "Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio.");
+out.push("### Guardiano", "", "Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto spara in verticale, senza bersaglio.");
 ups(parseUps(block("const PLAYER_DEF")));
 // combo del guardiano: K(id, torretta, condizione, livello del guardiano, nome, descrizione)
 const TNAME = Object.fromEntries([...src.matchAll(/^  (\w+): \{ name: "([^"]+)"/gm)].map((x) => [x[1], x[2]]));
@@ -26,7 +26,7 @@ out.push("- **Combo** (contano come scelte del guardiano): " + (combos.length ? 
 const tre = /^  (\w+): \{ name: "([^"]+)", type: "(\w+)", range: (\d+), reload: ([\d.]+), blurb: "([^"]+)", ups: \[/gm; let m;
 while ((m = tre.exec(src))) { out.push(`### ${m[2]} (\`${m[1]}\`)`, "", `${TN[m[3]]} · ${m[6]}. Portata ${m[4]} px, ricarica ${m[5].replace(".", ",")} s.`); ups(parseUps(block("  " + m[1] + ": { name:"))); out.push(""); }
 out.push("### Nemici", "");
-for (const x of src.matchAll(/^  (\w+):\s+\{ type: "(\w+)", hp: (\d+),\s+speed: (\d+), r: (\d+),\s+dmg: ([\d.]+),\s+look: "(\w+)"\s+\},\s+\/\/ (.+)$/gm)) out.push(`- \`${x[1]}\` — ${x[8]}, ${TN[x[2]]}: vita ${x[3]}, velocità ${x[4]}, raggio ${x[5]}, danno alla cupola ${x[6].replace(".", ",")}`);
+for (const x of src.matchAll(/^  (\w+):\s+\{ type: "(\w+)",\s+hp: (\d+),\s+speed: (\d+), r: (\d+),\s+dmg: ([\d.]+),\s+look: "(\w+)"\s+\},\s+\/\/ (.+)$/gm)) out.push(`- \`${x[1]}\` — ${x[8]}, ${TN[x[2]]}: vita ${x[3]}, velocità ${x[4]}, raggio ${x[5]}, danno alla cupola ${x[6].replace(".", ",")}`);
 const RES = eval("(" + src.match(/const RESIST = (\{[\s\S]*?\n\});/)[1] + ")");
 out.push("", "### Resistenze (×0,5 resiste, ×1,5 debole) — segnaposto", "");
 for (const [e, r] of Object.entries(RES)) out.push(`- Nemico ${TN[e]}: resiste a ${Object.keys(r).filter((k) => r[k] === 0.5).map((k) => TN[k]).join(", ")}, debole a ${Object.keys(r).filter((k) => r[k] === 1.5).map((k) => TN[k]).join(", ")}`);

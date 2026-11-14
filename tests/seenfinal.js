@@ -15,7 +15,7 @@ const strong = (h) => P(h, ["domeHp: 100,", "domeHp: 1000000,"], ["startTurrets:
 function alerts(L, seen) {
   const g = makeGame({ seed: 6, patch: strong, cleared: L - 1, level: L, seen }); g.key("Enter"); const r = seeded(2); const got = [];
   for (let f = 0; f < 200000; f++) {
-    if (f % 90 === 0) g.click(30 + r() * 300, 120);
+    if (f % 90 === 0) g.tap(30 + r() * 300, 120);
     g.frame(); const T = g.texts; const i = T.indexOf("Nuovo nemico: ");
     if (i >= 0) { const k = T[i + 1] + " " + T[i + 2]; if (!got.includes(k)) got.push(k); }
     if (T.includes("Ricompensa mini-boss") && T.includes("Continua")) g.key("1");

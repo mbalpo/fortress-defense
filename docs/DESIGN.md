@@ -20,22 +20,21 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ## 2. La partita
 
-- Schermo logico 360×640, sempre in verticale. In basso il suolo, sopra la **cupola** (semi-ellisse larga 344 px, alta 95 px al centro) che protegge
-  guardiano e torrette. In fondo la barra della vita della cupola. **[deciso]** (altezza ridotta su richiesta)
+- Schermo logico 360×640, sempre in verticale. In basso il suolo, sopra la **cupola** (semi-ellisse con raggio orizzontale 215 px, più larga dello schermo: esce di 35 px per lato e la sua partenza non si vede; alta 95 px al centro e circa 52 px ai bordi dello schermo) che protegge
+  guardiano e torrette. In fondo la barra della vita della cupola. **[deciso]** (altezza ridotta su richiesta; allargata perché i nemici laterali non arrivino al suolo) · 215 px **[Claude]**
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
 - Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). Dal livello 31, le torrette sbloccate con i Sigilli si possono equipaggiare prima dell’ondata 1 (§ 16). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
-- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando (mira automatica) e spara da solo. **[deciso]**
-- **Mira** (scelta nel menu, ricordata): automatica, oppure manuale = il guardiano resta fermo e spara solo mentre si tiene premuto;
-  premendo entro 45 px da un nemico i colpi lo inseguono, altrimenti vanno dritti verso il dito. Le torrette sparano sempre da sole. **[deciso]** (45 px **[Claude]**)
-- **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”. **[deciso]**
-- **Frenesia** (chain del guardiano): la barra si carica nel tempo; in automatico parte da sola ma va in pausa se non ci sono nemici a schermo;
-  in manuale parte e scorre solo mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]**
+- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale e spara **sempre in verticale**, così si indirizzano i colpi spostandolo; al rilascio torna la mira automatica. **[deciso]**
+- **Mira**: solo automatica; non c’è più la mira manuale né il mirino, e nel menu non c’è più la scelta. Tutti i proiettili del guardiano mentre si preme vanno dritti in alto, senza bersaglio. Le torrette sparano sempre da sole. **[deciso]**
+- **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”; il guardiano lo usa quando non si preme. **[deciso]**
+- **Frenesia** (chain del guardiano): la barra si carica nel tempo e parte da sola; va in pausa se non ci sono nemici a schermo e nessun dito premuto, cioè scorre anche mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]** (lettura della pressione **[Claude]**)
 - **Pausa**: pulsante in alto (o Esc/P), si attiva da sola se si cambia app. Due schede: “Nemici del livello” e “Torri e potenziamenti”.
   “Abbandona” chiede un secondo tocco. **[deciso]**
 - **Nemici scoperti** (per tutta la campagna, salvati sul dispositivo): nella scheda Nemici solo quelli già incontrati, gli altri “sconosciuto”;
   al primo incontro compare l’avviso “Nuovo nemico” (3,5 s, uno alla volta, si ferma in pausa).
   Mini-boss e boss finale si scoprono **tipo per tipo**. **[deciso]**
+- **Scelta delle carte**: una carta (o “Continua” della ricompensa) si sceglie rilasciando il dito sulla stessa carta su cui si è premuto; scorrere fuori annulla. Per circa 0,6 s dopo la comparsa della schermata i tocchi sono ignorati (i tasti 1/2/3 restano immediati). **[deciso]** (azione al rilascio e blocco) · 0,6 s **[Claude]**
 
 ## 3. Sistema di potenziamenti
 
@@ -75,7 +74,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Budget di scelte: 19 per partita, **28 dal livello 11** con i 3 mini-boss. Servono 19 scelte per riempire tutto al tetto lv1, 39 al tetto lv2,
   64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39: per questo, con 28 scelte,
   **non si possono massimizzare più di 2 tra torri e guardiano** senza bisogno di una regola esplicita. **[deciso]**
-- Progressione salvata sul dispositivo: livelli completati, nemici scoperti, Sigilli (saldo, livelli dei nodi, premi già riscossi per livello e modalità); impostazioni (bersaglio, mira) a parte. Il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione (§ 7). **[deciso]**
+- Progressione salvata sul dispositivo: livelli completati, nemici scoperti, Sigilli (saldo, livelli dei nodi, premi già riscossi per livello e modalità); impostazioni (bersaglio) a parte. Il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione (§ 7). **[deciso]**
 
 ## 5. Difficoltà e calibrazione
 
@@ -100,7 +99,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Dopo le combo del guardiano, confronto diretto con la versione precedente sugli stessi 200 semi (100 per bot): livello 15 dal 76,5% al 77,5%,
   25 dal 55,0% al 58,5%, 30 dal 23,5% al 23,0%: dentro il rumore. I bot scelgono le carte a caso o con regole semplici, e le combo escono di rado
   (peso 0,4 e condizioni), quindi la misura dice poco sulla loro forza vera. Nessun numero della difficoltà cambiato.
-- La difficoltà in **mira manuale non è misurata** (i bot giocano solo in automatico).
+- La difficoltà con il tiro verticale (tenendo premuto) **non è misurata**: i bot giocano solo con la mira automatica.
 - Le carte bloccate dall’albero (§ 16) valgono dal livello 1: tutte le misure sopra sono state fatte con il pool completo. Vanno rifatte con il **pool libero** (muri al 10, 20 e 30) prima di cambiare i numeri della difficoltà. **[da misurare]**
 - Prima misura con il pool libero (1.4.0; stessi bot e stessi semi, pool libero → pool completo; 120 partite per livello, 800 sui muri):
   1 100% → 100% · 5 95,0% → 95,8% · 8 49,2% → 51,7% · **10 9,9% → 11,9%** · 11 83,3% → 89,2% · 15 76,7% → 76,7% · **20 18,1% → 37,1%** ·
@@ -112,6 +111,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   perché lì si muore anche prima del boss (con il solo boss più debole il 10 restava sotto il 20%). Misura 1.4.1 (pool libero, 800 partite, stessi semi di sopra):
   **10 33,0%** · **20 28,0%** · **30 31,3%** (prima 9,9%, 18,1%, 4,9%); arrivano all’ondata 20: 446, 469, 404 su 800. Il livello 9 misura circa 36% (200 partite):
   il 10 resta un gradino, non un muro più alto. Gli altri livelli non cambiano. In Epica valgono gli stessi numeri per livello (non misurato).
+- Dopo la cupola larga e i cristalli più lenti: da rimisurare con gli stessi bot e gli stessi semi i livelli 10, 20 e 30 (800 partite; riferimento 1.4.1: 33,0% · 28,0% · 31,3%), i livelli 8, 15 e 25 (stessi semi dei confronti precedenti) e i muri dal 40 al 200 con `tests/tools/curva.js` (200 partite per muro; riferimento 1.8.0: media 31,1%). L’obiettivo del 30% per i muri è **[deciso]**: se la misura se ne allontana, decide Marco prima di cambiare i numeri. Esiti (1.9.0, stessi bot e stessi semi, confronto diretto con la 1.8.0 → 1.9.0): **10 32,0% → 32,6%** · **20 28,9% → 29,9%** · **30 31,8% → 29,0%** (800 partite; semi 1-400 per bot);
+  8 56,0% → 59,8% · 15 78,8% → 75,2% · 25 55,8% → 54,8% (400 partite; semi 1-200 per bot); muri dal 40 al 200 (200 partite per muro, semi 1-100) media **30,9% → 32,1%**,
+  da 15,5% (140) a 49,0% (120); differenza più grande al 70 (33,5% → 41,0%). Tutte le differenze sono dentro o vicine al rumore (±5-7 punti con 200-400 partite):
+  i muri restano intorno al 30%. Nessun numero della difficoltà cambiato. **[Claude]** (misura)
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -126,20 +129,21 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 - Menu → “Salvataggio · esporta o importa”: file JSON (sul telefono si apre la condivisione) o codice `FD1:…` (base64 del JSON).
   Import da file o codice incollato, con riepilogo e conferma prima di sostituire. Dati non validi rifiutati senza toccare i progressi. **[deciso]**
-- Formato (versione 2, dalla 1.5.0): `{ game: "fortress-defense", version: 2, appVersion, exportedAt, progress: { cleared, seen, seals, claims, tree, loadout }, settings: { targeting, aim } }`.
+- Formato (versione 2, dalla 1.5.0): `{ game: "fortress-defense", version: 2, appVersion, exportedAt, progress: { cleared, seen, seals, claims, tree, loadout }, settings: { targeting } }`.
   `seals` = Sigilli da spendere; `claims` = premi riscossi (`s31` primo completamento Standard del 31, `s31p` premio della cupola al 100%, `e5`… Epica);
   `tree` = nodi comprati (`{ "sky:burn1": 1 }`); `loadout` = torrette equipaggiate. Un salvataggio della versione 1 si importa con Sigilli e albero vuoti;
   valori non validi (nodi sconosciuti, torrette equipaggiate senza sblocco, più di 4) vengono scartati. **[Claude]**
-  Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso.
+  Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso. L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
 - `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
 - PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
+- **Schermo sempre acceso**: finché il gioco è aperto in primo piano lo schermo non si spegne, anche in automatico senza tocchi (Screen Wake Lock, richiesto dopo il tocco su “Start”, rilasciato in secondo piano e richiesto di nuovo al ritorno; se il browser non lo supporta il gioco funziona lo stesso). **[deciso]** (il comportamento) · modalità **[Claude]**
 
 ## 8. Guardiano e torrette *(generato)*
 
 ### Guardiano
 
-Physical. Spara da solo (o solo mentre si preme, in mira manuale), cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio.
+Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto spara in verticale, senza bersaglio.
 - **Standard** (max 3 pile): +1 perforazione (I colpi trapassano un nemico in più); Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%).
 - **Chain · Frenesia** — lv1 Frenesia: Barra carica → fuoco e danno maggiori · lv2 Carica rapida: Carica in 25 s invece di 30 · lv2 Frenesia furiosa: Cadenza in frenesia ×2 (da ×1,8) · lv3 Frenesia prolungata: La frenesia dura 12 s invece di 8
 - **Chain · Colpi esplosivi** — lv1 Colpi esplosivi: 10% di esplosione ad area sul colpo · lv2 Più esplosioni: Probabilità di esplosione maggiore · lv3 Esplosioni potenziate: Più probabilità e più raggio
@@ -251,6 +255,9 @@ Force · Buco nero che attrae e danneggia. Portata 260 px, ricarica 5,5 s.
 ### Nemici
 
 - `drone` — navicella, Electric: vita 30, velocità 50, raggio 11, danno alla cupola 2
+- `wisp` — cristallo-cometa, Energy: vita 22, velocità 60, raggio 9, danno alla cupola 1,5
+- `brute` — asteroide, Force: vita 140, velocità 28, raggio 16, danno alla cupola 6
+- `spitter` — meteora infuocata, Fire: vita 60, velocità 42, raggio 13, danno alla cupola 3
 - `shell` — frammento roccioso, Physical: vita 60, velocità 34, raggio 14, danno alla cupola 4
 
 ### Resistenze (×0,5 resiste, ×1,5 debole) — segnaposto
@@ -273,6 +280,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Laser: spazzata di **3 s** su 180° **[deciso]**; mini-raggi sfalsati di circa 10°, larghi il 60%, danno 40% del raggio principale (70% con la chain lv2),
   indebolimento 2,5 s dai raggi fissi (non dalla spazzata). I rimbalzi valgono solo per il raggio principale **[deciso]**; i mini-raggi li usano
   dal lv3 della chain e solo allora pagano il −20% per pila  **[da rivedere]**
+- Laser (revisione 3): un raggio che rimbalza non attraversa la cupola: quando, dopo un rimbalzo, la rientra, si ferma sul suo bordo e non rimbalza più. Il primo tratto, che parte da dentro la cupola, esce normalmente. Vale per il raggio principale e per i mini-raggi con la chain lv3. **[deciso]** (la regola) · tracciamento **[Claude]**
 - Disruption Drone: campo 6 s, ricarica 8 s da quando finisce, danno 8 per colpo, colpo ogni 1 s (0,6 s con il lv3), altezza base ±16 px, arretramento 90 px  **[Claude]**
 - Disruption Drone: teletrasporto lv3 = 20% della vita attuale; scarica = 3× danno del campo, seconda dopo 0,4 s, stack azzerati dopo la scarica  **[Claude]**
 - Disruption Drone (revisione 1): Esplosione finale = 3× il danno di un colpo del campo su tutta la fascia; Campo attrattivo = danno +40% e a ogni colpo
@@ -307,6 +315,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   quale la sfera cresce sulla bobina; per ogni 0,5 s di carica in più: raggio +30% (dal lv1) e danno +30% (dal lv2), quindi al lv3 raggio ×2,2 e danno ×2,2.
   Sfera carica = danno della sfera ×1,6; Esplosione ampia = raggio +40%; Esplosioni paralizzanti = 30% per 1 s, come il Thunderbolt **[deciso]**.
   Proiettile disegnato come un fulmine globulare (alone tremolante e archi)  **[Claude]**
+- Teslacoil (revisione 3): la Sfera statica è disegnata come il proiettile (fulmine globulare con alone tremolante e archi), alla dimensione della sua area, senza coprire i nemici; danno e area invariati. **[deciso]** (lo stile) · dettagli **[Claude]**
 - Gravity Vortex Gun: wormhole 4 s (6 s con Varchi stabili)  **[Claude]**
 - Gravity Vortex Gun (revisione 2): Buco nero iperdenso = danno +50%; Buco nero lento = avanza a 80 px/s invece di 130 (stesso percorso, più tempo sui nemici);
   Collasso crescente = danno e attrazione crescono con la strada fatta, fino a ×2 a fine percorso (e da fermo)  **[Claude]**
@@ -327,17 +336,20 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   Mini-drone di scorta = 3% per salva; mini-drone della torretta (durata, danno, Mini-droni incendiari e potenziati, Fiamme roventi) che parte dal guardiano;
   al massimo 3 insieme; non ferma la ricarica della torretta e non conta per Raffreddamento;
   Clone speculare = stessa cadenza e stesso numero di proiettili del guardiano (non il Ventaglio), 50% del danno senza combo, perforazione e Rimbalzo sì,
-  esplosioni, knockback e combo no; in automatico sceglie il proprio bersaglio dalla posizione specchiata; disegnato trasparente;
+  esplosioni, knockback e combo no; in automatico sceglie il proprio bersaglio dalla posizione specchiata (mentre si preme spara in verticale); disegnato trasparente;
   Proiettili frammentati = 10% per proiettile (non Ventaglio), una volta per proiettile: due frammenti al 50% del danno verso i nemici più vicini
   non ancora colpiti (entro 200 px, altrimenti a ±20°), senza perforazione né rimbalzo;
   Colpo caricato = un proiettile in più ogni 40 salve, danno ×2 (×3 in tutto con Colpo pesante, scelta di Marco); eredita i “+1 rimbalzo” della
   Teslacoil (senza il −15%) oltre al Rimbalzo del guardiano; disegnato più grande e giallo  **[da rivedere]**
+- Tiro verticale (revisione 3): mentre si preme il guardiano non sceglie bersagli, tutti i suoi proiettili partono in direzione verticale e proseguono fino al bordo dello schermo. Ventaglio e le altre combo valgono come prima. Il Clone speculare spara in verticale dalla posizione specchiata. **[deciso]** (clone) · dettagli **[Claude]**
 - Combo del guardiano, nomi delle carte (Marco ha dato solo gli effetti): Proiettili incendiari, Laser rotante, Colpi distruttivi, Posamine,
   Colpi ramificati, Mira amplificata, Mini-drone di scorta, Clone speculare, Proiettili frammentati, Colpo caricato, Proiettili gravitazionali  **[da rivedere]**
 - Combo del guardiano, letture di Claude: “torretta di lv2” = basta la torretta al livello 2, il guardiano può essere al livello 1;
   “scelta chain X” = la torretta ha la voce lv1 di quella chain  **[da rivedere]**
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
 - Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita base 400 al livello 10, 2250 al 20, 1450 al 30, dal 40 con la formula del § 5, danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
+- Cupola larga (revisione 3): il profilo di collisione ha raggio orizzontale 215 px (prima 172), altezza invariata. Vale per il contatto dei nemici (ai bordi ora si fermano a circa y 517 invece di 550), per il bordo contro cui si fermano i rimbalzi del laser e per il punto in cui nascono le mine. Le sfere orbitanti del Thunderbolt restano sul profilo di prima (raggio 172), così non escono dallo schermo. **[Claude]** (da rivedere dopo la misura)
+- Cristalli (`wisp`): velocità base da 72 a 60 px/s (restano il nemico più veloce; a ondata 20 circa 77 px/s invece di 92). Vita, danno e numero invariati. **[deciso]** (la riduzione) · 60 **[Claude]** (da misurare con i bot)
 
 Interpretazioni di Claude **confermate**: Disruption Drone lv3 “aumento intervallo del danneggiamento” = danneggia più spesso (ogni 0,6 s);
 Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 px → 480 px con 3 pile); Hive, un “colpo” è una raffica
@@ -362,6 +374,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
+- **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
 ## 12. Contenuti mancanti (da definire con Marco)
 
