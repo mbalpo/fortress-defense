@@ -3,6 +3,34 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.11.0 — taratura con l’equipaggiamento atteso, icone di pezzi e Moduli
+
+Punti “Cosa manca” della 1.10.0. Obiettivo di Marco: muri dal 40 tra il 50 e il 70% di vittorie dei bot con l’equipaggiamento atteso (fascia accettata durante il lavoro,
+per non alzare troppo la difficoltà; prima l’indicazione era “circa 50%”).
+
+- **Equipaggiamento atteso dei bot**: nuovo `tests/tools/equip-atteso.js` (drop veri di `rollDrops` per 1,5 vittorie per livello dal 30, poi una strategia da giocatore:
+  fonde i pezzi, equipaggia il più raro, installa i Moduli più utili, fonde gli altri). `curva.js` lo usa con `EQUIP=1.5`. Al 40 guardiano +29%, al 100 +97%, al 200 +152%.
+- **Misura con la curva della 1.8.0**: muri dal 40 al 200 al **93%** di media (da 81% a 100%): l’equipaggiamento rendeva i muri quasi certi.
+- **Curva nuova** (`app/index.html`): `EFF_SLOPE_31` da 0,2 a **0,8**, nuovo scalino `EFF_JUMP_31` = **2** dal livello 31 (i muri vicini al 30 si muovevano poco con la sola
+  pendenza), fattori della vita del boss finale per muro `FINAL_BOSS_K` (80 ×1,3, 100 ×1,3, 140 ×0,45, 150 ×1,1, 170 ×1,9) per i muri che uscivano dalla fascia.
+  Valori **[Claude] [provvisorio]**. Dal 30 al 200: vita dei nemici ×2,97 (prima ×1,49), danno ×2,13, numero ×1,62, velocità ×1,26.
+- **Risultato** (200 partite per muro, 400 al 140 e al 150): 40 67,5 · 50 64,0 · 60 71,0 · 70 59,0 · 80 63,0 · 90 55,0 · 100 65,5 · 110 59,5 · 120 47,0 · 130 62,5 · 140 53,3 ·
+  150 57,0 · 160 55,5 · 170 60,0 · 180 63,0 · 190 67,0 · 200 46,0: **media 59,8%**; 120 e 200 poco sotto il 50%, 60 poco sopra il 70%, dentro il rumore (±7).
+  Livelli intermedi: 35 77,5 · 45 93,5 · 75 98,0 · 125 84,5 · 175 99,5. **Senza equipaggiamento**: 40 17% · 100 3% · 200 0% (prima circa 31%): dal 40 l’equipaggiamento
+  è necessario. Prove intermedie in DESIGN.md § 16 (“Taratura 1.11.0”).
+- **Icone** (draw.js): `PIECE_ART` con le sagome dei 6 pezzi (cannone, guanto, elmetto, corazza, stivale, nucleo esagonale) e `modIcon` (chip con piedini, nucleo del colore
+  della rarità e iniziale del pezzo); nei 6 riquadri della schermata, nel pezzo scelto, negli slot, nell’inventario e nei tasselli della vittoria.
+- DESIGN.md: § 5 formule, § 11 difficoltà dal 31, § 15 obiettivo 50-70%, icone, taratura; § 16 “Taratura 1.11.0” con tutte le prove; § 13.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.11.0.
+
+**Test**: `npm test`, tutti verdi (nessun test dipendeva dalla curva oltre il 30). Screenshot rifatti e controllati (37-42: icone nei riquadri, nelle righe e nella vittoria).
+Durante il lavoro: un errore di sintassi nelle note del catalogo (apice inverso in un testo) bloccava `npm run catalog`; corretto.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (icone nelle scene dell’equipaggiamento e della vittoria; note “futuro” aggiornate).
+
+Checklist: nuove voci “Curva dal 31 ritarata con l’equipaggiamento: provare i muri 40-60 giocando”, “Senza equipaggiamento dal 40 i muri sono quasi impossibili: va bene?”,
+“Fattori del boss per muro (80, 100, 140, 150, 170): provvisori”, “Icone di pezzi e Moduli da vedere sul telefono”; togliere “Equipaggiamento: misura con i bot e muri al 50%”, “Icone di pezzi e Moduli”.
+
 ## 1.10.1 — carte dopo ogni ondata, Modulo 12 con le carte dei mini-boss, testi delle carte
 
 Risposte di Marco dopo la 1.10.0.

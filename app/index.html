@@ -140,8 +140,8 @@ const LV = { hp0: 0.42, hpSlope: 0.08, hpSlopeHi: 0.02, dmg: 0.01, speed: 0.002,
 // fino a D=10 la vita sale in fretta (da nemici deboli al "muro"); dopo sale piano, perché le scelte per partita non crescono
 // difficoltà effettiva: tra il 20 e il 30 sale piano (la potenza del giocatore è ferma fino al boss del 30); dal 31 sale di 0,2 per livello,
 // tarata con i bot che spendono i Sigilli attesi nell’albero (1,5 per livello dal 31) perché i livelli tra un muro e l’altro restino intorno al 60-80%
-const EFF_SLOPE_31 = 0.2;
-const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_SLOPE_31 * (D - 30);
+const EFF_SLOPE_31 = 0.8, EFF_JUMP_31 = 2;   // 1.11.0: pendenza da 0,2 a 0,8 e scalino di 2 dal 31, con l’equipaggiamento atteso (muri dal 40 al 50-70%)
+const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (D - 30);
 const levelHp    = (D) => { D = effD(D); return D <= 10 ? LV.hp0 + LV.hpSlope * (D - 1) : LV.hp0 + LV.hpSlope * 9 + LV.hpSlopeHi * (D - 10); };
 const levelDmg   = (D) => 1 + LV.dmg * (effD(D) - 1);
 const levelSpeed = (D) => 1 + LV.speed * (effD(D) - 1);
@@ -165,7 +165,9 @@ const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed:
 // vita base del boss finale, tarata con i bot perché i muri si superino circa nel 30% delle partite (scelta di Marco):
 // 10, 20, 30 sul pool libero; dal 40 con l’albero atteso e le abilità della barriera, 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
-const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35));
+// fattore per singolo muro (1.11.0): corregge i muri che con l’equipaggiamento atteso uscivano dalla fascia 50-70% [Claude, provvisorio]
+const FINAL_BOSS_K = { 80: 1.3, 100: 1.3, 140: 0.45, 150: 1.1, 170: 1.9 };
+const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35)) * (FINAL_BOSS_K[lv] || 1);
 // vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
 const WALL_ENEMY_HP = { 10: 0.93 };
 const finalBossDef = (lv) => ({ type: TYPE_KEYS[(lv / 10) % 5], hp: finalBossHp(lv), speed: 14, r: 34, dmg: 8, boss: true, final: true, look: "mothership", kbRes: 0.85, statRes: 0.6 });   // vita che cresce con il livello
@@ -2346,7 +2348,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.10.1";
+const APP_VERSION = "1.11.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 3, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento
 const $id = (id) => document.getElementById(id);
 function makeSave() {

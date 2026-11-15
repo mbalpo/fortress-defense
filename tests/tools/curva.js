@@ -2,7 +2,10 @@
 // cioè con i Sigilli presi fino a lì (in Standard: 1 per livello dal 31 più, in media, metà dei premi della cupola al 100%)
 // spesi da una strategia semplice (prima i nodi condivisi, poi danno e barriera, poi il resto); dal 40 i bot usano le tre abilità d’ingresso.
 // Uso: node tests/tools/curva.js <livelli> [partite per bot, default 20] [primo seme, default 1] [Sigilli per livello, default 1.5] [sostituzioni JSON]
+// Con EQUIP=<vittorie per livello> (es. EQUIP=1.5) i bot hanno anche l’equipaggiamento atteso (tests/tools/equip-atteso.js), uguale per tutte le partite del livello.
 const { play, makeGame } = require("../bot.js");
+const { gearFor } = require("./equip-atteso.js");
+const EQUIP = +(process.env.EQUIP || 0);
 const LVS = process.argv[2].split(",").map(Number), N = +(process.argv[3] || 20), S0 = +(process.argv[4] || 1), PER = +(process.argv[5] || 1.5);
 const reps = JSON.parse(process.argv[6] || "[]");
 const patch = (h) => reps.reduce((a, [x, y]) => { if (!a.includes(x)) throw new Error("manca " + x); return a.replace(x, y); }, h);
@@ -26,7 +29,7 @@ function treeFor(L) {
   return JSON.parse(g.win.__ev(SPEND));
 }
 for (const L of LVS) {
-  const tree = treeFor(L), storage = { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], tree }) };
+  const tree = treeFor(L), gear = EQUIP ? gearFor(L, EQUIP, 1) : undefined, storage = { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], tree, gear }) };
   const row = [];
   for (const pol of ["random", "smart"]) {
     let w = 0, s = 0;

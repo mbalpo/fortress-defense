@@ -84,10 +84,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Formule (in `app/index.html`, sezione CAMPAGNA):
   - vita dei nemici: `levelHp(D)` = 0,42 + 0,08·(D−1) fino a D=10, poi +0,02 per livello (valori in `LV`);
   - difficoltà effettiva `effD`: piena fino a 20, al **30%** tra 20 e 30 (la potenza del giocatore è ferma fino al boss del 30),
-    dal 31 sale di **0,2 per livello** (`EFF_SLOPE_31`; al 200 effD = 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
+    dal 31 sale di **0,8 per livello con uno scalino di 2** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.11.0; al 200 effD = 161; prima 0,2 senza scalino, al 200 effD = 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
-  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
+  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro dalla 1.11.0 (`FINAL_BOSS_K`: 80 ×1,3, 100 ×1,3, 140 ×0,45, 150 ×1,1, 170 ×1,9) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
     al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
@@ -375,9 +375,9 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
-- **Difficoltà dal livello 31**: tarata nella 1.7.0 con il solo albero dei Sigilli (pendenza 0,2 e boss finali, § 5). Quando arriva l’equipaggiamento
-  il giocatore avrà più potenza: la curva andrà rialzata, ma solo in parte: con l’equipaggiamento atteso i muri devono stare intorno al 50% (§ 15, **[deciso]**). Oggi vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
-  vita ×1,49, danno ×1,28, numero ×1,15. Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
+- **Difficoltà dal livello 31**: ritarata nella 1.11.0 con albero ed equipaggiamento attesi (pendenza 0,8, scalino 2, fattori del boss per muro, § 5 e § 16):
+  muri dal 40 al 200 in media al 59,8%, dentro la fascia 50-70% (§ 15, **[deciso]**). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
+  vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Aperto: senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
   (tabella delle resistenze segnaposto, § 6). Da rivedere con le resistenze vere.
@@ -399,7 +399,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · taratura dell’equipaggiamento e icone di pezzi e Moduli (§ 15) · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
+Ranger · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
 salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
@@ -440,7 +440,7 @@ salvataggio della partita in corso · audio e altre impostazioni · bilanciament
   Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
   leggendario rosso `#ff4d6a`, ancestrale iridescente.
 - **Obiettivo di bilanciamento** **[deciso]**: l’equipaggiamento deve essere **premiante** e aiutare a superare i muri: con l’equipaggiamento atteso
-  i muri dal 40 in poi passano dal **30% circa al 50% circa** di vittorie dei bot. La curva dal 31 (§ 5) quindi non va rialzata fino a riassorbire tutto l’equipaggiamento.
+  i muri dal 40 in poi passano dal **30% circa al 50-70%** di vittorie dei bot (fascia accettata da Marco nella taratura 1.11.0, per non alzare troppo la difficoltà). La curva dal 31 (§ 5) quindi non va rialzata fino a riassorbire tutto l’equipaggiamento.
 - **Inventario** **[deciso]**: **nessun limite** a pezzi e Moduli (servono per le fusioni); un oggetto si può scartare a mano, senza compenso.
 - **Moduli installati** **[deciso]**: si tolgono **gratis e senza perdite**, tornano in inventario e si possono installare in un altro pezzo dello stesso tipo.
 - **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
@@ -585,6 +585,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Schermata** “Equipaggiamento” (menu, accanto all’albero, dal livello 30): i 6 pezzi in alto (bordo del colore della rarità, Moduli installati), il pezzo scelto con
   statistica e slot, sotto l’inventario di quel pezzo in due schede (Pezzi, Moduli per rarità) con tre modalità: **Equipaggia/Installa** (un tocco), **Fondi** (pezzi: due tocchi;
   Moduli: si scelgono 5 righe, anche diverse, poi “Fondi ora”), **Scarta** (due tocchi). Un Modulo installato si toglie con due tocchi. Sopra: totale di guardiano, barriera e torri.
+- **Icone** (1.11.0) **[Claude]**: sagome dei 6 pezzi (cannone, guanto, elmetto, corazza, stivale, nucleo esagonale) e chip per i Moduli (con l’iniziale del pezzo), del colore della rarità; nei 6 riquadri, nelle righe dell’inventario, negli slot e nella vittoria.
 - **Vittoria**: tasselli con gli oggetti presi, del colore della rarità. **Avviso del 30**: “cadono a ogni vittoria. Equipaggiali dal menu.”
 - **Letture degli effetti**:
   - Un solo bonus di danno del guardiano: statistica base di arma, guanti e testa + Moduli 2, 3, 4, 5, 6, 9, 12, 13, 17, 18 (i valori negativi di 4, 12 e 17 entrano qui);
@@ -598,7 +599,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero. 22: a ogni ondata, 4 carte più basse; tasto 4.
   - 29 e 30: un tiro a inizio partita; 30 vale per le torrette equipaggiate e per quelle che arrivano dopo. Senza questi Moduli non si consuma nessun tiro casuale (le misure dei bot restano confrontabili).
   - Riduzione del danno (11) e del cooldown (15) si sommano all’albero, con i tetti del § 16 (40% e 60%).
-- **Salvataggio**: versione 3 (§ 7). **Mancano**: misura con i bot dell’equipaggiamento atteso e taratura dei muri al 50% (obiettivo sopra); icone dei pezzi e dei Moduli (oggi solo riquadri e testo).
+- **Salvataggio**: versione 3 (§ 7). **Taratura** (1.11.0): muri dal 40 al 200 in media al 59,8% con l’equipaggiamento atteso (numeri in § 16, “Taratura 1.11.0”).
 
 ## 16. Sigilli e albero dei potenziamenti (da costruire)
 
@@ -718,6 +719,14 @@ Regole di calcolo **[Claude] [da rivedere]**:
   da 1,1 a 1,3 (35,1%) e poi **1,5**: muri dal 50 al 200 in media **31,1%** (200 partite ciascuno: 50 26,0% · 60 30,5% · 70 34,0% · 80 18,0% · 90 16,5% · 100 41,5% ·
   110 35,5% · 120 41,5% · 130 33,0% · 140 17,0% · 150 34,5% · 160 42,5% · 170 47,0% · 180 36,5% · 190 18,0% · 200 25,5%); il 40 (senza abilità) 35,5%.
 - **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
+- **Taratura 1.11.0, con l’equipaggiamento atteso** (`EQUIP=1.5 node tests/tools/curva.js …`; equipaggiamento da `tests/tools/equip-atteso.js`: drop veri per 1,5 vittorie
+  per livello dal 30, poi fusioni, pezzo più raro e Moduli migliori; al 40 guardiano +29%, al 100 +97%, al 200 +152%). Obiettivo **[deciso]**: muri dal 40 tra il 50 e il 70%.
+  Con la curva della 1.8.0 i muri dal 40 al 200 erano al **93%** (40 82% · 100 99% · 170-200 98-100%). Prove (100 partite per muro, 40/70/100/140/200): pendenza 0,5 →
+  71/67/87/45/82 · 0,8 → 73/59/76/16/45 · 1,2 → 60/33/51/4/4; pendenza 0,65 su tutti i muri: media 64%; 0,7 con tre boss corretti: 70,8%.
+  **Finale** (pendenza 0,8, scalino 2, `FINAL_BOSS_K`; 200 partite per muro, 400 al 140 e al 150): 40 67,5 · 50 64,0 · 60 71,0 · 70 59,0 · 80 63,0 · 90 55,0 · 100 65,5 ·
+  110 59,5 · 120 47,0 · 130 62,5 · 140 53,3 · 150 57,0 · 160 55,5 · 170 60,0 · 180 63,0 · 190 67,0 · 200 46,0: **media 59,8%**. Livelli intermedi: 35 77,5 · 45 93,5 · 75 98,0 ·
+  125 84,5 · 175 99,5 (respiro tra i muri). **Senza equipaggiamento** (solo albero atteso): 40 17% · 100 3% · 200 0%: dal 40 l’equipaggiamento diventa necessario.
+  Rumore circa ±7 punti per muro con 200 partite.
 
 ### Regole generali
 - I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]** Eccezione dalla 1.10.1: le torrette equipaggiate non consumano più scelte (§ 4).

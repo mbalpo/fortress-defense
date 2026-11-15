@@ -600,6 +600,59 @@ function treeAbilities() {
 // colore della rarità: pieno, l’ancestrale iridescente (la tinta gira col tempo)
 const rarColor = (r) => r === 4 ? "hsl(" + Math.round((clock * 90) % 360) + ",85%,70%)" : RARITY[r].color;
 const RAR_SHORT = ["Comune", "Raro", "Epico", "Legg.", "Ancest."];
+// icone dei pezzi (disegno originale, sagome semplici): centro (x, y), lato s, colore c della rarità
+const PIECE_ART = {
+  arma(x, y, s, c) {               // cannone del guardiano: canna obliqua, bocca luminosa, impugnatura
+    const k = s / 20;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-0.7);
+    rr(-9 * k, -2.6 * k, 16 * k, 5.2 * k, 2 * k); ctx.fillStyle = BODY2; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = c; ctx.stroke();
+    disc(8 * k, 0, 2.6 * k, c);
+    rr(-6 * k, 1.5 * k, 4 * k, 6 * k, 1.5 * k); ctx.fillStyle = BODY; ctx.fill(); ctx.stroke();
+    ctx.restore();
+  },
+  guanti(x, y, s, c) {             // guanto: palmo, quattro dita, pollice
+    const k = s / 20;
+    for (let i = 0; i < 4; i++) { rr(x + (-6 + i * 3.2) * k, y - 9 * k, 2.6 * k, 7 * k, 1.2 * k); ctx.fillStyle = BODY2; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = c; ctx.stroke(); }
+    rr(x - 6.5 * k, y - 3 * k, 12.5 * k, 10 * k, 3 * k); ctx.fillStyle = BODY2; ctx.fill(); ctx.lineWidth = 1.2; ctx.stroke();
+    poly([[x + 6 * k, y - 1 * k], [x + 9.5 * k, y - 4 * k], [x + 10 * k, y - 1 * k], [x + 6 * k, y + 3 * k]], BODY2, c, 1);
+    ctx.fillStyle = c; ctx.fillRect(x - 6.5 * k, y + 4 * k, 12.5 * k, 1.6 * k);
+  },
+  testa(x, y, s, c) {              // elmetto integrale con visore e antenna
+    const k = s / 20;
+    ctx.beginPath(); ctx.arc(x, y + 2 * k, 9 * k, Math.PI, 0); ctx.lineTo(x + 9 * k, y + 6 * k); ctx.lineTo(x - 9 * k, y + 6 * k); ctx.closePath();
+    ctx.fillStyle = BODY2; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = c; ctx.stroke();
+    rr(x - 6.5 * k, y - 1 * k, 13 * k, 3.6 * k, 1.8 * k); ctx.fillStyle = c; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 4 * k, y - 6 * k); ctx.lineTo(x + 6.5 * k, y - 10 * k); ctx.lineWidth = 1; ctx.stroke(); disc(x + 6.5 * k, y - 10 * k, 1.2 * k, c);
+  },
+  armatura(x, y, s, c) {           // corazza: piastra a scudo con spalle e linea centrale
+    const k = s / 20;
+    poly([[x - 9 * k, y - 7 * k], [x - 3 * k, y - 9 * k], [x, y - 6 * k], [x + 3 * k, y - 9 * k], [x + 9 * k, y - 7 * k], [x + 7 * k, y + 3 * k], [x, y + 9 * k], [x - 7 * k, y + 3 * k]], BODY2, c, 1.2);
+    ctx.beginPath(); ctx.moveTo(x, y - 5 * k); ctx.lineTo(x, y + 7 * k); ctx.lineWidth = 1; ctx.strokeStyle = c; ctx.stroke();
+    disc(x, y - 1 * k, 2 * k, c);
+  },
+  stivali(x, y, s, c) {            // stivale: gambale, piede, suola
+    const k = s / 20;
+    poly([[x - 5 * k, y - 9 * k], [x + 2 * k, y - 9 * k], [x + 2 * k, y + 1 * k], [x + 9 * k, y + 3 * k], [x + 9 * k, y + 7 * k], [x - 5 * k, y + 7 * k]], BODY2, c, 1.2);
+    ctx.fillStyle = c; ctx.fillRect(x - 5 * k, y + 7 * k, 14 * k, 2 * k); ctx.fillRect(x - 5 * k, y - 5 * k, 7 * k, 1.4 * k);
+  },
+  nucleo(x, y, s, c) {             // nucleo: esagono con sfera di energia
+    const k = s / 20, pts = [];
+    for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; pts.push([x + Math.cos(a) * 9 * k, y + Math.sin(a) * 9 * k]); }
+    poly(pts, BODY, c, 1.2);
+    disc(x, y, 5 * k, c, 0.35); disc(x, y, 3 * k, c);
+  },
+};
+function pieceIcon(id, x, y, s, c) { PIECE_ART[id](x, y, s, c); }
+// icona del Modulo: chip quadrato con i piedini e il nucleo del colore della rarità; la lettera dice il pezzo
+function modIcon(pc, x, y, s, c) {
+  const k = s / 20;
+  ctx.fillStyle = "#7f8ba3";
+  for (let i = -1; i <= 1; i++) { ctx.fillRect(x + i * 4 * k - 0.8 * k, y - 9.5 * k, 1.6 * k, 3 * k); ctx.fillRect(x + i * 4 * k - 0.8 * k, y + 6.5 * k, 1.6 * k, 3 * k);
+    ctx.fillRect(x - 9.5 * k, y + i * 4 * k - 0.8 * k, 3 * k, 1.6 * k); ctx.fillRect(x + 6.5 * k, y + i * 4 * k - 0.8 * k, 3 * k, 1.6 * k); }
+  rr(x - 7 * k, y - 7 * k, 14 * k, 14 * k, 2.5 * k); ctx.fillStyle = BODY; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = c; ctx.stroke();
+  rr(x - 4 * k, y - 4 * k, 8 * k, 8 * k, 1.5 * k); ctx.fillStyle = c; ctx.fill();
+  if (pc && s >= 14) txt(PIECES[pc].name[0], x, y + 0.5 * k, 6.5 * k, "#070b16", "center", "800");
+}
 function gearHeader() {
   const s = gearStats(progress.gear), p = (x) => "+" + fmt(x * 100) + "%";
   return "Guardiano " + p(s.pdmg) + " · barriera " + p(s.hp) + " · torri " + p(s.tdmg);
@@ -614,16 +667,18 @@ function gearScreen() {
   PIECE_IDS.forEach((id, i) => {
     const x = 12 + (i % 3) * 114, y = 48 + Math.floor(i / 3) * 50, q = g.eq[id], on = gearSel === id;
     button(x, y, 108, 44, "", () => gearPick(id), { stroke: q ? rarColor(q.r) : on ? "#7fa0e0" : "#2c4272", fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)" });
-    txt(PIECES[id].name, x + 54, y + 14, 12, on ? "#e8eefc" : "#b9c8e6", "center", "700");
-    if (q) txt(RARITY[q.r].name + " · " + q.m.length + "/" + (q.r + 1), x + 54, y + 31, 10, rarColor(q.r), "center", "700");
-    else txt(gearCount(g, "pcs", id) ? "vuoto · in inventario" : "vuoto", x + 54, y + 31, 10, "#6f82ad", "center", "500");
+    pieceIcon(id, x + 19, y + 22, 24, q ? rarColor(q.r) : "#4a5a80");
+    txt(PIECES[id].name, x + 66, y + 14, 12, on ? "#e8eefc" : "#b9c8e6", "center", "700");
+    if (q) fitTxt(RARITY[q.r].name + " " + q.m.length + "/" + (q.r + 1), x + 66, y + 31, 70, 10, rarColor(q.r), "center", "700");
+    else txt(gearCount(g, "pcs", id) ? "da equipaggiare" : "vuoto", x + 66, y + 31, 10, "#6f82ad", "center", "500");
   });
   // pezzo scelto: statistica base e slot dei Moduli
   let y = 160;
   if (e) {
-    txt(P.name, 16, y + 2, 14, "#e8eefc", "left", "800");
-    txt(RARITY[e.r].name, 16 + tw(P.name, 14, "800") + 8, y + 2, 12, rarColor(e.r), "left", "700");
-    txt(STAT_TXT[P.stat] + " +" + fmt(P.base[e.r]) + "%", 16, y + 18, 11, "#9fb4d9", "left", "500");
+    pieceIcon(pc, 28, y + 10, 26, rarColor(e.r));
+    txt(P.name, 48, y + 2, 14, "#e8eefc", "left", "800");
+    txt(RARITY[e.r].name, 48 + tw(P.name, 14, "800") + 8, y + 2, 12, rarColor(e.r), "left", "700");
+    txt(STAT_TXT[P.stat] + " +" + fmt(P.base[e.r]) + "%", 48, y + 18, 11, "#9fb4d9", "left", "500");
     const arm = gearArm === "u";
     button(252, y - 8, 96, 26, arm ? "Tocca ancora" : "Togli", tapUnequip, { size: 11, stroke: arm ? "#ffd166" : "#2c4272", color: arm ? "#ffd166" : "#9fb4d9" });
     for (let i = 0; i <= e.r; i++) {
@@ -631,7 +686,7 @@ function gearScreen() {
       if (m) {
         const armed = gearArm === "s" + i;
         button(12, yy, 336, 24, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
-        disc(24, yy + 12, 5, rarColor(m[1]));
+        modIcon(pc, 25, yy + 12, 16, rarColor(m[1]));
         txt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + 12, 11, armed ? "#ffd166" : "#e8eefc", "left", "600");
       } else {
         rr(12, yy, 336, 24, 8); ctx.lineWidth = 1; ctx.strokeStyle = "#24345a"; ctx.stroke();
@@ -666,9 +721,10 @@ function gearScreen() {
       else if (gearMode === "fuse") sub = r >= 4 ? "Rarità massima" : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali";
       else sub = n ? (armed ? "Tocca di nuovo per scartarne uno" : "Tocca per scartarne uno") : "";
       button(12, yy, 336, 36, "", () => tapPiece(r), { stroke: armed ? "#ffd166" : n ? rarColor(r) : "#24345a", fill: n ? "rgba(18,30,58,0.92)" : "rgba(10,16,32,0.6)" });
-      txt(RARITY[r].name, 22, yy + 12, 12, n ? rarColor(r) : "#4a5a80", "left", "700");
+      pieceIcon(pc, 32, yy + 18, 22, n ? rarColor(r) : "#3a4a70");
+      txt(RARITY[r].name, 52, yy + 12, 12, n ? rarColor(r) : "#4a5a80", "left", "700");
       txt("×" + n, 338, yy + 12, 12, n ? "#e8eefc" : "#4a5a80", "right", "700");
-      if (sub) txt(sub, 22, yy + 27, 10, armed ? "#ffd166" : "#8a9ac0", "left", "500");
+      if (sub) txt(sub, 52, yy + 27, 10, armed ? "#ffd166" : "#8a9ac0", "left", "500");
     }
   } else {
     for (let r = 0; r < 5; r++) {
@@ -681,7 +737,8 @@ function gearScreen() {
     list.forEach((fx, i) => {
       const yy = y + 28 + i * 23, n = qty(g.mods, modKey(pc, gearRar, fx)), armed = gearArm === "m" + fx, sel = gearFuse[fx] || 0;
       button(12, yy, 336, 21, "", () => tapMod(fx), { stroke: armed ? "#ffd166" : sel ? "#c9a2ff" : "#2c4272" });
-      txt(armed ? "Tocca di nuovo per scartarne uno" : modText(fx, gearRar), 22, yy + 11, 10, armed ? "#ffd166" : "#e8eefc", "left", "600");
+      modIcon(null, 22, yy + 10.5, 13, rarColor(gearRar));
+      txt(armed ? "Tocca di nuovo per scartarne uno" : modText(fx, gearRar), 34, yy + 11, 10, armed ? "#ffd166" : "#e8eefc", "left", "600");
       txt((sel ? sel + " scelti · " : "") + "×" + n, 338, yy + 11, 10, sel ? "#c9a2ff" : "#9fb4d9", "right", "700");
     });
   }
@@ -694,7 +751,8 @@ function gearChips(y) {
   list.forEach((o, i) => {
     const x = 18 + (i % 3) * 110, yy = y + Math.floor(i / 3) * 30;
     rr(x, yy, 104, 26, 6); ctx.fillStyle = "rgba(18,30,58,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = rarColor(o.r); ctx.stroke();
-    txt(o.kind === "mods" ? "Modulo " + PIECES[o.pc].name.toLowerCase() : PIECES[o.pc].name, x + 52, yy + 13, 10, rarColor(o.r), "center", "700");
+    if (o.kind === "mods") modIcon(o.pc, x + 14, yy + 13, 16, rarColor(o.r)); else pieceIcon(o.pc, x + 14, yy + 13, 18, rarColor(o.r));
+    fitTxt(o.kind === "mods" ? "Modulo " + PIECES[o.pc].name.toLowerCase() : PIECES[o.pc].name, x + 60, yy + 13, 80, 10, rarColor(o.r), "center", "700");
   });
   return list.length ? Math.ceil(list.length / 3) * 30 + 18 : 0;
 }

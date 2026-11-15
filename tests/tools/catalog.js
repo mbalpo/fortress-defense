@@ -168,11 +168,11 @@ function scenes(turretIds) {
     eq: { arma: { r: 4, m: [[2, 4], [4, 3], [1, 2]] }, testa: { r: 2, m: [[22, 1]] }, armatura: { r: 3, m: [[10, 4], [11, 2]] }, stivali: { r: 0, m: [] }, nucleo: { r: 1, m: [[30, 0]] } } } });
   add(1, "menu-equipaggiamento", "Menu con l’equipaggiamento", "Dal livello 30: pulsante “Equipaggiamento” accanto all’albero.", { progress: PG }, ["menuScreen"]);
   add(1, "equipaggiamento-pezzi", "Equipaggiamento · pezzi", "I 6 pezzi con rarità (colore, ancestrale iridescente) e Moduli installati; slot del pezzo scelto; inventario dei pezzi.",
-    { progress: PG, setup: "openGear();", each: "", frames: 60 }, ["gearScreen", "rarColor", "gearHeader"]);
+    { progress: PG, setup: "openGear();", each: "", frames: 60 }, ["gearScreen", "rarColor", "gearHeader", "pieceIcon", "modIcon"]);
   add(1, "equipaggiamento-moduli", "Equipaggiamento · fusione dei Moduli", "Moduli del pezzo per rarità; in modalità “Fondi” si scelgono 5 Moduli, anche diversi.",
     { progress: PG, setup: "openGear(); gearSetTab('mods'); gearSetMode('fuse'); tapMod(1); tapMod(1); tapMod(23);", frames: 1 }, ["gearScreen"]);
   add(1, "vittoria-oggetti", "Vittoria con l’equipaggiamento", "Dal livello 30: pezzi e Moduli presi, con il colore della rarità.",
-    { progress: PG, setup: "selLevel = 42; startRun('standard'); __cat.step(100); winLevel();", frames: 1 }, ["wonScreen", "gearChips"]);
+    { progress: PG, setup: "selLevel = 42; startRun('standard'); __cat.step(100); winLevel();", frames: 1 }, ["wonScreen", "gearChips", "pieceIcon", "modIcon"]);
   add(1, "carte-4", "Quattro carte e rinnovo", "Moduli 22 (4 carte tra cui scegliere) e 21 (rinnovo delle carte).",
     { progress: Object.assign({}, PG, { gear: { pcs: {}, mods: {}, eq: { testa: { r: 1, m: [[22, 4], [21, 4]] } } } }), setup: START(42) + " queue = []; enemies.length = 0; wave = 1; endWave();", frames: 1 }, ["upgradeScreen"]);
   // schermate HTML (stesso markup e CSS di index.html)
@@ -567,8 +567,8 @@ ${palette}
 <p>Posti già previsti per elementi che non hanno ancora un disegno (DESIGN.md § 13 e § 15). Quando arrivano: funzione in <code>draw.js</code>, voce qui, <code>npm run catalog</code>.</p>
 <div class="todo">
   <div data-voce="futuro:ranger"><b>Ranger</b><br>Nessun disegno ancora (§ 13).</div>
-  <div data-voce="futuro:equipaggiamento"><b>Equipaggiamento</b><br>6 pezzi: testa, armatura, guanti, stivali, arma, nucleo; 5 rarità (comune, raro, epico, leggendario, ancestrale) con un colore ciascuna, l’ancestrale iridescente. Oggi solo riquadri con testo (schermata “Equipaggiamento” nel § 1): nessuna icona dei pezzi (§ 15).</div>
-  <div data-voce="futuro:moduli"><b>Moduli (chip)</b><br>Un tipo per pezzo, stesse 5 rarità. Oggi righe di testo con un pallino del colore della rarità: nessuna icona (§ 15).</div>
+  <div data-voce="futuro:equipaggiamento"><b>Equipaggiamento</b><br>6 pezzi: testa, armatura, guanti, stivali, arma, nucleo; 5 rarità (comune, raro, epico, leggendario, ancestrale) con un colore ciascuna, l’ancestrale iridescente. Icone dei 6 pezzi (<code>PIECE_ART</code>, sagome semplici colorate con la rarità) nella schermata “Equipaggiamento” e nella vittoria (§ 1).</div>
+  <div data-voce="futuro:moduli"><b>Moduli (chip)</b><br>Un tipo per pezzo, stesse 5 rarità. Icona a chip (<code>modIcon</code>): piedini, nucleo del colore della rarità e iniziale del pezzo (§ 1, schermata “Equipaggiamento”).</div>
 </div>
 </section>
 
