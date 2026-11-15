@@ -3,6 +3,14 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione — equipaggiamento necessario dal 40 (nessuna versione nuova)
+
+- Marco conferma la taratura 1.11.0: che senza equipaggiamento i muri dal 40 siano quasi impossibili (40 17%, 100 3%, 200 0%) **va bene così**. DESIGN.md § 11 aggiornato.
+
+**Test**: nessuno (solo documenti). Catalogo grafico: non cambiato.
+
+Checklist: togliere “Senza equipaggiamento dal 40 i muri sono quasi impossibili: va bene?” (deciso: sì).
+
 ## 1.11.0 — taratura con l’equipaggiamento atteso, icone di pezzi e Moduli
 
 Punti “Cosa manca” della 1.10.0. Obiettivo di Marco: muri dal 40 tra il 50 e il 70% di vittorie dei bot con l’equipaggiamento atteso (fascia accettata durante il lavoro,

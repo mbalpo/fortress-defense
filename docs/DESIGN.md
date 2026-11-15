@@ -377,7 +377,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.11.0 con albero ed equipaggiamento attesi (pendenza 0,8, scalino 2, fattori del boss per muro, § 5 e § 16):
   muri dal 40 al 200 in media al 59,8%, dentro la fascia 50-70% (§ 15, **[deciso]**). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
-  vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Aperto: senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
+  vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%): **va bene così** **[deciso]** (Marco, dopo la 1.11.0). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
   (tabella delle resistenze segnaposto, § 6). Da rivedere con le resistenze vere.
