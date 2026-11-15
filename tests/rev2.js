@@ -41,21 +41,21 @@ console.log("— Pool libero: carte bloccate dall’albero dei Sigilli (DESIGN.m
     const lk = X.TREE_LOCKS[d.id] || [], byId = Object.fromEntries(d.ups.map((u) => [u.id, u])), errs = [];
     if (lk.some((id) => !byId[id])) errs.push("voce inesistente");
     const free = d.ups.filter((u) => !lk.includes(u.id));
-    // struttura dei blocchi: una chain intera da 3 voci, un lv2 dell’altra chain, un level up lv2 (guardiano: anche il level up lv1, § 16)
+    // struttura dei blocchi: una chain intera da 3 voci, un lv2 dell’altra chain, un level up lv1 e uno lv2 (§ 16)
     const lkChain = lk.map((id) => byId[id]).filter((u) => u && u.cat === "chain"), chains = [...new Set(lkChain.map((u) => u.chain))];
     const whole = chains.find((c) => d.ups.filter((u) => u.chain === c).every((u) => lk.includes(u.id)) && d.ups.filter((u) => u.chain === c).length === 3);
     const other = lkChain.filter((u) => u.chain !== whole);
     const lkLu = lk.map((id) => byId[id]).filter((u) => u && u.cat === "lu").map((u) => u.lv).sort().join("-");
     if (!whole || other.length !== 1 || other[0].lv !== 2) errs.push("chain bloccate");
-    if (lkLu !== (d.id === "player" ? "1-2" : "2")) errs.push("level up bloccati " + lkLu);
+    if (lkLu !== "1-2") errs.push("level up bloccati " + lkLu);
     if (lk.some((id) => byId[id] && byId[id].cat === "std")) errs.push("carta standard bloccata");
     // ogni voce chain libera di lv N > 1 ha una voce libera di lv N−1 nella stessa chain (quindi ogni lv3 ha un lv2 libero)
     for (const u of free) if (u.cat === "chain" && u.lv > 1 && !free.some((v) => v.chain === u.chain && v.lv === u.lv - 1)) errs.push(u.id + " senza lv" + (u.lv - 1) + " libero");
     const freeChainLv3 = free.filter((u) => u.cat === "chain" && u.lv === 3).length;
     if (freeChainLv3 < 1) errs.push("nessuna chain completa libera");
-    // level up rimasti: torrette 2 a lv1, 1 a lv2, 1 a lv3; guardiano 1 per livello (Colpo pesante è bloccato, § 16)
+    // level up rimasti: 1 per livello (un lv1 e un lv2 sono bloccati, § 16)
     const lu = [1, 2, 3].map((l) => free.filter((u) => u.cat === "lu" && u.lv === l).length);
-    const need = d.id === "player" ? [1, 1, 1] : [2, 1, 1];
+    const need = [1, 1, 1];
     if (lu.some((n, i) => n < need[i])) errs.push("level up liberi " + lu.join("-"));
     // con il solo pool libero si arriva al lv3 e a 12 potenziamenti (scelte a caso, 20 prove)
     let maxed = 0;

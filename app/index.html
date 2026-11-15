@@ -425,21 +425,21 @@ Object.keys(TURRETS).forEach((k) => { TURRETS[k].id = k; });
 const TURRET_ORDER = Object.keys(TURRETS);
 
 // Carte bloccate dall’albero dei Sigilli (DESIGN.md § 16): non escono, dal livello 1, finché non sono in META.unlocked.
-// Torrette: chain da 3 voci · un lv2 dell’altra chain · un level up lv2 [Claude, da rivedere]. Guardiano: chain Colpi esplosivi,
+// Torrette: chain da 3 voci · un lv2 dell’altra chain · un level up lv1 e uno lv2 [Claude, da rivedere; il lv1 deciso da Marco nella 1.9.4]. Guardiano: chain Colpi esplosivi,
 // Frenesia furiosa, Colpo pesante, Rimbalzo [deciso]. Le combo che richiedono una voce bloccata escono solo dopo lo sblocco.
 const TREE_LOCKS = {
   player:  ["boom1", "boomP", "boom3", "fspd", "punch", "ricochet"],
-  sky:     ["burn1", "burn2", "burn3", "splitB", "again"],
-  laser:   ["sweep1", "sweep2", "sweep3", "multiW", "exploit"],
-  disr:    ["tp1", "tp2", "tp3", "dstB", "amp"],
-  aero:    ["salvo1", "salvoK", "salvo2", "mineK", "echo"],
-  thunder: ["fork1", "fork2", "forkW", "paraD", "vuln"],
-  beam:    ["amp1", "amp2", "amp3", "pull", "feed"],
-  wheel:   ["mini1", "miniB", "miniD", "trailR", "stoke"],
-  hive:    ["seed1", "seed2", "seed3", "waveR", "kami"],
-  rail:    ["split1", "split2", "mass", "boomR", "stun"],
-  tesla:   ["over1", "over2", "over3", "orbSlow", "stun"],
-  vortex:  ["stat1", "stat2", "stat3", "whT", "twin"],
+  sky:     ["burn1", "burn2", "burn3", "splitB", "fire", "again"],
+  laser:   ["sweep1", "sweep2", "sweep3", "multiW", "longer", "exploit"],
+  disr:    ["tp1", "tp2", "tp3", "dstB", "blast", "amp"],
+  aero:    ["salvo1", "salvoK", "salvo2", "mineK", "blast", "echo"],
+  thunder: ["fork1", "fork2", "forkW", "paraD", "wide", "vuln"],
+  beam:    ["amp1", "amp2", "amp3", "pull", "vuln", "feed"],
+  wheel:   ["mini1", "miniB", "miniD", "trailR", "heat", "stoke"],
+  hive:    ["seed1", "seed2", "seed3", "waveR", "push", "kami"],
+  rail:    ["split1", "split2", "mass", "boomR", "punch", "stun"],
+  tesla:   ["over1", "over2", "over3", "orbSlow", "chain", "stun"],
+  vortex:  ["stat1", "stat2", "stat3", "whT", "power", "twin"],
 };
 const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unlocked[who] || []).includes(id) && !progress.tree[who + ":" + id];
 
@@ -2086,7 +2086,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.9.3";
+const APP_VERSION = "1.9.4";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
 const $id = (id) => document.getElementById(id);
 function makeSave() {

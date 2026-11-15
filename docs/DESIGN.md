@@ -607,31 +607,33 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Torrette
 - **Sezione condivisa per tipo** **[deciso]**: danno del tipo, durata degli status, danno di tutte le torrette. Valgono **solo per le torrette** (il guardiano ha già il suo albero e l’equipaggiamento).
-- **Nodi per ogni torretta (9)** **[deciso]**:
+- **Nodi per ogni torretta (10)** **[deciso]** (erano 9: il level up lv1 è stato aggiunto nella 1.9.4, Marco):
   - sblocco della chain da 3 voci (3 nodi, in sequenza);
   - sblocco di uno dei due lv2 dell’altra chain (1);
-  - sblocco di un level up lv2 (1);
+  - sblocco di un level up lv1 (1) e di un level up lv2 (1), come per il guardiano;
   - potenziamento delle 3 carte standard (3 nodi, con più livelli ciascuno): azzerano i malus e aumentano anche di molto i bonus, con l’obiettivo di restare efficaci fino a ~200 livelli di campagna;
   - **sblocco permanente della torretta** (1, nodo finale).
 - **Sblocco permanente**: con il nodo acquistato la torretta si può equipaggiare prima dell’ondata 1, fino a 4. Ogni torretta equipaggiata consuma una scelta: le prime N scelte dopo le ondate vengono saltate,
   così il totale resta 19 (28 dal livello 11) e la regola delle scelte non cambia. Le torrette già equipaggiate non escono più come carte. **[deciso]**
 - **Carte bloccate** (non disponibili fino all’acquisto, dal livello 1; i livelli 1-30 si giocano con il pool libero, vedi § 5) **[Claude] [da rivedere]**.
   Criterio: si blocca la carta che aggiunge una meccanica o il salto di potenza maggiore; restano libere quelle numeriche.
+  Level up lv1 **[deciso]** (Marco, 1.9.4; elenco proposto da Claude e accettato): stesso criterio, e non si blocca mai un lv1 da cui dipende un level up successivo
+  (Thunderbolt: Sfera sul campo serve a Sfere pungenti; Hive: Evoluzione I serve a Evoluzione II). Restano liberi 1 level up per livello, come per il guardiano.
   Nel codice: tabella `TREE_LOCKS` (anche il guardiano) e sblocchi in `META.unlocked`, per ora a mano; controllo in `tests/rev2.js` (pool libero) e `tests/combo.js` (combo bloccate). **[Claude]**
 
-| Torretta | Chain da 3 voci bloccata | lv2 bloccato dell’altra chain | Level up lv2 bloccato |
-|---|---|---|---|
-| Sky Guard | Missili incendiari | Mini-missili esplosivi | Doppio impatto |
-| Laser | Raggio spazzante | Raggi debilitanti | Sfruttare i debuff |
-| Disruption Drone | Teletrasporto | Scarica distruttiva | Campo destabilizzante |
-| Aeroblast | Salva di schegge | Mine d’urto | Doppia esplosione |
-| Thunderbolt | Fulmini ramificati | Scossa continua | Fulmini corrosivi |
-| Beam | Raggio amplificato | Attrazione | Raggio vorace |
-| Firewheel Drone | Mini-droni | Scia combustibile | Fiamma crescente |
-| Hive | Sciame | Onda rallentante | Droni kamikaze |
-| Railgun | Proiettile diviso | Deflagrazione | Impatto stordente |
-| Teslacoil | Sovraccarico | Sfera rallentante | Esplosioni paralizzanti |
-| Gravity Vortex Gun | Buco nero statico | Varchi stabili | Secondo buco nero |
+| Torretta | Chain da 3 voci bloccata | lv2 bloccato dell’altra chain | Level up lv1 bloccato | Level up lv2 bloccato |
+|---|---|---|---|---|
+| Sky Guard | Missili incendiari | Mini-missili esplosivi | Area infuocata | Doppio impatto |
+| Laser | Raggio spazzante | Raggi debilitanti | Raggio persistente | Sfruttare i debuff |
+| Disruption Drone | Teletrasporto | Scarica distruttiva | Esplosione finale | Campo destabilizzante |
+| Aeroblast | Salva di schegge | Mine d’urto | Esplosioni ampie | Doppia esplosione |
+| Thunderbolt | Fulmini ramificati | Scossa continua | Fulmini larghi | Fulmini corrosivi |
+| Beam | Raggio amplificato | Attrazione | Vulnerabilità | Raggio vorace |
+| Firewheel Drone | Mini-droni | Scia combustibile | Fiamme roventi | Fiamma crescente |
+| Hive | Sciame | Onda rallentante | Colpi di forza | Droni kamikaze |
+| Railgun | Proiettile diviso | Deflagrazione | Impatto | Impatto stordente |
+| Teslacoil | Sovraccarico | Sfera rallentante | Esplosione a catena | Esplosioni paralizzanti |
+| Gravity Vortex Gun | Buco nero statico | Varchi stabili | Buco nero iperdenso | Secondo buco nero |
 
 ### Guardiano **[deciso]** (9 nodi)
 - Sblocco della chain **Colpi esplosivi** (3 nodi, in sequenza); lv2 **Frenesia furiosa**; level up lv1 **Colpo pesante**; level up lv2 **Rimbalzo**.
@@ -640,10 +642,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Fase 1 costruita (1.5.0)
 - **Premi** come sopra. Lettura applicata: il premio della cupola al 100% si prende solo con un completamento **successivo** al primo (anche se il primo era già perfetto). **[da rivedere]** (la lettura era da confermare)
-- **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
+- **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv1, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
   **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
   Ogni nodo di sblocco ha un solo livello.
-- **Costi** **[provvisorio]**: chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 9 Sigilli, il guardiano 7, tutto l’albero di fase 1 106.
+- **Costi** **[provvisorio]**: chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 10 Sigilli, il guardiano 7, tutto l’albero di fase 1 117 (106 prima della 1.9.4).
   In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
 - **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). Nessun rimborso per ora (proposta di rimborso totale ancora aperta, § 11).
 - **Torrette equipaggiate**: si scelgono toccando lo Sblocco permanente già comprato (al massimo 4); valgono in **tutti i livelli e le modalità**, come le carte sbloccate
@@ -673,7 +675,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   **Più carte, più danno** **[deciso]** (Marco, al posto di “più carte (+cadenza)”): la torretta o il guardiano con più carte scelte nella partita ha danno
   +5/10/15/20/25% (5 livelli, dopo Riduzione danno). Letture **[Claude] [da rivedere]**: “carte” = pile di potenziamenti prese (anche quelle dei mini-boss);
   a parità hanno il bonus tutti quelli in testa; con zero carte nessuno; si ricalcola a ogni carta presa.
-- Costo dell’albero intero (1.7.0): sblocchi 106, carte standard 660 (torrette) + 56 (guardiano), Tipi 305, Barriera 75: **1202 Sigilli**. In Standard fino al 200
+- Costo dell’albero intero (1.7.0): sblocchi 117, carte standard 660 (torrette) + 56 (guardiano), Tipi 305, Barriera 75: **1213 Sigilli** (1.9.4: +11 per i level up lv1). In Standard fino al 200
   se ne prendono al massimo 340 (circa 255 con metà dei premi della cupola), in Epica fino a 1200: l’albero dura ben oltre il 200.
 - **Misura con i bot** (1.6.0, prima della taratura, curva piena dal 31): livello 40 / 50 senza albero 3,0% / 0,5%; solo sblocchi 9,0% / 2,0%;
   nodi a livelli al 3 63,5% / 42,5%; albero pieno 88,0% / 72,0%.

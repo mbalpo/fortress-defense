@@ -3,6 +3,30 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.9.4 — un level up lv1 bloccato per torretta nell’albero dei Sigilli
+
+Correzione chiesta da Marco: ogni torretta deve avere, come il guardiano, anche un level up lv1 bloccato e sbloccabile con i Sigilli (prima ne aveva bloccato solo uno lv2).
+Elenco proposto da Claude e accettato da Marco: si blocca la carta che aggiunge una meccanica o dà il salto maggiore, mai un lv1 da cui dipende un level up successivo.
+
+- `TREE_LOCKS`: nuovi blocchi lv1 — Sky Guard Area infuocata · Laser Raggio persistente · Disruption Drone Esplosione finale · Aeroblast Esplosioni ampie ·
+  Thunderbolt Fulmini larghi (Sfera sul campo serve a Sfere pungenti) · Beam Vulnerabilità · Firewheel Drone Fiamme roventi · Hive Colpi di forza (Evoluzione I serve
+  a Evoluzione II) · Railgun Impatto · Teslacoil Esplosione a catena · Gravity Vortex Gun Buco nero iperdenso. Restano liberi un level up per livello (1-1-1), come per il guardiano.
+- Albero: 10 nodi per torretta (nuovo nodo “Level up lv1”, 1 Sigillo, prima del level up lv2); lo Sblocco permanente richiede anche il nodo nuovo
+  (chi l’aveva già comprato lo tiene). Torretta completa 10 Sigilli, sblocchi 117, albero intero 1213.
+- Schermata dell’albero (draw.js): con 10 nodi l’ultima riga usciva dallo schermo; il passo tra le righe si stringe quanto serve (da 45 a circa 43 px).
+- DESIGN.md § 16: nodi per torretta (10), tabella delle carte bloccate con la colonna “Level up lv1”, costi; § 5 misura.
+- Test: `rev2.js` (struttura dei blocchi: level up lv1 e lv2 bloccati per tutti, liberi 1-1-1), `seals.js` (ordine dei nodi, Sblocco permanente al 7° posto,
+  Sigilli rimasti 40, 10 nodi della Sky Guard), `run.js` (6 carte bloccate). Screenshot dell’albero: aggiunto il nodo nuovo della Sky Guard.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.9.4.
+
+**Misure con i bot** (pool libero, stessi semi della 1.9.3, 800 partite per muro): 10 35,8% (1.9.3: 35,8%) · 20 e 30: vedi la voce delle misure qui sotto.
+
+**Test**: `npm test`, tutti verdi. Screenshot rifatti e controllati (21, 22 albero delle torrette con 10 nodi; 23, 24, 26, 27 invariati).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (disegni non cambiati: cambiano versione e hash).
+
+Checklist: nuova voce “Level up lv1 bloccati delle torrette (§ 16): da provare giocando”; aggiornare la voce sui nodi dell’albero (10 per torretta).
+
 ## Documentazione — regole dell’equipaggiamento (nessuna versione nuova)
 
 Solo DESIGN.md, nessun cambiamento al gioco.

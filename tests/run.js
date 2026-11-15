@@ -27,7 +27,7 @@ const T = [
     /versione in attesa .* ✓/, /controllo senza risposta .* ✓/, /aggiornamento arrivato a gioco iniziato .* ✓/, /ricarico già fatto .* ✓/, /offline .* ✓/]],
   ["menu.js", "menu senza la scelta della mira", [/menu senza “Mira” .* ✓/, /impostazioni salvate: .* ✓/]],
   ["rev1.js", "revisione torri 1: Laser, Sky Guard, Disruption, Aeroblast, Thunderbolt, Beam, Hive", [/mini-raggi lv3\s+raggi: 3 .* ✓/, /Doppio impatto: .* ✓/, /Esplosione finale: .* ✓/, /scossa in 0,95 s: .* ✓/, /amplificato .* ✓/, /onda ampia\s+nemico a 170 px colpito: true ✓/]],
-  ["rev2.js", "revisione torri 2: regola delle chain, pool libero, Laser, Beam, Hive, Firewheel, Railgun, Teslacoil, Vortex", [/Gravity Vortex Gun\s+chain: 1-1-1 1-2-1 .* ✓/, /Guardiano\s+bloccate: 6 .* 20\/20 ✓/, /Gravity Vortex Gun\s+bloccate: 5 .* 20\/20 ✓/,
+  ["rev2.js", "revisione torri 2: regola delle chain, pool libero, Laser, Beam, Hive, Firewheel, Railgun, Teslacoil, Vortex", [/Gravity Vortex Gun\s+chain: 1-1-1 1-2-1 .* ✓/, /Guardiano\s+bloccate: 6 .* 20\/20 ✓/, /Gravity Vortex Gun\s+bloccate: 6 .* 20\/20 ✓/,
     /Raffreddamento, .* ✓/, /Esplosioni a catena, .* ✓/, /Esplosioni paralizzanti: .* ✓/, /Collasso crescente ×.* ✓/, /kamikaze .* ✓/, /Varchi stabili .* ✓/]],
   ["combo.js", "combo del guardiano: sblocco e effetti delle 11 combo", [/kVortex\s+con vortex .* ✓/, /combo con chain bloccata dall’albero: kThunder, kBeam, kWheel, kTesla ✓/, /carta: Guardiano · Combo .* ✓/, /thunder\s+scattate .* ✓/,
     /con mini-raggi e debuff .* ✓/, /con Scarica distruttiva .* ✓/, /mine create .* ✓/, /Ramificazione II .* ✓/, /nuovo bersaglio .* ✓/,

@@ -531,7 +531,8 @@ function treeScreen() {
     button(16 + i * 112, 50, 104, 30, label, () => { treeTab = id; treeArm = null; },
       { size: 12, fill: on ? "rgba(201,162,255,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
   });
-  const rows = (list, y0) => list.forEach((n, i) => treeNodeRow(n, y0 + i * 45));
+  // righe alte 40 a passo 45; se non stanno nello schermo (10 nodi per torretta) il passo si stringe fino a far finire l’ultima a 636
+  const rows = (list, y0) => { const step = Math.min(45, (636 - 40 - y0) / Math.max(1, list.length - 1)); list.forEach((n, i) => treeNodeRow(n, y0 + i * step)); };
   if (treeTab === "player") {
     txt("Guardiano · sblocchi e carte standard", 16, 98, 12, "#9fb4d9", "left", "700");
     rows(TREE.player, 112);

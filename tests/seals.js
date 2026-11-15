@@ -39,8 +39,8 @@ console.log("— Albero: acquisto dei nodi e carte sbloccate —");
   const st = (i) => ev(`nodeState(TREE.sky[${i}])`);
   const ids = "TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.card || n.kind).join(' ')";
   console.log("sblocchi della Sky Guard:", ev(ids), "| costi:", ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.costs[0]).join(' ')"),
-    ok(ev(ids) === "burn1 burn2 burn3 splitB again perm"));
-  console.log("stato iniziale: lv1", st(0), "| lv2", st(1), "| finale", st(5), ok(st(0) === "ready" && st(1) === "req" && st(5) === "req"));
+    ok(ev(ids) === "burn1 burn2 burn3 splitB fire again perm"));
+  console.log("stato iniziale: lv1", st(0), "| lv2", st(1), "| finale", st(6), ok(st(0) === "ready" && st(1) === "req" && st(6) === "req"));
   ev("openTree(); treeSel = 'sky'; tapNode(TREE.sky[0])");
   console.log("primo tocco: in attesa, Sigilli", ev("progress.seals"), ok(ev("treeArm") === "sky:burn1" && ev("progress.seals") === 4));
   ev("tapNode(TREE.sky[0])");
@@ -57,12 +57,12 @@ console.log("— Albero: acquisto dei nodi e carte sbloccate —");
 
 console.log("— Sblocco permanente e torrette equipaggiate —");
 {
-  const all = (id) => Object.fromEntries(["burn1", "burn2", "burn3", "splitB", "again", "perm"].map((k) => [id + ":" + k, 1]));
+  const all = (id) => Object.fromEntries(["burn1", "burn2", "burn3", "splitB", "fire", "again", "perm"].map((k) => [id + ":" + k, 1]));
   const { ev } = fresh(35, { seals: 50 });
-  ev("TREE.rail.slice(0, 5).forEach(buyNode)");
-  console.log("Railgun, nodi comprati tranne il finale → finale:", ev("nodeState(TREE.rail[5])"), ok(ev("nodeState(TREE.rail[5])") === "ready"));
-  ev("buyNode(TREE.rail[5])");
-  console.log("finale comprato, Sigilli rimasti:", ev("progress.seals"), ok(ev("progress.seals") === 41));
+  ev("TREE.rail.slice(0, 6).forEach(buyNode)");
+  console.log("Railgun, nodi comprati tranne il finale → finale:", ev("nodeState(TREE.rail[6])"), ok(ev("nodeState(TREE.rail[6])") === "ready"));
+  ev("buyNode(TREE.rail[6])");
+  console.log("finale comprato, Sigilli rimasti:", ev("progress.seals"), ok(ev("progress.seals") === 40));
   console.log("equipaggia senza sblocco (Laser):", ev("toggleEquip('laser')"), "| Railgun:", ev("toggleEquip('rail')"), ok(!ev("toggleEquip('laser')") && ev("progress.loadout.join()") === "rail"));
   const g2 = fresh(35, { seals: 0, tree: Object.assign(all("sky"), all("rail"), { "tesla:perm": 1, "beam:perm": 1, "hive:perm": 1 }), loadout: ["sky", "rail", "tesla", "beam", "hive", "nope"] });
   console.log("dal salvataggio: equipaggiate", g2.ev("progress.loadout.join()"), "(massimo 4, solo con lo sblocco)", ok(g2.ev("progress.loadout.join()") === "sky,rail,tesla,beam"));
@@ -112,7 +112,7 @@ console.log("— Fase 2: nodi a livelli —");
   const { ev } = fresh(40, { seals: 100 });
   console.log("nodi: Sky Guard", ev("TREE.sky.length"), "| guardiano", ev("TREE.player.length"), "| tipi", ev("TREE.types.length"), "| barriera", ev("TREE.barrier.length"),
     "| carte standard della Sky Guard:", ev("TREE.sky.filter((n) => n.kind === 'level').map((n) => n.id).join(' ')"),
-    ok(ev("TREE.sky.length") === 9 && ev("TREE.player.length") === 9 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 6));
+    ok(ev("TREE.sky.length") === 10 && ev("TREE.player.length") === 9 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 6));
   const costs = []; for (let i = 0; i < 21; i++) { const before = ev("progress.seals"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); }
   console.log("Danno maggiorato della Sky Guard, livelli 1-20 e oltre: costi", costs.join(""), "(totale " + costs.reduce((a, b) => a + b) + ") | stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
     ok(costs.join("") === "111112222233333444440" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));
