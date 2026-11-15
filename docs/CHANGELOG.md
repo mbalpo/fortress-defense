@@ -87,7 +87,8 @@ Elenco proposto da Claude e accettato da Marco: si blocca la carta che aggiunge 
   Sigilli rimasti 40, 10 nodi della Sky Guard), `run.js` (6 carte bloccate). Screenshot dell’albero: aggiunto il nodo nuovo della Sky Guard.
 - `APP_VERSION` e `VERSION` di `sw.js`: 1.9.4.
 
-**Misure con i bot** (pool libero, stessi semi della 1.9.3, 800 partite per muro): 10 35,8% (1.9.3: 35,8%) · 20 e 30: vedi la voce delle misure qui sotto.
+**Misure con i bot** (pool libero, stessi semi della 1.9.3, 800 partite per muro; 20 e 30 misurati con il codice della 1.10.1, che per i bot gioca uguale):
+**10 35,8%** · **20 33,0%** · **30 34,9%** (1.9.3: 35,8% · 27,5% · 32,9%). La carta lv1 in meno non abbassa i muri: restano intorno al 30%. Nessun numero della difficoltà cambiato.
 
 **Test**: `npm test`, tutti verdi. Screenshot rifatti e controllati (21, 22 albero delle torrette con 10 nodi; 23, 24, 26, 27 invariati).
 

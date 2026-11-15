@@ -119,6 +119,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   da 15,5% (140) a 49,0% (120); differenza più grande al 70 (33,5% → 41,0%). Tutte le differenze sono dentro o vicine al rumore (±5-7 punti con 200-400 partite):
   i muri restano intorno al 30%. Nessun numero della difficoltà cambiato. **[Claude]** (misura)
 - Dopo il disegno nuovo del guardiano (1.9.3: i colpi partono dalla bocca del cannone, 26 px più in alto e 7 px a destra; anche il clone specchia le salve dalla 1.9.2), stessi semi: **10 35,8%** · **20 27,5%** · **30 32,9%** (800 partite; 1.9.0: 32,6% · 29,9% · 29,0%). Scarti di 2-4 punti, al limite del rumore; muri ancora intorno al 30%. Nessun numero della difficoltà cambiato.
+- Con un level up lv1 bloccato in più per torretta (1.9.4), stessi semi: **10 35,8%** · **20 33,0%** · **30 34,9%** (800 partite). Nessun numero della difficoltà cambiato.
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
