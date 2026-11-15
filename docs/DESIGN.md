@@ -64,9 +64,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. L’equipaggiamento **non è ancora costruito** (regole decise in § 15); albero e abilità della barriera sì (fasi 1-3, § 16). **[deciso]**
+  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento (1.10.0, § 15), albero e abilità della barriera (fasi 1-3, § 16) sono costruiti. **[deciso]**
 - **Avviso di sblocco**: al primo completamento in Standard dei livelli 10, 20, 30, 31, 40 e 50 compare, sopra la schermata di vittoria, un avviso con ciò che si è sbloccato;
-  si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’equipaggiamento è annunciato come “in arrivo”. **[deciso]** · testi degli avvisi **[Claude]**
+  si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’avviso spiega che l’equipaggiamento cade a ogni vittoria. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
@@ -136,8 +136,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   `seals` = Sigilli da spendere; `claims` = premi riscossi (`s31` primo completamento Standard del 31, `s31p` premio della cupola al 100%, `e5`… Epica);
   `tree` = nodi comprati (`{ "sky:burn1": 1 }`); `loadout` = torrette equipaggiate. Un salvataggio della versione 1 si importa con Sigilli e albero vuoti;
   valori non validi (nodi sconosciuti, torrette equipaggiate senza sblocco, più di 4) vengono scartati. **[Claude]**
+  Versione 3 (1.10.0): in più `progress.gear` = `{ pcs: { "arma:2": n }, mods: { "arma:2:17": n }, eq: { arma: { r, m: [[effetto, rarità], …] } } }` (inventario e pezzi equipaggiati).
+  Le versioni 1 e 2 si importano con l’inventario vuoto; pezzi, Moduli e installazioni non validi (tipi o effetti sconosciuti, doppioni, più Moduli degli slot) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso. L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
-- `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
+- `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero, equipaggiamento; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
 - PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
 - **Schermo sempre acceso**: finché il gioco è aperto in primo piano lo schermo non si spegne, anche in automatico senza tocchi (Screen Wake Lock, richiesto dopo il tocco su “Start”, rilasciato in secondo piano e richiesto di nuovo al ritorno; se il browser non lo supporta il gioco funziona lo stesso). **[deciso]** (il comportamento) · modalità **[Claude]**
@@ -381,7 +383,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Idee messe da parte**: Modulo con “+1 vita barriera per nemico ucciso” (rischio di rigenerazione quasi illimitata; da riprendere con un tetto per ondata o per partita).
 - **Nomi** definitivi delle due famiglie di chip (provvisori: Sigilli e Moduli).
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
-- **Equipaggiamento** (§ 15): decisi statistica base, drop, inventario e rimozione dei Moduli. Aperti: valori provvisori (tabella delle rarità, colori), schema della schermata (proposta di Claude in fase di costruzione).
+- **Equipaggiamento** (§ 15, costruito nella 1.10.0): aperti i valori provvisori (tabella delle rarità, colori), la schermata e le letture degli effetti di Claude (§ 15, “Costruito”), la misura con i bot dell’equipaggiamento atteso (muri al 50%).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
 - **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
@@ -395,7 +397,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · equipaggiamento e chip (§ 15) · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
+Ranger · taratura dell’equipaggiamento e icone di pezzi e Moduli (§ 15) · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
 salvataggio della partita in corso · audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
@@ -410,7 +412,7 @@ salvataggio della partita in corso · audio e altre impostazioni · bilanciament
   (percorso, comando e test **[Claude]**)
   Il disegno sta in `app/draw.js`, modulo condiviso dal gioco e dal catalogo **[Claude]**.
 
-## 15. Equipaggiamento e chip (da costruire)
+## 15. Equipaggiamento e chip (costruito nella 1.10.0, da tarare)
 
 - **Due famiglie di chip** (nomi provvisori **[da rivedere]**): **Sigilli**, che si spendono nell’albero dei potenziamenti permanenti (§ 16); **Moduli**, che si inseriscono negli slot dell’equipaggiamento. **[deciso]** (la distinzione; i nomi sono di Claude)
 - **Equipaggiamento**: 6 pezzi (testa, armatura, guanti, stivali, arma, nucleo). Ogni pezzo dà una statistica base (tipicamente attacco del personaggio) e ha slot per i Moduli. Si trova come drop casuale a fine livello assieme ai chip. **[deciso]**
@@ -570,6 +572,31 @@ Regole di calcolo **[Claude] [da rivedere]**:
   il lv2, voci chain lv2) possono comparire fin dalla prima scelta; dopo i primi tre potenziamenti il primo level up può essere sia di lv1 sia
   di lv2. Le regole delle chain restano valide: la voce lv2 si propone solo dopo aver scelto la voce lv1 della stessa chain.
 - **Da misurare con i bot** (livelli oltre il 30, equipaggiamento nullo, medio e massimo): tabelle di drop per rarità e difficoltà, statistica base dei pezzi per rarità, bonus per rarità (valori X degli effetti), potenza totale dell’equipaggiamento completo, peso degli effetti 21, 22, 29 e 30 sul budget di scelte. Con fusione 5:1 un ancestrale vale 625 comuni: i drop devono dare direttamente rarità alte.
+
+### Costruito (1.10.0) · scelte di Claude **[Claude] [da rivedere]** dove non indicato
+- **Dati e regole** come sopra: 6 pezzi, 5 rarità, 30 effetti con pesi e pool, valori X, statistica base, drop (2 pezzi e 2-3 Moduli, Epica +1), tabella delle rarità,
+  fusione 5:1 di pezzi e Moduli, doppioni, scarto, Moduli che si tolgono gratis. Nel codice: `RARITY`, `PIECES`, `MOD`, `DROP`, `DROP_RARITY`; inventario in `progress.gear`.
+- **Drop**: a ogni vittoria con difficoltà almeno 30 e livello 30 completato, quindi dal primo completamento del 30 e in **tutti i livelli di Epica** (difficoltà ≥ 31).
+  Tipo del pezzo e del Modulo a caso, 6 tipi con la stessa probabilità; l’effetto del Modulo si estrae dal pool con i pesi.
+- **Inventario**: pezzi uguali (tipo e rarità) e Moduli uguali (pezzo, rarità, effetto) sono intercambiabili e si contano; solo il pezzo equipaggiato porta Moduli.
+  **Cambiando pezzo** i Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario; “Togli” rimette in inventario pezzo e Moduli.
+- **Schermata** “Equipaggiamento” (menu, accanto all’albero, dal livello 30): i 6 pezzi in alto (bordo del colore della rarità, Moduli installati), il pezzo scelto con
+  statistica e slot, sotto l’inventario di quel pezzo in due schede (Pezzi, Moduli per rarità) con tre modalità: **Equipaggia/Installa** (un tocco), **Fondi** (pezzi: due tocchi;
+  Moduli: si scelgono 5 righe, anche diverse, poi “Fondi ora”), **Scarta** (due tocchi). Un Modulo installato si toglie con due tocchi. Sopra: totale di guardiano, barriera e torri.
+- **Vittoria**: tasselli con gli oggetti presi, del colore della rarità. **Avviso del 30**: “cadono a ogni vittoria. Equipaggiali dal menu.”
+- **Letture degli effetti**:
+  - Un solo bonus di danno del guardiano: statistica base di arma, guanti e testa + Moduli 2, 3, 4, 5, 6, 9, 12, 13, 17, 18 (i valori negativi di 4, 12 e 17 entrano qui);
+    moltiplica il danno insieme agli altri bonus (carte, albero). 6, 13 e 18 si valutano sul nemico colpito, 3, 5 e 12 a ogni salva.
+  - 1 critico: per ogni proiettile del guardiano che colpisce (anche ventaglio e clone), danno ×1,5. 3: torrette in campo in quel momento (max 4).
+    5 e 13: nemici entro 80 px dal bordo della cupola (5: al massimo 10). 12: “carte scelte” = scelte fatte dopo le ondate in quella partita (non le carte dei mini-boss).
+  - 7: intervallo tra le salve × (1 − X). 8: alla prima salva che colpisce un nemico con uno stato (rallentamento, indebolimento, vulnerabilità, bruciatura, paralisi), una volta per stato.
+  - 10: i primi X danni della partita alla cupola sono ignorati; i primi N colpi nemici ricevono un contrattacco physical pari a X% del danno del guardiano (con i suoi bonus).
+  - 14: una volta per partita, quando la vita scende sotto il 20%. 16: anche il boss finale, al massimo 4 volte.
+  - 19: esplosioni dei Colpi esplosivi del guardiano. 20: il primo proiettile di ogni salva, sul primo nemico che colpisce (senza probabilità), al massimo 2× il danno del colpo.
+  - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero. 22: a ogni ondata, 4 carte più basse; tasto 4.
+  - 29 e 30: un tiro a inizio partita; 30 vale per le torrette equipaggiate e per quelle che arrivano dopo. Senza questi Moduli non si consuma nessun tiro casuale (le misure dei bot restano confrontabili).
+  - Riduzione del danno (11) e del cooldown (15) si sommano all’albero, con i tetti del § 16 (40% e 60%).
+- **Salvataggio**: versione 3 (§ 7). **Mancano**: misura con i bot dell’equipaggiamento atteso e taratura dei muri al 50% (obiettivo sopra); icone dei pezzi e dei Moduli (oggi solo riquadri e testo).
 
 ## 16. Sigilli e albero dei potenziamenti (da costruire)
 

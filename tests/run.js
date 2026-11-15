@@ -46,6 +46,10 @@ const T = [
     /premere e rilasciare sulla stessa carta → scelta, ondata 2 .* ✓/, /tasto 3 appena comparsa → scelta subito: true .* ✓/, /“Continua” premuto e rilasciato sopra → ondata 2 ✓/, /Standard e pausa alla pressione .* ✓/]],
   ["sblocchi.js", "avvisi di sblocco a fine livello (10, 20, 30, 31, 40, 50), chiusura a mano", [/livello 10 completato la prima volta → avviso: true .* ✓/, /livello 30 completato .* ✓/, /livello 50 completato .* ✓/,
     /nessun avviso: true ✓/, /“Livello 11” sotto l’avviso → ignorato, stato: won ✓/, /Invio di nuovo → parte il livello 11: play 11 ✓/, /tocco su “Ho capito” → chiuso: true ✓/]],
+  ["equip.js", "equipaggiamento: inventario, salvataggio v3, drop, fusione, statistiche, effetti, schermata", [/pool \(pezzo, effetti, pesi\).* ✓/, /effetti nei pool: 30 .* ✓/,
+    /ripulito: .* ✓/, /versione 2 importata: .* ✓/, /livello 29: nessuno .* ✓/, /rarità \(%\) D 30: .* ✓/, /fusione di Moduli: .* ✓/, /conti attesi ✓/,
+    /tetto della riduzione del danno: .* ✓/, /colpo del guardiano: .* ✓/, /Modulo 22 ancestrale: carte offerte 4 ✓/, /guardiano dal livello 2: .* ✓/,
+    /Modulo 10: .* ✓/, /Modulo 14: .* ✓/, /Modulo 16: .* ✓/, /Esc → stato menu .* ✓/, /vittoria al 30: .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
 ];

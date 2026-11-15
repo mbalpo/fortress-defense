@@ -50,7 +50,7 @@ const frames = (g, n) => { for (let i = 0; i < n; i++) { g.frame(); g.texts.leng
 { // menu, albero e pausa: si attivano ancora alla pressione
   const g = makeGame({ seed: 4, cleared: 40, level: 20, patch: (h) => P(h, expose) }); const X = g.win.__x;
   const l0 = X.selLevel(); g.click(296, 158); const l1 = X.selLevel();
-  g.click(180, 376); const st = X.state();
+  g.click(118, 376); const st = X.state();
   console.log("menu: “+” alla pressione → livello", l0, "→", l1, "| albero aperto alla pressione:", st, ok(l1 === l0 + 1 && st === "tree"));
   g.key("Escape"); g.frame(); g.click(180, 277); const s2 = X.state(); g.frame(); g.click(229, 26); const s3 = X.state();
   console.log("Standard e pausa alla pressione → stati:", s2, s3, ok(s2 === "play" && s3 === "pause"));

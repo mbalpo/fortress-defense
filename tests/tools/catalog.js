@@ -163,6 +163,18 @@ function scenes(turretIds) {
         " fireAbility({ id: 'freeze', v: abVal('freeze', 3) }); fireAbility({ id: 'mines', v: abVal('mines', 3) }); fireAbility({ id: 'reflect', v: abVal('reflect', 1) }); domeShield = 3; __cat.step(40); fireAbility({ id: 'repulse', v: abVal('repulse', 3) });",
       each: "if (Math.random() < 0.01) fireAbility({ id: 'repulse', v: abVal('repulse', 3) });", frames: 12 }, ["FX.domeGas", "FX.domeWave", "FX.domeAura", "FX.shieldCount", "FX.aeroMine"]);
   add(1, "albero-tipi", "Albero dei Sigilli · Tipi", "Sezione condivisa delle torrette: danno per tipo, di tutte le torrette, durata degli stati.", { progress: PS, setup: "openTree(); treeSel = 'types';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
+  // equipaggiamento (DESIGN.md § 15)
+  const PG = Object.assign({}, PS, { cleared: 42, gear: { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:2": 1 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:0:23": 2, "arma:4:19": 1 },
+    eq: { arma: { r: 4, m: [[2, 4], [4, 3], [1, 2]] }, testa: { r: 2, m: [[22, 1]] }, armatura: { r: 3, m: [[10, 4], [11, 2]] }, stivali: { r: 0, m: [] }, nucleo: { r: 1, m: [[30, 0]] } } } });
+  add(1, "menu-equipaggiamento", "Menu con l’equipaggiamento", "Dal livello 30: pulsante “Equipaggiamento” accanto all’albero.", { progress: PG }, ["menuScreen"]);
+  add(1, "equipaggiamento-pezzi", "Equipaggiamento · pezzi", "I 6 pezzi con rarità (colore, ancestrale iridescente) e Moduli installati; slot del pezzo scelto; inventario dei pezzi.",
+    { progress: PG, setup: "openGear();", each: "", frames: 60 }, ["gearScreen", "rarColor", "gearHeader"]);
+  add(1, "equipaggiamento-moduli", "Equipaggiamento · fusione dei Moduli", "Moduli del pezzo per rarità; in modalità “Fondi” si scelgono 5 Moduli, anche diversi.",
+    { progress: PG, setup: "openGear(); gearSetTab('mods'); gearSetMode('fuse'); tapMod(1); tapMod(1); tapMod(23);", frames: 1 }, ["gearScreen"]);
+  add(1, "vittoria-oggetti", "Vittoria con l’equipaggiamento", "Dal livello 30: pezzi e Moduli presi, con il colore della rarità.",
+    { progress: PG, setup: "selLevel = 42; startRun('standard'); __cat.step(100); winLevel();", frames: 1 }, ["wonScreen", "gearChips"]);
+  add(1, "carte-4", "Quattro carte e rinnovo", "Moduli 22 (4 carte tra cui scegliere) e 21 (rinnovo delle carte).",
+    { progress: Object.assign({}, PG, { gear: { pcs: {}, mods: {}, eq: { testa: { r: 1, m: [[22, 4], [21, 4]] } } } }), setup: START(42) + " queue = []; enemies.length = 0; wave = 1; endWave();", frames: 1 }, ["upgradeScreen"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);
@@ -555,8 +567,8 @@ ${palette}
 <p>Posti già previsti per elementi che non hanno ancora un disegno (DESIGN.md § 13 e § 15). Quando arrivano: funzione in <code>draw.js</code>, voce qui, <code>npm run catalog</code>.</p>
 <div class="todo">
   <div data-voce="futuro:ranger"><b>Ranger</b><br>Nessun disegno ancora (§ 13).</div>
-  <div data-voce="futuro:equipaggiamento"><b>Equipaggiamento</b><br>6 pezzi: testa, armatura, guanti, stivali, arma, nucleo; 5 rarità (comune, raro, epico, leggendario, ancestrale). Nessun disegno ancora (§ 15).</div>
-  <div data-voce="futuro:moduli"><b>Moduli (chip)</b><br>Un tipo per pezzo, stesse 5 rarità. Nessun disegno ancora (§ 15).</div>
+  <div data-voce="futuro:equipaggiamento"><b>Equipaggiamento</b><br>6 pezzi: testa, armatura, guanti, stivali, arma, nucleo; 5 rarità (comune, raro, epico, leggendario, ancestrale) con un colore ciascuna, l’ancestrale iridescente. Oggi solo riquadri con testo (schermata “Equipaggiamento” nel § 1): nessuna icona dei pezzi (§ 15).</div>
+  <div data-voce="futuro:moduli"><b>Moduli (chip)</b><br>Un tipo per pezzo, stesse 5 rarità. Oggi righe di testo con un pallino del colore della rarità: nessuna icona (§ 15).</div>
 </div>
 </section>
 

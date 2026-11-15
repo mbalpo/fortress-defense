@@ -434,9 +434,11 @@ function menuScreen() {
   const eu = epicUnlocked();
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
     () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
-  const to = treeOpen();
-  button(60, 358, 240, 36, to ? "Albero dei Sigilli · " + progress.seals + " ◆" : "Albero dei Sigilli · dal livello " + CAMPAIGN.sealsFrom, openTree,
+  const to = treeOpen(), go = gearOpen();
+  button(60, 358, 116, 36, to ? "Albero · " + progress.seals + " ◆" : "Albero · liv " + CAMPAIGN.sealsFrom, openTree,
     { size: to ? 13 : 12, stroke: to ? "#c9a2ff" : "#2c3a5f", color: to ? "#e8eefc" : "#6f82ad" });
+  button(184, 358, 116, 36, go ? "Equipaggiamento" : "Equip. · liv " + CAMPAIGN.equipUnlock, openGear,
+    { size: go ? 11 : 12, stroke: go ? "#7fa0e0" : "#2c3a5f", color: go ? "#e8eefc" : "#6f82ad" });
   const rows = [["Torri e guardiano al livello 2", 10], ["Torri e guardiano al livello 3", 20], ["Equipaggiamento del guardiano", CAMPAIGN.equipUnlock],
     ["Sigilli e albero dei potenziamenti", CAMPAIGN.sealsFrom], ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
   txt("Sblocchi (a fine livello)", 36, 412, 12, "#9fb4d9", "left", "700");
@@ -457,9 +459,11 @@ function sealLines() {
   return ["Sigilli di questo livello già riscossi"];
 }
 function wonScreen() {
-  const sl = sealLines(), dy = sl.length ? 18 * sl.length + 8 : 0;       // i pulsanti scendono sotto le righe dei Sigilli
+  const sl = sealLines();
   overlay("LIVELLO SUPERATO", ["Livello " + campLevel + " completato" + (mode === "epic" ? " (Epica)" : ""), "Cupola: " + Math.ceil(domeHp) + "/" + domeMax], "#3fe0a0");
   sl.forEach((l, i) => txt(l, W / 2, 282 + i * 18, i ? 11 : 13, i ? "#9fb4d9" : "#c9a2ff", "center", i ? "500" : "700"));
+  const gy = 282 + sl.length * 18 - (sl.length ? 6 : 12);                // equipaggiamento preso, sotto i Sigilli
+  const dy = (sl.length ? 18 * sl.length + 8 : 0) + gearChips(gy);       // i pulsanti scendono sotto Sigilli e oggetti
   const more = mode === "standard" && campLevel < CAMPAIGN.maxLevel;
   button(60, 300 + dy, 240, 48, more ? "Livello " + (campLevel + 1) : "Rigioca", nextOrRetry, { size: 16, stroke: "#3fe0a0" });
   if (more) button(60, 360 + dy, 240, 48, "Rigioca il livello " + campLevel, retry, { size: 14 });
@@ -490,17 +494,20 @@ function upgradeScreen() {
   if (rewards) { rewardScreen(); return; }
   txt(bonusMode ? "Ricompensa mini-boss" : "Ondata " + wave + " superata", W / 2, 86, 24, bonusMode ? "#ffd166" : "#3fe0a0", "center", "800");
   txt("Scegli un potenziamento", W / 2, 116, 13, "#9fb4d9", "center", "500");
+  const four = options.length > 3, step = four ? 100 : 122, h = four ? 92 : 110, k = h / 110;   // con 4 carte (Modulo 22) sono più basse
   options.forEach((opt, i) => {
-    const x = 20, y = 140 + i * 122, w = 320, h = 110, o = describe(opt), c = TYPES[o.type].color;
+    const x = 20, y = 140 + i * step, w = 320, o = describe(opt), c = TYPES[o.type].color;
     button(x, y, w, h, "", () => pick(i), { stroke: c, release: true });
     disc(x + 26, y + h / 2, 13, c);
     txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
-    txt(o.head, x + 52, y + 22, 11, c, "left", "700");
-    txt(o.title, x + 52, y + 46, 16, "#e8eefc", "left", "700");
-    txt(o.desc, x + 52, y + 70, 12, "#b9c8e6", "left", "500");
-    txt(o.note, x + 52, y + 92, 10, "#6f82ad", "left", "500");
+    txt(o.head, x + 52, y + 22 * k, 11, c, "left", "700");
+    txt(o.title, x + 52, y + 46 * k, 16, "#e8eefc", "left", "700");
+    txt(o.desc, x + 52, y + 70 * k, 12, "#b9c8e6", "left", "500");
+    txt(o.note, x + 52, y + 92 * k, 10, "#6f82ad", "left", "500");
   });
-  txt("Torri fino al lv " + towerCap() + (campLevel >= CAMPAIGN.maxMaxedFrom ? " · al massimo: " + maxedCount() + "/" + CAMPAIGN.maxMaxed : ""), W / 2, 140 + options.length * 122 + 12, 11, "#6f82ad", "center", "500");
+  const yb = 140 + options.length * step;
+  txt("Torri fino al lv " + towerCap() + (campLevel >= CAMPAIGN.maxMaxedFrom ? " · al massimo: " + maxedCount() + "/" + CAMPAIGN.maxMaxed : ""), W / 2, yb + 12, 11, "#6f82ad", "center", "500");
+  if (refreshLeft > 0 && !bonusMode) button(90, yb + 26, 180, 32, "Rinnova le carte (" + refreshLeft + ")", refreshCards, { size: 12, stroke: "#7fa0e0" });   // Modulo 21
 }
 
 /* ---------- ALBERO DEI SIGILLI ---------- */
@@ -584,6 +591,109 @@ function treeAbilities() {
   });
 }
 
+/* ---------- EQUIPAGGIAMENTO ---------- */
+// colore della rarità: pieno, l’ancestrale iridescente (la tinta gira col tempo)
+const rarColor = (r) => r === 4 ? "hsl(" + Math.round((clock * 90) % 360) + ",85%,70%)" : RARITY[r].color;
+const RAR_SHORT = ["Comune", "Raro", "Epico", "Legg.", "Ancest."];
+function gearHeader() {
+  const s = gearStats(progress.gear), p = (x) => "+" + fmt(x * 100) + "%";
+  return "Guardiano " + p(s.pdmg) + " · barriera " + p(s.hp) + " · torri " + p(s.tdmg);
+}
+function gearScreen() {
+  dim(0.92);
+  const g = progress.gear, pc = gearSel, e = g.eq[pc], P = PIECES[pc];
+  button(8, 8, 62, 30, "‹ Menu", closeGear, { size: 12 });
+  txt("EQUIPAGGIAMENTO", W / 2 + 22, 18, 16, "#e8eefc", "center", "800");
+  txt(gearHeader(), W / 2 + 34, 36, 9, "#9fb4d9", "center", "600");
+  // i 6 pezzi
+  PIECE_IDS.forEach((id, i) => {
+    const x = 12 + (i % 3) * 114, y = 48 + Math.floor(i / 3) * 50, q = g.eq[id], on = gearSel === id;
+    button(x, y, 108, 44, "", () => gearPick(id), { stroke: q ? rarColor(q.r) : on ? "#7fa0e0" : "#2c4272", fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)" });
+    txt(PIECES[id].name, x + 54, y + 14, 12, on ? "#e8eefc" : "#b9c8e6", "center", "700");
+    if (q) txt(RARITY[q.r].name + " · " + q.m.length + "/" + (q.r + 1), x + 54, y + 31, 10, rarColor(q.r), "center", "700");
+    else txt(gearCount(g, "pcs", id) ? "vuoto · in inventario" : "vuoto", x + 54, y + 31, 10, "#6f82ad", "center", "500");
+  });
+  // pezzo scelto: statistica base e slot dei Moduli
+  let y = 160;
+  if (e) {
+    txt(P.name, 16, y + 2, 14, "#e8eefc", "left", "800");
+    txt(RARITY[e.r].name, 16 + tw(P.name, 14, "800") + 8, y + 2, 12, rarColor(e.r), "left", "700");
+    txt(STAT_TXT[P.stat] + " +" + fmt(P.base[e.r]) + "%", 16, y + 18, 11, "#9fb4d9", "left", "500");
+    const arm = gearArm === "u";
+    button(252, y - 8, 96, 26, arm ? "Tocca ancora" : "Togli", tapUnequip, { size: 11, stroke: arm ? "#ffd166" : "#2c4272", color: arm ? "#ffd166" : "#9fb4d9" });
+    for (let i = 0; i <= e.r; i++) {
+      const yy = y + 30 + i * 26, m = e.m[i];
+      if (m) {
+        const armed = gearArm === "s" + i;
+        button(12, yy, 336, 24, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
+        disc(24, yy + 12, 5, rarColor(m[1]));
+        txt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + 12, 11, armed ? "#ffd166" : "#e8eefc", "left", "600");
+      } else {
+        rr(12, yy, 336, 24, 8); ctx.lineWidth = 1; ctx.strokeStyle = "#24345a"; ctx.stroke();
+        txt("Slot libero · Moduli: " + P.name.toLowerCase(), 24, yy + 12, 10, "#5f7299", "left", "500");
+      }
+    }
+  } else {
+    txt(P.name + " · nessun pezzo equipaggiato", 16, y + 2, 14, "#e8eefc", "left", "800");
+    txt("Statistica base: " + STAT_TXT[P.stat] + ".", 16, y + 20, 11, "#9fb4d9", "left", "500");
+    txt("Slot dei Moduli: da 1 (comune) a 5 (ancestrale).", 16, y + 36, 11, "#9fb4d9", "left", "500");
+    txt("Equipaggia un pezzo dall’inventario qui sotto.", 16, y + 52, 11, "#6f82ad", "left", "500");
+  }
+  // inventario del pezzo scelto
+  y = 330;
+  const np = gearCount(g, "pcs", pc), nm = gearCount(g, "mods", pc);
+  [["pcs", "Pezzi (" + np + ")"], ["mods", "Moduli (" + nm + ")"]].forEach(([id, label], i) => {
+    const on = gearTab === id;
+    button(12 + i * 172, y, 164, 26, label, () => gearSetTab(id), { size: 12, fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#7fa0e0" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
+  });
+  const fc = fuseCount(), ready = gearTab === "mods" && gearMode === "fuse" && fc === 5;
+  [["use", gearTab === "pcs" ? "Equipaggia" : "Installa"], ["fuse", gearTab === "mods" && gearMode === "fuse" ? (ready ? "Fondi ora" : "Fondi " + fc + "/5") : "Fondi"], ["drop", "Scarta"]].forEach(([id, label], i) => {
+    const on = gearMode === id;
+    button(12 + i * 114, y + 32, 108, 24, label, () => gearSetMode(id),
+      { size: 11, fill: on ? "rgba(201,162,255,0.16)" : "rgba(18,30,58,0.92)", stroke: ready && id === "fuse" ? "#ffd166" : on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
+  });
+  y += 64;
+  if (gearTab === "pcs") {
+    for (let r = 0; r < 5; r++) {
+      const n = qty(g.pcs, pcKey(pc, r)), yy = y + r * 40, armed = gearArm === "p" + r;
+      let sub = "";
+      if (gearMode === "use") sub = n ? (e && e.r === r ? "Uguale a quello equipaggiato" : "Tocca per equipaggiare (" + (r + 1) + (r ? " slot)" : " slot)")) : "";
+      else if (gearMode === "fuse") sub = r >= 4 ? "Rarità massima" : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali";
+      else sub = n ? (armed ? "Tocca di nuovo per scartarne uno" : "Tocca per scartarne uno") : "";
+      button(12, yy, 336, 36, "", () => tapPiece(r), { stroke: armed ? "#ffd166" : n ? rarColor(r) : "#24345a", fill: n ? "rgba(18,30,58,0.92)" : "rgba(10,16,32,0.6)" });
+      txt(RARITY[r].name, 22, yy + 12, 12, n ? rarColor(r) : "#4a5a80", "left", "700");
+      txt("×" + n, 338, yy + 12, 12, n ? "#e8eefc" : "#4a5a80", "right", "700");
+      if (sub) txt(sub, 22, yy + 27, 10, armed ? "#ffd166" : "#8a9ac0", "left", "500");
+    }
+  } else {
+    for (let r = 0; r < 5; r++) {
+      const on = gearRar === r, n = Object.entries(g.mods).reduce((a, [k, v]) => a + (k.startsWith(pc + ":" + r + ":") ? v : 0), 0);
+      button(12 + r * 68, y, 64, 22, "", () => gearSetRar(r), { stroke: on ? rarColor(r) : "#2c4272", fill: on ? "rgba(127,160,224,0.14)" : "rgba(18,30,58,0.92)" });
+      txt(RAR_SHORT[r] + " " + n, 44 + r * 68, y + 12, 10, n || on ? rarColor(r) : "#4a5a80", "center", "700");
+    }
+    const list = P.pool.filter((fx) => qty(g.mods, modKey(pc, gearRar, fx)) > 0);
+    if (!list.length) txt("Nessun Modulo " + RARITY[gearRar].name.toLowerCase() + " per questo pezzo", W / 2, y + 50, 11, "#6f82ad", "center", "500");
+    list.forEach((fx, i) => {
+      const yy = y + 28 + i * 23, n = qty(g.mods, modKey(pc, gearRar, fx)), armed = gearArm === "m" + fx, sel = gearFuse[fx] || 0;
+      button(12, yy, 336, 21, "", () => tapMod(fx), { stroke: armed ? "#ffd166" : sel ? "#c9a2ff" : "#2c4272" });
+      txt(armed ? "Tocca di nuovo per scartarne uno" : modText(fx, gearRar), 22, yy + 11, 10, armed ? "#ffd166" : "#e8eefc", "left", "600");
+      txt((sel ? sel + " scelti · " : "") + "×" + n, 338, yy + 11, 10, sel ? "#c9a2ff" : "#9fb4d9", "right", "700");
+    });
+  }
+  if (gearMsg) txt(gearMsg, W / 2, 630, 10, "#ffd166", "center", "600");
+  else if (gearTab === "mods" && gearMode === "fuse") txt(gearRar >= 4 ? "Rarità massima: niente fusione" : "Scegli 5 Moduli (anche diversi), poi “Fondi ora”", W / 2, 630, 10, "#8a9ac0", "center", "500");
+}
+// oggetti presi a fine livello (schermata di vittoria): tasselli colorati per rarità, al massimo 3 per riga
+function gearChips(y) {
+  const list = gearGain || [];
+  list.forEach((o, i) => {
+    const x = 18 + (i % 3) * 110, yy = y + Math.floor(i / 3) * 30;
+    rr(x, yy, 104, 26, 6); ctx.fillStyle = "rgba(18,30,58,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = rarColor(o.r); ctx.stroke();
+    txt(o.kind === "mods" ? "Modulo " + PIECES[o.pc].name.toLowerCase() : PIECES[o.pc].name, x + 52, yy + 13, 10, rarColor(o.r), "center", "700");
+  });
+  return list.length ? Math.ceil(list.length / 3) * 30 + 18 : 0;
+}
+
 function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
   ctx.strokeStyle = locked ? "#ffd166" : "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
   ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
@@ -615,7 +725,7 @@ function draw() {
   for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
   ctx.globalAlpha = 1;
 
-  if (state !== "menu" && state !== "save" && state !== "tree") {
+  if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear") {
     drawDomeFill(); drawGround();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
@@ -642,6 +752,7 @@ function draw() {
   else if (state === "lost") lostScreen();
   else if (state === "pause") pauseScreen();
   else if (state === "tree") treeScreen();
+  else if (state === "gear") gearScreen();
 }
 
 /* ---------- TORRETTE CON DISEGNO PROPRIO, PROIETTILI ED EFFETTI ---------- */

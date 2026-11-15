@@ -130,4 +130,18 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("selLevel = 40; startRun('standard')"); g.frame(60); ev("winLevel()"); g.frame(); g.save("35-avviso-sblocco.png");
     ev("unlockNotes = UNLOCKS.slice(0, 1)"); g.frame(); g.save("36-avviso-sblocco-10.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
+  { // equipaggiamento (DESIGN.md § 15): menu, pezzi, Moduli in fusione, vittoria con gli oggetti, 4 carte e rinnovo
+    const gear = { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:2": 1, "nucleo:0": 3 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:0:23": 2, "arma:0:4": 1, "arma:2:17": 1, "arma:4:19": 1 },
+      eq: { arma: { r: 4, m: [[2, 4], [4, 3], [1, 2]] }, testa: { r: 2, m: [[22, 1]] }, armatura: { r: 3, m: [[10, 4], [11, 2], [16, 0]] }, stivali: { r: 0, m: [] }, nucleo: { r: 1, m: [[30, 0], [28, 1]] } } };
+    const gp = { cleared: 42, seen: ALL_SEEN, seals: 3, gear };
+    const g = game({ progress: gp, src }), ev = g.w.__ev;
+    g.save("37-menu-equipaggiamento.png");
+    ev("openGear()"); g.frame(); g.save("38-equipaggiamento-pezzi.png");
+    ev("gearSetTab('mods'); gearSetMode('fuse'); tapMod(1); tapMod(1); tapMod(23)"); g.frame(); g.save("39-equipaggiamento-moduli.png");
+    ev("gearPick('guanti'); gearSetTab('pcs'); gearSetMode('use')"); g.frame(); g.save("40-equipaggiamento-vuoto.png");
+    const h = game({ progress: gp, src }), eh = h.w.__ev;
+    eh("selLevel = 42; startRun('standard')"); h.frame(100); eh("winLevel()"); h.frame(); h.save("41-vittoria-oggetti.png");
+    const c = game({ progress: Object.assign({}, gp, { gear: { pcs: {}, mods: {}, eq: { testa: { r: 1, m: [[22, 4], [21, 4]] } } } }), src }), ec = c.w.__ev;
+    ec("selLevel = 42; startRun('standard'); queue = []; enemies.length = 0;"); c.frame(80); c.frame(80); c.frame(1);
+    ec("wave = 1; endWave()"); c.frame(); c.save("42-carte-4-rinnovo.png"); }
 }

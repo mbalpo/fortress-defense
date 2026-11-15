@@ -131,7 +131,7 @@ const CAMPAIGN = {
   maxMaxedFrom: Infinity, maxMaxed: 2,     // regola di sicurezza, disattivata: il limite nasce dal budget di scelte (19; 28 con i mini-boss)
   smallUntil: 10,                          // fino a questa difficoltà solo nemici "piccoli"
   epicUnlock: 50, epicOffset: 30,          // Epica: difficoltà = livello + 30
-  equipUnlock: 30, barrierUnlock: 40,      // sblocchi registrati, funzioni non ancora costruite
+  equipUnlock: 30, barrierUnlock: 40,      // equipaggiamento (DESIGN.md § 15) e abilità della barriera (§ 16)
   sealsFrom: 31, sealsStandard: 1, sealsEpic: 3,   // Sigilli: dal livello 31 in Standard (1), da subito in Epica (3); DESIGN.md § 16
 };
 const UP_W = { std: 1, chain: 0.4, combo: 0.4, lu: 2 };   // chain e combo escono meno degli standard
@@ -532,6 +532,67 @@ const TREE_NODE = Object.fromEntries(Object.values(TREE).flat().map((n) => [n.id
 const TREE_IDS = new Set(Object.keys(TREE_NODE));
 
 /* =====================================================================
+   EQUIPAGGIAMENTO E MODULI (DESIGN.md § 15)
+   6 pezzi del guardiano, 5 rarità; ogni pezzo dà una statistica base e ha da 1 a 5 slot (uno per grado di rarità) per i Moduli
+   del suo tipo. Valori della statistica base e dei drop [Claude, provvisori]; effetti e valori X dei Moduli dal § 15.
+   ===================================================================== */
+// colori pieni; l’ancestrale è iridescente (colore che cambia, vedi rarColor in draw.js)
+const RARITY = [["Comune", "#8e98a4"], ["Raro", "#46c86e"], ["Epico", "#3d7bff"], ["Leggendario", "#ff4d6a"], ["Ancestrale", "#e8eefc"]].map(([name, color], r) => ({ r, name, color }));
+const PIECES = {          // pool: il primo effetto è l’esclusivo del pezzo
+  arma:     { name: "Arma",     stat: "pdmg", base: [6, 10, 15, 21, 28], pool: [4, 1, 2, 7, 17, 18, 19, 23, 24] },
+  guanti:   { name: "Guanti",   stat: "pdmg", base: [4, 7, 11, 15, 20],  pool: [20, 1, 6, 7, 8, 17, 19, 25, 26] },
+  testa:    { name: "Testa",    stat: "pdmg", base: [4, 7, 11, 15, 20],  pool: [22, 2, 3, 9, 12, 18, 21, 27, 29] },
+  armatura: { name: "Armatura", stat: "hp",   base: [6, 10, 15, 21, 28], pool: [10, 5, 11, 12, 13, 15, 16, 24, 28] },
+  stivali:  { name: "Stivali",  stat: "hp",   base: [6, 10, 15, 21, 28], pool: [14, 5, 6, 8, 11, 13, 15, 16, 26] },
+  nucleo:   { name: "Nucleo",   stat: "tdmg", base: [4, 7, 11, 15, 20],  pool: [30, 3, 9, 21, 23, 25, 27, 28, 29] },
+};
+const PIECE_IDS = Object.keys(PIECES);
+const STAT_TXT = { pdmg: "danno del guardiano", hp: "vita della barriera", tdmg: "danno delle torrette" };
+const sgn = (v) => (v > 0 ? "+" : "−") + fmt(Math.abs(v));
+const typeMod = (type) => ({ w: 3, type, v: [6, 11, 17, 24, 32], t: (v) => "Danno " + TYPES[type].name + " +" + fmt(v) + "% (torrette)" });
+// effetti dei Moduli: w = peso nel pool, v = valore per rarità (comune → ancestrale), t = testo
+const MOD = {
+  1:  { w: 3, v: [3, 5, 8, 11, 15], t: (v) => "Critico " + fmt(v) + "% (danno ×1,5)" },
+  2:  { w: 3, v: [5, 9, 14, 20, 28], t: (v) => "Danno del guardiano +" + fmt(v) + "%" },
+  3:  { w: 2, v: [1.5, 2.5, 4, 5.5, 7], t: (v) => "+" + fmt(v) + "% danni per torre in campo" },
+  4:  { w: 1, v: [-20, -12, -5, 3, 10], t: (v) => "+1 proiettile, danni " + sgn(v) + "%" },
+  5:  { w: 3, v: [1, 1.5, 2, 3, 4], t: (v) => "+" + fmt(v) + "% danni per nemico vicino" },
+  6:  { w: 3, v: [5, 9, 14, 20, 28], t: (v) => "+" + fmt(v) + "% danni a chi ha un debuff" },
+  7:  { w: 2, v: [3, 5, 8, 11, 15], t: (v) => "Intervallo tra le salve −" + fmt(v) + "%" },
+  8:  { w: 2, v: [10, 18, 27, 38, 50], t: (v) => "Le salve allungano i debuff +" + fmt(v) + "%" },
+  9:  { w: 2, v: [0.3, 0.5, 0.7, 0.9, 1.2], t: (v) => "+" + fmt(v) + "% danni per Modulo installato" },
+  10: { w: 1, v: [[5, 50, 3], [8, 100, 4], [12, 150, 5], [16, 200, 6], [20, 300, 8]], t: (v) => "Ignora " + v[0] + " danni · contrattacco " + v[1] + "% ×" + v[2] },
+  11: { w: 3, v: [[8, 3], [15, 5], [25, 8], [35, 11], [50, 15]], t: (v) => "Barriera: vita +" + v[0] + "%, danno −" + v[1] + "%" },
+  12: { w: 2, v: [[-10, 0.4], [-6, 0.6], [-3, 0.8], [2, 1], [5, 1.2]], t: (v) => "Danni " + sgn(v[0]) + "%, +" + fmt(v[1]) + "% per carta scelta" },
+  13: { w: 3, v: [5, 9, 14, 20, 28], t: (v) => "+" + fmt(v) + "% danni vicino alla barriera" },
+  14: { w: 1, v: [1.5, 2, 3, 4, 5], t: (v) => "Sotto il 20% di vita: immune " + fmt(v) + " s" },
+  15: { w: 2, v: [5, 9, 13, 18, 25], t: (v) => "Cooldown delle abilità −" + fmt(v) + "%" },
+  16: { w: 2, v: [2, 3, 5, 7, 10], t: (v) => "Boss ucciso: +" + fmt(v) + "% vita della barriera" },
+  17: { w: 2, v: [-15, -9, -4, 2, 8], t: (v) => "+1 perforazione, danni " + sgn(v) + "%" },
+  18: { w: 3, v: [6, 11, 16, 23, 32], t: (v) => "+" + fmt(v) + "% danni sopra il 70% di vita" },
+  19: { w: 3, v: [8, 14, 22, 30, 40], t: (v) => "Esplosioni del guardiano +" + fmt(v) + "%" },
+  20: { w: 1, v: [0.3, 0.5, 0.8, 1.1, 1.5], t: (v) => "Danno extra: " + fmt(v) + "% della vita massima" },
+  21: { w: 1, v: [1, 1, 2, 2, 3], t: (v) => v + (v === 1 ? " rinnovo" : " rinnovi") + " delle carte per partita" },
+  22: { w: 1, v: [10, 25, 45, 70, 100], t: (v) => fmt(v) + "%: 4 carte tra cui scegliere" },
+  23: typeMod("force"), 24: typeMod("physical"), 25: typeMod("electric"), 26: typeMod("fire"), 27: typeMod("energy"),
+  28: { w: 1, v: [4, 7, 11, 15, 20], t: (v) => "Torrette: tutti i danni +" + fmt(v) + "%" },
+  29: { w: 1, v: [5, 12, 22, 35, 50], t: (v) => fmt(v) + "%: guardiano dal livello 2" },
+  30: { w: 1, v: [10, 25, 45, 70, 100], t: (v) => fmt(v) + "%: torrette dal livello 2" },
+};
+const modText = (fx, r) => MOD[fx].t(MOD[fx].v[r]);
+// drop a fine livello [deciso: quantità; Claude, provvisori: terzo Modulo al 50%, +1 Modulo in Epica, tabella delle rarità per difficoltà]
+const DROP = { pieces: 2, mods: 2, modExtra: 0.5, epicMods: 1 };
+const DROP_RARITY = [[30, [80, 18, 2, 0, 0]], [60, [55, 30, 13, 2, 0]], [100, [35, 35, 22, 7, 1]], [140, [20, 35, 30, 12, 3]], [180, [10, 30, 35, 19, 6]]];
+const GEAR_NEAR = 80;                            // “vicino alla barriera / alla fortezza”: entro 80 px dal bordo della cupola
+// chiavi e conteggi dell’inventario (servono già al caricamento dei progressi)
+const emptyGear = () => ({ pcs: {}, mods: {}, eq: {} });
+const gearOpen = () => progress.cleared >= CAMPAIGN.equipUnlock;
+const pcKey = (p, r) => p + ":" + r, modKey = (p, r, fx) => p + ":" + r + ":" + fx;
+const qty = (o, k) => o[k] || 0;
+const bump = (o, k, n) => { const v = (o[k] || 0) + n; if (v > 0) o[k] = v; else delete o[k]; };
+const okR = (r) => Number.isInteger(r) && r >= 0 && r < 5, okFx = (p, fx) => PIECES[p] && PIECES[p].pool.includes(fx);
+
+/* =====================================================================
    GEOMETRIA E STATO
    ===================================================================== */
 const FORT_H = 26, GROUND_H = 30;
@@ -561,7 +622,7 @@ const CARD_LOCK = 0.6;
 let cardsAt = -1e9, cardPress = null;
 function cardsShown() { cardsAt = clock; cardPress = null; }
 
-let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree
+let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree | gear
 let mode = "standard";
 let clock = 0;
 let wave = 1, waveTime = 0, queue = [];
@@ -588,7 +649,8 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // seals = Sigilli da spendere · claims = premi già riscossi ("s31" primo completamento Standard del 31, "s31p" premio della barriera al 100%, "e5"… Epica)
 // tree = nodi comprati { "sky:burn1": 1 } · loadout = torrette equipaggiate prima dell’ondata 1 (con lo sblocco permanente, al massimo 4)
 // abilities = abilità della barriera equipaggiate { resist, control, offense }; null = quelle d’ingresso (mai cambiate)
-const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [], abilities: null };
+// gear = equipaggiamento: inventario, pezzi equipaggiati e Moduli installati (cleanGear)
+const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} } };
 // Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
 function cleanSeals(p) {
   const tree = {};
@@ -607,6 +669,7 @@ try {
   if (p && Number.isFinite(p.cleared)) progress.cleared = clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel);
   if (p && Array.isArray(p.seen)) progress.seen = p.seen.filter((k) => typeof k === "string" && k !== "ship" && k !== "mothership").slice(0, 50);   // vecchie scoperte generiche dei boss, non più valide
   Object.assign(progress, cleanSeals(p));
+  progress.gear = cleanGear(p);
 } catch (e) { /* storage non disponibile: si riparte da zero */ }
 function saveProgress() { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {} }
 const maxSelectable = () => Math.min(progress.cleared + 1, CAMPAIGN.maxLevel);
@@ -616,7 +679,7 @@ const towerCap = () => CAMPAIGN.towerCaps.reduce((c, [n, cap]) => progress.clear
 const UNLOCKS = [
   { lv: 10, title: "Torri e guardiano al livello 2", lines: ["Le carte level up ora portano torri e", "guardiano fino al livello 2.", "Dal livello 11 arrivano i mini-boss."] },
   { lv: 20, title: "Torri e guardiano al livello 3", lines: ["Le carte level up ora portano torri e", "guardiano fino al livello 3."] },
-  { lv: CAMPAIGN.equipUnlock, title: "Equipaggiamento del guardiano", lines: ["Testa, armatura, guanti, stivali, arma e nucleo.", "In arrivo in un prossimo aggiornamento."] },
+  { lv: CAMPAIGN.equipUnlock, title: "Equipaggiamento del guardiano", lines: ["Testa, armatura, guanti, stivali, arma e nucleo:", "cadono a ogni vittoria. Equipaggiali dal menu."] },
   { lv: CAMPAIGN.sealsFrom, title: "Sigilli e albero dei potenziamenti", lines: ["Completando i livelli guadagni Sigilli:", "spendili nell’albero, dal menu."] },
   { lv: CAMPAIGN.barrierUnlock, title: "Abilità della barriera", lines: ["Fino a 3 abilità della cupola in battaglia:", "sceglile nell’albero, Barriera · Abilità."] },
   { lv: CAMPAIGN.epicUnlock, title: "Modalità Epica", lines: ["Livelli con difficoltà +" + CAMPAIGN.epicOffset + " e più Sigilli:", "scegli “Epica” nel menu."] },
@@ -666,6 +729,124 @@ function equipAbility(id) {                     // tocco sul pallino: equipaggia
   else { if (treeLv("ab:" + id) < 1) return false; cur[g] = id; }
   progress.abilities = cur; saveProgress(); return true;
 }
+
+/* ---------- EQUIPAGGIAMENTO: inventario, pezzi equipaggiati, Moduli, fusione, drop (DESIGN.md § 15) ---------- */
+// progress.gear: pcs = pezzi in inventario { "arma:2": n } (pezzo:rarità); mods = Moduli in inventario { "arma:2:17": n } (pezzo:rarità:effetto);
+// eq = pezzi equipaggiati { arma: { r, m: [[effetto, rarità], …] } } (i Moduli installati non stanno nell’inventario)
+function cleanGear(p) {                           // da dati qualsiasi: tiene solo pezzi, Moduli e installazioni validi
+  const g = emptyGear(), src = p && p.gear && typeof p.gear === "object" ? p.gear : {}, n = (v) => clamp(Math.floor(+v) || 0, 0, 1e5);
+  if (src.pcs && typeof src.pcs === "object") for (const k in src.pcs) { const [pc, r] = k.split(":"); if (PIECES[pc] && okR(+r) && n(src.pcs[k])) g.pcs[pcKey(pc, +r)] = n(src.pcs[k]); }
+  if (src.mods && typeof src.mods === "object") for (const k in src.mods) {
+    const [pc, r, fx] = k.split(":"); if (okR(+r) && okFx(pc, +fx) && n(src.mods[k])) g.mods[modKey(pc, +r, +fx)] = n(src.mods[k]);
+  }
+  if (src.eq && typeof src.eq === "object") for (const pc of PIECE_IDS) {
+    const e = src.eq[pc]; if (!e || !okR(e.r)) continue;
+    const m = [];
+    for (const x of Array.isArray(e.m) ? e.m : []) if (Array.isArray(x) && okFx(pc, x[0]) && okR(x[1]) && !m.some((y) => y[0] === x[0]) && m.length < e.r + 1) m.push([x[0], x[1]]);
+    g.eq[pc] = { r: e.r, m };
+  }
+  return g;
+}
+const gearCount = (g, kind, pc) => Object.entries(g[kind]).reduce((a, [k, v]) => a + (!pc || k.startsWith(pc + ":") ? v : 0), 0);
+// equipaggia un pezzo dell’inventario: quello di prima torna in inventario; i suoi Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario
+function equipPiece(pc, r) {
+  const g = progress.gear; if (!gearOpen() || !qty(g.pcs, pcKey(pc, r))) return false;
+  const old = g.eq[pc], m = old ? old.m : [];
+  bump(g.pcs, pcKey(pc, r), -1);
+  if (old) bump(g.pcs, pcKey(pc, old.r), 1);
+  m.slice(r + 1).forEach(([fx, mr]) => bump(g.mods, modKey(pc, mr, fx), 1));
+  g.eq[pc] = { r, m: m.slice(0, r + 1) };
+  saveProgress(); return true;
+}
+function unequipPiece(pc) {                      // toglie il pezzo: pezzo e Moduli tornano in inventario
+  const g = progress.gear, e = g.eq[pc]; if (!e) return false;
+  bump(g.pcs, pcKey(pc, e.r), 1); e.m.forEach(([fx, mr]) => bump(g.mods, modKey(pc, mr, fx), 1));
+  delete g.eq[pc]; saveProgress(); return true;
+}
+// installa un Modulo nel pezzo equipaggiato del suo tipo: serve uno slot libero e nessun Modulo con lo stesso effetto in quel pezzo
+const canInstall = (pc, fx) => { const e = progress.gear.eq[pc]; return !!e && e.m.length < e.r + 1 && !e.m.some((x) => x[0] === fx); };
+function installMod(pc, r, fx) {
+  const g = progress.gear; if (!qty(g.mods, modKey(pc, r, fx)) || !canInstall(pc, fx)) return false;
+  bump(g.mods, modKey(pc, r, fx), -1); g.eq[pc].m.push([fx, r]); saveProgress(); return true;
+}
+function removeMod(pc, i) {                       // gratis e senza perdite: torna in inventario [deciso]
+  const g = progress.gear, e = g.eq[pc]; if (!e || !e.m[i]) return false;
+  const [fx, r] = e.m.splice(i, 1)[0]; bump(g.mods, modKey(pc, r, fx), 1); saveProgress(); return true;
+}
+// fusione: 5 pezzi uguali (stesso tipo e rarità) → 1 della rarità successiva
+function fusePieces(pc, r) {
+  const g = progress.gear; if (r >= 4 || qty(g.pcs, pcKey(pc, r)) < 5) return false;
+  bump(g.pcs, pcKey(pc, r), -5); bump(g.pcs, pcKey(pc, r + 1), 1); saveProgress(); return true;
+}
+// fusione dei Moduli: 5 dello stesso pezzo e della stessa rarità, anche con effetti diversi (sel = { effetto: quanti });
+// l’effetto del risultato si estrae dal pool del pezzo con i pesi
+function rollModFx(pc) {
+  const pool = PIECES[pc].pool; let x = Math.random() * pool.reduce((a, fx) => a + MOD[fx].w, 0);
+  for (const fx of pool) if ((x -= MOD[fx].w) < 0) return fx;
+  return pool[pool.length - 1];
+}
+function fuseMods(pc, r, sel) {
+  const g = progress.gear, ids = Object.keys(sel).map(Number);
+  if (r >= 4 || ids.reduce((a, fx) => a + sel[fx], 0) !== 5 || ids.some((fx) => qty(g.mods, modKey(pc, r, fx)) < sel[fx])) return null;
+  ids.forEach((fx) => bump(g.mods, modKey(pc, r, fx), -sel[fx]));
+  const fx = rollModFx(pc); bump(g.mods, modKey(pc, r + 1, fx), 1); saveProgress(); return fx;
+}
+function discard(kind, key) {                     // scarto a mano, senza compenso [deciso]
+  const g = progress.gear; if (!qty(g[kind], key)) return false;
+  bump(g[kind], key, -1); saveProgress(); return true;
+}
+// drop: a ogni vittoria dal livello 30 (difficoltà almeno 30, quindi anche ogni livello di Epica), anche rigiocando
+function rollRarity(D) {
+  const t = DROP_RARITY.reduce((a, [d, w]) => D >= d ? w : a, DROP_RARITY[0][1]);
+  let x = Math.random() * 100; for (let r = 0; r < 5; r++) if ((x -= t[r]) < 0) return r;
+  return 0;
+}
+function rollDrops(D, epic) {
+  const g = progress.gear, out = [], pick = () => PIECE_IDS[Math.floor(Math.random() * PIECE_IDS.length)];
+  for (let i = 0; i < DROP.pieces; i++) { const pc = pick(), r = rollRarity(D); bump(g.pcs, pcKey(pc, r), 1); out.push({ kind: "pcs", pc, r }); }
+  const nm = DROP.mods + (Math.random() < DROP.modExtra ? 1 : 0) + (epic ? DROP.epicMods : 0);
+  for (let i = 0; i < nm; i++) { const pc = pick(), r = rollRarity(D), fx = rollModFx(pc); bump(g.mods, modKey(pc, r, fx), 1); out.push({ kind: "mods", pc, r, fx }); }
+  return out;
+}
+let gearGain = null;                              // oggetti presi nell’ultima vittoria (schermata di vittoria)
+// statistiche dell’equipaggiamento per la partita: frazioni (0,1 = 10%); i “+X% danni” del guardiano si sommano in pdmg (un solo bonus)
+function gearStats(gear) {
+  const s = { pdmg: 0, hp: 0, tdmg: 0, type: {}, crit: 0, perTower: 0, proj: 0, perNear: 0, debuff: 0, rate: 0, ext: 0, perMod: 0, absorb: 0, counter: 0, counterN: 0,
+    red: 0, perCard: 0, nearB: 0, lowImm: 0, abCd: 0, heal: 0, pierce: 0, high: 0, explo: 0, maxHp: 0, refresh: 0, four: 0, p2: 0, t2: 0, mods: 0 };
+  for (const pc of PIECE_IDS) {
+    const e = gear && gear.eq[pc]; if (!e) continue;
+    s[PIECES[pc].stat] += PIECES[pc].base[e.r] / 100;
+    for (const [fx, r] of e.m) {
+      const v = MOD[fx].v[r], f = Array.isArray(v) ? v.map((x) => x / 100) : v / 100; s.mods++;
+      switch (fx) {
+        case 1: s.crit += f; break;          case 2: s.pdmg += f; break;            case 3: s.perTower += f; break;
+        case 4: s.proj++; s.pdmg += f; break; case 5: s.perNear += f; break;         case 6: s.debuff += f; break;
+        case 7: s.rate += f; break;          case 8: s.ext += f; break;             case 9: s.perMod += f; break;
+        case 10: s.absorb += v[0]; s.counter += f[1]; s.counterN += v[2]; break;
+        case 11: s.hp += f[0]; s.red += f[1]; break;
+        case 12: s.pdmg += f[0]; s.perCard += f[1]; break;
+        case 13: s.nearB += f; break;        case 14: s.lowImm += v; break;          case 15: s.abCd += f; break;
+        case 16: s.heal += f; break;         case 17: s.pierce++; s.pdmg += f; break; case 18: s.high += f; break;
+        case 19: s.explo += f; break;        case 20: s.maxHp += f; break;           case 21: s.refresh += v; break;
+        case 22: s.four += f; break;         case 28: s.tdmg += f; break;            case 29: s.p2 += f; break;   case 30: s.t2 += f; break;
+        default: s.type[MOD[fx].type] = (s.type[MOD[fx].type] || 0) + f;       // 23-27: danno di un tipo (torrette)
+      }
+    }
+  }
+  s.pdmg += s.perMod * s.mods;
+  for (const k of ["crit", "four", "p2", "t2"]) s[k] = Math.min(1, s[k]);      // probabilità: tetto del 100%
+  return s;
+}
+let GEAR = gearStats(null);                       // statistiche della partita in corso (startRun)
+// stato della partita legato all’equipaggiamento (startRun)
+let gearAbsorb = 0, counterLeft = 0, lowImmUsed = false, domeImmT = 0, healLeft = 0, refreshLeft = 0, runPicks = 0, turretsLv2 = false;
+function gearRun() {
+  gearAbsorb = GEAR.absorb; counterLeft = GEAR.counterN; lowImmUsed = false; domeImmT = 0; healLeft = 4; refreshLeft = GEAR.refresh; runPicks = 0;
+  turretsLv2 = GEAR.t2 > 0 && Math.random() < GEAR.t2;   // Modulo 30: un tiro a inizio battaglia per tutte le torrette (nessun tiro senza il Modulo)
+}
+// Moduli 29 e 30: l’entità parte dal livello 2; i potenziamenti restano 12 e i level up 3 (il primo la lascia al 2) [deciso, § 15]
+function fromLv2(s) { s.level = 2; s.lv2 = true; return s; }
+function newTurret(id, i) { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); return turretsLv2 ? fromLv2(s) : s; }
 const curDiff = () => diffOf(campLevel, mode === "epic");
 const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
 const randEnemy = () => { const l = living(); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
@@ -693,7 +874,8 @@ const cdOf = (s) => s.def.reload * Math.pow(stdR(s, "cd", 0.88), N(s, "cd")) * M
 function makeShooter(def, x, y) {
   const sb = {}; for (const u of def.ups) if (u.cat === "std") sb[u.id] = treeLv(def.id + ":std:" + u.id);
   // tb: danno del tipo e di tutte le torrette dall’albero (solo torrette)
-  const tb = def.id === "player" ? 1 : 1 + TREE_VAL.typeDmg * treeLv("types:dmg:" + def.type) + TREE_VAL.allDmg * treeLv("types:all");
+  // e dall’equipaggiamento: statistica base del nucleo, Moduli 23-28 (si sommano a quelli dell’albero)
+  const tb = def.id === "player" ? 1 : 1 + TREE_VAL.typeDmg * treeLv("types:dmg:" + def.type) + TREE_VAL.allDmg * treeLv("types:all") + GEAR.tdmg + (GEAR.type[def.type] || 0);
   return { id: def.id, def, x, y, up: {}, level: 1, used: 0, done: false, cd: 0.5, busy: 0, st: {}, sb, tb };
 }
 function busy(s, d) {           // le torrette "a durata" ricaricano quando l’effetto è finito
@@ -1519,6 +1701,13 @@ const PLAYER = { dmg: 7, interval: 0.15, range: 9999 };
 // bocca del cannone del guardiano (braccio destro alzato), rispetto ai piedi: da qui partono i colpi; il clone la ha specchiata
 const GUN = { dx: 7, dy: -56 };
 function frenzyOn(p) { return (p.st.frenzyT || 0) > 0; }
+// equipaggiamento sul guardiano: un solo bonus che somma statistica base e “+X% danni” dei Moduli (fissi, per torre, per nemico vicino, per carta scelta)
+const nearBarrier = (e) => domeK(e.x, e.y, GEAR_NEAR + e.def.r) <= 1;
+const gearMul = () => 1 + GEAR.pdmg + GEAR.perTower * slots.filter(Boolean).length + GEAR.perCard * runPicks
+  + (GEAR.perNear ? GEAR.perNear * Math.min(10, living().filter(nearBarrier).length) : 0);
+// bonus che dipendono dal nemico colpito (Moduli 6, 13, 18): si aggiungono allo stesso bonus
+const gearHit = (e) => (GEAR.debuff && debuffed(e) ? GEAR.debuff : 0) + (GEAR.nearB && nearBarrier(e) ? GEAR.nearB : 0) + (GEAR.high && e.hp > 0.7 * e.maxHp ? GEAR.high : 0);
+const guardDmg = (p) => PLAYER.dmg * dmgM(p) * gearMul();          // danno di riferimento del guardiano (contrattacco del Modulo 10)
 function playerTick(p, dt) {
   // la frenesia scorre solo mentre si combatte: se ci sono nemici a schermo o se si sta premendo; altrimenti va in pausa
   const engaged = pressing || living().length > 0;
@@ -1531,7 +1720,7 @@ function playerTick(p, dt) {
   }
   p.st.paused = frenzyOn(p) && !engaged;
   p.cd -= dt; if (p.cd > 0) return;
-  const cnt = 1 + N(p, "proj"), pos = { x: p.x + GUN.dx, y: GROUND_Y + GUN.dy };
+  const cnt = 1 + N(p, "proj") + GEAR.proj, pos = { x: p.x + GUN.dx, y: GROUND_Y + GUN.dy };
   let t = null, ang = -Math.PI / 2;
   if (pressing) t = nearestTo(press.x, press.y, PRESS_PICK);   // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
   else {
@@ -1539,14 +1728,15 @@ function playerTick(p, dt) {
     if (!t) { p.cd = 0; return; }
   }
   const f = frenzyOn(p);
-  const raw = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * (f ? FRENZY.dmg : 1);    // senza Colpo pesante
+  p.gm = gearMul();
+  const raw = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * (f ? FRENZY.dmg : 1) * p.gm;    // senza Colpo pesante
   const dmg0 = raw * (has(p, "punch") ? 1.6 : 1);
   const dmg = dmg0 * beamAmp(p, t);
   // combo che scattano per colpo (salva): l’effetto parte dal primo impatto del primo proiettile
   const proc = { laser: comboOn(p, "kLaser") && Math.random() < 0.03, disr: comboOn(p, "kDisr") && Math.random() < 0.10,
     aero: comboOn(p, "kAero") && Math.random() < 0.05, thunder: comboOn(p, "kThunder") && Math.random() < 0.05 };
   const any = proc.laser || proc.disr || proc.aero || proc.thunder;
-  for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 && any ? { proc } : null);
+  for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 ? { proc: any ? proc : null, first: true } : null);
   const aim0 = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;     // direzione della salva (il clone la specchia)
   if (has(p, "fan"))                         // proiettili secondari a ventaglio, danno minore
     for (const d of fanOffsets(p)) playerBullet(p, pos.x, pos.y, null, dmg * 0.3, aim0 + d, { fan: true });
@@ -1559,7 +1749,14 @@ function playerTick(p, dt) {
     for (let k = 0; k < cnt; k++) playerBullet(p, cx + (k - (cnt - 1) / 2) * 7, pos.y, null, dmg0 * 0.5, ca, { clone: true });
     if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * 0.3, ca - d, { clone: true, fan: true });
   }
+  const cd0 = p.cd;
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
+  if (GEAR.rate) p.cd -= (p.cd - cd0) * GEAR.rate;   // Modulo 7: intervallo tra le salve più breve
+}
+// Modulo 8: la prima salva che colpisce un nemico con uno stato ne allunga la durata, una sola volta per stato
+const EXT_KEYS = ["slowT", "weakT", "vulnT", "burnT", "paraT"];
+function gearExtend(e) {
+  for (const k of EXT_KEYS) if (e[k] > 0 && !(e.ext && e.ext[k])) { (e.ext = e.ext || {})[k] = true; e[k] *= 1 + GEAR.ext; }
 }
 // Ventaglio: scarti angolari dei proiettili secondari (4 di base; Ventaglio ampliato dell’albero: di più, sempre entro ±0,6 rad)
 function fanOffsets(p) {
@@ -1572,7 +1769,8 @@ function fanOffsets(p) {
 function playerBullet(p, x, y, t, dmg, ang, o) {
   o = o || {};
   const fan = !!o.fan, clone = !!o.clone, frag = !!o.frag, charged = o.charged != null;
-  let pierce = fan || frag ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0);
+  let pierce = fan || frag ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0) + GEAR.pierce;
+  let maxHp = !!o.first && GEAR.maxHp > 0;      // Modulo 20: un colpo per salva, sul primo nemico colpito
   let bounces = fan || frag ? 0 : (has(p, "ricochet") ? 1 : 0) + (charged ? o.charged : 0);
   const prob = fan || frag || !has(p, "boom1") ? 0 : 0.10 + (has(p, "boomP") ? 0.10 : 0) + (has(p, "boom3") ? 0.10 : 0);
   const rad = 30 * (1 + (has(p, "boom3") ? 0.3 : 0));
@@ -1592,13 +1790,18 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
       }
       for (const e of living()) {
         if (this.hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 3) continue;
+        if (GEAR.ext) gearExtend(e);
+        const dmg1 = dmg;                          // Moduli 6, 13, 18 (bonus sul nemico colpito) e critico (1); senza equipaggiamento dmg non cambia
+        { const gm = p.gm || 1, gh = gearHit(e), cr = GEAR.crit && Math.random() < GEAR.crit; if (gh || cr) dmg = dmg1 * (gm + gh) / gm * (cr ? 1.5 : 1); }
         this.hit.add(e); damage(e, dmg, "physical", false, "player"); knock(e, kb);
+        dmg = dmg1;
+        if (maxHp && !e.dead) { maxHp = false; damage(e, Math.min(GEAR.maxHp * e.maxHp, 2 * dmg), "physical", true, "player"); }
         if (fire) damage(e, dmg * 0.2, "fire", true, "player");
         if (force) damage(e, dmg * 0.2, "force", true, "player");
         if (proc) { guardProc(p, proc, e); proc = null; }
         if (canFrag && Math.random() < 0.10) { canFrag = false; guardFrag(p, this, dmg); }
         if (prob && Math.random() < prob) {
-          for (const f of living()) if (f !== e && dist(f.x, f.y, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7, "physical", false, "player");
+          for (const f of living()) if (f !== e && dist(f.x, f.y, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), "physical", false, "player");   // Modulo 19
           ring(e.x, e.y, rad, TYPES.physical.color, 0.3);
         }
         if (pierce > 0) { pierce--; this.t = null; }
@@ -1697,12 +1900,14 @@ function comboReady(u) {
 }
 function applyUp(s, u) {
   s.up[u.id] = N(s, u.id) + 1;
-  if (u.cat === "lu") { if (s.level < 3) { s.level++; s.used = 0; } else s.done = true; }
+  if (u.cat === "lu") { if (s.lv2) { s.lv2 = false; s.used = 0; } else if (s.level < 3) { s.level++; s.used = 0; } else s.done = true; }   // lv2: partito dal livello 2, il primo level up lo lascia al 2
   else s.used++;
   if (player && slots) markTop();
 }
 
-function rollOptions() {
+let cardsN = 3;                                  // carte offerte dopo l’ondata (4 con il Modulo 22)
+function rollOptions(n) {
+  n = n || cardsN;
   const cands = [], owned = slots.filter(Boolean);
   if (slots.indexOf(null) >= 0)
     for (const id of TURRET_ORDER)
@@ -1710,7 +1915,7 @@ function rollOptions() {
   for (const who of [player, ...owned])
     for (const u of eligible(who)) cands.push({ w: UP_W[u.cat], opt: { kind: "up", who, up: u } });
   const out = [];
-  while (out.length < 3 && cands.length) {
+  while (out.length < n && cands.length) {
     let r = Math.random() * cands.reduce((a, c) => a + c.w, 0), i = 0;
     while (i < cands.length - 1 && (r -= cands[i].w) > 0) i++;
     out.push(cands.splice(i, 1)[0].opt);
@@ -1735,7 +1940,7 @@ function describe(opt) {
   return { head: d.name + " · " + lab, title: u.name, desc: u.desc, note, type: d.type };
 }
 function applyOption(opt) {
-  if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = makeShooter(TURRETS[opt.id], SLOT_X[f], GROUND_Y - 14); }
+  if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = newTurret(opt.id, f); }
   else applyUp(opt.who, opt.up);
 }
 function giveBossRewards() {                  // il mini-boss dà carte a caso, applicate subito
@@ -1746,11 +1951,15 @@ function giveBossRewards() {                  // il mini-boss dà carte a caso, 
   }
   bonusLeft = 0;
 }
+function refreshCards() {                        // Modulo 21: nuove carte al posto di quelle offerte (stesso numero)
+  if (state !== "upgrade" || rewards || refreshLeft <= 0 || !options.length) return false;
+  refreshLeft--; options = rollOptions(options.length); cardsShown(); return true;
+}
 function pick(i) {
   if (state !== "upgrade") return;
   if (rewards) { rewards = null; bonusMode = false; startWave(wave + 1); return; }   // "Continua" dopo la ricompensa
   const opt = options[i]; if (!opt) return;
-  applyOption(opt);
+  applyOption(opt); runPicks++;
   options = [];
   if (bonusLeft > 0) { giveBossRewards(); if (rewards.length) { bonusMode = true; cardsShown(); return; } rewards = null; }
   bonusMode = false;
@@ -1774,19 +1983,22 @@ function startRun(m) {
   pressing = false;
   mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
-  domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp")) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
+  GEAR = gearStats(progress.gear); gearRun();
+  domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan");
+  if (GEAR.p2 && Math.random() < GEAR.p2) fromLv2(player);                                   // Modulo 29: guardiano dal livello 2
   statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
   startAbilities();
   slots = [null, null, null, null];
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
+  if (turretsLv2) slots.forEach((s) => { if (s) fromLv2(s); });
   // torrette equipaggiate con lo sblocco permanente (DESIGN.md § 16): ognuna consuma una delle prime scelte dopo le ondate.
   // META.startTurrets resta lo sblocco a mano per le prove e non consuma scelte.
-  skipLeft = 0; skipNote = false; sealGain = null;
+  skipLeft = 0; skipNote = false; sealGain = null; gearGain = null;
   for (const id of progress.loadout) {
     const f = slots.indexOf(null);
     if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
-    slots[f] = makeShooter(TURRETS[id], SLOT_X[f], GROUND_Y - 14); skipLeft++;
+    slots[f] = newTurret(id, f); skipLeft++;
   }
   startWave(1);
 }
@@ -1901,15 +2113,19 @@ function domeWave(side) {
 }
 
 // riduzione del danno alla cupola: META (equipaggiamento, a mano) + albero, con tetto sul totale; cooldown delle abilità idem
-const domeRed = () => Math.min(TREE_CAP.red, clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red"));
-const abCdM = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd"));
+const domeRed = () => Math.min(TREE_CAP.red, clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red") + GEAR.red);
+const abCdM = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd") + GEAR.abCd);
 function domeHit(e) {
-  const dmg = Math.max(1, e.dmg * (e.weakT > 0 ? 1 - (e.weakK || 0.35) * (1 - (e.statRes || 0)) : 1) * (1 - 0.1 * e.destrN * (1 - (e.statRes || 0))) * (1 - domeRed()));
+  if (counterLeft > 0) { counterLeft--; if (player) damage(e, GEAR.counter * guardDmg(player), "physical", false, "player"); }   // Modulo 10: contrattacco ai primi colpi
+  let dmg = Math.max(1, e.dmg * (e.weakT > 0 ? 1 - (e.weakK || 0.35) * (1 - (e.statRes || 0)) : 1) * (1 - 0.1 * e.destrN * (1 - (e.statRes || 0))) * (1 - domeRed()));
   if (AB.burnT > 0) burn(e, 3, AB.burnDps);                                     // Barriera ustionante: brucia chi colpisce
   if (domeShield > 0) { domeShield--; ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // immunità (Impenetrabile, in futuro equipaggiamento)
   if (Math.random() < TREE_VAL.ignore * treeLv("barrier:ignore")) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#c9a2ff", 0.3); return; }   // colpo ignorato (albero)
   if (AB.reflectT > 0) damage(e, dmg * AB.reflectK, "force", false, "dome");    // Barriera riflettente
+  if (domeImmT > 0) { ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // Modulo 14: immunità sotto il 20%
+  if (gearAbsorb > 0) { const a = Math.min(gearAbsorb, dmg); gearAbsorb -= a; dmg -= a; if (dmg <= 0) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#e8eefc", 0.3); return; } }   // Modulo 10: primi danni ignorati
   domeHp -= dmg; domeFlash = 0.25; domeSince = 0;
+  if (GEAR.lowImm && !lowImmUsed && domeHp > 0 && domeHp < 0.2 * domeMax) { lowImmUsed = true; domeImmT = GEAR.lowImm; ring(DOME.cx, DOME.cy, DOME.ry, "#e8eefc", 0.8); }
   ring(e.x, Math.min(e.y, GROUND_Y), 22, "#7fe8ff", 0.3);
 }
 
@@ -1948,12 +2164,15 @@ function update(dt) {
     }
   }
 
-  domeSince += dt; domeFlash = Math.max(0, domeFlash - dt);
+  domeSince += dt; domeFlash = Math.max(0, domeFlash - dt); domeImmT = Math.max(0, domeImmT - dt);
   abilityTick(dt);
 
   for (const e of enemies) if (!e.dead && e.y >= 0) markSeen(e);                 // entrato nella schermata
   if (alerts.length) { alerts[0].t -= dt; if (alerts[0].t <= 0) alerts.shift(); }
-  for (const e of enemies) if (e.dead && e.boss && !e.rewarded) { e.rewarded = true; if (!e.final) bossBonus++; ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6); }
+  for (const e of enemies) if (e.dead && e.boss && !e.rewarded) {
+    e.rewarded = true; if (!e.final) bossBonus++; ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
+    if (GEAR.heal && healLeft > 0 && domeHp > 0) { healLeft--; domeHp = Math.min(domeMax, domeHp + domeMax * GEAR.heal); }   // Modulo 16 (al massimo 4 volte)
+  }
   for (const f of floaters) { f.y -= 28 * dt; f.life -= dt; }
   ents = ents.filter((o) => !o.dead);
   enemies = enemies.filter((e) => !e.dead);
@@ -1969,6 +2188,7 @@ function winLevel() {
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
   unlockNotes = UNLOCKS.filter((u) => before < u.lv && progress.cleared >= u.lv);
   sealGain = sealReward(mode, campLevel, domeHp >= domeMax && !AB.backupUsed);   // con il Backup attivato il premio della cupola non si prende
+  gearGain = gearOpen() && curDiff() >= CAMPAIGN.equipUnlock ? rollDrops(curDiff(), mode === "epic") : null;   // equipaggiamento: a ogni vittoria dal 30
   saveProgress();
   selLevel = clamp(campLevel + 1, 1, maxSelectable());
 }
@@ -1977,6 +2197,7 @@ function endWave() {
   skipNote = false;
   if (skipLeft > 0) { skipLeft--; skipNote = true; startWave(wave + 1); return; }   // scelta già usata da una torretta equipaggiata
   bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null;
+  cardsN = GEAR.four && Math.random() < GEAR.four ? 4 : 3;                       // Modulo 22: a volte 4 carte (la scelta resta una)
   options = rollOptions();
   if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else { state = "upgrade"; cardsShown(); }
 }
@@ -1996,6 +2217,47 @@ function tapNode(n) {                            // primo tocco: seleziona; seco
   buyNode(n); treeArm = null;
 }
 // pausa: il gioco si ferma (update gira solo in "play") e si apre il riepilogo
+// schermata dell’equipaggiamento: pezzo scelto, inventario (pezzi o Moduli), modalità (usa, fondi, scarta), rarità dei Moduli mostrati,
+// riga in attesa del secondo tocco (fusione dei pezzi, scarto, Modulo o pezzo da togliere), Moduli scelti per la fusione, messaggio
+let gearSel = "arma", gearTab = "pcs", gearMode = "use", gearRar = 0, gearArm = null, gearFuse = {}, gearMsg = "";
+const gearReset = () => { gearArm = null; gearFuse = {}; };
+function openGear() { if (!gearOpen()) return; state = "gear"; gearReset(); gearMsg = ""; }
+function closeGear() { state = "menu"; gearReset(); }
+function gearPick(pc) { gearSel = pc; gearReset(); gearMsg = ""; }
+function gearSetTab(t) { gearTab = t; gearReset(); gearMsg = ""; }
+function gearSetRar(r) { gearRar = r; gearReset(); gearMsg = ""; }
+const fuseCount = () => Object.values(gearFuse).reduce((a, n) => a + n, 0);
+function gearSetMode(m) {                          // “Fondi” con 5 Moduli scelti: esegue la fusione
+  if (m === "fuse" && gearMode === "fuse" && gearTab === "mods" && fuseCount() === 5) {
+    const fx = fuseMods(gearSel, gearRar, gearFuse); gearReset();
+    gearMsg = fx ? "Nuovo Modulo " + RARITY[gearRar + 1].name.toLowerCase() + ": " + modText(fx, gearRar + 1) : ""; return;
+  }
+  gearMode = m; gearReset(); gearMsg = "";
+}
+function tapPiece(r) {                             // riga dei pezzi in inventario (rarità r) del pezzo scelto
+  const k = pcKey(gearSel, r), n = qty(progress.gear.pcs, k); gearMsg = "";
+  if (!n || (gearMode === "fuse" && (r >= 4 || n < 5))) { gearArm = null; return; }
+  if (gearMode === "use") { equipPiece(gearSel, r); gearArm = null; return; }
+  if (gearArm !== "p" + r) { gearArm = "p" + r; return; }          // fondere e scartare chiedono due tocchi
+  gearArm = null;
+  if (gearMode === "fuse") { fusePieces(gearSel, r); gearMsg = "Fusione: 5 pezzi → 1 " + RARITY[r + 1].name.toLowerCase(); } else discard("pcs", k);
+}
+function tapMod(fx) {                              // riga dei Moduli in inventario (rarità gearRar) del pezzo scelto
+  const r = gearRar, k = modKey(gearSel, r, fx), n = qty(progress.gear.mods, k), e = progress.gear.eq[gearSel]; gearMsg = "";
+  if (!n) return;
+  if (gearMode === "use") {
+    if (!installMod(gearSel, r, fx)) gearMsg = !e ? "Prima equipaggia un pezzo" : e.m.some((x) => x[0] === fx) ? "Effetto già installato in questo pezzo" : "Nessuno slot libero";
+    return;
+  }
+  if (gearMode === "fuse") { if (r >= 4) return; const c = gearFuse[fx] || 0; if (c < n && fuseCount() < 5) gearFuse[fx] = c + 1; else delete gearFuse[fx]; return; }
+  if (gearArm !== "m" + fx) { gearArm = "m" + fx; return; }
+  gearArm = null; discard("mods", k);
+}
+function tapSlot(i) {                              // Modulo installato: primo tocco seleziona, secondo lo toglie (torna in inventario)
+  if (gearArm !== "s" + i) { gearArm = "s" + i; return; }
+  gearArm = null; removeMod(gearSel, i);
+}
+function tapUnequip() { if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel); }
 let pauseTab = "enemies", pauseQuit = false;
 function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; pressing = false; pauseQuit = false; }
 function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit = false; }
@@ -2021,6 +2283,7 @@ cv.addEventListener("pointerdown", (e) => {
     b.onTap(); return;
   }
   if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
+  if (state === "gear") gearArm = null;
   if (state === "play") {
     dragging = true; pressing = true; player.targetX = p.x; setPress(p);   // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
@@ -2047,6 +2310,7 @@ window.addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase();
   if (state === "save") { if (k === "escape") closeSave(); return; }
   if (state === "tree") { if (k === "escape") closeTree(); return; }   // mentre si scrive nel pannello i tasti non comandano il gioco
+  if (state === "gear") { if (k === "escape") closeGear(); return; }
   if (state === "menu" && (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d"))
     selLevel = clamp(selLevel + (k === "arrowright" || k === "d" ? 1 : -1), 1, maxSelectable());
   if (k === "arrowleft" || k === "a") keys.left = 1;
@@ -2056,7 +2320,8 @@ window.addEventListener("keydown", (e) => {
   else if (k === "tab" && state === "pause") { e.preventDefault(); pauseTab = pauseTab === "enemies" ? "build" : "enemies"; }
   else if (k === "t" && (state === "play" || state === "upgrade")) toggleTargeting();
   else if (state === "upgrade" && rewards && (k === "enter" || k === " " || k === "1")) pick(0);
-  else if (state === "upgrade" && (k === "1" || k === "2" || k === "3")) pick(+k - 1);
+  else if (state === "upgrade" && (k === "1" || k === "2" || k === "3" || k === "4")) pick(+k - 1);
+  else if (state === "upgrade" && k === "r") refreshCards();
   else if (state === "menu" && (k === "enter" || k === " ")) startRun("standard");
   else if (state === "menu" && k === "e") { if (epicUnlocked()) startRun("epic"); }
   else if (state === "won" && unlockNotes.length && (k === "enter" || k === " " || k === "escape")) closeUnlocks();   // prima si chiude l’avviso
@@ -2086,12 +2351,12 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.9.4";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 2, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate
+const APP_VERSION = "1.10.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 3, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities } },
+    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)) },
     settings: { targeting: settings.targeting } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -2113,18 +2378,20 @@ function parseSave(text) {                      // controlla tutto prima di tocc
     cleared: clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel),
     seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 50) : [],
     ...cleanSeals(p),                            // versione 1: niente Sigilli, si parte da zero
+    gear: cleanGear(p),                          // versioni 1 e 2: niente equipaggiamento, inventario vuoto
     targeting: s.targeting === "highest" ? "highest" : "closest",
     exportedAt: typeof d.exportedAt === "string" && !isNaN(Date.parse(d.exportedAt)) ? d.exportedAt : null,
   };
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.seen = d.seen;
-  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities;
+  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear;
   settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
   saveProgress(); saveSettings(); selLevel = maxSelectable();
 }
 let pendingSave = null;
-const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + " e " + Object.keys(p.tree).length + " nodi dell’albero";
+const gearItems = (g) => gearCount(g, "pcs") + gearCount(g, "mods") + Object.values(g.eq).reduce((a, e) => a + 1 + e.m.length, 0);
+const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + ", " + Object.keys(p.tree).length + " nodi dell’albero e " + gearItems(p.gear) + " oggetti dell’equipaggiamento";
 function refreshSavePanel(msg, isErr) {
   $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · " + sealsLabel(progress);
   $id("confirmBox").hidden = !pendingSave;

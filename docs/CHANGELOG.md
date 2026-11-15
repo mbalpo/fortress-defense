@@ -3,6 +3,47 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.10.0 — equipaggiamento e Moduli
+
+Prima versione giocabile dell’equipaggiamento (DESIGN.md § 15), con le regole e i valori decisi con Marco; dove serviva una scelta in più l’ha fatta Claude
+(segnata **[Claude] [da rivedere]** nel nuovo punto “Costruito (1.10.0)” del § 15).
+
+- **Dati** (`app/index.html`, dopo l’albero): `RARITY` (5 rarità e colori), `PIECES` (statistica base, pool di 9 effetti con l’esclusivo in testa), `MOD` (30 effetti: peso,
+  valori per rarità, testo), `DROP` e `DROP_RARITY`.
+- **Inventario** in `progress.gear` (pezzi e Moduli contati per tipo e rarità, pezzi equipaggiati con i loro Moduli); funzioni `equipPiece`, `unequipPiece`, `installMod`,
+  `removeMod`, `fusePieces`, `fuseMods`, `discard`, `rollDrops`, `gearStats`. Cambiando pezzo i Moduli passano al nuovo finché ci sono slot.
+- **Drop**: a ogni vittoria dal livello 30 (e in ogni livello di Epica): 2 pezzi e 2-3 Moduli, +1 Modulo in Epica, rarità dalla tabella “avara”. Tasselli colorati nella vittoria.
+- **Effetti in battaglia**: statistica base (danno del guardiano, vita della barriera, danno delle torrette) e tutti i 30 Moduli: un solo bonus di danno del guardiano
+  (`gearMul`, più `gearHit` per i bonus sul nemico colpito), critico, +1 proiettile, +1 perforazione, cadenza, debuff allungati, esplosioni, % della vita massima, primi danni
+  ignorati e contrattacco, immunità sotto il 20%, cura per boss, riduzione del danno e del cooldown (con i tetti dell’albero), danni delle torrette (tipo e tutte), rinnovo
+  delle carte (pulsante e tasto R), 4 carte (tasto 4), guardiano e torrette dal livello 2 (`fromLv2`: il primo level up li lascia al 2).
+  Senza equipaggiamento il gioco non consuma tiri casuali in più: le partite dei bot con gli stessi semi restano uguali.
+- **Schermata “Equipaggiamento”** (draw.js, `gearScreen`): menu → pulsante accanto all’albero (dal 30). I 6 pezzi, il pezzo scelto con statistica e slot, inventario di quel pezzo
+  (schede Pezzi e Moduli per rarità) con le modalità Equipaggia/Installa, Fondi, Scarta. Ancestrale iridescente (`rarColor`). Esc torna al menu.
+- **Carte**: con 4 carte le carte sono più basse (92 px invece di 110).
+- **Avviso del 30**: non più “in arrivo”, ora “cadono a ogni vittoria. Equipaggiali dal menu.”
+- **Salvataggio**: versione 3 con `gear`; le versioni 1 e 2 si importano con l’inventario vuoto; dati non validi scartati (`cleanGear`). Il pannello conta anche gli oggetti.
+- **Menu**: “Albero” ed “Equipaggiamento” affiancati (prima un solo pulsante largo).
+- DESIGN.md: § 15 “Costruito (1.10.0)” con tutte le letture; § 4, § 7 (formato 3), § 11, § 13.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.10.0 (elenco dei file invariato).
+
+**Test**: nuovo `tests/equip.js` (41 controlli: dati e pool, pulizia e salvataggio v3, migrazione dalla v2, drop per livello e modalità, distribuzione delle rarità e degli effetti,
+equipaggiare/installare/fondere/scartare, statistiche e tetti, colpo del guardiano con arma, Modulo 18 e critico, Moduli 4, 7, 10, 14, 16, 21, 22, 29, schermata e vittoria).
+Aggiornati `seals.js` (versione 3 del salvataggio) e `carte.js` (posizione del pulsante dell’albero). `npm test`: tutti verdi.
+Durante il lavoro: corretto un errore che al caricamento perdeva in silenzio l’equipaggiamento salvato (funzioni usate prima della loro definizione), trovato dal test.
+
+Screenshot: nuovi 37 (menu), 38 (pezzi), 39 (fusione dei Moduli), 40 (pezzo vuoto), 41 (vittoria con gli oggetti), 42 (4 carte e rinnovo); controllati anche 01 e 25.
+Nota: nella carta della Beam la descrizione esce dal bordo (anche con 3 carte, già prima di questa versione).
+
+**Misure con i bot**: non fatte. Senza equipaggiamento il gioco è identico per i bot (stessi tiri casuali): verificato con `calib2.js` ai livelli 12 e 35 (6 partite per bot), risultati e ondate medie uguali alla 1.9.4. I muri restano quelli della 1.9.4. Manca la misura con
+l’equipaggiamento atteso, e quindi la taratura verso il 50% dei muri dal 40.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (nuove scene: menu con l’equipaggiamento, pezzi, fusione dei Moduli, vittoria con gli oggetti, 4 carte e rinnovo;
+note “futuro” di equipaggiamento e Moduli aggiornate; 55 scene).
+
+Checklist: nuove voci “Equipaggiamento: provare schermata, fusione e drop sul telefono”, “Equipaggiamento: letture di Claude degli effetti (§ 15, Costruito)”,
+“Equipaggiamento: misura con i bot e muri al 50%”, “Icone di pezzi e Moduli”, “Descrizione della Beam fuori dalla carta”; togliere “Equipaggiamento da costruire”.
+
 ## 1.9.4 — un level up lv1 bloccato per torretta nell’albero dei Sigilli
 
 Correzione chiesta da Marco: ogni torretta deve avere, come il guardiano, anche un level up lv1 bloccato e sbloccabile con i Sigilli (prima ne aveva bloccato solo uno lv2).
