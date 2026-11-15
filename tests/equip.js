@@ -131,6 +131,8 @@ console.log("— Effetti in battaglia —");
   ev("endWave = endWave; wave = 1; endWave(); window.__o1 = options.map((o) => o.kind + (o.id || o.up.id)).join();");
   const ref = ev("refreshCards()"), left = ev("refreshLeft");
   console.log("rinnovo delle carte:", ref, "| rimasti", left, "| carte", ev("options.length"), ok(ref && left === 2 && ev("options.length") === 3 && ev("state") === "upgrade"));
+  ev("runPicks = 0; pick(0); bonusLeft = 1; giveBossRewards();");
+  console.log("Modulo 12: carte contate, 1 scelta + 3 del mini-boss =", ev("runPicks"), ok(ev("runPicks") === 4));
   // Modulo 22 (ancestrale: sempre 4 carte) e Modulo 29 (ancestrale 50%, qui forzato)
   const four = eqOf({ testa: { r: 0, m: [[22, 4]] } }).ev;
   four("startRun('standard'); enemies = []; queue = []; wave = 1; endWave();");

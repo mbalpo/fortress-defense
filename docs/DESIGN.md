@@ -74,8 +74,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   (riduce l’intensità, non la durata). **[deciso]** (valori **[da rivedere]**, § 10)
 - Fino a difficoltà 10 solo nemici “piccoli” (niente asteroidi). **[deciso]**
 - Budget di scelte: 19 per partita, **28 dal livello 11** con i 3 mini-boss. Servono 19 scelte per riempire tutto al tetto lv1, 39 al tetto lv2,
-  64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39: per questo, con 28 scelte,
-  **non si possono massimizzare più di 2 tra torri e guardiano** senza bisogno di una regola esplicita. **[deciso]**
+  64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39. **[deciso]**
+  **Nessun limite di torri al livello 3** (1.10.1, Marco): tolta la regola “al massimo 2 tra torri e guardiano al massimo” (era già spenta nel codice) e le scelte saltate
+  per le torrette equipaggiate: le carte si scelgono dopo ogni ondata anche con torrette equipaggiate, che quindi si aggiungono al budget. **[deciso]**
 - Progressione salvata sul dispositivo: livelli completati, nemici scoperti, Sigilli (saldo, livelli dei nodi, premi già riscossi per livello e modalità); impostazioni (bersaglio) a parte. Il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione (§ 7). **[deciso]**
 
 ## 5. Difficoltà e calibrazione
@@ -579,7 +580,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Drop**: a ogni vittoria con difficoltà almeno 30 e livello 30 completato, quindi dal primo completamento del 30 e in **tutti i livelli di Epica** (difficoltà ≥ 31).
   Tipo del pezzo e del Modulo a caso, 6 tipi con la stessa probabilità; l’effetto del Modulo si estrae dal pool con i pesi.
 - **Inventario**: pezzi uguali (tipo e rarità) e Moduli uguali (pezzo, rarità, effetto) sono intercambiabili e si contano; solo il pezzo equipaggiato porta Moduli.
-  **Cambiando pezzo** i Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario; “Togli” rimette in inventario pezzo e Moduli.
+  **Cambiando pezzo** i Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario **[deciso]** (confermato da Marco); “Togli” rimette in inventario pezzo e Moduli.
 - **Schermata** “Equipaggiamento” (menu, accanto all’albero, dal livello 30): i 6 pezzi in alto (bordo del colore della rarità, Moduli installati), il pezzo scelto con
   statistica e slot, sotto l’inventario di quel pezzo in due schede (Pezzi, Moduli per rarità) con tre modalità: **Equipaggia/Installa** (un tocco), **Fondi** (pezzi: due tocchi;
   Moduli: si scelgono 5 righe, anche diverse, poi “Fondi ora”), **Scarta** (due tocchi). Un Modulo installato si toglie con due tocchi. Sopra: totale di guardiano, barriera e torri.
@@ -588,7 +589,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - Un solo bonus di danno del guardiano: statistica base di arma, guanti e testa + Moduli 2, 3, 4, 5, 6, 9, 12, 13, 17, 18 (i valori negativi di 4, 12 e 17 entrano qui);
     moltiplica il danno insieme agli altri bonus (carte, albero). 6, 13 e 18 si valutano sul nemico colpito, 3, 5 e 12 a ogni salva.
   - 1 critico: per ogni proiettile del guardiano che colpisce (anche ventaglio e clone), danno ×1,5. 3: torrette in campo in quel momento (max 4).
-    5 e 13: nemici entro 80 px dal bordo della cupola (5: al massimo 10). 12: “carte scelte” = scelte fatte dopo le ondate in quella partita (non le carte dei mini-boss).
+    5 e 13: nemici entro 80 px dal bordo della cupola (5: al massimo 10). 12: “carte scelte” = **tutte** le carte prese nella partita, anche quelle dei mini-boss **[deciso]** (Marco, 1.10.1).
   - 7: intervallo tra le salve × (1 − X). 8: alla prima salva che colpisce un nemico con uno stato (rallentamento, indebolimento, vulnerabilità, bruciatura, paralisi), una volta per stato.
   - 10: i primi X danni della partita alla cupola sono ignorati; i primi N colpi nemici ricevono un contrattacco physical pari a X% del danno del guardiano (con i suoi bonus).
   - 14: una volta per partita, quando la vita scende sotto il 20%. 16: anche il boss finale, al massimo 4 volte.
@@ -640,8 +641,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - sblocco di un level up lv1 (1) e di un level up lv2 (1), come per il guardiano;
   - potenziamento delle 3 carte standard (3 nodi, con più livelli ciascuno): azzerano i malus e aumentano anche di molto i bonus, con l’obiettivo di restare efficaci fino a ~200 livelli di campagna;
   - **sblocco permanente della torretta** (1, nodo finale).
-- **Sblocco permanente**: con il nodo acquistato la torretta si può equipaggiare prima dell’ondata 1, fino a 4. Ogni torretta equipaggiata consuma una scelta: le prime N scelte dopo le ondate vengono saltate,
-  così il totale resta 19 (28 dal livello 11) e la regola delle scelte non cambia. Le torrette già equipaggiate non escono più come carte. **[deciso]**
+- **Sblocco permanente**: con il nodo acquistato la torretta si può equipaggiare prima dell’ondata 1, fino a 4. Dalla 1.10.1 le torrette equipaggiate **non consumano scelte** (prima le prime N scelte venivano saltate): le carte restano 19 (28 dal livello 11) in più delle torrette equipaggiate. Le torrette già equipaggiate non escono più come carte. **[deciso]**
 - **Carte bloccate** (non disponibili fino all’acquisto, dal livello 1; i livelli 1-30 si giocano con il pool libero, vedi § 5) **[Claude] [da rivedere]**.
   Criterio: si blocca la carta che aggiunge una meccanica o il salto di potenza maggiore; restano libere quelle numeriche.
   Level up lv1 **[deciso]** (Marco, 1.9.4; elenco proposto da Claude e accettato): stesso criterio, e non si blocca mai un lv1 da cui dipende un level up successivo
@@ -676,8 +676,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
 - **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). Nessun rimborso per ora (proposta di rimborso totale ancora aperta, § 11).
 - **Torrette equipaggiate**: si scelgono toccando lo Sblocco permanente già comprato (al massimo 4); valgono in **tutti i livelli e le modalità**, come le carte sbloccate
-  (lettura **[Claude] [da rivedere]**). Ognuna occupa il primo slot libero e salta una delle prime scelte dopo le ondate (all’annuncio dell’ondata: “Scelta già usata da una torretta
-  equipaggiata”). `META.startTurrets` resta lo sblocco a mano per le prove e non salta scelte.
+  (lettura **[Claude] [da rivedere]**). Ognuna occupa il primo slot libero (dalla 1.10.1 senza saltare scelte). `META.startTurrets` resta lo sblocco a mano per le prove.
 - **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
   La schermata di vittoria mostra i Sigilli presi e, se resta, il premio della cupola al 100%.
 
@@ -720,7 +719,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
 
 ### Regole generali
-- I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]**
+- I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]** Eccezione dalla 1.10.1: le torrette equipaggiate non consumano più scelte (§ 4).
 - **Da misurare con i bot**: muri 10/20/30 con il pool libero; potenza richiesta fino a 200 livelli (con la formula attuale la vita base dei nemici è ×1,9 al 100 e ×3,2 al 200 rispetto al 30, ma la curva oltre il 30 cambierà);
   costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo.
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante

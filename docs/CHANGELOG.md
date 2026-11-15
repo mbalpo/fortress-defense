@@ -3,6 +3,33 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.10.1 — carte dopo ogni ondata, Modulo 12 con le carte dei mini-boss, testi delle carte
+
+Risposte di Marco dopo la 1.10.0.
+
+- **Cambio di pezzo**: confermato che i Moduli passano al nuovo finché ci sono slot (DESIGN.md § 15 ora **[deciso]**).
+- **Modulo 12**: “carte scelte” conta tutte le carte della partita, anche le 3 dei mini-boss (`giveBossRewards` incrementa `runPicks`).
+- **Nessun limite di torri al livello 3**: tolti `CAMPAIGN.maxMaxed`/`maxMaxedFrom` (regola già spenta) e il testo “al massimo” sotto le carte; tolte le **scelte saltate**
+  per le torrette equipaggiate (`skipLeft`, `skipNote` e la scritta “Scelta già usata da una torretta equipaggiata”): si sceglie una carta dopo ogni ondata.
+  `maxedCount` resta solo come statistica per `tests/camp.js`.
+- **Testi delle carte fuori dal bordo**: accorciate le descrizioni di Disruption Drone (“Due droni e un campo di forza largo”), Aeroblast (“Esplosioni con knockback,
+  corto raggio”), Thunderbolt (“Sfere sulla barriera, fulmini ovunque”), Beam (“Raggio continuo su un bersaglio”), Firewheel (“Drone lanciafiamme che rimbalza”).
+  Rete di sicurezza in draw.js (`fitTxt`): titolo, descrizione e nota delle carte rimpiccioliscono se non stanno in 260 px. La carta del Disruption Drone che usciva era la
+  sua carta “Nuova torretta” (descrizione di 323 px).
+- DESIGN.md: § 4 budget e nessun limite al livello 3, § 15 letture confermate, § 16 Sblocco permanente e torrette equipaggiate, § 8 rigenerato (`npm run design-lists`).
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.10.1.
+
+**Test**: nuovo `tests/testi.js` (misura con @napi-rs/canvas e il font del gioco titoli, descrizioni e note delle 202 carte e i 150 testi dei Moduli; prima della correzione
+trovava le 5 descrizioni sopra). `seals.js`: carta dopo ogni ondata con 2 torrette equipaggiate e 19 carte in una partita (prima 17 + 2). `equip.js`: Modulo 12 con le carte del
+mini-boss. `npm test`: tutti verdi. Screenshot rifatti; controllato 42 (4 carte con le descrizioni nuove).
+
+**Misure con i bot**: non servono. I bot (`calib2.js`, `curva.js`) non equipaggiano torrette, quindi giocano come prima. Per un giocatore che le equipaggia,
+dal 31 le torrette equipaggiate ora si aggiungono alle 19 (28) carte: è più forte di quanto misurano i bot.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (carte con i testi nuovi).
+
+Checklist: togliere “Descrizione della Beam fuori dalla carta”; aggiornare “Torrette equipaggiate” (non consumano più scelte); confermate le due letture del § 15.
+
 ## 1.10.0 — equipaggiamento e Moduli
 
 Prima versione giocabile dell’equipaggiamento (DESIGN.md § 15), con le regole e i valori decisi con Marco; dove serviva una scelta in più l’ha fatta Claude

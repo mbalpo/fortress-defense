@@ -32,6 +32,11 @@ function txt(s, x, y, size, color, align, weight) {
   ctx.fillStyle = color || "#e8eefc"; ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
   ctx.fillText(s, x, y);
 }
+// testo che deve stare in maxW: se è più largo il corpo scende fino a 9 px (rete di sicurezza; tests/testi.js controlla i testi delle carte)
+function fitTxt(s, x, y, maxW, size, color, align, weight) {
+  let z = size; while (z > 9 && tw(s, z, weight) > maxW) z -= 0.5;
+  txt(s, x, y, z, color, align, weight);
+}
 function button(x, y, w, h, label, onTap, opts) {
   opts = opts || {};
   buttons.push({ x, y, w, h, onTap, release: !!opts.release });   // release: si attiva al rilascio sullo stesso pulsante (carte)
@@ -483,9 +488,9 @@ function rewardScreen() {
     disc(x + 26, y + h / 2, 13, c);
     txt("✓", x + 26, y + h / 2 + 1, 14, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22, 11, c, "left", "700");
-    txt(o.title, x + 52, y + 46, 16, "#e8eefc", "left", "700");
-    txt(o.desc, x + 52, y + 70, 12, "#b9c8e6", "left", "500");
-    txt(o.note, x + 52, y + 92, 10, "#6f82ad", "left", "500");
+    fitTxt(o.title, x + 52, y + 46, 260, 16, "#e8eefc", "left", "700");
+    fitTxt(o.desc, x + 52, y + 70, 260, 12, "#b9c8e6", "left", "500");
+    fitTxt(o.note, x + 52, y + 92, 260, 10, "#6f82ad", "left", "500");
   });
   button(60, 140 + rewards.length * 122 + 4, 240, 48, "Continua", () => pick(0), { size: 16, stroke: "#ffd166", release: true });
 }
@@ -501,12 +506,12 @@ function upgradeScreen() {
     disc(x + 26, y + h / 2, 13, c);
     txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22 * k, 11, c, "left", "700");
-    txt(o.title, x + 52, y + 46 * k, 16, "#e8eefc", "left", "700");
-    txt(o.desc, x + 52, y + 70 * k, 12, "#b9c8e6", "left", "500");
-    txt(o.note, x + 52, y + 92 * k, 10, "#6f82ad", "left", "500");
+    fitTxt(o.title, x + 52, y + 46 * k, 260, 16, "#e8eefc", "left", "700");
+    fitTxt(o.desc, x + 52, y + 70 * k, 260, 12, "#b9c8e6", "left", "500");
+    fitTxt(o.note, x + 52, y + 92 * k, 260, 10, "#6f82ad", "left", "500");
   });
   const yb = 140 + options.length * step;
-  txt("Torri fino al lv " + towerCap() + (campLevel >= CAMPAIGN.maxMaxedFrom ? " · al massimo: " + maxedCount() + "/" + CAMPAIGN.maxMaxed : ""), W / 2, yb + 12, 11, "#6f82ad", "center", "500");
+  txt("Torri fino al lv " + towerCap(), W / 2, yb + 12, 11, "#6f82ad", "center", "500");
   if (refreshLeft > 0 && !bonusMode) button(90, yb + 26, 180, 32, "Rinnova le carte (" + refreshLeft + ")", refreshCards, { size: 12, stroke: "#7fa0e0" });   // Modulo 21
 }
 
@@ -740,7 +745,6 @@ function draw() {
     if (state === "play" && waveTime < 0) {
       ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
       txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
-      if (skipNote) txt("Scelta già usata da una torretta equipaggiata", W / 2, 290, 12, "#c9a2ff", "center", "600");
       if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       else if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       ctx.globalAlpha = 1;

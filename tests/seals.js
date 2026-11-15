@@ -68,18 +68,18 @@ console.log("— Sblocco permanente e torrette equipaggiate —");
   console.log("dal salvataggio: equipaggiate", g2.ev("progress.loadout.join()"), "(massimo 4, solo con lo sblocco)", ok(g2.ev("progress.loadout.join()") === "sky,rail,tesla,beam"));
   const g3 = fresh(35, { tree: Object.assign(all("sky"), all("rail")), loadout: ["sky", "rail"] }), e = g3.ev;
   e("startRun('standard')");
-  console.log("partita: slot", e("slots.map((s) => s ? s.id : '-').join(' ')"), "| scelte da saltare", e("skipLeft"), ok(e("slots.map((s) => s ? s.id : '-').join(' ')") === "sky rail - -" && e("skipLeft") === 2));
+  console.log("partita: slot", e("slots.map((s) => s ? s.id : '-').join(' ')"), ok(e("slots.map((s) => s ? s.id : '-').join(' ')") === "sky rail - -"));
   const seq = [];
-  for (let i = 0; i < 3; i++) { e("queue = []; enemies.length = 0; endWave()"); seq.push(e("state + ' ' + wave")); }
-  console.log("fine delle ondate 1, 2, 3:", seq.join(" · "), ok(seq.join() === "play 2,play 3,upgrade 3"));
+  for (let i = 0; i < 3; i++) { e("queue = []; enemies.length = 0; endWave()"); seq.push(e("state + ' ' + wave")); e("pick(0)"); }
+  console.log("fine delle ondate 1, 2, 3:", seq.join(" · "), ok(seq.join() === "upgrade 1,upgrade 2,upgrade 3"));   // dalla 1.10.1 nessuna scelta saltata
   let offeredOwned = false;
   for (let i = 0; i < 300; i++) if (e("rollOptions().some((o) => o.kind === 'new' && (o.id === 'sky' || o.id === 'rail'))")) offeredOwned = true;
   console.log("le torrette equipaggiate escono come carta:", offeredOwned, ok(!offeredOwned));
-  // budget: 19 scelte in tutto = 2 torrette equipaggiate + 17 carte
+  // dalla 1.10.1 le torrette equipaggiate non consumano scelte: 19 carte in una partita
   const g4 = fresh(35, { tree: Object.assign(all("sky"), all("rail")), loadout: ["sky", "rail"] }), f = g4.ev;
   f("startRun('standard')"); let cards = 0;
   for (let w = 1; w < 20; w++) { f("queue = []; enemies.length = 0; endWave()"); if (f("state") === "upgrade") { cards++; f("pick(0)"); } }
-  console.log("carte scelte in una partita:", cards, "+ 2 equipaggiate = " + (cards + 2), ok(cards === 17));
+  console.log("carte scelte in una partita:", cards, "con 2 equipaggiate", ok(cards === 19));
 }
 
 console.log("— Schermata dell’albero —");
