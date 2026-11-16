@@ -449,7 +449,9 @@ const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unloc
 // Fase 1, sblocchi (generati da TREE_LOCKS): chain da 3 voci in sequenza, le altre carte bloccate, “Sblocco permanente” dopo tutti gli altri.
 // Fase 2, nodi numerici: carte standard di ogni torretta e del guardiano, sezione condivisa per tipo, spina e rami della barriera.
 // Costi e valori [Claude, provvisori].
-const SEAL_COST = { chain: [1, 1, 2], card: 1, perm: 3, abilityUnlock: 3 };
+// Sigilli (◆) e Sigilli maggiori (✦, 1.12.0, Marco): le carte bloccate costano quanto il loro livello (lv1 1, lv2 2, lv3 3); lo Sblocco permanente 3 maggiori;
+// le abilità d’ingresso della barriera 1 Sigillo, le altre 3. mcosts[L] = Sigilli maggiori per passare dal livello L al L+1.
+const SEAL_COST = { chain: [1, 2, 3], permMajor: 3, abilityEntry: 1, abilityUnlock: 3 };
 // nodi a livelli: il livello L costa 1 + ⌊(L − 1) / 5⌋ Sigilli (1 per i livelli 1-5, 2 per i 6-10, 3 per gli 11-15, 4 per i 16-20)
 const levelCost = (L) => 1 + Math.floor((L - 1) / 5);
 const CAT_NAME = { lu: "Level up", std: "Standard" };
@@ -460,6 +462,8 @@ const STD_KIND = { dmg: ["pct", 0.25], msl: ["mal", 0.15], rad: ["pct", 0.3], "v
   dur: ["pct", 0.3], height: ["pct", 0.3], proj: ["mal", 0.15], fast: ["fast", 0.1], sph: ["mal", 0.15], cd: ["red", 0.12], drone: ["mal", 0.15],
   hits: ["cnt", 2], pierce: ["cnt", 1], len: ["pct", 0.3] };
 const stdKind = (who, id) => STD_KIND[who + ":" + id] || STD_KIND[id];
+const fanK = (L) => 0.3 + 0.5 * L / 3;           // Ventaglio potenziato: danno dei secondari rispetto al principale
+const frenzyK = (L) => 1.35 + 0.55 * L;         // Frenesia potenziata: moltiplicatore del danno in frenesia (×1,35 → ×3)
 const fmt = (x) => String(Math.round(x * 10) / 10).replace(".", ",");          // decimali con la virgola
 const pctS = (x) => fmt(x * 100) + "%";
 function stdFx(kind, v, L) {                    // effetto per pila della carta con il nodo al livello L
@@ -472,31 +476,42 @@ function stdFx(kind, v, L) {                    // effetto per pila della carta 
 // valori dei nodi della sezione per tipo e della barriera, per livello
 const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02, cards: 0.05 };
 const TREE_CAP = { red: 0.4, abCd: 0.6 };      // tetti sul totale (equipaggiamento + albero): riduzione del danno e del cooldown delle abilità
-const lvNode = (id, who, name, max, fx, req) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)), req: req || [], fx });
+// maj(L) = Sigilli maggiori per il livello L (oltre ai Sigilli normali levelCost(L)); senza maj nessun maggiore (barriera)
+const lvNode = (id, who, name, max, fx, req, maj) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)),
+  mcosts: Array.from({ length: max }, (_, i) => maj ? maj(i + 1) : 0), req: req || [], fx });
+// schemi dei Sigilli maggiori [deciso, Marco]: uno ogni 5 livelli (1, 6, 11, 16: nodi da 20 livelli e sezione per tipo), solo allo sblocco (carte standard
+// da 5 livelli delle torrette), uno per ogni livello (+1 proiettile, Ventaglio potenziato e Frenesia potenziata del guardiano)
+const MAJ_EVERY5 = (L) => (L - 1) % 5 === 0 ? 1 : 0, MAJ_FIRST = (L) => L === 1 ? 1 : 0, MAJ_EACH = () => 1;
 function buildTree(who) {
   const def = who === "player" ? PLAYER_DEF : TURRETS[who], ups = TREE_LOCKS[who].map((id) => def.ups.find((u) => u.id === id));
   const whole = ups.find((u) => u.cat === "chain" && def.ups.filter((v) => v.chain === u.chain).every((v) => TREE_LOCKS[who].includes(v.id))).chain;
-  const nodes = [], one = (n, cost) => Object.assign(n, { max: 1, costs: [cost] });
+  const nodes = [], one = (n, cost, major) => Object.assign(n, { max: 1, costs: [cost], mcosts: [major || 0] });
   ups.filter((u) => u.chain === whole && u.cat === "chain").sort((a, b) => a.lv - b.lv).forEach((u, i, arr) =>
     nodes.push(one({ id: who + ":" + u.id, who, card: u.id, kind: "chain", name: u.name, sub: "Chain " + arr[0].name + " · voce lv" + u.lv,
-      req: i ? [who + ":" + arr[i - 1].id] : [] }, SEAL_COST.chain[i])));
+      req: i ? [who + ":" + arr[i - 1].id] : [] }, SEAL_COST.chain[u.lv - 1])));
   for (const u of ups) if (u.chain !== whole || u.cat !== "chain")
     nodes.push(one({ id: who + ":" + u.id, who, card: u.id, kind: "card", name: u.name, req: [],
-      sub: u.cat === "chain" ? "Chain " + def.ups.find((v) => v.chain === u.chain && v.lv === 1).name + " · voce lv" + u.lv : CAT_NAME[u.cat] + " lv" + u.lv }, SEAL_COST.card));
+      sub: u.cat === "chain" ? "Chain " + def.ups.find((v) => v.chain === u.chain && v.lv === 1).name + " · voce lv" + u.lv : CAT_NAME[u.cat] + " lv" + u.lv }, u.lv));   // costo = livello della carta
   if (who !== "player") nodes.push(one({ id: who + ":perm", who, kind: "perm", name: "Sblocco permanente", sub: "Si equipaggia prima dell’ondata 1",
-    req: nodes.map((n) => n.id) }, SEAL_COST.perm));
-  // fase 2: carte standard (guardiano: Danno maggiorato, malus di +1 proiettile, colpi del Ventaglio)
+    req: nodes.map((n) => n.id) }, 0, SEAL_COST.permMajor));
+  // fase 2: carte standard (guardiano: Danno maggiorato, malus di +1 proiettile; Ventaglio e Frenesia potenziati)
   for (const u of def.ups.filter((v) => v.cat === "std" && (who !== "player" || v.id !== "pierce"))) {
     const [k, v] = stdKind(who, u.id), max = who === "player" && u.id === "proj" ? 3 : u.id === "dmg" ? STD_BOOST.maxDmg : STD_BOOST.max;
-    nodes.push(lvNode(who + ":std:" + u.id, who, u.name, max, (L) => stdFx(k, v, L) + (k === "mal" ? "" : " per pila")));
+    const maj = u.id === "dmg" ? MAJ_EVERY5 : who === "player" ? MAJ_EACH : MAJ_FIRST;
+    nodes.push(lvNode(who + ":std:" + u.id, who, u.name, max, (L) => stdFx(k, v, L) + (k === "mal" ? "" : " per pila"), null, maj));
   }
-  if (who === "player") nodes.push(lvNode("player:fan", who, "Ventaglio ampliato", 3, (L) => (4 + L) + " proiettili secondari"));
+  if (who === "player") {
+    // Ventaglio potenziato (prima “ampliato”, stesso id): danno dei proiettili secondari dal 30% all’80% del principale al livello 3 [Marco]
+    nodes.push(lvNode("player:fan", who, "Ventaglio potenziato", 3, (L) => "secondari al " + Math.round(fanK(L) * 100) + "%", null, MAJ_EACH));
+    // Frenesia potenziata: danno in frenesia fino a ×3 al livello 3, carica +2 s per livello [Marco; valori intermedi Claude]
+    nodes.push(lvNode("player:frenzy", who, "Frenesia potenziata", 3, (L) => "danno ×" + fmt(frenzyK(L)) + ", carica +" + 2 * L + " s", null, MAJ_EACH));
+  }
   return nodes;
 }
 const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree(w)]));
-TREE.types = [...TYPE_KEYS.map((t) => lvNode("types:dmg:" + t, "types", "Danno " + TYPES[t].name, 20, (L) => "danno +" + pctS(TREE_VAL.typeDmg * L))),
-  lvNode("types:all", "types", "Danno di tutte le torrette", 20, (L) => "danno +" + pctS(TREE_VAL.allDmg * L)),
-  lvNode("types:status", "types", "Durata degli stati", 5, (L) => "durata +" + pctS(TREE_VAL.statDur * L))];
+TREE.types = [...TYPE_KEYS.map((t) => lvNode("types:dmg:" + t, "types", "Danno " + TYPES[t].name, 20, (L) => "danno +" + pctS(TREE_VAL.typeDmg * L), null, MAJ_EVERY5)),
+  lvNode("types:all", "types", "Danno di tutte le torrette", 20, (L) => "danno +" + pctS(TREE_VAL.allDmg * L), null, MAJ_EVERY5),
+  lvNode("types:status", "types", "Durata degli stati", 5, (L) => "durata +" + pctS(TREE_VAL.statDur * L), null, MAJ_EVERY5)];
 TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + pctS(TREE_VAL.hpPct * L)),
   lvNode("barrier:red", "barrier", "Riduzione danno", 5, (L) => "danno subito −" + pctS(TREE_VAL.red * L), ["barrier:hp"]),
   lvNode("barrier:flat", "barrier", "Vita fissa", 5, (L) => "vita +" + TREE_VAL.hpFlat * L, ["barrier:red"]),
@@ -527,7 +542,7 @@ const ABILITIES = {
 const abVal = (id, L) => { const a = ABILITIES[id], o = {}; for (const k in a) o[k] = Array.isArray(a[k]) ? a[k][Math.max(1, Math.min(5, L)) - 1] : a[k]; return o; };
 const AB_GROUP_OF = Object.fromEntries(AB_GROUPS.flatMap(([g, , ids]) => ids.map((id) => [id, g])));
 TREE.abilities = AB_GROUPS.flatMap(([g, , ids]) => ids.map((id, i) => ({ id: "ab:" + id, who: "abilities", kind: "ability", ab: id, group: g, name: ABILITIES[id].name,
-  max: 5, free: i === 0 ? 1 : 0, costs: [i === 0 ? 0 : SEAL_COST.abilityUnlock, 2, 3, 4, 5].map((c, k) => k ? levelCost(k + 1) : c), req: i ? ["ab:" + ids[i - 1]] : [],
+  max: 5, costs: [i === 0 ? SEAL_COST.abilityEntry : SEAL_COST.abilityUnlock, 2, 3, 4, 5].map((c, k) => k ? levelCost(k + 1) : c), mcosts: [0, 0, 0, 0, 0], req: i ? ["ab:" + ids[i - 1]] : [],
   fx: (L) => ABILITIES[id].fx(L, abVal(id, L)) })));
 const TREE_NODE = Object.fromEntries(Object.values(TREE).flat().map((n) => [n.id, n]));
 const TREE_IDS = new Set(Object.keys(TREE_NODE));
@@ -651,19 +666,23 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // tree = nodi comprati { "sky:burn1": 1 } · loadout = torrette equipaggiate prima dell’ondata 1 (con lo sblocco permanente, al massimo 4)
 // abilities = abilità della barriera equipaggiate { resist, control, offense }; null = quelle d’ingresso (mai cambiate)
 // gear = equipaggiamento: inventario, pezzi equipaggiati e Moduli installati (cleanGear)
-const progress = { cleared: 0, seen: [], seals: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} } };
+// majors = Sigilli maggiori da spendere (dalla 1.12.0: boss in Epica)
+const progress = { cleared: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} } };
 // Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
 function cleanSeals(p) {
   const tree = {};
   if (p && p.tree && typeof p.tree === "object") for (const k in p.tree) { const L = Math.floor(+p.tree[k]); if (TREE_IDS.has(k) && L > 0) tree[k] = Math.min(L, TREE_NODE[k].max); }
+  // dalla 1.12.0 le abilità d’ingresso costano 1 Sigillo: chi aveva già completato il 40 con un salvataggio precedente (senza majors) le tiene [deciso, Marco]
+  if (p && p.majors === undefined && Number.isFinite(p.cleared) && p.cleared >= CAMPAIGN.barrierUnlock)
+    for (const [, , ids] of AB_GROUPS) tree["ab:" + ids[0]] = Math.max(tree["ab:" + ids[0]] || 0, 1);
   const claims = p && Array.isArray(p.claims) ? [...new Set(p.claims.filter((k) => typeof k === "string" && /^[se]\d{1,3}p?$/.test(k)))] : [];
   const loadout = p && Array.isArray(p.loadout) ? [...new Set(p.loadout.filter((id) => tree[id + ":perm"]))].slice(0, 4) : [];
   let abilities = null;
   if (p && p.abilities && typeof p.abilities === "object") {
     abilities = {};
-    for (const [g, , ids] of AB_GROUPS) { const id = p.abilities[g]; if (ids.includes(id) && (tree["ab:" + id] || TREE_NODE["ab:" + id].free)) abilities[g] = id; }
+    for (const [g, , ids] of AB_GROUPS) { const id = p.abilities[g]; if (ids.includes(id) && tree["ab:" + id]) abilities[g] = id; }
   }
-  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, claims, tree, loadout, abilities };
+  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, majors: p && Number.isFinite(p.majors) ? clamp(Math.floor(p.majors), 0, 1e6) : 0, claims, tree, loadout, abilities };
 }
 try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
@@ -691,17 +710,18 @@ const epicUnlocked = () => progress.cleared >= CAMPAIGN.epicUnlock;
 const treeOpen = () => progress.cleared >= CAMPAIGN.sealsFrom || progress.claims.length > 0;   // l’albero si apre completando il livello 31
 
 /* ---------- ALBERO DEI SIGILLI: acquisto dei nodi e torrette equipaggiate ---------- */
-const nodeLv = (n) => Math.max(progress.tree[n.id] || 0, n.free || 0);           // free: livello di partenza senza spesa (abilità d’ingresso)
+const nodeLv = (n) => progress.tree[n.id] || 0;
 const treeLv = (id) => TREE_NODE[id] ? nodeLv(TREE_NODE[id]) : progress.tree[id] || 0;
 const nodeOwned = (n) => nodeLv(n) > 0;
 const abilitiesOpen = () => progress.cleared >= CAMPAIGN.barrierUnlock;
 const nodeCost = (n) => n.costs[Math.min(nodeLv(n), n.max - 1)];             // costo del prossimo livello
+const nodeMCost = (n) => n.mcosts ? n.mcosts[Math.min(nodeLv(n), n.max - 1)] : 0;   // Sigilli maggiori del prossimo livello
 // max (livello massimo) · ready (si può comprare) · req (i nodi precedenti non sono abbastanza alti) · poor (Sigilli insufficienti)
 const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.req.some((r) => treeLv(r) < Math.min(nodeLv(n) + 1, TREE_NODE[r].max)) ? "req"
-  : progress.seals < nodeCost(n) ? "poor" : "ready";
+  : progress.seals < nodeCost(n) || progress.majors < nodeMCost(n) ? "poor" : "ready";
 function buyNode(n) {
   if (nodeState(n) !== "ready") return false;
-  progress.seals -= nodeCost(n); progress.tree[n.id] = nodeLv(n) + 1; saveProgress(); return true;
+  progress.seals -= nodeCost(n); progress.majors -= nodeMCost(n); progress.tree[n.id] = nodeLv(n) + 1; saveProgress(); return true;
 }
 function toggleEquip(id) {
   if (!progress.tree[id + ":perm"]) return false;
@@ -722,6 +742,18 @@ function sealReward(m, lv, full) {
   return { got: 0, why: "done" };
 }
 let sealGain = null;
+// Sigilli maggiori (1.12.0): solo in Epica. Boss finale: 1 a ogni vittoria su di lui; mini-boss: 10% ciascuno, al massimo 1 per livello
+// [deciso: fonte e limite (Marco); Claude, provvisori: 1 dal boss finale, 10%, anche rigiocando, preso subito alla sconfitta del boss]
+const MAJOR = { final: 1, miniChance: 0.1 };
+let majorGain = 0, miniMajor = false;
+function majorDrop(e) {
+  let n = 0;
+  if (e.final) n = MAJOR.final;
+  else if (!miniMajor && Math.random() < MAJOR.miniChance) { n = 1; miniMajor = true; }
+  if (!n) return;
+  progress.majors += n; majorGain += n; saveProgress();
+  floaters.push({ x: clamp(e.x, 90, W - 90), y: Math.max(60, e.y - 40), life: 1.6, txt: "+" + n + " Sigillo maggiore ✦", color: "#ffd166" });
+}
 // abilità equipaggiate per gruppo (senza scelta: quelle d’ingresso)
 const equippedAbilities = () => progress.abilities || Object.fromEntries(AB_GROUPS.map(([g, , ids]) => [g, ids[0]]));
 function equipAbility(id) {                     // tocco sul pallino: equipaggia nel suo gruppo o toglie
@@ -781,8 +813,13 @@ function fusePieces(pc, r) {
 }
 // fusione dei Moduli: 5 dello stesso pezzo e della stessa rarità, anche con effetti diversi (sel = { effetto: quanti });
 // l’effetto del risultato si estrae dal pool del pezzo con i pesi
-function rollModFx(pc) {
-  const pool = PIECES[pc].pool; let x = Math.random() * pool.reduce((a, fx) => a + MOD[fx].w, 0);
+// Effetti rari (peso 1: 4, 10, 14, 20, 21, 22, 28, 29, 30): insieme escono con RARE_CHANCE[rarità] (5% nel comune → 30% nell’ancestrale) [deciso, Marco;
+// valori intermedi Claude]; dentro ciascun gruppo (rari o standard) l’effetto si estrae con i pesi. Vale per drop e fusioni.
+const RARE_CHANCE = [0.05, 0.11, 0.18, 0.24, 0.30];
+function rollModFx(pc, r) {
+  const all = PIECES[pc].pool, rare = all.filter((fx) => MOD[fx].w === 1), std = all.filter((fx) => MOD[fx].w > 1);
+  const pool = rare.length && Math.random() < RARE_CHANCE[r || 0] ? rare : std;
+  let x = Math.random() * pool.reduce((a, fx) => a + MOD[fx].w, 0);
   for (const fx of pool) if ((x -= MOD[fx].w) < 0) return fx;
   return pool[pool.length - 1];
 }
@@ -790,7 +827,7 @@ function fuseMods(pc, r, sel) {
   const g = progress.gear, ids = Object.keys(sel).map(Number);
   if (r >= 4 || ids.reduce((a, fx) => a + sel[fx], 0) !== 5 || ids.some((fx) => qty(g.mods, modKey(pc, r, fx)) < sel[fx])) return null;
   ids.forEach((fx) => bump(g.mods, modKey(pc, r, fx), -sel[fx]));
-  const fx = rollModFx(pc); bump(g.mods, modKey(pc, r + 1, fx), 1); saveProgress(); return fx;
+  const fx = rollModFx(pc, r + 1); bump(g.mods, modKey(pc, r + 1, fx), 1); saveProgress(); return fx;
 }
 function discard(kind, key) {                     // scarto a mano, senza compenso [deciso]
   const g = progress.gear; if (!qty(g[kind], key)) return false;
@@ -806,7 +843,7 @@ function rollDrops(D, epic) {
   const g = progress.gear, out = [], pick = () => PIECE_IDS[Math.floor(Math.random() * PIECE_IDS.length)];
   for (let i = 0; i < DROP.pieces; i++) { const pc = pick(), r = rollRarity(D); bump(g.pcs, pcKey(pc, r), 1); out.push({ kind: "pcs", pc, r }); }
   const nm = DROP.mods + (Math.random() < DROP.modExtra ? 1 : 0) + (epic ? DROP.epicMods : 0);
-  for (let i = 0; i < nm; i++) { const pc = pick(), r = rollRarity(D), fx = rollModFx(pc); bump(g.mods, modKey(pc, r, fx), 1); out.push({ kind: "mods", pc, r, fx }); }
+  for (let i = 0; i < nm; i++) { const pc = pick(), r = rollRarity(D), fx = rollModFx(pc, r); bump(g.mods, modKey(pc, r, fx), 1); out.push({ kind: "mods", pc, r, fx }); }
   return out;
 }
 let gearGain = null;                              // oggetti presi nell’ultima vittoria (schermata di vittoria)
@@ -1715,7 +1752,7 @@ function playerTick(p, dt) {
   if (has(p, "frenzy1")) {
     if (frenzyOn(p)) { if (engaged) { p.st.frenzyT -= dt; if (p.st.frenzyT <= 0) { p.st.frenzyT = 0; p.st.charge = 0; } } }
     else {
-      p.st.charge = Math.min(1, (p.st.charge || 0) + dt / FRENZY.fill[has(p, "fill") ? 1 : 0]);
+      p.st.charge = Math.min(1, (p.st.charge || 0) + dt / (FRENZY.fill[has(p, "fill") ? 1 : 0] + 2 * (p.frzL || 0)));   // Frenesia potenziata: +2 s per livello
       if (p.st.charge >= 1 && engaged) p.st.frenzyT = frenzyDur(p);      // parte solo se si sta combattendo
     }
   }
@@ -1730,7 +1767,7 @@ function playerTick(p, dt) {
   }
   const f = frenzyOn(p);
   p.gm = gearMul();
-  const raw = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * (f ? FRENZY.dmg : 1) * p.gm;    // senza Colpo pesante
+  const raw = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * (f ? frenzyK(p.frzL || 0) : 1) * p.gm;    // senza Colpo pesante
   const dmg0 = raw * (has(p, "punch") ? 1.6 : 1);
   const dmg = dmg0 * beamAmp(p, t);
   // combo che scattano per colpo (salva): l’effetto parte dal primo impatto del primo proiettile
@@ -1740,7 +1777,7 @@ function playerTick(p, dt) {
   for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 ? { proc: any ? proc : null, first: true } : null);
   const aim0 = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;     // direzione della salva (il clone la specchia)
   if (has(p, "fan"))                         // proiettili secondari a ventaglio, danno minore
-    for (const d of fanOffsets(p)) playerBullet(p, pos.x, pos.y, null, dmg * 0.3, aim0 + d, { fan: true });
+    for (const d of fanOffsets(p)) playerBullet(p, pos.x, pos.y, null, dmg * fanK(p.fanX || 0), aim0 + d, { fan: true });   // Ventaglio potenziato: 30% → 80%
   if (comboOn(p, "kWheel") && Math.random() < 0.03) guardWheel(p);
   if (comboOn(p, "kTesla") && (p.st.shots = (p.st.shots || 0) + 1) % 40 === 0)     // Colpo caricato: ×2 (×3 in tutto con Colpo pesante)
     playerBullet(p, pos.x, pos.y, t, raw * (has(p, "punch") ? 3 : 2) * beamAmp(p, t, true), ang, { charged: N(partner("tesla"), "bounce") });
@@ -1748,7 +1785,7 @@ function playerTick(p, dt) {
     // anche se da quel lato non ci sono nemici; nessun bersaglio proprio; ventaglio, chain e level up sì, combo no
     const cx = W - pos.x, ca = Math.PI - aim0;        // bocca del cannone specchiata
     for (let k = 0; k < cnt; k++) playerBullet(p, cx + (k - (cnt - 1) / 2) * 7, pos.y, null, dmg0 * 0.5, ca, { clone: true });
-    if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * 0.3, ca - d, { clone: true, fan: true });
+    if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * fanK(p.fanX || 0), ca - d, { clone: true, fan: true });
   }
   const cd0 = p.cd;
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
@@ -1759,11 +1796,8 @@ const EXT_KEYS = ["slowT", "weakT", "vulnT", "burnT", "paraT"];
 function gearExtend(e) {
   for (const k of EXT_KEYS) if (e[k] > 0 && !(e.ext && e.ext[k])) { (e.ext = e.ext || {})[k] = true; e[k] *= 1 + GEAR.ext; }
 }
-// Ventaglio: scarti angolari dei proiettili secondari (4 di base; Ventaglio ampliato dell’albero: di più, sempre entro ±0,6 rad)
-function fanOffsets(p) {
-  const nf = 4 + (p.fanX || 0);
-  return nf === 4 ? [-0.6, -0.3, 0.3, 0.6] : Array.from({ length: nf }, (_, i) => -0.6 + 1.2 * i / (nf - 1));
-}
+// Ventaglio: scarti angolari dei 4 proiettili secondari (dalla 1.12.0 l’albero ne aumenta il danno, non il numero)
+function fanOffsets(p) { return [-0.6, -0.3, 0.3, 0.6]; }
 // t = bersaglio da inseguire (oppure null: il colpo va dritto lungo ang); o = tipo di proiettile:
 // fan = secondario del ventaglio; clone = del Clone speculare (chain e level up del guardiano sì, combo no);
 // frag = frammento della combo Railgun (skip: nemici già colpiti dal proiettile da cui nasce); charged = Colpo caricato (Teslacoil: numero di rimbalzi ereditati); proc = combo da attivare al primo impatto
@@ -1985,7 +2019,7 @@ function startRun(m) {
   enemies = []; ents = []; floaters = [];
   GEAR = gearStats(progress.gear); gearRun();
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
-  player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan");
+  player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan"); player.frzL = treeLv("player:frenzy");
   if (GEAR.p2 && Math.random() < GEAR.p2) fromLv2(player);                                   // Modulo 29: guardiano dal livello 2
   statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
   startAbilities();
@@ -1993,7 +2027,7 @@ function startRun(m) {
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
   if (turretsLv2) slots.forEach((s) => { if (s) fromLv2(s); });
   // torrette equipaggiate con lo sblocco permanente (DESIGN.md § 16): in campo dall’ondata 1; dalla 1.10.1 non consumano più scelte (decisione di Marco).
-  sealGain = null; gearGain = null;
+  sealGain = null; gearGain = null; majorGain = 0; miniMajor = false;
   for (const id of progress.loadout) {
     const f = slots.indexOf(null);
     if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
@@ -2040,7 +2074,7 @@ function domeNear(e) {
 /* ---------- ABILITÀ DELLA BARRIERA (DESIGN.md § 16) ---------- */
 // equipaggiate dall’albero (dal livello 40 completato) e, a mano, META.domeAbilities (livello dell’albero o 1)
 function startAbilities() {
-  const ids = abilitiesOpen() ? Object.values(equippedAbilities()) : [];
+  const ids = abilitiesOpen() ? Object.values(equippedAbilities()).filter((id) => treeLv("ab:" + id) > 0) : [];   // solo quelle comprate (dalla 1.12.0 anche le d’ingresso)
   for (const id of META.domeAbilities) if (ABILITIES[id] && !ids.includes(id)) ids.push(id);
   AB = { list: [], burnT: 0, reflectT: 0, powerT: 0, gasT: 0, regenT: 0, regenWait: 0, regenUses: 0, backupUsed: false };
   domeShield = 0; powerBonus = 0;
@@ -2171,6 +2205,7 @@ function update(dt) {
   for (const e of enemies) if (e.dead && e.boss && !e.rewarded) {
     e.rewarded = true; if (!e.final) bossBonus++; ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
     if (GEAR.heal && healLeft > 0 && domeHp > 0) { healLeft--; domeHp = Math.min(domeMax, domeHp + domeMax * GEAR.heal); }   // Modulo 16 (al massimo 4 volte)
+    if (mode === "epic") majorDrop(e);
   }
   for (const f of floaters) { f.y -= 28 * dt; f.life -= dt; }
   ents = ents.filter((o) => !o.dead);
@@ -2348,12 +2383,12 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.11.0";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 3, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento
+const APP_VERSION = "1.12.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)) },
+    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, majors: progress.majors, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)) },
     settings: { targeting: settings.targeting } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -2382,13 +2417,13 @@ function parseSave(text) {                      // controlla tutto prima di tocc
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.seen = d.seen;
-  progress.seals = d.seals; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear;
+  progress.seals = d.seals; progress.majors = d.majors; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear;
   settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
   saveProgress(); saveSettings(); selLevel = maxSelectable();
 }
 let pendingSave = null;
 const gearItems = (g) => gearCount(g, "pcs") + gearCount(g, "mods") + Object.values(g.eq).reduce((a, e) => a + 1 + e.m.length, 0);
-const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + ", " + Object.keys(p.tree).length + " nodi dell’albero e " + gearItems(p.gear) + " oggetti dell’equipaggiamento";
+const sealsLabel = (p) => p.seals + (p.seals === 1 ? " Sigillo" : " Sigilli") + ", " + p.majors + (p.majors === 1 ? " Sigillo maggiore" : " Sigilli maggiori") + ", " + Object.keys(p.tree).length + " nodi dell’albero e " + gearItems(p.gear) + " oggetti dell’equipaggiamento";
 function refreshSavePanel(msg, isErr) {
   $id("saveInfo").textContent = "Ora: " + progress.cleared + " livelli completati · " + progress.seen.length + " nemici scoperti · " + sealsLabel(progress);
   $id("confirmBox").hidden = !pendingSave;

@@ -440,7 +440,7 @@ function menuScreen() {
   button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
     () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
   const to = treeOpen(), go = gearOpen();
-  button(60, 358, 116, 36, to ? "Albero · " + progress.seals + " ◆" : "Albero · liv " + CAMPAIGN.sealsFrom, openTree,
+  button(60, 358, 116, 36, to ? "Albero " + progress.seals + "◆" + (progress.majors ? " " + progress.majors + "✦" : "") : "Albero · liv " + CAMPAIGN.sealsFrom, openTree,
     { size: to ? 13 : 12, stroke: to ? "#c9a2ff" : "#2c3a5f", color: to ? "#e8eefc" : "#6f82ad" });
   button(184, 358, 116, 36, go ? "Equipaggiamento" : "Equip. · liv " + CAMPAIGN.equipUnlock, openGear,
     { size: go ? 11 : 12, stroke: go ? "#7fa0e0" : "#2c3a5f", color: go ? "#e8eefc" : "#6f82ad" });
@@ -456,6 +456,10 @@ function menuScreen() {
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
 function sealLines() {
+  const mj = majorGain ? ["+" + majorGain + (majorGain === 1 ? " Sigillo maggiore ✦" : " Sigilli maggiori ✦") + " dai boss (" + progress.majors + ")"] : [];
+  return [...mj, ...sealLines0()];
+}
+function sealLines0() {
   const g = sealGain; if (!g || g.why === "none") return [];
   const one = (n) => n + (n === 1 ? " Sigillo" : " Sigilli");
   if (g.why === "first") return ["+" + one(g.got) + " ◆ (" + one(progress.seals) + ")", g.next ? "Rigiocalo con la cupola al 100%: +" + one(g.got) : ""].filter(Boolean);
@@ -517,6 +521,8 @@ function upgradeScreen() {
 
 /* ---------- ALBERO DEI SIGILLI ---------- */
 const TREE_TABS = [["player", "Guardiano"], ["turrets", "Torrette"], ["barrier", "Barriera"]];
+// costo del prossimo livello: Sigilli maggiori (✦) e normali (◆)
+const costLabel = (n) => { const m = nodeMCost(n), c = nodeCost(n); return (m ? m + " ✦" : "") + (m && c ? " + " : "") + (c || !m ? c + " ◆" : ""); };
 function treeNodeRow(n, y, x0, w0) {
   const X = x0 || 16, Wd = w0 || 328, R = X + Wd;      // posizione e larghezza della riga
   const st = nodeState(n), L = nodeLv(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
@@ -525,19 +531,19 @@ function treeNodeRow(n, y, x0, w0) {
   txt(n.name, X + 10, y + 13, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
   let sub = n.sub, subC = "#6f82ad";
   if (n.kind === "level" || n.kind === "ability") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
-  if (armed) { sub = "Tocca di nuovo per spendere " + nodeCost(n) + " ◆"; subC = "#ffd166"; }
+  if (armed) { sub = "Tocca di nuovo per spendere " + costLabel(n); subC = "#ffd166"; }
   else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" || n.kind === "ability" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
   else if (full && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
-  txt(sub, X + 10, y + 29, 10, subC, "left", "500");
+  fitTxt(sub, X + 10, y + 29, Wd - 20 - tw(costLabel(n), 12, "700") - 8, 10, subC, "left", "500");
   if (n.max > 1) txt(L + "/" + n.max, R - 44, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
   if (full) txt("✓", R - 12, y + 20, 15, "#3fe0a0", "right", "800");
-  else txt(nodeCost(n) + " ◆", R - 10, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : "#c9a2ff", "right", "700");
+  else txt(costLabel(n), R - 10, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : nodeMCost(n) ? "#ffd166" : "#c9a2ff", "right", "700");
 }
 function treeScreen() {
   dim(0.92);
   button(8, 8, 62, 30, "‹ Menu", closeTree, { size: 12 });
   txt("ALBERO DEI SIGILLI", W / 2 + 22, 18, 16, "#e8eefc", "center", "800");
-  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo da spendere" : " Sigilli da spendere"), W / 2 + 22, 36, 11, "#c9a2ff", "center", "700");
+  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo" : " Sigilli") + " · ✦ " + progress.majors + (progress.majors === 1 ? " maggiore" : " maggiori") + " da spendere", W / 2 + 22, 36, 11, "#c9a2ff", "center", "700");
   TREE_TABS.forEach(([id, label], i) => {
     const on = treeTab === id;
     button(16 + i * 112, 50, 104, 30, label, () => { treeTab = id; treeArm = null; },

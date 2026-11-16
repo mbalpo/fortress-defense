@@ -33,7 +33,7 @@ console.log("— Inventario e salvataggio versione 3 —");
     ok(JSON.stringify(g.pcs) === '{"arma:2":3}' && JSON.stringify(g.mods) === '{"arma:1:17":2,"nucleo:4:30":1}' && JSON.stringify(g.eq.arma) === '{"r":1,"m":[[17,0],[2,1]]}'
       && !g.eq.testa && JSON.stringify(g.eq.stivali) === '{"r":0,"m":[]}'));
   const save = J(ev, "makeSave()");
-  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 3 && save.progress.gear.pcs["arma:2"] === 3));
+  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 4 && save.progress.gear.pcs["arma:2"] === 3));
   const code = ev("makeCode()"); ev("progress.gear = emptyGear()"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice andata e ritorno: arma", JSON.stringify(J(ev, "progress.gear.eq.arma")), "| salvato:", !!stored().gear.eq.arma, ok(J(ev, "progress.gear.eq.arma").m.length === 2 && stored().gear.pcs["arma:2"] === 3));
   const v2 = JSON.stringify({ game: "fortress-defense", version: 2, progress: { cleared: 40, seen: [], seals: 3, claims: [], tree: {}, loadout: [] }, settings: {} });
@@ -58,6 +58,10 @@ console.log("— Drop a fine livello —");
   console.log("rarità (%) D 30:", h30.join("/"), "| D 100:", h100.join("/"), "| D 200:", h200.join("/"),
     ok(h30[3] === 0 && h30[4] === 0 && Math.abs(h30[0] - 80) <= 4 && h100[4] <= 3 && h100[3] > 2 && Math.abs(h200[4] - 6) <= 3));
   const fxs = J(ev, `(() => { const c = {}; for (let i = 0; i < 6000; i++) { const fx = rollModFx("arma"); c[fx] = (c[fx] || 0) + 1; } return c; })()`);
+  const rareShare = (pc, r) => J(ev, `(() => { let n = 0; for (let i = 0; i < 8000; i++) if (MOD[rollModFx("${pc}", ${r})].w === 1) n++; return Math.round(n / 80); })()`);
+  const rs = [0, 1, 2, 3, 4].map((r) => rareShare("nucleo", r));
+  console.log("effetti rari estratti (nucleo, % per rarità):", rs.join("/"), "| testa comune", rareShare("testa", 0), "| arma ancestrale", rareShare("arma", 4),
+    ok(Math.abs(rs[0] - 5) <= 2 && Math.abs(rs[2] - 18) <= 3 && Math.abs(rs[4] - 30) <= 3 && Math.abs(rareShare("arma", 4) - 30) <= 3));
   console.log("effetti estratti per l’arma (6000):", JSON.stringify(fxs), ok(Object.keys(fxs).length === 9 && fxs[4] < fxs[1] && Math.abs(fxs[1] / 6000 - 3 / 23) < 0.03));
 }
 

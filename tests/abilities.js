@@ -10,7 +10,8 @@ const fresh = (cleared, extra) => {
 // partita al livello 45, senza ondate; un nemico fuori schermo tiene aperta l’ondata
 function battle(extra, ab) {
   const t = fresh(45, extra), ev = t.ev;
-  if (ab) ev(`progress.abilities = ${JSON.stringify(ab)}`);
+  // dalla 1.12.0 in partita valgono solo le abilità comprate: quelle equipaggiate dal test si danno almeno al livello 1
+  if (ab) ev(`progress.abilities = ${JSON.stringify(ab)}; for (const id of Object.values(progress.abilities)) progress.tree['ab:' + id] = Math.max(progress.tree['ab:' + id] || 0, 1);`);
   ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0; spawn({ enemy: 'drone', x: 180 }); Object.assign(enemies[0], { y: -400, speed: 0, hp: 1e9, maxHp: 1e9 });");
   t.mk = (x, y) => ev(`(() => { spawn({ enemy: 'shell', x: ${x} }); const e = enemies[enemies.length - 1]; Object.assign(e, { x: ${x}, y: ${y}, speed: 0, hp: 1e7, maxHp: 1e7, dmg: 4 }); return enemies.length - 1; })()`);
   t.run = (sec) => { for (let i = 0; i < Math.round(sec * 60); i++) t.g.frame(); };

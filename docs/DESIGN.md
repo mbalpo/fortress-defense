@@ -138,6 +138,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   `seals` = Sigilli da spendere; `claims` = premi riscossi (`s31` primo completamento Standard del 31, `s31p` premio della cupola al 100%, `e5`… Epica);
   `tree` = nodi comprati (`{ "sky:burn1": 1 }`); `loadout` = torrette equipaggiate. Un salvataggio della versione 1 si importa con Sigilli e albero vuoti;
   valori non validi (nodi sconosciuti, torrette equipaggiate senza sblocco, più di 4) vengono scartati. **[Claude]**
+  Versione 4 (1.12.0): in più `majors` (Sigilli maggiori); un salvataggio senza `majors` (versioni 1-3) con almeno 40 livelli completati riceve le abilità d’ingresso della barriera, che dalla 1.12.0 costano 1 Sigillo.
   Versione 3 (1.10.0): in più `progress.gear` = `{ pcs: { "arma:2": n }, mods: { "arma:2:17": n }, eq: { arma: { r, m: [[effetto, rarità], …] } } }` (inventario e pezzi equipaggiati).
   Le versioni 1 e 2 si importano con l’inventario vuoto; pezzi, Moduli e installazioni non validi (tipi o effetti sconosciuti, doppioni, più Moduli degli slot) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non salva la partita in corso. L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
@@ -492,6 +493,9 @@ così per renderlo certo servono due Moduli ancestrali. **[deciso]**
 | 29 | X% di probabilità che il guardiano parta dal livello 2 (si scelgono subito anche carte lv2; le lv1 restano) | 1 |
 | 30 | X% di probabilità che tutte le torrette della battaglia partano dal livello 2 (come sopra) | 1 |
 
+**Effetti rari** (1.12.0) **[deciso]** (Marco): gli effetti di peso 1 (4, 10, 14, 20, 21, 22, 28, 29, 30) escono insieme con il **5%** nel comune e il **30%** nell’ancestrale
+(raro 11%, epico 18%, leggendario 24% **[Claude]**), nei drop e nelle fusioni; dentro il gruppo dei rari e in quello degli altri l’effetto si estrae con i pesi.
+
 **Pesi** **[Claude]** (accettati da Marco): 3 = frequente, 2 = medio, 1 = raro (gli effetti più forti). La probabilità di un effetto è il suo peso diviso
 la somma dei pesi del pool (somme: arma 23, guanti 22, stivali 22, armatura 20, testa 18, nucleo 17; in testa e nucleo gli effetti rari pesano di più, perché ne
 contengono 4 su 9).
@@ -603,7 +607,19 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ## 16. Sigilli e albero dei potenziamenti (da costruire)
 
-- **Valuta**: i Sigilli sono una sola valuta, spendibile in tutte le sezioni dell’albero. **[deciso]**
+- **Valuta**: i Sigilli (◆) si spendono in tutte le sezioni dell’albero. **[deciso]**
+- **Sigilli maggiori** (✦, dalla 1.12.0) **[deciso]** (Marco): seconda valuta, per ora solo dai boss in **Epica**: il **boss finale** e, con bassa probabilità, i **mini-boss**,
+  ma mai più di 1 per livello dai mini-boss (a parte il boss finale). Valori **[Claude] [provvisorio]**: boss finale 1 a ogni vittoria su di lui (anche rigiocando),
+  mini-boss 10% ciascuno; il maggiore si prende subito alla sconfitta del boss (anche se poi la partita è persa). Mostrato a schermo e nella vittoria.
+- **Costi dalla 1.12.0** **[deciso]** (Marco):
+  - sblocco delle carte chain e level up (torrette e guardiano): costo uguale al **livello della carta** (lv1 1, lv2 2, lv3 3 Sigilli);
+  - **carte standard potenziabili**: si sbloccano con i maggiori. Nodi da 20 livelli (Danno maggiorato di torrette e guardiano, sezione per tipo): **1 maggiore ai livelli 1, 6, 11, 16**
+    (4 in tutto) più i Sigilli normali di sempre; nodi da 5 livelli delle torrette (e Durata degli stati): 1 maggiore allo sblocco; guardiano: **+1 proiettile, Ventaglio potenziato
+    e Frenesia potenziata** 1 maggiore **a ogni livello** più i Sigilli normali;
+  - **Sblocco permanente** delle torrette: **3 maggiori** (nessun Sigillo normale);
+  - **Barriera**: niente maggiori; le abilità d’ingresso (Rigenerazione, Repulsiva, Ustionante) non sono più gratis: **1 Sigillo**. Chi aveva già completato il 40 con un
+    salvataggio precedente le tiene **[deciso]**.
+  - Nodi già comprati con i costi vecchi restano. Totale di maggiori per l’albero intero: guardiano 13, ogni torretta 9, sezione per tipo 25 (137 in tutto).
 - **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **3** per livello, dal livello 1 di Epica.
   Si riscuotono al primo completamento. Non si riottengono completando di nuovo il livello, tranne **una sola volta per livello e modalità**, completandolo con la
   **barriera al 100% a fine livello** (la vita si misura alla fine: contano anche cure e Backup). Ogni livello e modalità paga quindi al massimo due volte.
@@ -664,9 +680,9 @@ Regole di calcolo **[Claude] [da rivedere]**:
 | Teslacoil | Sovraccarico | Sfera rallentante | Esplosione a catena | Esplosioni paralizzanti |
 | Gravity Vortex Gun | Buco nero statico | Varchi stabili | Buco nero iperdenso | Secondo buco nero |
 
-### Guardiano **[deciso]** (9 nodi)
+### Guardiano **[deciso]** (10 nodi dalla 1.12.0)
 - Sblocco della chain **Colpi esplosivi** (3 nodi, in sequenza); lv2 **Frenesia furiosa**; level up lv1 **Colpo pesante**; level up lv2 **Rimbalzo**.
-- Potenziamenti: carta standard **Danno maggiorato**; riduzione del malus di **+1 proiettile**; colpi aggiuntivi del **Ventaglio**.
+- Potenziamenti: carta standard **Danno maggiorato**; riduzione del malus di **+1 proiettile**; **Ventaglio potenziato** (1.12.0, prima “ampliato”: non aggiunge proiettili, alza il danno dei secondari dal 30% all’**80%** del principale al livello 3; 47%, 63%, 80%); **Frenesia potenziata** (1.12.0, 3 livelli): danno in frenesia da ×1,35 a ×1,9, ×2,45, **×3** e carica **+2 s per livello** (32, 34, 36 s; con Carica rapida da 25). **[deciso]** (valori intermedi **[Claude]**)
 - Restano libere: chain Frenesia (lv1, Carica rapida, lv3), Ventaglio, Perforazione II, Cadenza maggiorata, le tre carte standard.
 
 ### Fase 1 costruita (1.5.0)
@@ -674,12 +690,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv1, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
   **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
   Ogni nodo di sblocco ha un solo livello.
-- **Costi** **[provvisorio]**: chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 10 Sigilli, il guardiano 7, tutto l’albero di fase 1 117 (106 prima della 1.9.4).
+- **Costi** (fino alla 1.11.0; dalla 1.12.0 vedi “Costi dalla 1.12.0” sopra): chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 10 Sigilli, il guardiano 7, tutto l’albero di fase 1 117 (106 prima della 1.9.4).
   In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
 - **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). Nessun rimborso per ora (proposta di rimborso totale ancora aperta, § 11).
 - **Torrette equipaggiate**: si scelgono toccando lo Sblocco permanente già comprato (al massimo 4); valgono in **tutti i livelli e le modalità**, come le carte sbloccate
   (lettura **[Claude] [da rivedere]**). Ognuna occupa il primo slot libero (dalla 1.10.1 senza saltare scelte). `META.startTurrets` resta lo sblocco a mano per le prove.
-- **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
+- **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31; il pulsante mostra Sigilli ◆ e maggiori ✦): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
   La schermata di vittoria mostra i Sigilli presi e, se resta, il premio della cupola al 100%.
 
 ### Fase 2 costruita (1.6.0) · valori **[Claude] [provvisorio]**
@@ -751,7 +767,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - Rigenerazione scatta quando la vita scende sotto il 40% (soglia del testo originale); X in % della vita massima al secondo.
   - “Tetto dell’abilità 5” letto come 5 livelli: mine da 4 (livello 1) a 8 (livello 5).
   - Congelante da −25% (livello 1) a −45% (livello 5).
-  - 5 livelli per ogni abilità; la prima di ogni gruppo è al livello 1 senza spesa, la seconda si sblocca con un nodo, la terza dopo la seconda.
+  - 5 livelli per ogni abilità; la prima di ogni gruppo al livello 1 senza spesa (dalla 1.12.0 costa 1 Sigillo), la seconda si sblocca con un nodo, la terza dopo la seconda.
   - Le abilità si equipaggiano dal livello 40 (completato).
   - Partenza sfalsata: la prima abilità con cooldown scatta a 10 s, la seconda a 20, la terza a 30. Le abilità con cooldown aspettano un nemico in campo
     (la Repulsiva un nemico vicino alla barriera) prima di scattare.

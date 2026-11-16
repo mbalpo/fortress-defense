@@ -3,6 +3,35 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.0 — Sigilli maggiori, costi nuovi dell’albero, Ventaglio e Frenesia potenziati, Moduli rari
+
+Richieste di Marco, punti 1-5 (i punti 6-11 sono nel prossimo lavoro).
+
+- **Sigilli maggiori** (✦, `progress.majors`): solo in Epica, dal boss finale (1 a ogni vittoria su di lui) e dai mini-boss (10% ciascuno, al massimo 1 per livello);
+  si prendono subito alla sconfitta del boss (`majorDrop`), scritta a schermo e riga nella vittoria. Fonte e limite **[deciso]**, numeri **[Claude] [provvisorio]**.
+- **Costi dell’albero** (`SEAL_COST`, `mcosts` per livello, `nodeMCost`): carte chain e level up = livello della carta (1, 2, 3); Sblocco permanente 3 maggiori; nodi da 20 livelli
+  e sezione per tipo 1 maggiore ai livelli 1, 6, 11, 16; carte standard da 5 livelli delle torrette 1 maggiore allo sblocco; guardiano +1 proiettile, Ventaglio e Frenesia
+  potenziati 1 maggiore a ogni livello; barriera senza maggiori. Righe dell’albero con il costo “1 ✦ + 1 ◆”; intestazione e pulsante del menu con i maggiori.
+- **Ventaglio potenziato** (prima “ampliato”, stesso nodo `player:fan`): i proiettili secondari restano 4, il loro danno passa dal 30% a 47%, 63%, **80%** del principale.
+- **Frenesia potenziata** (nuovo nodo `player:frenzy`, 3 livelli): danno in frenesia ×1,9, ×2,45, **×3** (base ×1,35), carica +2 s per livello.
+- **Abilità d’ingresso** della barriera: 1 Sigillo (prima gratis); in partita valgono solo le abilità comprate. Un salvataggio precedente (senza `majors`) con il 40 completato le riceve.
+- **Moduli rari** (peso 1: 4, 10, 14, 20, 21, 22, 28, 29, 30): insieme escono con 5 / 11 / 18 / 24 / 30% per rarità (`RARE_CHANCE`), nei drop e nelle fusioni.
+- **Salvataggio**: versione 4 con `majors`; pannello con i Sigilli maggiori.
+- Righe dell’albero: il testo sotto il nome rimpicciolisce se tocca il costo.
+- DESIGN.md: § 16 valuta, Sigilli maggiori, costi, guardiano; § 15 effetti rari; § 7 formato 4. `APP_VERSION` e `VERSION` di `sw.js`: 1.12.0.
+
+**Test**: `seals.js` (costi nuovi, maggiori per livello, nodo senza maggiori, Ventaglio al 3 con 4 secondari all’80%, Frenesia al 3, maggiori in Epica e non in Standard,
+abilità d’ingresso per salvataggi vecchi e nuovi, Sblocco permanente con 3 maggiori), `abilities.js` (le abilità equipaggiate dai test ora vanno comprate), `equip.js`
+(quota degli effetti rari per rarità, salvataggio versione 4). `npm test`: tutti verdi. Screenshot dell’albero rifatti e controllati.
+
+**Misure con i bot** (equipaggiamento atteso, 100 partite per muro): 40 81,5% · 70 81,0% · 100 38,0% · 150 53,0% · 200 74,0% (1.11.0: 67,5 · 59,0 · 65,5 · 57,0 · 46,0).
+I bot giocano in Standard e non hanno maggiori: non comprano più carte standard né sezione per tipo, e spendono i Sigilli nella barriera. **La taratura dal 31 va rifatta**.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (albero con i costi nuovi).
+
+Checklist: nuove voci “Sigilli maggiori: quantità dai boss di Epica da confermare”, “Taratura dal 31 da rifare dopo i Sigilli maggiori”, “Ventaglio e Frenesia potenziati da provare”;
+aggiornare “Costi dell’albero” e “Abilità d’ingresso”.
+
 ## Documentazione — equipaggiamento necessario dal 40 (nessuna versione nuova)
 
 - Marco conferma la taratura 1.11.0: che senza equipaggiamento i muri dal 40 siano quasi impossibili (40 17%, 100 3%, 200 0%) **va bene così**. DESIGN.md § 11 aggiornato.
