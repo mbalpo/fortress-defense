@@ -437,7 +437,8 @@ function menuScreen() {
   txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
   button(36, 130, 56, 56, "−", () => { selLevel = Math.max(1, selLevel - 1); }, { size: 26 });
   button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
-  txt("Livello " + selLevel, W / 2, 150, 24, "#e8eefc", "center", "800");
+  button(100, 128, 160, 60, "", openLevels, { fill: "rgba(18,30,58,0.6)", stroke: "#2c4272" });   // tocco: griglia dei livelli (1.12.3)
+  txt("Livello " + selLevel + " ▦", W / 2, 150, 22, "#e8eefc", "center", "800");
   txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
   txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
   txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
@@ -456,7 +457,8 @@ function menuScreen() {
   rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 430 + i * 17, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
   txt("Mini-boss: ondate 5, 10, 15 dal livello 11 (Epica: sempre)", 36, 532, 10, "#ffd166", "left", "500");
   txt("Boss finale all’ondata 20 dei livelli 10, 20, 30…", 36, 546, 10, "#ffd166", "left", "500");
-  button(60, 562, 240, 36, "Salvataggio · esporta o importa", openSave, { size: 13, stroke: "#7fa0e0" });
+  button(60, 562, 154, 36, "Salvataggio", openSave, { size: 13, stroke: "#7fa0e0" });
+  button(220, 562, 80, 36, "Guida", openGuide, { size: 13, stroke: "#3fe0a0" });
   txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 614, 11, "#5f7299", "center", "500");
   txt("v" + APP_VERSION, W - 8, 632, 9, "#3a4a70", "right", "500");
 }
@@ -503,9 +505,18 @@ function rewardScreen() {
     fitTxt(o.note, x + 52, y + 92, 260, 10, "#6f82ad", "left", "500");
   });
   button(60, 140 + rewards.length * 122 + 4, 240, 48, "Continua", () => pick(0), { size: 16, stroke: "#ffd166", release: true });
+  button(90, 140 + rewards.length * 122 + 60, 180, 32, "Potenziamenti presi", () => { upBuild = true; cardsShown(); }, { size: 12, stroke: "#9fb4d9", release: true });
+}
+// potenziamenti presi, aperti dalla scelta delle carte o dalla ricompensa (1.12.3): stessa vista della pausa, poi si torna alle carte
+function upBuildScreen() {
+  dim(0.94);
+  txt("Potenziamenti presi", W / 2, 70, 20, "#e8eefc", "center", "800");
+  pauseBuild();
+  button(16, 584, 328, 44, "Torna alle carte", () => { upBuild = false; cardsShown(); }, { size: 15, stroke: "#3fe0a0", release: true });   // al rilascio, come le carte (1.12.3)
 }
 function upgradeScreen() {
   dim(0.84);
+  if (upBuild) { upBuildScreen(); return; }
   if (rewards) { rewardScreen(); return; }
   txt(bonusMode ? "Ricompensa mini-boss" : "Ondata " + wave + " superata", W / 2, 86, 24, bonusMode ? "#ffd166" : "#3fe0a0", "center", "800");
   txt("Scegli un potenziamento", W / 2, 116, 13, "#9fb4d9", "center", "500");
@@ -522,7 +533,9 @@ function upgradeScreen() {
   });
   const yb = 140 + options.length * step;
   txt("Torri fino al lv " + towerCap(), W / 2, yb + 12, 11, "#6f82ad", "center", "500");
-  if (refreshLeft > 0 && !bonusMode) button(90, yb + 26, 180, 32, "Rinnova le carte (" + refreshLeft + ")", refreshCards, { size: 12, stroke: "#7fa0e0" });   // Modulo 21
+  const rf = refreshLeft > 0 && !bonusMode;      // Modulo 21: rinnovo; accanto, i potenziamenti presi
+  button(rf ? 20 : 90, yb + 26, rf ? 156 : 180, 32, "Potenziamenti presi", () => { upBuild = true; cardsShown(); }, { size: 12, stroke: "#9fb4d9", release: true });
+  if (rf) button(184, yb + 26, 156, 32, "Rinnova le carte (" + refreshLeft + ")", refreshCards, { size: 12, stroke: "#7fa0e0", release: true });
 }
 
 /* ---------- ALBERO DEI SIGILLI ---------- */
@@ -769,6 +782,132 @@ function gearChips(y) {
   return list.length ? Math.ceil(list.length / 3) * 30 + 18 : 0;
 }
 
+/* ---------- GRIGLIA DEI LIVELLI (1.12.3) ---------- */
+function sealGem(x, y, r, got) {                 // rombo del Sigillo: pieno se preso, vuoto se da prendere
+  const pts = [[x, y - r], [x + r, y], [x, y + r], [x - r, y]];
+  if (got) poly(pts, "#c9a2ff"); else poly(pts, "rgba(201,162,255,0.08)", "#c9a2ff", 1.2);
+}
+function levelsScreen() {
+  dim(0.92);
+  button(8, 8, 62, 30, "‹ Menu", closeLevels, { size: 12 });
+  txt("LIVELLI", W / 2 + 22, 22, 18, "#e8eefc", "center", "800");
+  const eu = epicUnlocked();
+  [["standard", "Standard", "#3fe0a0"], ["epic", eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · dal livello " + CAMPAIGN.epicUnlock, "#ff7a3d"]].forEach(([id, label, c], i) => {
+    const on = lvMode === id, off = id === "epic" && !eu;
+    button(16 + i * 168, 46, 160, 30, label, () => { if (!off) lvMode = id; },
+      { size: 12, fill: on ? "rgba(63,224,160,0.12)" : "rgba(18,30,58,0.92)", stroke: on ? c : "#2c4272", color: off ? "#5f7299" : on ? "#e8eefc" : "#9fb4d9" });
+  });
+  const pages = Math.ceil(CAMPAIGN.maxLevel / 50);
+  for (let i = 0; i < pages; i++) {
+    const on = lvPage === i, open = i * 50 + 1 <= maxSelectable();
+    button(16 + i * 84, 82, 80, 26, (i * 50 + 1) + "-" + Math.min(CAMPAIGN.maxLevel, i * 50 + 50), () => { lvPage = i; },
+      { size: 11, fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#7fa0e0" : "#2c4272", color: open ? (on ? "#e8eefc" : "#9fb4d9") : "#5f7299" });
+  }
+  button(16, 114, 328, 24, (lvFilter ? "☑" : "☐") + " Solo i livelli con Sigilli da prendere", () => { lvFilter = !lvFilter; },
+    { size: 11, stroke: lvFilter ? "#c9a2ff" : "#2c4272", color: lvFilter ? "#e8eefc" : "#9fb4d9" });
+  for (let i = 0; i < 50; i++) {
+    const lv = lvPage * 50 + i + 1; if (lv > CAMPAIGN.maxLevel) break;
+    const x = 12 + (i % 5) * 68, y = 144 + Math.floor(i / 5) * 43;
+    const open = lv <= maxSelectable(), done = lvMode === "epic" ? progress.claims.includes("e" + lv) : lv <= progress.cleared;
+    const st = sealStatus(lvMode, lv), dimmed = !open || (lvFilter && !sealsOpen(lvMode, lv)), sel = lv === lvSel;
+    button(x, y, 64, 40, "", () => pickLevel(lv), { stroke: sel ? "#ffd166" : !open ? "#1c2a4a" : done ? "#3fe0a0" : "#7fa0e0",
+      fill: sel ? "rgba(255,209,102,0.16)" : dimmed ? "rgba(10,16,32,0.6)" : "rgba(18,30,58,0.92)" });
+    txt(String(lv), x + 32, y + 14, 13, dimmed ? "#4a5a80" : lv % 10 === 0 ? "#ffd166" : "#e8eefc", "center", "800");   // muri in giallo
+    if (!open) continue;
+    if (st.first !== "no") { ctx.globalAlpha = dimmed ? 0.4 : 1; sealGem(x + 24, y + 29, 4.5, st.first === "got"); sealGem(x + 40, y + 29, 4.5, st.full === "got"); ctx.globalAlpha = 1; }
+    else if (done) txt("✓", x + 32, y + 29, 11, "#3fe0a0", "center", "800");
+  }
+  fitTxt("◆ preso · ◇ da prendere (1° completamento, cupola al 100%) · giallo: muro", W / 2, 579, 336, 10, "#8a9ac0", "center", "500");
+  const can = lvSel <= maxSelectable() && (lvMode === "standard" || eu);
+  button(16, 590, 328, 40, "Gioca il livello " + lvSel + " · " + (lvMode === "epic" ? "Epica" : "Standard"), playLevel,
+    { size: 14, stroke: can ? (lvMode === "epic" ? "#ff7a3d" : "#3fe0a0") : "#2c3a5f", color: can ? "#e8eefc" : "#6f82ad" });
+}
+
+/* ---------- GUIDA: stati e carte (1.12.3) ---------- */
+const STATUS_INFO = [
+  ["slow", "Rallentamento", "Il nemico avanza alla metà della velocità."],
+  ["para", "Paralisi", "Il nemico è fermo e non attacca la cupola. Mini-boss e boss non si paralizzano."],
+  ["weak", "Indebolimento", "I colpi del nemico alla cupola fanno il 35% di danno in meno (la Barriera congelante di più)."],
+  ["destr", "Distruzione", "Ogni pila toglie il 10% al danno del nemico; 3 pile (5 con Distruzione estesa), dura 5 s."],
+  ["vuln", "Vulnerabilità", "Il nemico subisce il 25% di danno in più (da un tipo o da tutti)."],
+  ["burn", "Bruciatura", "Danno da fuoco ogni istante finché dura."],
+];
+const STATUS_EXTRA = [
+  ["Campo destabilizzante", "Nel campo del Disruption Drone il nemico subisce il 25% in più dalle altre torri."],
+  ["Scia combustibile", "Nella scia della Firewheel il nemico subisce il 30% in più dal fuoco."],
+  ["Scossa continua", "Il Thunderbolt fa danno elettrico ai paralizzati finché dura la paralisi."],
+  ["Resistenza dei boss", "Mini-boss e boss subiscono gli stati in parte: dal 25 al 60% in meno."],
+];
+function guideScreen() {
+  dim(0.94);
+  button(8, 8, 62, 30, "‹ Menu", closeGuide, { size: 12 });
+  txt("GUIDA", W / 2 + 22, 22, 18, "#e8eefc", "center", "800");
+  [["status", "Stati dei nemici"], ["cards", "Carte"]].forEach(([id, label], i) => {
+    const on = guideTab === id;
+    button(16 + i * 168, 46, 160, 30, label, () => { guideTab = id; guideScroll = 0; },
+      { size: 12, fill: on ? "rgba(63,224,160,0.12)" : "rgba(18,30,58,0.92)", stroke: on ? "#3fe0a0" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
+  });
+  if (guideTab === "status") guideStatus(); else guideCards();
+}
+function guideStatus() {
+  let y = 96;
+  for (const [k, name, desc] of STATUS_INFO) {
+    const c = STATUS_ICONS.find((s) => s[0] === k)[2];
+    disc(28, y + 8, 11, "rgba(18,30,58,0.95)"); statusIcon(k, 28, y + 8, c, { destrN: 2 });
+    txt(name, 48, y + 2, 13, c, "left", "700");
+    wrap(desc, W - 64, 11).forEach((l, i) => txt(l, 48, y + 18 + i * 14, 11, "#b9c8e6", "left", "500"));
+    y += 22 + wrap(desc, W - 64, 11).length * 14 + 6;
+  }
+  y += 4; txt("Altri effetti (senza icona)", 16, y, 12, "#9fb4d9", "left", "700"); y += 18;
+  for (const [name, desc] of STATUS_EXTRA) {
+    txt(name, 16, y, 12, "#e8eefc", "left", "700");
+    wrap(desc, W - 32, 11).forEach((l, i) => txt(l, 16, y + 15 + i * 13, 11, "#b9c8e6", "left", "500"));
+    y += 18 + wrap(desc, W - 32, 11).length * 13 + 4;
+  }
+}
+// riga di una carta nella guida: nome, categoria e stato nell’albero, descrizione; carte standard con l’effetto per pila (con i nodi dell’albero)
+function guideCardLines(def, u) {
+  const who = def.id, cat = u.cat === "std" ? "Standard · fino a 3 pile" : u.cat === "chain" ? "Chain " + def.ups.find((v) => v.chain === u.chain && v.lv === 1).name + " · lv " + u.lv
+    : u.cat === "lu" ? "Level up · lv " + u.lv : "Combo con " + TURRETS[u.needs].name + (typeof u.cond === "number" ? " al lv " + u.cond : " (" + TURRETS[u.needs].ups.find((v) => v.id === u.cond).name + ")");
+  const lockedNow = locked(who, u.id), inTree = (TREE_LOCKS[who] || []).includes(u.id);
+  const lock = inTree ? (lockedNow ? "bloccata (albero)" : "sbloccata (albero)") : "";
+  let extra = "";
+  if (u.cat === "std") { const k = stdKind(who, u.id); if (k) { const L = treeLv(who + ":std:" + u.id); extra = "Per pila: " + stdFx(k[0], k[1], L) + (L ? " (nodo dell’albero al " + L + ")" : ""); } }
+  return { cat, lock, lockedNow, desc: [u.desc, extra].filter(Boolean) };
+}
+function guideCards() {
+  const ids = ["player", ...TURRET_ORDER];
+  ids.forEach((id, i) => {
+    const x = 12 + (i % 6) * 56, y = 84 + Math.floor(i / 6) * 46, on = guideSel === id, def = id === "player" ? PLAYER_DEF : TURRETS[id], c = TYPES[def.type].color;
+    button(x, y, 52, 42, "", () => { guideSel = id; guideScroll = 0; }, { stroke: on ? c : "#2c4272", fill: on ? "rgba(201,162,255,0.12)" : "rgba(18,30,58,0.92)" });
+    if (id === "player") txt("Guard.", x + 26, y + 21, 11, c, "center", "800");
+    else { ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, 48, 38); ctx.clip(); TURRET_ART[id](x + 26, y + 36, c); ctx.restore(); }
+  });
+  const def = guideSel === "player" ? PLAYER_DEF : TURRETS[guideSel], c = TYPES[def.type].color, top = 182, bottom = 624;
+  // contenuto (scorre): intestazione con le statistiche, poi le carte
+  ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, bottom - top); ctx.clip();
+  let y = top + 14 - guideScroll;
+  txt(def.name || "Guardiano", 16, y, 15, c, "left", "800");
+  txt(TYPES[def.type].name, W - 16, y, 11, c, "right", "700"); y += 18;
+  const stat = guideSel === "player" ? "Danno " + PLAYER.dmg + " per colpo, una salva ogni " + fmt(PLAYER.interval) + " s, portata totale."
+    : (def.blurb + ". Portata " + def.range + " px, ricarica " + fmt(def.reload) + " s.");
+  wrap(stat, W - 32, 11).forEach((l) => { txt(l, 16, y, 11, "#9fb4d9", "left", "500"); y += 14; });
+  y += 6;
+  for (const u of def.ups) {
+    const L = guideCardLines(def, u), rows = L.desc.flatMap((d) => wrap(d, W - 40, 11)), h = 36 + rows.length * 14;
+    rr(12, y - 8, W - 24, h, 8); ctx.fillStyle = L.lockedNow ? "rgba(10,16,32,0.7)" : "rgba(18,30,58,0.92)"; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = L.lockedNow ? "#4a3a70" : "#24345a"; ctx.stroke();
+    txt(u.name, 22, y + 4, 13, L.lockedNow ? "#8a7ab8" : "#e8eefc", "left", "700");
+    fitTxt(L.cat + (L.lock ? " · " + L.lock : ""), 22, y + 19, W - 44, 10, L.lockedNow ? "#c9a2ff" : "#7fa0e0", "left", "600");
+    rows.forEach((l, i) => txt(l, 22, y + 34 + i * 14, 11, "#b9c8e6", "left", "500"));
+    y += h + 6;
+  }
+  ctx.restore();
+  const content = y + guideScroll - top;              // altezza del contenuto: lo scorrimento non va oltre la fine
+  guideScroll = clamp(guideScroll, 0, Math.max(0, content - (bottom - top) + 10));
+  if (content > bottom - top) txt(guideScroll > 0 ? "▲ ▼ trascina per scorrere" : "▼ trascina in su per vedere le altre carte", W / 2, 633, 10, "#8a9ac0", "center", "500");
+}
+
 function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
   ctx.strokeStyle = locked ? "#ffd166" : "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
   ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
@@ -800,7 +939,7 @@ function draw() {
   for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
   ctx.globalAlpha = 1;
 
-  if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear") {
+  if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear" && state !== "levels" && state !== "guide") {
     drawDomeFill(); drawGround();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
@@ -827,6 +966,8 @@ function draw() {
   else if (state === "pause") pauseScreen();
   else if (state === "tree") treeScreen();
   else if (state === "gear") gearScreen();
+  else if (state === "levels") levelsScreen();
+  else if (state === "guide") guideScreen();
 }
 
 /* ---------- TORRETTE CON DISEGNO PROPRIO, PROIETTILI ED EFFETTI ---------- */

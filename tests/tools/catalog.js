@@ -175,6 +175,15 @@ function scenes(turretIds) {
     { progress: PG, setup: "selLevel = 42; startRun('standard'); __cat.step(100); winLevel();", frames: 1 }, ["wonScreen", "gearChips", "pieceIcon", "modIcon"]);
   add(1, "carte-4", "Quattro carte e rinnovo", "Moduli 22 (4 carte tra cui scegliere) e 21 (rinnovo delle carte).",
     { progress: Object.assign({}, PG, { gear: { pcs: {}, mods: {}, eq: { testa: { r: 1, m: [[22, 4], [21, 4]] } } } }), setup: START(42) + " queue = []; enemies.length = 0; wave = 1; endWave();", frames: 1 }, ["upgradeScreen"]);
+  // 1.12.3: griglia dei livelli, guida, potenziamenti presi dalla scelta delle carte
+  const PL = Object.assign({}, PS, { cleared: 57, majors: 0, claims: ["s31", "s31p", "s32", "s33", "s33p", "s40", "s50", "e1"] });
+  add(1, "livelli", "Griglia dei livelli", "Dal menu (tocco su “Livello”): Standard/Epica, pagine da 50, Sigilli presi (◆) e da prendere (◇), filtro, muri in giallo.",
+    { progress: PL, setup: "openLevels(); lvSel = 45;", frames: 1 }, ["levelsScreen", "sealGem"]);
+  add(1, "guida-stati", "Guida · stati dei nemici", "Legenda delle icone di stato e degli altri effetti.", { progress: PL, setup: "openGuide();", frames: 1 }, ["guideScreen", "guideStatus"]);
+  add(1, "guida-carte", "Guida · carte", "Tutte le carte di una torretta o del guardiano, con categoria, blocco dell’albero ed effetto per pila; l’elenco scorre col dito.",
+    { progress: PL, setup: "openGuide(); guideTab = 'cards'; guideSel = 'sky';", frames: 1 }, ["guideScreen", "guideCards", "guideCardLines"]);
+  add(1, "potenziamenti-presi", "Potenziamenti presi (dalla scelta delle carte)", "Pulsante sotto le carte: la stessa vista della pausa, poi “Torna alle carte”.",
+    { progress: PL, setup: START(12) + " queue = []; enemies.length = 0; wave = 3; endWave(); upBuild = true;", frames: 1 }, ["upBuildScreen", "pauseBuild"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);

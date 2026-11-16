@@ -130,6 +130,15 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   mirino rosso = vulnerabilità, fiamma arancione = bruciatura, linee ondulate (una per pila) = distruzione. **[deciso]**
 - La tabella delle resistenze (× 0,5 al proprio tipo, ×1,5 a un altro) è un **segnaposto** di Claude: **da decidere** (§ 11).
 
+- **Griglia dei livelli** (1.12.3) **[deciso]** (Marco: griglia, Standard/Epica, Sigilli presi; impaginazione **[Claude]**): toccando “Livello N” nel menu si apre una griglia
+  di 50 livelli per pagina (1-50, 51-100, …), con Standard/Epica in alto; ogni livello mostra due rombi (Sigillo del primo completamento e premio della cupola al 100%; pieno = preso),
+  i muri in giallo, i livelli non ancora giocabili spenti; il filtro “Solo i livelli con Sigilli da prendere” spegne gli altri. Un tocco sceglie, un secondo tocco (o “Gioca”) parte.
+- **Guida** (1.12.3, menu → “Guida”) **[deciso]** (le pagine) · contenuti **[Claude]**: scheda “Stati dei nemici” (icone, effetti e valori, altri effetti senza icona, resistenza dei boss);
+  scheda “Carte”: guardiano e 11 torrette, con statistiche di base e tutte le carte (categoria, blocco nell’albero, descrizione, effetto per pila delle standard con il nodo dell’albero).
+  L’elenco scorre trascinando il dito. Descrizioni estese delle carte: per ora quelle brevi del gioco più i valori; testi più lunghi da scrivere con Marco.
+- **Potenziamenti presi dalla scelta delle carte** (1.12.3) **[deciso]**: pulsante “Potenziamenti presi” sotto le carte e nella ricompensa del mini-boss (tasto B): la vista
+  “Torri e potenziamenti” della pausa, poi “Torna alle carte”. Questi pulsanti e “Rinnova le carte” si attivano al rilascio, come le carte.
+
 ## 7. Salvataggio e PWA
 
 - Menu → “Salvataggio · esporta o importa”: file JSON (sul telefono si apre la condivisione) o codice `FD1:…` (base64 del JSON).

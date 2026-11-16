@@ -139,6 +139,17 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     g.frame(140);
     ev("[[1, 120, 430], [2, 200, 440], [3, 290, 430]].forEach(([l, x, y]) => { for (let k = 0; k < [1, 2, 4][l - 1]; k++) hiveShotFx({ x, y }, enemies[2], l, k, [1, 2, 4][l - 1]); });");
     g.frame(4); g.save("43-fiamme-hive.png"); }
+  { // 1.12.3: griglia dei livelli, guida (stati e carte), potenziamenti presi dalla scelta delle carte
+    const lp = { cleared: 57, seen: ALL_SEEN, majors: 0, claims: ["s31", "s31p", "s32", "s33", "s33p", "s34", "s35", "s36", "s38p", "s40", "s41", "s42", "s50", "e1", "e2"], tree: { "sky:burn1": 1, "sky:std:dmg": 3 } };
+    const g = game({ progress: lp, src }), ev = g.w.__ev;
+    ev("openLevels(); lvSel = 45"); g.frame(); g.save("44-livelli.png");
+    ev("lvFilter = true"); g.frame(); g.save("45-livelli-filtro.png");
+    ev("state = 'menu'; openGuide()"); g.frame(); g.save("46-guida-stati.png");
+    ev("guideTab = 'cards'; guideSel = 'sky'"); g.frame(); g.save("47-guida-carte.png");
+    ev("guideScroll = 400"); g.frame(); g.save("48-guida-carte-scorrimento.png");
+    const c = game({ progress: lp, src }), ec = c.w.__ev;
+    ec("selLevel = 12; startRun('standard'); queue = []; enemies.length = 0; const s = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14); s.up.dmg = 2; s.up.split1 = 1; slots[0] = s; player.up.dmg = 1; wave = 3; endWave();");
+    c.frame(); c.save("49-carte-potenziamenti.png"); ec("upBuild = true"); c.frame(); c.save("50-potenziamenti-presi.png"); }
   { // equipaggiamento (DESIGN.md § 15): menu, pezzi, Moduli in fusione, vittoria con gli oggetti, 4 carte e rinnovo
     const gear = { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:2": 1, "nucleo:0": 3 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:0:23": 2, "arma:0:4": 1, "arma:2:17": 1, "arma:4:19": 1 },
       eq: { arma: { r: 4, m: [[2, 4], [4, 3], [1, 2]] }, testa: { r: 2, m: [[22, 1]] }, armatura: { r: 3, m: [[10, 4], [11, 2], [16, 0]] }, stivali: { r: 0, m: [] }, nucleo: { r: 1, m: [[30, 0], [28, 1]] } } };

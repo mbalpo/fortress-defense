@@ -638,7 +638,7 @@ const CARD_LOCK = 0.6;
 let cardsAt = -1e9, cardPress = null;
 function cardsShown() { cardsAt = clock; cardPress = null; }
 
-let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree | gear
+let state = "menu";            // menu | play | upgrade | pause | won | lost | save | tree | gear | levels | guide
 let mode = "standard";
 let clock = 0;
 let wave = 1, waveTime = 0, queue = [];
@@ -2059,7 +2059,7 @@ function startRun(m) {
 
 // tra un’ondata e l’altra la frenesia attiva resta in pausa e continua nell’ondata successiva
 function startWave(n) {
-  wave = n; waveTime = -1.2; ents = [];
+  wave = n; waveTime = -1.2; ents = []; upBuild = false;
   for (const s of [player, ...slots]) if (s) { s.st = s.id === "player" ? { charge: s.st.charge, frenzyT: s.st.frenzyT || 0 } : {}; s.busy = 0; s.cd = Math.min(s.cd, 0.8); }
   queue = [];
   for (const g of waveSpec(n, curDiff()).groups)
@@ -2312,6 +2312,25 @@ function tapSlot(i) {                              // Modulo installato: primo t
 }
 function tapUnequip() { if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel); }
 let pauseTab = "enemies", pauseQuit = false;
+// griglia dei livelli (1.12.3): modalità mostrata, pagina da 50, filtro “solo con Sigilli da prendere”, livello scelto
+let lvMode = "standard", lvPage = 0, lvFilter = false, lvSel = 1;
+function openLevels() { state = "levels"; lvMode = mode === "epic" && epicUnlocked() ? "epic" : "standard"; lvSel = selLevel; lvPage = Math.floor((selLevel - 1) / 50); }
+function closeLevels() { state = "menu"; }
+// Sigilli di un livello: first/full = premio del primo completamento e premio della cupola al 100%: "no" (non previsto), "got" (preso), "open" (da prendere)
+function sealStatus(m, lv) {
+  const epic = m === "epic", key = (epic ? "e" : "s") + lv;
+  if (!epic && lv < CAMPAIGN.sealsFrom) return { first: "no", full: "no" };
+  return { first: progress.claims.includes(key) ? "got" : "open", full: progress.claims.includes(key + "p") ? "got" : "open" };
+}
+const sealsOpen = (m, lv) => { const st = sealStatus(m, lv); return st.first === "open" || st.full === "open"; };
+function pickLevel(lv) { if (lv > maxSelectable()) return; if (lvSel === lv) { playLevel(); return; } lvSel = lv; }   // secondo tocco sullo stesso livello: gioca
+function playLevel() { selLevel = lvSel; if (lvMode === "epic" && !epicUnlocked()) return; startRun(lvMode); }
+// guida (1.12.3): scheda (stati | carte), entità scelta per le carte, scorrimento dell’elenco
+let guideTab = "status", guideSel = "player", guideScroll = 0, guideDrag = null;
+function openGuide() { state = "guide"; guideScroll = 0; }
+function closeGuide() { state = "menu"; guideDrag = null; }
+// potenziamenti presi, dalla scelta delle carte (1.12.3)
+let upBuild = false;
 function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; pressing = false; pauseQuit = false; }
 function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit = false; }
 
@@ -2337,12 +2356,14 @@ cv.addEventListener("pointerdown", (e) => {
   }
   if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
   if (state === "gear") gearArm = null;
+  if (state === "guide") guideDrag = { y: p.y, s: guideScroll };   // trascinare scorre l’elenco delle carte
   if (state === "play") {
     dragging = true; pressing = true; player.targetX = p.x; setPress(p);   // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
 cv.addEventListener("pointermove", (e) => {
+  if (state === "guide" && guideDrag) { guideScroll = Math.max(0, guideDrag.s - (toLogical(e).y - guideDrag.y)); return; }
   if (!dragging || state !== "play") return;
   const p = toLogical(e); player.targetX = p.x; setPress(p);
 });
@@ -2350,13 +2371,14 @@ function setPress(p) { press.x = p.x; press.y = Math.min(p.y, GROUND_Y - 50); }
 const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
 const stopDrag = () => { dragging = false; pressing = false; };
 cv.addEventListener("pointerup", (e) => {
-  stopDrag();
+  stopDrag(); guideDrag = null;
   const c = cardPress; cardPress = null;
   if (!c || state !== "upgrade") return;
   const p = toLogical(e);                        // vale solo se il dito finisce sulla stessa carta su cui era partito
   const b = buttons.find((o) => o.release && o.x === c.x && o.y === c.y && o.w === c.w && o.h === c.h);
   if (b && inBtn(p, b)) b.onTap();
 });
+cv.addEventListener("wheel", (e) => { if (state === "guide") { e.preventDefault(); guideScroll = Math.max(0, guideScroll + e.deltaY * 0.5); } }, { passive: false });
 cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; });
 window.addEventListener("keydown", (e) => {
   if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
@@ -2364,6 +2386,10 @@ window.addEventListener("keydown", (e) => {
   if (state === "save") { if (k === "escape") closeSave(); return; }
   if (state === "tree") { if (k === "escape") closeTree(); return; }   // mentre si scrive nel pannello i tasti non comandano il gioco
   if (state === "gear") { if (k === "escape") closeGear(); return; }
+  if (state === "levels") { if (k === "escape") closeLevels(); else if (k === "enter") playLevel(); return; }
+  if (state === "guide") { if (k === "escape") closeGuide(); return; }
+  if (state === "upgrade" && (k === "b" || k === "tab")) { e.preventDefault(); upBuild = !upBuild; return; }
+  if (state === "upgrade" && upBuild) { if (k === "escape" || k === "enter") upBuild = false; return; }
   if (state === "menu" && (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d"))
     selLevel = clamp(selLevel + (k === "arrowright" || k === "d" ? 1 : -1), 1, maxSelectable());
   if (k === "arrowleft" || k === "a") keys.left = 1;
@@ -2404,7 +2430,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.12.2";
+const APP_VERSION = "1.12.3";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {

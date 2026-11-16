@@ -3,6 +3,33 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.3 — griglia dei livelli, guida, potenziamenti presi dalla scelta delle carte
+
+Punti 7, 8 e 9 delle richieste di Marco. Impaginazione e testi della guida **[Claude]** (DESIGN.md § 6).
+
+- **Griglia dei livelli** (`levelsScreen`, stato `levels`): si apre toccando “Livello N” nel menu (ora con ▦). Standard/Epica in alto (Epica spenta prima del 50), pagine
+  da 50, filtro “Solo i livelli con Sigilli da prendere”, 50 caselle 5×10 con due rombi per i Sigilli (`sealStatus`, `sealsOpen`; pieno = preso), muri in giallo,
+  livelli non giocabili spenti. Un tocco sceglie, il secondo sullo stesso livello o “Gioca” parte; Invio gioca, Esc torna al menu.
+- **Guida** (`guideScreen`, stato `guide`, menu → “Guida” accanto a “Salvataggio”): scheda “Stati dei nemici” (6 icone con effetti e valori del codice, 4 effetti senza
+  icona) e scheda “Carte” (guardiano e 11 torrette: statistiche di base, tutte le carte con categoria, blocco nell’albero, descrizione ed effetto per pila delle carte
+  standard con il nodo dell’albero). L’elenco scorre trascinando il dito (o con la rotella).
+- **Potenziamenti presi** (`upBuildScreen`): pulsante sotto le carte e sotto “Continua” della ricompensa del mini-boss, tasto B: la vista della pausa, poi “Torna alle carte”
+  (anche Esc o Invio). Mentre è aperta i tasti 1-4 non scelgono. Questi pulsanti e “Rinnova le carte” si attivano al rilascio come le carte: con un tocco subito dopo la
+  comparsa della schermata (trovato dal test delle carte) si poteva aprire la vista per sbaglio.
+- Menu: “Salvataggio” più corto, nuovo “Guida”; il livello è un pulsante che apre la griglia.
+- DESIGN.md § 6: griglia, guida, potenziamenti presi. `APP_VERSION` e `VERSION` di `sw.js`: 1.12.3.
+
+**Test**: nuovo `tests/schermate.js` (apertura dal menu, stato dei Sigilli per livello e modalità, filtro, livello oltre il massimo, partenza in Epica con il secondo tocco,
+Epica bloccata prima del 50, guida: stati, carte bloccate e sbloccate, effetto per pila col nodo, scorrimento fino alla fine e col dito, tutte le entità senza errori;
+vista dei potenziamenti con il tasto B, tasti bloccati, Esc). Aggiornati `savetest.js` (testo “Livello 24 ▦”). `npm test`: tutti verdi.
+Screenshot nuovi 44-50 controllati; corretti la legenda della griglia (usciva dal bordo), la riga del blocco nella guida (troppo lunga) e la scritta dello scorrimento (sopra le icone).
+
+**Misure con i bot**: non servono (solo schermate).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (nuove scene: griglia dei livelli, guida stati, guida carte, potenziamenti presi; 59 scene).
+
+Checklist: nuove voci “Griglia dei livelli, guida e potenziamenti presi: da provare sul telefono”, “Guida: descrizioni estese delle carte da scrivere?”; togliere le voci dei punti 7, 8 e 9.
+
 ## 1.12.2 — fiamme della Sky Guard e della Firewheel, colpi e evoluzioni dell’Hive
 
 Punti 10 e 11 delle richieste di Marco (il 6, mine doppie, è nella 1.12.1).

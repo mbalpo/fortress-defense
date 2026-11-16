@@ -61,8 +61,8 @@ const tick = () => new Promise((r) => setTimeout(r, 30));
   const p = JSON.parse(h.w.localStorage.getItem("fortress-progress-v1")), s = JSON.parse(h.w.localStorage.getItem("fortress-proto-v1"));
   console.log("Sostituisci → livelli", p.cleared, "| nemici", p.seen.join(", "), "| impostazioni", JSON.stringify(s), "|", h.msg(), ok(p.cleared === 23 && p.seen.length === 4 && !("aim" in s) && s.targeting === "highest"));
   h.key("Escape"); h.texts.length = 0; h.frame();
-  const lvl = h.texts.find((x) => /^Livello \d+$/.test(x));
-  console.log("menu dopo l’importazione:", lvl, "|", h.texts.find((x) => x.startsWith("Livelli completati")), ok(lvl === "Livello 24"));
+  const lvl = h.texts.find((x) => /^Livello \d+ ▦$/.test(x));   // dalla 1.12.3 con il segno della griglia
+  console.log("menu dopo l’importazione:", lvl, "|", h.texts.find((x) => x.startsWith("Livelli completati")), ok(lvl === "Livello 24 ▦"));
 
   // --- importazione da file, con vecchie chiavi generiche dei boss ---
   const k = game({}); k.tap(180, 580); k.frame();
