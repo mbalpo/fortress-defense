@@ -1,6 +1,6 @@
 "use strict";
 /* =====================================================================
-   FORTRESS DEFENSE · DISEGNO
+   PLANET DEFENSE · DISEGNO
    Tutto quello che si vede sul canvas: primitive (testi, pulsanti, forme), torrette (TURRET_ART), guardiano,
    nemici e indicatori di stato, proiettili ed effetti (FX), HUD, avvisi e schermate (menu, carte, pausa, vittoria, sconfitta).
    Lo usano il gioco (app/index.html) e il catalogo grafico (docs/catalogo-grafico.html, npm run catalog).
@@ -479,7 +479,7 @@ function overlay(title, lines, color, y0) {
   txt(title, W / 2, y0 || 190, 30, color || "#e8eefc", "center", "800");
   lines.forEach((l, i) => txt(l, W / 2, (y0 || 190) + 48 + i * 22, 14, "#9fb4d9", "center", "500"));
 }
-function menuTitle() { dim(0.8); txt("FORTRESS DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800"); }   // velo e titolo (aggancio HD-2D)
+function menuTitle() { dim(0.8); txt("PLANET DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800"); }   // velo e titolo (aggancio HD-2D)
 function menuScreen() {
   menuTitle();
   txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");

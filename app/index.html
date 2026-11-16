@@ -9,9 +9,9 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Fortress">
+<meta name="apple-mobile-web-app-title" content="Planet">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>Fortress Defense</title>
+<title>Planet Defense</title>
 <style>
   :root { color-scheme: dark; }
   html, body { margin: 0; height: 100%; background: #070b16; overflow: hidden; overscroll-behavior: none; }
@@ -56,8 +56,8 @@
 <canvas id="c" aria-label="Campo di battaglia"></canvas>
 <script src="draw-hd2d.js"></script>
 <script src="draw.js"></script>
-<div id="splash" role="button" aria-label="Fortress Defense">
-  <h1>FORTRESS DEFENSE</h1>
+<div id="splash" role="button" aria-label="Planet Defense">
+  <h1>PLANET DEFENSE</h1>
   <img src="icon-512.png" alt="" width="512" height="512">
   <p id="splashMsg" role="status"></p>
 </div>
@@ -2450,8 +2450,9 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.13.0";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
+const APP_VERSION = "1.13.1";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+// versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
@@ -2469,7 +2470,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
   }
   let d;
   try { d = JSON.parse(t); } catch (e) { throw new Error(isCode ? "Il codice non è valido o è incompleto." : "Non è un salvataggio leggibile."); }
-  if (!d || d.game !== SAVE_GAME) throw new Error("Non è un salvataggio di Fortress Defense.");
+  if (!d || d.game !== SAVE_GAME) throw new Error("Non è un salvataggio di Planet Defense.");
   if (!(d.version >= 1) || d.version > SAVE_VERSION) throw new Error("Versione del salvataggio non supportata.");
   const p = d.progress || {}, s = d.settings || {};
   if (!Number.isFinite(p.cleared)) throw new Error("Il salvataggio non contiene i livelli completati.");
@@ -2508,11 +2509,11 @@ function stageSave(text) {
 function openSave() { state = "save"; pendingSave = null; $id("codeBox").value = ""; refreshSavePanel(); $id("savePanel").hidden = false; }
 function closeSave() { $id("savePanel").hidden = true; pendingSave = null; state = "menu"; }
 $id("btnExport").addEventListener("click", async () => {
-  const json = JSON.stringify(makeSave(), null, 2), name = "fortress-salvataggio-" + new Date().toISOString().slice(0, 10) + ".json";
+  const json = JSON.stringify(makeSave(), null, 2), name = "planet-defense-salvataggio-" + new Date().toISOString().slice(0, 10) + ".json";
   try {                                          // sul telefono: foglio di condivisione (File, Drive, mail…)
     const file = new File([json], name, { type: "application/json" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "Salvataggio Fortress Defense" });
+      await navigator.share({ files: [file], title: "Salvataggio Planet Defense" });
       refreshSavePanel("File pronto: " + name); return;
     }
   } catch (e) { if (e && e.name === "AbortError") { refreshSavePanel(); return; } }

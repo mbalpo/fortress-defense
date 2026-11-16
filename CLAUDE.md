@@ -1,4 +1,7 @@
-# Fortress Defense — istruzioni per Claude Code
+# Planet Defense — istruzioni per Claude Code
+
+Nome del gioco dalla 1.13.1: **Planet Defense** (prima Fortress Defense). Restano col vecchio nome, apposta, la cartella del progetto, il pacchetto npm
+e le chiavi interne (localStorage `fortress-…`, salvataggi `game: "fortress-defense"` e prefisso `FD1:`, cache `fortress-…`, `FORTRESS_DRAW`): cambiarle farebbe perdere i progressi.
 
 Tower defense personale di Marco, PWA offline ispirata a *Galaxy Defense: Fortress TD* (grafica e testi originali).
 **Lingua: italiano** per tutto: testi del gioco, commenti, messaggi, documenti, commit.

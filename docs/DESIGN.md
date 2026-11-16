@@ -1,4 +1,4 @@
-# Fortress Defense — documento di design
+# Planet Defense — documento di design
 
 Fonte di verità per tutte le decisioni sul gioco. Va aggiornato **ogni volta** che una decisione cambia,
 sia in Claude Code (insieme al codice) sia nel progetto su claude.ai (che prepara le modifiche da riportare qui).

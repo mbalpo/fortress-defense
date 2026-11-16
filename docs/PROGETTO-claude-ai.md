@@ -6,7 +6,7 @@ Il ponte è `docs/DESIGN.md`, la fonte di verità comune.
 
 ## 1. Creare il progetto su claude.ai
 
-1. Nuovo progetto, per esempio “Fortress Defense · design”.
+1. Nuovo progetto, per esempio “Planet Defense · design”.
 2. Nelle **istruzioni del progetto** incolla il testo della sezione 3.
 3. Nella **conoscenza del progetto** carica:
    - `docs/DESIGN.md` (obbligatorio)
@@ -27,7 +27,7 @@ I file del progetto non si aggiornano da soli: al punto 3 vanno ricaricati, altr
 ## 3. Istruzioni del progetto (da incollare)
 
 ```
-Questo progetto serve a progettare Fortress Defense, il tower defense personale (PWA, solo offline) che Marco sta costruendo,
+Questo progetto serve a progettare Planet Defense (prima Fortress Defense), il tower defense personale (PWA, solo offline) che Marco sta costruendo,
 ispirato a Galaxy Defense: Fortress TD con grafica e testi originali. Il codice vive in un repository gestito con Claude Code:
 qui si ragiona di design, si prendono decisioni e si tiene la checklist di revisione.
 

@@ -1,4 +1,4 @@
-FORTRESS DEFENSE · app installabile (PWA)
+PLANET DEFENSE · app installabile (PWA)
 =========================================
 
 CONTENUTO

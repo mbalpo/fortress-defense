@@ -50,7 +50,7 @@ function page(sc) {
     key: (k) => w.dispatchEvent(new w.KeyboardEvent("keydown", { key: k })),
     tapSplash: () => sp.click(), setHidden: (v) => w.__setHidden(v),
     tapCanvas: (x, y) => { const e = new w.Event("pointerdown", { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; d.getElementById("c").dispatchEvent(e); },
-    inMenu: () => { texts.length = 0; frame(); return texts.includes("FORTRESS DEFENSE"); },
+    inMenu: () => { texts.length = 0; frame(); return texts.includes("PLANET DEFENSE"); },
   };
 }
 

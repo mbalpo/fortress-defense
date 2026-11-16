@@ -430,7 +430,7 @@ function page(P, M, S, T, H) {
 <meta name="catalogo-hash" content="${H.hash}">
 <meta name="catalogo-versione" content="${esc(P.version)}">
 <meta name="catalogo-data" content="${now.toISOString()}">
-<title>Fortress Defense · ${TITLE}</title>
+<title>Planet Defense · ${TITLE}</title>
 <link rel="icon" type="image/png" href="${P.icons["icon-192.png"]}">
 <style>
   :root { color-scheme: dark; --bg: #070b16; --panel: #101a33; --line: #2c4272; --text: #e8eefc; --muted: #9fb4d9; --dim: #6f82ad; --ok: #3fe0a0; --gold: #ffd166; }
@@ -485,7 +485,7 @@ function page(P, M, S, T, H) {
 </head>
 <body>
 <header>
-  <h1>Fortress Defense · ${TITLE}</h1>
+  <h1>Planet Defense · ${TITLE}</h1>
   <div class="facts"><span>Versione <b>${esc(P.version)}</b></span><span>Generato il <b>${date}</b></span><span>Hash <b>${H.hash.slice(0, 16)}</b></span><span>File: <code>${OUT_REL}</code> (<code>npm run ${ALT ? "catalog-hd2d" : "catalog"}</code>)</span></div>
   <p class="hashes">Hash completo ${H.hash} · ${hashRows}</p>
   <p>Tutto quello che si vede qui è disegnato dal codice del gioco: il modulo <code>${DRAW_FILE}</code> e lo script di <code>app/index.html</code>, incorporati in questa pagina.
@@ -605,7 +605,7 @@ ${palette}
 <details><summary>${DRAW_FILE} (${(ALT ? P.drawHd : P.draw).split("\n").length} righe)</summary><pre id="src-draw">${esc(ALT ? P.drawHd : P.draw)}</pre></details>
 </section>
 </main>
-<footer>Fortress Defense ${esc(P.version)} · catalogo generato da <code>tests/tools/catalog.js</code> · se un file del gioco cambia, <code>npm test</code> lo rigenera e un test controlla che non sia indietro.</footer>
+<footer>Planet Defense ${esc(P.version)} · catalogo generato da <code>tests/tools/catalog.js</code> · se un file del gioco cambia, <code>npm test</code> lo rigenera e un test controlla che non sia indietro.</footer>
 <iframe id="atelier" title="atelier" aria-hidden="true" style="position:absolute;left:-10000px;top:0;width:720px;height:1280px;border:0;visibility:hidden"></iframe>
 <script type="text/plain" id="src-css">${P.css}</script>
 <script type="text/plain" id="src-markup">${P.markup}</script>

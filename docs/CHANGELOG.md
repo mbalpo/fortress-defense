@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.13.1 — il gioco si chiama Planet Defense
+
+Richiesta di Marco: rinominare il gioco da Fortress Defense a Planet Defense.
+
+- **Nomi visibili**: titolo della pagina, schermata iniziale, titolo del menu (grafica classica e HD-2D), nome dell’app installata (`manifest.json`: “Planet Defense”,
+  nome breve “Planet”; su iPhone “Planet”), titolo della condivisione e nome del file del salvataggio (`planet-defense-salvataggio-AAAA-MM-GG.json`), messaggio
+  “Non è un salvataggio di Planet Defense.”, titoli di catalogo, README, CLAUDE.md, DESIGN.md, DEPLOY.md, PROGETTO-claude-ai.md, commenti in testa ai file.
+- **Restano col vecchio nome, apposta**: chiavi del localStorage (`fortress-progress-v1`, `fortress-proto-v1`, `fortress-update-reload`), `game: "fortress-defense"` e
+  prefisso `FD1:` dei salvataggi, cache del service worker `fortress-…`, `FORTRESS_DRAW`, cartella del progetto e pacchetto npm. Cambiarle farebbe perdere
+  i progressi sul telefono e rifiutare i salvataggi già esportati. Le icone non hanno scritte: invariate.
+- `APP_VERSION` e `VERSION`: 1.13.1. Sul telefono il nome sotto l’icona si aggiorna da solo (a volte dopo un po’); se no, basta reinstallare l’app.
+
+**Test**: aggiornati i testi attesi in `splash.js`, `menu.js` e `savetest.js` (titolo, messaggio di rifiuto, nome del file). `npm test`: tutti verdi.
+Schermata del menu controllata.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html e docs/catalogo-grafico-alternativo.html (titoli).
+
+Checklist: rinominare il progetto su claude.ai in “Planet Defense” e aggiornare il nome nelle istruzioni del progetto; dopo la pubblicazione, controllare il nome
+sotto l’icona sul telefono.
+
 ## 1.13.0 — grafica HD-2D nel gioco, a scelta nel menu principale
 
 Richiesta di Marco: portare la proposta HD-2D nel gioco con un’opzione per scegliere la grafica, nel menu principale.

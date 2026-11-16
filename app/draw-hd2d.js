@@ -1,6 +1,6 @@
 "use strict";
 /* =====================================================================
-   FORTRESS DEFENSE · GRAFICA HD-2D (1.13.0)
+   PLANET DEFENSE · GRAFICA HD-2D (1.13.0)
    Pixel art con luci moderne: sprite generati dal codice (griglie di caratteri o funzioni), ingranditi a 2 px logici senza smussare,
    luci additive raccolte durante il disegno della battaglia e stese alla fine, cielo stellato fino all’orizzonte, ombre a terra.
    Si sceglie nel menu principale (“Grafica: HD-2D”); la scelta vale dal caricamento successivo della pagina.
@@ -871,9 +871,9 @@ frenzyBar = function frenzyBar(k, f) {
 menuTitle = function menuTitle() {
   dim(0.62);
   ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.lineJoin = "round"; ctx.lineWidth = 6; ctx.strokeStyle = OUTLINE; ctx.strokeText("FORTRESS DEFENSE", W / 2, 72);
+  ctx.lineJoin = "round"; ctx.lineWidth = 6; ctx.strokeStyle = OUTLINE; ctx.strokeText("PLANET DEFENSE", W / 2, 72);
   const tg = ctx.createLinearGradient(0, 58, 0, 84); tg.addColorStop(0, "#fff6d6"); tg.addColorStop(0.5, "#ffd166"); tg.addColorStop(1, "#e08a3a");
-  ctx.fillStyle = tg; ctx.fillText("FORTRESS DEFENSE", W / 2, 70);
+  ctx.fillStyle = tg; ctx.fillText("PLANET DEFENSE", W / 2, 70);
   light(W / 2, 70, 120, "#ffb347", 0.35);
 };
 // carte: il pallino del tipo illumina la carta

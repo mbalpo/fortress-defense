@@ -35,7 +35,7 @@ const tick = () => new Promise((r) => setTimeout(r, 30));
   console.log("Invio ed E con il pannello aperto non avviano partite:", g.panelOpen(), ok(g.panelOpen()));
   g.click("btnExport"); await tick();
   const fileText = await g.cap.blob.text(); const fileData = JSON.parse(fileText);
-  console.log("esporta file →", g.cap.name, "| livelli", fileData.progress.cleared, "| nemici", fileData.progress.seen.length, "| impostazioni", JSON.stringify(fileData.settings), "(niente aim) |", g.msg(), ok(/^fortress-salvataggio-\d{4}-\d\d-\d\d\.json$/.test(g.cap.name) && fileData.progress.cleared === 23 && !("aim" in fileData.settings) && fileData.settings.targeting === "highest"));
+  console.log("esporta file →", g.cap.name, "| livelli", fileData.progress.cleared, "| nemici", fileData.progress.seen.length, "| impostazioni", JSON.stringify(fileData.settings), "(niente aim) |", g.msg(), ok(/^planet-defense-salvataggio-\d{4}-\d\d-\d\d\.json$/.test(g.cap.name) && fileData.progress.cleared === 23 && !("aim" in fileData.settings) && fileData.settings.targeting === "highest"));
   g.click("btnCopy"); await tick();
   console.log("copia codice →", g.cap.clip.slice(0, 16) + "… (" + g.cap.clip.length + " caratteri) |", g.msg(), ok(g.cap.clip.startsWith("FD1:")));
   g.key("Escape"); g.frame();
@@ -46,7 +46,7 @@ const tick = () => new Promise((r) => setTimeout(r, 30));
   const h = game({});
   h.tap(180, 580); h.frame();
   const before = h.w.localStorage.getItem("fortress-progress-v1");
-  for (const [label, text, expect] of [["testo qualsiasi", "ciao", "leggibile"], ["altro gioco", JSON.stringify({ game: "altro", version: 1 }), "Non è un salvataggio di Fortress"], ["codice troncato", g.cap.clip.slice(0, 40), "non è valido"], ["versione futura", JSON.stringify({ game: "fortress-defense", version: 9, progress: { cleared: 3 } }), "non supportata"], ["vuoto", "", "niente da importare"]]) {
+  for (const [label, text, expect] of [["testo qualsiasi", "ciao", "leggibile"], ["altro gioco", JSON.stringify({ game: "altro", version: 1 }), "Non è un salvataggio di Planet"], ["codice troncato", g.cap.clip.slice(0, 40), "non è valido"], ["versione futura", JSON.stringify({ game: "fortress-defense", version: 9, progress: { cleared: 3 } }), "non supportata"], ["vuoto", "", "niente da importare"]]) {
     h.d.getElementById("codeBox").value = text; h.click("btnPaste");
     const m = h.msg(), conf = !h.d.getElementById("confirmBox").hidden;
     console.log(("rifiuto: " + label).padEnd(28), "→", m, ok(m.includes(expect) && !conf));

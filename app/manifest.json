@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Fortress Defense",
-  "short_name": "Fortress",
+  "name": "Planet Defense",
+  "short_name": "Planet",
   "description": "Difendi la cupola dalle ondate di meteoriti e navi aliene.",
   "lang": "it",
   "start_url": "./",
