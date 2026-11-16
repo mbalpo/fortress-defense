@@ -345,21 +345,21 @@ const TURRET_GRID = {
     ".kddccccccccbbk.",
     "kd3ccc3cc3ccc3ak",
     "kkkkkkkkkkkkkkkk"],
-  aero: [                        // mortaio: canna corta che si allarga in alto, bordo nel colore del tipo
+  aero: [                       // cannone: qui solo la base girevole; la canna (aeroBarrel) ruota verso il bersaglio
     "................",
     "................",
     "................",
-    "kkkkkkkkkkkkkkkk",
-    "k54444444443332k",
-    "kkkkkkkkkkkkkkkk",
-    ".kedddcccccbbbk.",
-    ".kedddcccccbbbk.",
-    "..kedcccccbbak..",
-    "..kedcccccbbak..",
-    "...kdccccbbak...",
-    "...kkkkkkkkkk...",
-    "..kcyccccccybk..",
-    ".kdccccccccccbk.",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "....kkkkkkkk....",
+    "...kdddcccbbk...",
+    "..kdeddccccbbk..",
+    "..k3333333332k..",
+    ".kddcyccccycbbk.",
     ".kbbbbbbbbbbbak.",
     "kkkkkkkkkkkkkkkk"],
   thunder: [                     // traliccio con le croci; la sfera in cima si disegna a parte e crepita
@@ -466,7 +466,7 @@ const TURRET_GRID = {
     "kkkkkkkkkkkkkkkk"],
 };
 function turretSprite(id, c) { return gridSprite("t:" + id + ":" + c, TURRET_GRID[id], turretPal(c)); }
-function hdTurret(id, x, g, c) {
+function hdTurret(id, x, g, c, s) {
   groundShadow(x + 3, g - 1, 15, 0.45);
   blit(turretSprite(id, c), x, g, 8, 16);
   const a = ctx.globalAlpha;
@@ -479,7 +479,7 @@ function hdTurret(id, x, g, c) {
       ctx.fillRect(Math.round((x + Math.cos(ang) * rr) / PX) * PX - 1, Math.round((g - 19 + Math.sin(ang) * rr * 0.9) / PX) * PX - 1, PX, PX);
     }
     ctx.globalAlpha = a; light(x, g - 19, 26, c, 0.7 * a);
-  } else hdTurretExtra(id, x, g, c, a);
+  } else hdTurretExtra(id, x, g, c, a, s);
 }
 // HD-2D: quadratino allineato alla griglia dei pixel
 function pxDot(x, y, col, a) { if (a != null) ctx.globalAlpha = a; ctx.fillStyle = col; ctx.fillRect(Math.round(x / PX) * PX, Math.round(y / PX) * PX, PX, PX); }
@@ -494,9 +494,25 @@ function pixelOrb(x, y, R, col, t) {
   for (let k = 0; k < 3; k++) { const an = hash2(k, t0) * 6.2832, d = (R + 1.5 + hash2(k + 5, t0)) * PX; pxDot(x + Math.cos(an) * d, y + Math.sin(an) * d, "#fff6b0", a * 0.8); }
   ctx.globalAlpha = a;
 }
+// canna dell’Aeroblast in N direzioni, ridisegnata a pixel per ognuna (non ruotata come immagine): culatta, canna, freno di bocca nel colore del tipo;
+// la luce resta fissa in alto a sinistra mentre la canna gira
+function aeroBarrel(c, fr, N) {
+  const a = fr / N * 6.2832, ca = Math.cos(a), sa = Math.sin(a), P = ramp(c), M = [METAL.a, METAL.b, METAL.c, METAL.d, METAL.e];
+  return procSprite("aeroBarrel:" + c + ":" + fr + ":" + N, 35, 35, (i, j) => {
+    const dx = i - 17, dy = j - 17, u = dx * ca + dy * sa, v = -dx * sa + dy * ca;
+    const hw = u < -3.5 || u > 14.2 ? 0 : u < 1.5 ? 3.4 : u < 11 ? 2.4 : 3.1;
+    if (Math.abs(v) > hw) return null;
+    if (u > 13.3 && Math.abs(v) < 1.3) return "#0a0418";                         // bocca
+    const nx = -sa * v / hw, ny = ca * v / hw, lam = -(nx * 0.6 + ny * 0.8) * 0.75 + 0.15 + (u < 1.2 ? -0.15 : 0);
+    const k = lam > 0.55 ? 4 : lam > 0.2 ? 3 : lam > -0.15 ? 2 : lam > -0.5 ? 1 : 0;
+    if (u > 11 && u < 12.4) return P[Math.min(5, k + 1)];                          // fascia del freno di bocca
+    if (u > 5 && u < 5.8) return M[Math.max(0, k - 1)];                            // anello a metà canna
+    return M[k];
+  });
+}
 const DISR_DRONE = ["...k...", "..k5k..", ".k453k.", "k45332k", ".k322k.", "..k2k..", "...k..."];
 // parti animate delle torrette della fase 2 (droni, sfere, fiamme, api, cariche) e le loro luci
-function hdTurretExtra(id, x, g, c, a) {
+function hdTurretExtra(id, x, g, c, a, s) {
   if (id === "disr") {
     for (const s of [-1, 1]) {
       const dy = Math.sin(clock * 2.6 + s) * 1.6;
@@ -504,7 +520,23 @@ function hdTurretExtra(id, x, g, c, a) {
       light(x + s * 8, g - 21 + dy, 14, c, 0.6 * a);
     }
     light(x, g - 15, 10, c, 0.5 * a);
-  } else if (id === "aero") { light(x - 9, g - 7, 8, "#ffd27a", 0.6 * a); light(x + 9, g - 7, 8, "#ffd27a", 0.6 * a); light(x, g - 22, 18, c, 0.3 * a); }
+  } else if (id === "aero") {                  // canna che ruota verso il bersaglio e rincula quando spara
+    let ang = -Math.PI / 2 + 0.6 * Math.sin(clock * 0.9), rec = 0;   // nelle tessere del catalogo (senza torretta) la canna oscilla
+    if (s) {
+      const dt = s.__t == null ? 0 : clamp(clock - s.__t, 0, 0.1); s.__t = clock;
+      const t = pickTargets({ x: s.x, y: s.y - 8 }, rangeOf(s), 1)[0];   // lo stesso nemico che il prossimo colpo prende di mira
+      const want = t ? clamp(Math.atan2(t.y - (g - 12), t.x - x), -Math.PI + 0.35, -0.35) : s.__aim == null ? -Math.PI / 2 : s.__aim;
+      s.__aim = s.__aim == null ? want : s.__aim + (want - s.__aim) * Math.min(1, dt * 8);
+      if (s.__cd != null && s.cd > s.__cd + 0.2) s.__rec = 1;            // il tempo di ricarica è risalito: ha appena sparato
+      s.__cd = s.cd; s.__rec = Math.max(0, (s.__rec || 0) - dt * 5);
+      ang = s.__aim; rec = s.__rec;
+    }
+    const N = 48, fr = ((Math.round(ang / 6.2832 * N) % N) + N) % N, back = rec * 3;
+    blit(aeroBarrel(c, fr, N), x - Math.cos(ang) * back, g - 12 - Math.sin(ang) * back, 17, 17);
+    blit(procSprite("aeroCap", 5, 5, (i, j) => { const d = Math.hypot(i - 2, j - 2); return d > 2.4 ? null : i + j < 3 ? METAL.e : i + j < 5 ? METAL.d : METAL.b; }), x, g - 12, 3.5, 3.5);
+    if (rec > 0.3) { const mx = x + Math.cos(ang) * 30, my = g - 12 + Math.sin(ang) * 30; pixelOrb(mx, my, 2, "#fff6b0", clock); light(mx, my, 26, "#ffd27a", rec); }
+    light(x - 9, g - 5, 8, "#ffd27a", 0.6 * a); light(x + 9, g - 5, 8, "#ffd27a", 0.6 * a);
+  }
   else if (id === "thunder") { pixelOrb(x, g - 25, 3, c, clock); light(x, g - 25, 30 + 4 * Math.sin(clock * 23), c, 0.85 * a); }
   else if (id === "beam") { const f = 0.7 + 0.3 * Math.sin(clock * 6); pxDot(x - 1, g - 27, "#ffffff", a); ctx.globalAlpha = a; light(x - 1, g - 26, 22 * f, c, 0.9 * a); }
   else if (id === "wheel") {
@@ -624,7 +656,7 @@ const TURRET_ART = {
   sky(x, g, c) { hdTurret("sky", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   laser(x, g, c) { hdTurret("laser", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   disr(x, g, c) { hdTurret("disr", x, g, c); },   // HD-2D: sprite in TURRET_GRID
-  aero(x, g, c) { hdTurret("aero", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  aero(x, g, c, s) { hdTurret("aero", x, g, c, s); },   // s: la torretta, per la direzione della canna (assente nelle tessere)   // HD-2D: sprite in TURRET_GRID
   thunder(x, g, c) { hdTurret("thunder", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   beam(x, g, c) { hdTurret("beam", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   wheel(x, g, c) { hdTurret("wheel", x, g, c); },   // HD-2D: sprite in TURRET_GRID
@@ -634,7 +666,7 @@ const TURRET_ART = {
   vortex(x, g, c) { hdTurret("vortex", x, g, c); },   // HD-2D: sprite in TURRET_GRID
 };
 function drawTurret(s) {
-  TURRET_ART[s.id](s.x, GROUND_Y, TYPES[s.def.type].color);
+  TURRET_ART[s.id](s.x, GROUND_Y, TYPES[s.def.type].color, s);
   txt("L" + s.level + (s.done ? " ★" : " " + s.used + "/3"), s.x, GROUND_Y + 18, 9, s.done ? "#ffd166" : "#9fb4d9", "center", "700");
   const b = BEHAV[s.id]; if (b.draw) b.draw(s);
 }

@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 2: Aeroblast a cannone girevole (il gioco non cambia)
+
+Richiesta di Marco: l’Aeroblast più simile a un cannone che ruota secondo la direzione del colpo. Aspetto **[Claude]**.
+
+- Base girevole fissa (`TURRET_GRID.aero`) e canna a parte (`aeroBarrel`): culatta, canna con un anello, freno di bocca nel colore del tipo, bocca scura;
+  ridisegnata a pixel in 48 direzioni (non ruotata come immagine), con la luce sempre in alto a sinistra.
+- **Direzione**: la logica non la tiene, quindi il disegno chiede a `pickTargets` (solo lettura) lo stesso nemico che il prossimo colpo prende di mira e la canna
+  ci gira verso con un po’ di morbidezza (tra 20° e 160° sopra l’orizzonte); senza bersagli resta dov’era. **Rinculo**: quando il tempo di ricarica risale
+  la canna arretra di 3 px e dalla bocca esce una vampata con la luce. Lo stato del disegno sta nella torretta in campi `__aim`, `__rec`, `__cd`, `__t`.
+- `drawTurret` passa la torretta come quarto argomento di `TURRET_ART` (le altre lo ignorano); nelle tessere del catalogo, senza torretta, la canna oscilla.
+- `tests/tools/hd2d-shots.js`: `hd2d-aero-zoom.png` (6 direzioni e il rinculo, ingranditi) e `hd2d-aero-1..3.png` (in battaglia).
+
+**Test**: `npm test` tutti verdi (il gioco non cambia); catalogo alternativo rigenerato senza errori.
+
+Catalogo grafico: non cambiato; docs/catalogo-grafico-alternativo.html rigenerato.
+
+Checklist: nessuna voce nuova.
+
 ## Proposta grafica HD-2D, fase 2: torrette e nemici rimasti (il gioco non cambia)
 
 Fase 2 di 4. Aspetto **[Claude]**.

@@ -34,7 +34,7 @@ console.log("Schermate HD-2D in " + OUT + ":");
 function battle(extra) {
   const g = game(); g.key("Enter"); g.frame();
   g.ev(`queue = []; enemies.length = 0; player.level = 2;
-    [["sky", { fire: 1, msl: 1, split1: 1 }], ["laser", { multi1: 1 }], ["vortex", { wh1: 1, wh2: 1 }]].forEach(([id, up], i) => {
+    [["sky", { fire: 1, msl: 1, split1: 1 }], ["laser", { multi1: 1 }], ["vortex", { wh1: 1, wh2: 1 }], ["aero", {}]].forEach(([id, up], i) => {
       const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); Object.assign(s.up, up); s.level = 2; slots[i] = s; });
     Object.assign(player.up, { kSky: 1, kVortex: 1, proj: 2, fan: 1 }); player.x = player.targetX = 250;
     [["drone", 90, 250], ["brute", 250, 220], ["spitter", 150, 330], ["shell", 290, 380], ["brute", 60, 420], ["drone", 210, 150], ["spitter", 300, 120], ["shell", 120, 170]]
@@ -71,3 +71,17 @@ function battle(extra) {
     TYPE_KEYS.forEach((t, i) => foe(Object.assign(bossDef(1, 5), { type: t }), 36 + i * 72, 360, 1.1, { boss: true, hp: 0.7 }));
     TYPE_KEYS.slice(0, 3).forEach((t, i) => foe(Object.assign(finalBossDef(10), { type: t }), 60 + i * 120, 520, 1, { boss: true, hp: 0.7 }));`);
   g.save("sprite-2.png"); }
+
+// Aeroblast: la canna segue il bersaglio e rincula al colpo (tre momenti, ingranditi)
+{ const g = battle(); const shots = [];
+  for (const n of [40, 25, 25]) { g.frame(n); shots.push(n); g.ev("alerts.length = 0;"); g.save("aero-" + shots.length + ".png"); } }
+// Aeroblast ingrandito ×4 in 6 direzioni (e uno con il rinculo e la vampata)
+{ const g = battle(); g.frame(5);
+  g.ev(`state = "pause"; ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); ctx.fillStyle = "#1b2238"; ctx.fillRect(0, 0, W, H);
+    const s = slots[3], c = TYPES.physical.color;
+    [-2.79, -2.4, -1.9, -1.57, -1.0, -0.35].forEach((a, i) => { ctx.save(); ctx.translate(60 + (i % 3) * 120, 150 + Math.floor(i / 3) * 170); ctx.scale(3.5, 3.5);
+      const f = { def: s.def, up: {}, st: {}, x: 0, y: GROUND_Y + 14, cd: 1, __aim: a, __t: clock, __cd: 1, __rec: 0 }; ctx.translate(0, -GROUND_Y);
+      const keep = pickTargets; pickTargets = () => []; DRAW.TURRET_ART.aero(0, GROUND_Y, c, f); pickTargets = keep; ctx.restore(); });
+    ctx.save(); const s2 = slots[3]; ctx.translate(180, 530); ctx.scale(3.5, 3.5); ctx.translate(0, -GROUND_Y);
+    const keep = pickTargets; pickTargets = () => []; DRAW.TURRET_ART.aero(0, GROUND_Y, c, { def: s2.def, up: {}, st: {}, x: 0, y: GROUND_Y + 14, cd: 1, __aim: -1.2, __t: clock, __cd: 1, __rec: 0.8 }); pickTargets = keep; ctx.restore();`);
+  g.save("aero-zoom.png"); }
