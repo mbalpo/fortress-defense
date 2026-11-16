@@ -1,7 +1,7 @@
 "use strict";
 /* =====================================================================
    FORTRESS DEFENSE · DISEGNO · PROPOSTA HD-2D (fase 1)
-   Copia di app/draw.js con un altro aspetto: pixel art con luci moderne, ombre a terra e profondità di campo. NON è usata dal gioco:
+   Copia di app/draw.js con un altro aspetto: pixel art con luci moderne, cielo stellato fino all’orizzonte, ombre a terra. NON è usata dal gioco:
    la carica solo il catalogo alternativo (npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html) e tests/tools/hd2d-shots.js.
    Fase 1: campo di battaglia, Sky Guard, Laser, Gravity Vortex Gun, guardiano, navicella, asteroide, meteora, frammento roccioso,
    missili, Area infuocata, varchi, raggi laser, esplosioni, colpi del guardiano. Il resto è ancora il disegno di app/draw.js.
@@ -99,12 +99,12 @@ function poly(pts, fill, stroke, lw) {
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1.2; ctx.stroke(); }
 }
 
-/* ---------- HD-2D (proposta): pixel art a PX px logici, luci additive, ombre a terra, profondità di campo ----------
+/* ---------- HD-2D (proposta): pixel art a PX px logici, luci additive, ombre a terra, foschia all’orizzonte ----------
    Gli sprite sono griglie di caratteri (una lettera = un colore della tavolozza) o generati da una funzione (rocce, navicelle);
    si disegnano una volta in un canvas piccolo e poi si ingrandiscono senza smussare. Le luci si raccolgono mentre si disegna il mondo
    e si stendono tutte insieme alla fine (somma additiva); fuori dal mondo (tessere del catalogo) si stendono subito. */
 const PX = 2;
-const HD = { lights: null, bg: null, blur: null, blur2: null };
+const HD = { lights: null, bg: null };
 function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; }
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return h.length === 4 ? [((n >> 8) & 15) * 17, ((n >> 4) & 15) * 17, (n & 15) * 17] : [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function mix(a, b, t) { const A = hexRgb(a), B = hexRgb(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); }
@@ -158,91 +158,58 @@ function drawLights(list) {
   }
   ctx.restore();
 }
-// ombra a terra (il mondo è un plastico visto di sbieco: chi vola proietta l’ombra più in basso)
+// ombra a terra di chi poggia sulla piattaforma (torrette, guardiano)
 function groundShadow(x, y, rx, a) {
   ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = "#05030f";
   ctx.beginPath(); ctx.ellipse(x, y, rx, rx * 0.36, 0, 0, 6.2832); ctx.fill(); ctx.restore();
 }
 
-/* ---------- plastico di fondo: cielo lontano, orizzonte, piana in prospettiva (disegnato una volta) ---------- */
-const HORIZON = 86;
+/* ---------- fondo: cielo stellato fino all’orizzonte, basso dietro la cupola (disegnato una volta) ----------
+   il giocatore guarda l’orizzonte: i nemici precipitano dal cielo verso la fortezza; lontano, creste e piana velate dalla foschia */
+const HORIZON = 562;
 function hdBackground() {
   if (HD.bg) return HD.bg;
-  const w = W / PX, h = H / PX, c = mkCanvas(w, h), g = c.getContext("2d"), hz = HORIZON / PX;
+  const w = W / PX, h = H / PX, c = mkCanvas(w, h), g = c.getContext("2d"), hz = Math.round(HORIZON / PX);
   const put = (i, j, col) => { g.fillStyle = col; g.fillRect(i, j, 1, 1); };
-  // cielo: fasce a gradini (niente sfumature continue: è pixel art), nebulosa a retino
-  const sky = ["#07061a", "#0b0a26", "#120f33", "#1a1542", "#251c52", "#33245e"];
-  for (let j = 0; j < hz; j++) for (let i = 0; i < w; i++) put(i, j, sky[Math.max(0, dith(i, j, j / hz, sky.length))]);
-  for (let j = 0; j < hz; j++) for (let i = 0; i < w; i++) {
-    const n = Math.sin(i * 0.09 + j * 0.05) + Math.sin(i * 0.031 - j * 0.12 + 1.3) + hash2(i, j) * 0.6;
-    if (n > 1.55 && (i + j) % 2 === 0) put(i, j, "#3a2a6a"); else if (n > 1.3 && (i + j) % 4 === 0) put(i, j, "#2c2160");
+  // cielo: dal blu notte in alto al viola caldo dell’orizzonte, a retino (niente sfumature continue: è pixel art)
+  const sky = ["#05041a", "#080724", "#0c0a2e", "#110e38", "#181242", "#21174c", "#2c1d55", "#3a235c", "#4c2c62", "#5e3566"];
+  for (let j = 0; j < hz; j++) for (let i = 0; i < w; i++) put(i, j, sky[Math.max(0, dith(i, j, Math.pow(j / hz, 1.6), sky.length))]);
+  // via lattea: fascia diagonale di nebulosa a retino, con grumi più chiari
+  for (let j = 0; j < hz - 20; j++) for (let i = 0; i < w; i++) {
+    const d = Math.abs((j - 40) - (i - 20) * 1.15) / 26, n = Math.sin(i * 0.21 + j * 0.13) * 0.3 + Math.sin(i * 0.07 - j * 0.11 + 2) * 0.3 + hash2(i, j) * 0.5;
+    const v = 1 - d + n * 0.5;
+    if (v > 0.95 && (i + j) % 2 === 0) put(i, j, "#4a3a86"); else if (v > 0.7 && (i + j) % 2 === 0) put(i, j, "#2e2468"); else if (v > 0.45 && (i * 3 + j) % 4 === 0) put(i, j, "#231c58");
   }
-  // pianeta ad anelli in alto a destra
-  const pcx = 140, pcy = 13, pr = 9;
-  for (let j = -pr; j <= pr; j++) for (let i = -pr; i <= pr; i++) {
-    const d = Math.hypot(i, j); if (d > pr) continue;
-    const l = (-i * 0.6 - j * 0.5) / pr + 0.35 * Math.sqrt(1 - (d / pr) ** 2);
-    put(pcx + i, pcy + j, l > 0.55 ? "#e9b98a" : l > 0.25 ? "#c98a62" : l > 0 ? "#8d5a4e" : "#4a2c3e");
-    if (Math.abs(j + i * 0.1 - 2) < 0.6 && l > 0) put(pcx + i, pcy + j, "#a86a52");
+  // stelle: tante piccole, qualcuna a croce
+  for (let k = 0; k < 230; k++) {
+    const i = Math.floor(hash2(k, 1) * w), j = Math.floor(Math.pow(hash2(k, 2), 1.25) * (hz - 14)), r = hash2(k, 3);
+    put(i, j, r > 0.8 ? "#e6ecff" : r > 0.45 ? "#9a9ad0" : "#5c5a98");
+    if (r > 0.96) for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) put(i + a, j + b, "#7f86c8");
   }
-  for (let i = -16; i <= 16; i++) { const j = Math.round(i * -0.28); if (Math.hypot(i, j) > pr - 1 || j > 0) { put(pcx + i, pcy + j, "#d9c3a0"); if (Math.abs(i) < 14) put(pcx + i, pcy + j + 1, "#8f7a6a"); } }
-  // stelle fisse (quelle che brillano le aggiunge il disegno di ogni fotogramma)
-  for (let k = 0; k < 70; k++) { const i = Math.floor(hash2(k, 1) * w), j = Math.floor(hash2(k, 2) * (hz - 8)); put(i, j, hash2(k, 3) > 0.7 ? "#cfd8ff" : "#6f6fa8"); }
-  // creste lontane, velate dalla foschia
+  // pianeta ad anelli (alto a destra, sotto l’HUD) e una luna piccola a sinistra
+  const planet = (pcx, pcy, pr, cols, ring) => {
+    for (let j = -pr; j <= pr; j++) for (let i = -pr; i <= pr; i++) {
+      const d = Math.hypot(i, j); if (d > pr) continue;
+      const l = (-i * 0.6 - j * 0.5) / pr + 0.35 * Math.sqrt(1 - (d / pr) ** 2), k = l > 0.55 ? 0 : l > 0.25 ? 1 : l > 0 ? 2 : 3;
+      put(pcx + i, pcy + j, cols[k]); if (ring && Math.abs(j + i * 0.1 - 2) < 0.6 && l > 0) put(pcx + i, pcy + j, cols[2]);
+    }
+    if (ring) for (let i = -pr - 7; i <= pr + 7; i++) { const j = Math.round(i * -0.28); if (Math.hypot(i, j) > pr - 1 || j > 0) { put(pcx + i, pcy + j, "#d9c3a0"); if (Math.abs(i) < pr + 5) put(pcx + i, pcy + j + 1, "#8f7a6a"); } }
+  };
+  planet(138, 72, 11, ["#e9b98a", "#c98a62", "#8d5a4e", "#4a2c3e"], true);
+  planet(26, 150, 4, ["#d6dcf0", "#a3a9c8", "#6d6f98", "#3a3a66"], false);
+  // creste lontane all’orizzonte, due piani velati dalla foschia (più chiaro = più lontano)
   for (let i = 0; i < w; i++) {
-    const m1 = Math.round(hz - 4 - 5 * Math.abs(Math.sin(i * 0.045 + 0.4)) - 3 * hash2(Math.floor(i / 3), 9));
-    const m2 = Math.round(hz - 1 - 3 * Math.abs(Math.sin(i * 0.11 + 2)) - hash2(Math.floor(i / 2), 4) * 2);
-    for (let j = m1; j < hz; j++) put(i, j, "#3b2f6b");
-    for (let j = m2; j < hz; j++) put(i, j, "#4a3c78");
+    const m1 = Math.round(hz - 6 - 8 * Math.abs(Math.sin(i * 0.035 + 0.4)) - 4 * hash2(Math.floor(i / 3), 9));
+    const m2 = Math.round(hz - 2 - 4 * Math.abs(Math.sin(i * 0.09 + 2)) - hash2(Math.floor(i / 2), 4) * 2);
+    for (let j = m1; j < hz; j++) put(i, j, j === m1 ? "#7a5a8c" : "#5d4479");
+    for (let j = m2; j < hz; j++) put(i, j, j === m2 ? "#5a4a84" : "#3e3468");
   }
-  // piana: dalla foschia lilla all’orizzonte al blu scuro vicino a noi, a fasce
-  const land = ["#5a4b86", "#4d4380", "#413a74", "#363267", "#2d2b5c", "#26264f", "#202245", "#1b1d3c"];
-  for (let j = hz; j < h; j++) for (let i = 0; i < w; i++) put(i, j, land[Math.max(0, dith(i, j, Math.pow((j - hz) / (h - hz), 0.7), land.length))]);
-  // retino di sabbia e sassi, più radi e piccoli verso l’orizzonte
-  for (let j = hz; j < h; j++) for (let i = 0; i < w; i++) {
-    const t = (j - hz) / (h - hz), r = hash2(i, j);
-    if (r > 0.993 - t * 0.01) put(i, j, "#5d5891"); else if (r < 0.008 + t * 0.012) put(i, j, "#15162f");
-  }
-  // linee di prospettiva che convergono verso il punto di fuga (sottili, a tratti)
-  const vx = w / 2, vy = hz - 40;
-  for (let k = -7; k <= 7; k++) {
-    const x1 = vx + k * 34;
-    for (let j = hz + 2; j < h; j += 1) { const t = (j - vy) / (h - vy), i = Math.round(vx + (x1 - vx) * t); if ((j >> 1) % 4 !== 0) continue; put(i, j, rgba("#6a6fb0", 0.18)); }
-  }
-  // crateri: ovali schiacciati (più schiacciati e piccoli lontano), bordo chiaro verso la luce (in alto a sinistra)
-  const craters = [[30, 70, 9], [118, 95, 12], [70, 140, 8], [150, 160, 10], [22, 200, 13], [95, 215, 7], [140, 250, 9], [50, 262, 6], [160, 60, 5], [80, 58, 4], [12, 120, 5]];
-  for (const [cx, cy, cr] of craters) {
-    const t = (cy - hz) / (h - hz), ry = cr * (0.32 + 0.3 * t), rx = cr * (0.7 + 0.3 * t);
-    for (let j = -Math.ceil(ry) - 1; j <= ry + 1; j++) for (let i = -Math.ceil(rx) - 1; i <= rx + 1; i++) {
-      const d = Math.hypot(i / rx, j / ry);
-      if (d <= 0.78) put(cx + i, cy + j, j < 0 ? "#141331" : "#1f1f46");
-      else if (d <= 1.05) put(cx + i, cy + j, j < 0 || i < -rx * 0.5 ? "#16163a" : "#625c98");
-    }
-  }
-  // massi con l’ombra verso il basso a destra
-  const rocks = [[56, 110, 3], [128, 132, 4], [36, 168, 3], [105, 182, 5], [165, 205, 4], [62, 236, 3], [125, 268, 4], [8, 240, 3]];
-  for (const [rx0, ry0, rr0] of rocks) {
-    for (let i = -rr0; i <= rr0 + 3; i++) put(rx0 + i, ry0 + 1, "#121230");
-    for (let j = -rr0; j <= 0; j++) for (let i = -rr0; i <= rr0; i++) {
-      if (Math.hypot(i, j * 1.3) > rr0) continue;
-      put(rx0 + i, ry0 + j, i + j < -rr0 * 0.6 ? "#8d86bd" : i + j < 0 ? "#615b95" : "#3c3970");
-    }
-  }
+  // bagliore dell’orizzonte e piana vicina (sotto la cupola, fino alla piattaforma)
+  for (let i = 0; i < w; i++) if ((i + hz) % 2 === 0) put(i, hz - 1, "#8c5f80");
+  const land = ["#3a3166", "#2e2858", "#25214a", "#1d1a3e"];
+  for (let j = hz; j < h; j++) for (let i = 0; i < w; i++) put(i, j, land[Math.max(0, dith(i, j, (j - hz) / Math.max(1, (GROUND_Y / PX) - hz), land.length))]);
+  for (let j = hz; j < h; j++) for (let i = 0; i < w; i++) if (hash2(i, j) > 0.97) put(i, j, "#4a4280");
   HD.bg = c; return c;
-}
-// profondità di campo: la fascia in alto (lontana) sfuma, sempre di più verso il bordo (sfocatura ottenuta rimpicciolendo e ingrandendo)
-function tiltShift(top, fade) {
-  const cv0 = ctx.canvas, k = cv0.height / H, bw = cv0.width, bh = Math.round((top + fade) * k), s = 5;
-  if (!HD.blur || HD.blur.width !== Math.ceil(bw / s) || HD.blur.height !== Math.ceil(bh / s)) { HD.blur = mkCanvas(bw / s, bh / s); HD.blur2 = mkCanvas(bw / s, bh / s); }
-  const b = HD.blur, g = b.getContext("2d");
-  g.globalCompositeOperation = "source-over"; g.imageSmoothingEnabled = true; g.clearRect(0, 0, b.width, b.height);
-  g.drawImage(cv0, 0, 0, bw, bh, 0, 0, b.width, b.height);
-  const g2 = HD.blur2.getContext("2d"); g2.clearRect(0, 0, b.width, b.height); g2.drawImage(b, 0, 0); g.clearRect(0, 0, b.width, b.height);   // seconda passata: un pixel in più di sfocatura
-  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { g.globalAlpha = 0.25; g.drawImage(HD.blur2, dx, dy); } g.globalAlpha = 1;
-  const m = g.createLinearGradient(0, 0, 0, b.height);
-  m.addColorStop(0, "rgba(0,0,0,1)"); m.addColorStop(top / (top + fade), "rgba(0,0,0,0.85)"); m.addColorStop(1, "rgba(0,0,0,0)");
-  g.globalCompositeOperation = "destination-in"; g.fillStyle = m; g.fillRect(0, 0, b.width, b.height); g.globalCompositeOperation = "source-over";
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(b, 0, 0, b.width, b.height, 0, 0, bw, bh); ctx.restore();
 }
 // atmosfera: velo freddo in alto, calore in basso, angoli più scuri
 function grade() {
@@ -378,36 +345,39 @@ function hdTurret(id, x, g, c) {
   }
 }
 // guardiano visto di spalle: cannone alzato a destra, mano sinistra che lo afferra, zaino con la luce
+// generata a strati (dal fondo: braccio sinistro, busto, gambe, testa, collo, braccio destro, cannone, mano): l’avambraccio sinistro passa
+// dietro la testa e ricompare con la mano sull’attacco del cannone; le due braccia hanno lo stesso spessore; il collo stacca la testa dalle spalle
 const GUARD_GRID = [
-  "...........gg...",
-  "..........kGGk..",
-  "..........kMmk..",
-  "..........kMmk..",
-  "..........kMmk..",
-  ".........kkMmkk.",
-  "........kHkmVmmk",
-  ".......kSkkmmmmk",
-  "......kSk..kmmk.",
-  ".....kSk....kSk.",
-  "....kSk.....kSk.",
-  "...kSk..kkkkkSk.",
-  "...kSk.kTHTTkSk.",
-  "...kSkkTHHTTTkSk",
-  "....kSkVTTTTVkSk",
-  "....kSkkTTTTkSk.",
-  "....kkSSkkkkSSk.",
-  "....kSSSbbbbSSk.",
-  "....kSHSbLLbSSk.",
-  "....kSHSbbbbSSk.",
-  "....kSHSSSSSsSk.",
+  "............gg..",
+  "...........kGGk.",
+  "...........kMmk.",
+  "...........kMmk.",
+  "...........kMmk.",
+  "........kk.kMmk.",
+  ".......kHSkmmmmk",
+  "......kSSSkmVmmk",
+  ".....kSkkkkmmmmk",
+  "....kSkTTTkkkkk.",
+  "...kHkTHHTTkHSk.",
+  "..kHSkVHTTVkHSk.",
+  ".kHSkkVTTTVkHSk.",
+  ".kHSk.kTTTkkHSk.",
+  ".kHSk.kssskkHSk.",
+  "..kHSkkssskkHSk.",
+  "..kHkHSSSSSkHSk.",
+  "...kkHSbbbbSkk..",
+  "....kHSbLLbSsk..",
+  "....kHSbbbbSsk..",
+  "....kHSbbbbSsk..",
+  "....kHSSSSSSsk..",
+  "....kHSSSSSSsk..",
   "....kttttttttk..",
-  ".....kSSkkSsk...",
-  ".....kSHk.kSsk..",
-  ".....kSHk.kSsk..",
-  ".....kSSk.kSsk..",
-  "....kbbbk.kbbbk.",
-  "....kbbbbkkbbbbk",
-  ".....kkkk..kkkk."];
+  ".....kHSkkSsk...",
+  ".....kHSkkSsk...",
+  ".....kHSkkSsk...",
+  ".....kHSkkSsk...",
+  "....kbbbkkbbbk..",
+  ".....kkk..kkk..."];
 function guardPal(f) {
   return f ? { k: OUTLINE, s: "#4a2620", S: "#7a3f2c", H: "#b0643c", t: "#ffb36a", T: "#8a4a32", V: "#ffd166", m: "#3a2a2a", M: "#8c6a5a", G: "#fff6d0", g: "#ffb347", b: "#24141a", L: "#ffd166" }
            : { k: OUTLINE, s: "#1d2a52", S: "#2f4785", H: "#4f6fb8", t: "#d5dce8", T: "#3d5a9a", V: "#7fe8ff", m: "#252c44", M: "#6f7fa6", G: "#ffffff", g: "#7fe8ff", b: "#141a30", L: "#7fe8ff" };
@@ -477,7 +447,7 @@ function drawPlayer() {
 function guardianShape(x, mirror) {               // HD-2D: sprite GUARD_GRID (tavolozza blu, arancione in frenesia)
   const f = frenzyOn(player), a = ctx.globalAlpha, d = mirror ? -1 : 1;
   if (!mirror) groundShadow(x + 3, GROUND_Y - 1, 13, 0.45 * a);
-  blit(gridSprite("guard:" + (f ? 1 : 0), GUARD_GRID, guardPal(f)), x, GROUND_Y, 9, 29, mirror);
+  blit(gridSprite("guard:" + (f ? 1 : 0), GUARD_GRID, guardPal(f)), x, GROUND_Y, 9.5, 30, mirror);
   const glowC = f ? "#ffb347" : "#7fe8ff";
   light(x + d * GUN.dx, GROUND_Y + GUN.dy + 1, 16 + 3 * Math.sin(clock * 9), glowC, 0.8 * a);
   light(x, GROUND_Y - 20, 10, glowC, 0.5 * a);
@@ -1261,16 +1231,15 @@ function draw() {
   ctx.globalAlpha = 1;
 
   if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear" && state !== "levels" && state !== "guide") {
-    // HD-2D: plastico di fondo, terreno, effetti a terra e ombre, poi sprite; luci tutte insieme; profondità di campo e atmosfera
+    // HD-2D: cielo fino all’orizzonte, terreno, effetti a terra, poi sprite; luci tutte insieme; atmosfera
     HD.lights = [];
     blit(hdBackground(), 0, 0, 0, 0);
-    for (let k = 0; k < 14; k++) {                 // stelle che brillano nel cielo lontano
+    for (let k = 0; k < 30; k++) {                 // stelle che brillano
       const tw = Math.sin(clock * (1.5 + hash2(k, 21) * 2) + k * 1.7); if (tw < 0.4) continue;
-      ctx.fillStyle = rgba("#e8f0ff", (tw - 0.4) * 1.6); ctx.fillRect(Math.round(hash2(k, 22) * W / PX) * PX, Math.round(hash2(k, 23) * (HORIZON - 20) / PX) * PX, PX, PX);
+      ctx.fillStyle = rgba("#e8f0ff", (tw - 0.4) * 1.6); ctx.fillRect(Math.round(hash2(k, 22) * W / PX) * PX, Math.round(hash2(k, 23) * (HORIZON - 60) / PX) * PX, PX, PX);
     }
     drawGround();
     for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata, varchi) sotto i nemici
-    for (const e of enemies) if (!e.dead) groundShadow(e.x + e.def.r * 0.3, e.y + e.def.r + 10, e.def.r * 0.9, 0.28);
     drawDomeFill();
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
@@ -1280,7 +1249,7 @@ function draw() {
     drawDomeEdge();
     ctx.fillStyle = "rgba(12,8,34,0.16)"; ctx.fillRect(0, 0, W, GROUND_Y + GROUND_H);   // penombra: le luci risaltano
     const L = HD.lights; HD.lights = null; drawLights(L);
-    tiltShift(70, 120); grade(); motes();
+    grade(); motes();
     drawFortress();
     for (const f of floaters) drawFloater(f);
     ctx.globalAlpha = 1;

@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 1: ritocchi (il gioco non cambia)
+
+Osservazioni di Marco sulla prova di stile.
+
+- **Fondo**: cielo stellato fino alla base della cupola, come guardando l’orizzonte (prima una piana in prospettiva dall’alto dello schermo). Via lattea a retino,
+  230 stelle (qualcuna a croce) e 30 che brillano, pianeta ad anelli e una luna piccola; all’orizzonte, dietro la cupola, due piani di creste velate dalla foschia,
+  bagliore e un po’ di piana fino alla piattaforma.
+- **Niente ombre dei nemici**: precipitano dal cielo, non volano raso terra. Restano le ombre di torrette e guardiano sulla piattaforma.
+- **Niente sfocatura in alto** (`tiltShift` tolta): con il cielo la parte lontana è il fondo, già velato; i nemici in arrivo restano nitidi.
+- **Guardiano**: griglia rifatta a strati. Il collo stacca la testa dalle spalle; le due braccia hanno lo stesso spessore; l’avambraccio sinistro passa dietro la testa e
+  ricompare con la mano sull’attacco del cannone (prima un braccio lungo e sottile sopra la testa).
+
+**Test**: `npm test` tutti verdi (il gioco non cambia); catalogo alternativo rigenerato senza errori; schermate `hd2d-*` controllate.
+
+Catalogo grafico: non cambiato; docs/catalogo-grafico-alternativo.html rigenerato.
+
+Checklist: nessuna voce nuova.
+
 ## Proposta grafica HD-2D, fase 1 (il gioco non cambia)
 
 Richiesta di Marco: un reskin in stile HD-2D come proposta, in un catalogo a parte. Fase 1 di 4: prova di stile. Tutto l’aspetto è **[Claude]**.
