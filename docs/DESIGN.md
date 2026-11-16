@@ -55,6 +55,9 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   “proiettile” = ogni singolo proiettile. Elenco in § 8. **[deciso]** (valori **[da rivedere]**, § 10)
 - **Combo tra due torrette**: nessuna definita. **(aperto, § 11)**
 - **Combo e carte bloccate**: le combo del guardiano che richiedono la voce lv1 di una chain (Thunderbolt, Beam, Firewheel Drone, Teslacoil) possono uscire solo dopo che quella chain è stata sbloccata con i Sigilli (§ 16). Disruption Drone e Aeroblast usano una chain che resta libera. **[deciso]**
+- **Segno delle carte chain e level up** (1.12.5) **[deciso]** (Marco): sopra il pallino col numero (o la spunta della ricompensa), nel colore del tipo:
+  chain = una catena verticale per livello della chain (due affiancate al lv2, tre al lv3); level up = una freccia ^ per livello, una sotto l’altra.
+  Standard, combo e nuova torretta senza segno. Disegno **[Claude]**.
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
 

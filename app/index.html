@@ -2000,7 +2000,7 @@ function describe(opt) {
   else note = s.level < 3 ? "Porta al livello " + (s.level + 1) : "Potenziamento finale";
   if (u.prov) note += " · provvisorio";
   const lab = u.cat === "chain" ? "Chain " + u.lv : u.cat === "lu" ? "Level up " + u.lv : CAT_LABEL[u.cat];
-  return { head: d.name + " · " + lab, title: u.name, desc: u.desc, note, type: d.type };
+  return { head: d.name + " · " + lab, title: u.name, desc: u.desc, note, type: d.type, cat: u.cat, lv: u.lv };   // cat e lv: segno sopra il pallino (1.12.5)
 }
 function applyOption(opt) {
   if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = newTurret(opt.id, f); }
@@ -2438,7 +2438,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.12.4";
+const APP_VERSION = "1.12.5";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {

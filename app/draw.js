@@ -289,7 +289,10 @@ function drawFortress() {
   const frac = clamp(domeHp / domeMax, 0, 1);
   ctx.fillStyle = frac > 0.35 ? "#3fe0a0" : "#ff5a5a"; ctx.fillRect(10, y + 9, (W - 20) * frac, 8);
   ctx.strokeStyle = "#2c4272"; ctx.lineWidth = 1; ctx.strokeRect(10, y + 9, W - 20, 8);
-  txt("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13, 10, "#e8eefc", "center", "700");
+  // scritta bianca col contorno scuro: si legge anche sulla barra verde (1.12.5)
+  ctx.font = "800 10px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = "#070b16"; ctx.strokeText("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13);
+  ctx.fillStyle = "#ffffff"; ctx.fillText("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13);
   if (domeShield > 0) FX.shieldCount(W - 30, y + 13, domeShield);                // immunità accumulate (Impenetrabile)
 }
 function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, W, H); }
@@ -382,6 +385,24 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
   segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
   segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
   segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · dettagli nella pausa", "#6f82ad"]], x + 52, y + 46, 10);
+}
+// segno sopra il pallino della carta (1.12.5): chain = catene verticali affiancate (una per livello della chain),
+// level up = frecce ^ una sotto l’altra (una per livello); cx = centro del pallino, bot = sopra il pallino, c = colore del tipo
+function cardMark(o, cx, bot, c) {
+  const n = o.lv || 0; if (!n || (o.cat !== "chain" && o.cat !== "lu")) return;
+  ctx.strokeStyle = c; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (o.cat === "chain") {
+    for (let i = 0; i < n; i++) {
+      const x = cx + (i - (n - 1) / 2) * 7;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(x, bot - 3.6, 2.2, 3.4, 0, 0, 6.2832); ctx.stroke();       // anello di fronte
+      ctx.beginPath(); ctx.ellipse(x, bot - 14.4, 2.2, 3.4, 0, 0, 6.2832); ctx.stroke();
+      ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x, bot - 6.6); ctx.lineTo(x, bot - 11.4); ctx.stroke();   // anello di taglio tra i due
+    }
+  } else {
+    ctx.lineWidth = 2;
+    for (let i = 0; i < n; i++) { const y = bot - 1.5 - i * 5.5; ctx.beginPath(); ctx.moveTo(cx - 5, y); ctx.lineTo(cx, y - 4); ctx.lineTo(cx + 5, y); ctx.stroke(); }
+  }
 }
 function upText(s) {
   const parts = [];
@@ -497,6 +518,7 @@ function rewardScreen() {
   rewards.forEach((o, i) => {
     const x = 20, y = 140 + i * 122, w = 320, h = 110, c = TYPES[o.type].color;
     rr(x, y, w, h, 8); ctx.fillStyle = "rgba(18,30,58,0.92)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = c; ctx.stroke();
+    cardMark(o, x + 26, y + h / 2 - 16, c);
     disc(x + 26, y + h / 2, 13, c);
     txt("✓", x + 26, y + h / 2 + 1, 14, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22, 11, c, "left", "700");
@@ -524,6 +546,7 @@ function upgradeScreen() {
   options.forEach((opt, i) => {
     const x = 20, y = 140 + i * step, w = 320, o = describe(opt), c = TYPES[o.type].color;
     button(x, y, w, h, "", () => pick(i), { stroke: c, release: true });
+    cardMark(o, x + 26, y + h / 2 - 16, c);
     disc(x + 26, y + h / 2, 13, c);
     txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22 * k, 11, c, "left", "700");
@@ -1207,5 +1230,6 @@ const FX = {
 // quello che serve fuori: il gioco usa draw, FX, thunderDraw e teslaDraw; il catalogo anche il resto
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
   drawTurret, drawPlayer, guardianShape, drawCrosshair, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
-  menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button };
+  menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button,
+  PIECE_ART, pieceIcon, modIcon, rarColor, cardMark };
 }

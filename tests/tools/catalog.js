@@ -243,6 +243,11 @@ function tiles(M) {
     add("arte:" + id, M.turrets[id].name, `ctx.translate(0, -GROUND_Y); DRAW.drawTurret({ id: "${id}", x: 0, level: 2, used: 1, done: false, def: TURRETS["${id}"], st: {}, up: {} });`, [-22, -36, 44, 62], 3);
   add("guardiano", "Guardiano", "ctx.translate(0, -GROUND_Y); player.st.frenzyT = 0; DRAW.guardianShape(0);", [-20, -54, 40, 58], 3);
   add("guardiano-frenesia", "Guardiano in frenesia", "ctx.translate(0, -GROUND_Y); const f = player.st.frenzyT; player.st.frenzyT = 5; DRAW.guardianShape(0); player.st.frenzyT = f;", [-20, -54, 40, 58], 3);
+  // equipaggiamento del guardiano: ogni pezzo e il suo Modulo nelle 5 rarità (l’ancestrale cambia colore: tessera animata)
+  for (const [id, name] of Object.entries(M.pieces || {})) {
+    add("pezzo:" + id, name + " · 5 rarità", `[0, 1, 2, 3, 4].forEach((r) => DRAW.pieceIcon("${id}", -48 + r * 24, 0, 20, DRAW.rarColor(r)));`, [-60, -13, 120, 26], 2.5, true);
+    add("modulo:" + id, "Modulo · " + name + " · 5 rarità", `[0, 1, 2, 3, 4].forEach((r) => DRAW.modIcon("${id}", -48 + r * 24, 0, 20, DRAW.rarColor(r)));`, [-60, -13, 120, 26], 2.5, true);
+  }
   add("guardiano-clone", "Clone speculare (specchiato, trasparente)", "ctx.translate(0, -GROUND_Y); player.st.frenzyT = 0; ctx.globalAlpha = 0.45; DRAW.guardianShape(0, true); ctx.globalAlpha = 1;", [-20, -54, 40, 58], 3);
   const foe = (def, extra) => `DRAW.drawEnemy(Object.assign({ def: ${def}, x: 0, y: 0, hp: 1, maxHp: 1, flash: 0, shape: DRAW.ICON_SHAPE, rot: 0.4, boss: false }, ${JSON.stringify(extra || {})}));`;
   const ebox = (r, top) => [-(1.7 * r + 4), -(top || 2.8 * r + 6), 2 * (1.7 * r + 4), (top || 2.8 * r + 6) + 1.4 * r + 4];
@@ -313,6 +318,7 @@ function meta(P) {
     behavDraw: ev("Object.fromEntries(Object.entries(BEHAV).filter(([, b]) => b.draw).map(([k, b]) => [k, b.draw.name]))"),
     base: ev("({ BODY: DRAW.BODY, BODY2: DRAW.BODY2, DARK: DRAW.DARK })"),
     artSrc: ev("Object.fromEntries(Object.entries(DRAW.TURRET_ART).map(([k, f]) => [k, String(f)]))"),
+    pieces: ev("Object.fromEntries(PIECE_IDS.map((k) => [k, PIECES[k].name]))"), rarity: ev("RARITY.map((r) => r.name)"),
   };
   M.statusName = { slow: "Rallentamento", para: "Paralisi", weak: "Indebolimento", destr: "Distruzione (pile)", vuln: "Vulnerabilità", burn: "Bruciatura" };
   // dimensioni: si disegna ogni tessera ingrandita ×4 su sfondo trasparente e si misura la parte colorata
@@ -496,7 +502,7 @@ function page(P, M, S, T, H) {
       <li>Le modifiche si propongono come <b>funzioni di <code>app/draw.js</code></b> con la stessa firma (stessi argomenti, nessun valore di ritorno nuovo); qui solo disegno, nessuna regola di gioco. Per un proiettile nuovo: una voce in <code>FX</code>. Prestazioni: tutto si ridisegna 60 volte al secondo.</li>
     </ul>
   </section>
-  <nav><a href="#schermate">1 · Schermate</a><a href="#torrette">2 · Torrette e guardiano</a><a href="#nemici">3 · Nemici e stati</a><a href="#effetti">4 · Proiettili ed effetti</a>
+  <nav><a href="#schermate">1 · Schermate</a><a href="#torrette">2 · Torrette, guardiano, equipaggiamento</a><a href="#nemici">3 · Nemici e stati</a><a href="#effetti">4 · Proiettili ed effetti</a>
   <a href="#carte">5 · Carte</a><a href="#prova">6 · Scena di prova</a><a href="#palette">7 · Palette</a><a href="#futuro">8 · Da aggiungere</a><a href="#codice">Codice</a></nav>
 </header>
 <div class="bar" id="barra"><div>
@@ -515,7 +521,7 @@ ${scenesOf(1)}
 <div class="icons" data-voce="icone">${Object.entries(P.icons).map(([f, u]) => `<figure><img src="${u}" alt="" width="${f.includes("180") ? 90 : f.includes("192") ? 96 : 128}"><figcaption><code>${f}</code></figcaption></figure>`).join("")}</div>
 </section>
 
-<section id="torrette"><h2>2 · Torrette e guardiano</h2>
+<section id="torrette"><h2>2 · Torrette, guardiano, equipaggiamento</h2>
 <p>Ogni torretta ha una forma propria (<code>TURRET_ART</code>: x = centro, g = suolo, c = colore del tipo) su corpo <code>BODY</code>/<code>BODY2</code>; <code>drawTurret</code> aggiunge sotto il livello (“L2 1/3”, “★” al massimo).
 Dimensioni misurate sul disegno (larghezza × altezza in px logici). Proiettili ed effetti di ciascuna: § 4.</p>
 <div class="grid">${tilesOf(/^arte:|^guardiano/)}</div>
@@ -524,6 +530,14 @@ ${turretRows}
 <tr data-voce="torretta:guardiano"><td><b>Guardiano</b><br><code>player</code></td><td>${typeChip("physical")}</td><td><code>drawPlayer</code> · <code>guardianShape</code> ${dl(/^function guardianShape\(/)}<br>effetti: <code>FX.guardBullet</code>${M.fxKeys.includes("laserSpin") ? " <code>FX.laserSpin</code>" : ""} (combo)</td>
 <td>${sizeTxt("guardiano")}</td><td>${sw("#2a3f6e")} ${sw(M.types.physical.color)} · in frenesia ${sw("#6a3a2a")} ${sw("#ff9a5a")}</td></tr>
 </tbody></table>
+<h3 data-voce="equipaggiamento">Equipaggiamento del guardiano</h3>
+<p>6 pezzi (${Object.values(M.pieces || {}).join(", ")}) in 5 rarità (${(M.rarity || []).join(", ")}): il colore è quello della rarità (<code>rarColor</code>),
+l’ancestrale è iridescente e cambia colore col tempo. Icone dei pezzi <code>PIECE_ART</code> / <code>pieceIcon</code> ${dl(/^function pieceIcon\(/)}, nella schermata
+“Equipaggiamento” e nella vittoria (§ 1).</p>
+<div class="grid">${tilesOf(/^pezzo:/)}</div>
+<h3 data-voce="moduli">Moduli (chip)</h3>
+<p>Un tipo per pezzo, stesse 5 rarità. Icona a chip (<code>modIcon</code> ${dl(/^function modIcon\(/)}): piedini, nucleo del colore della rarità e iniziale del pezzo.</p>
+<div class="grid">${tilesOf(/^modulo:/)}</div>
 </section>
 
 <section id="nemici"><h2>3 · Nemici e stati</h2>
@@ -583,8 +597,6 @@ ${palette}
 <p>Posti già previsti per elementi che non hanno ancora un disegno (DESIGN.md § 13 e § 15). Quando arrivano: funzione in <code>draw.js</code>, voce qui, <code>npm run catalog</code>.</p>
 <div class="todo">
   <div data-voce="futuro:ranger"><b>Ranger</b><br>Nessun disegno ancora (§ 13).</div>
-  <div data-voce="futuro:equipaggiamento"><b>Equipaggiamento</b><br>6 pezzi: testa, armatura, guanti, stivali, arma, nucleo; 5 rarità (comune, raro, epico, leggendario, ancestrale) con un colore ciascuna, l’ancestrale iridescente. Icone dei 6 pezzi (<code>PIECE_ART</code>, sagome semplici colorate con la rarità) nella schermata “Equipaggiamento” e nella vittoria (§ 1).</div>
-  <div data-voce="futuro:moduli"><b>Moduli (chip)</b><br>Un tipo per pezzo, stesse 5 rarità. Icona a chip (<code>modIcon</code>): piedini, nucleo del colore della rarità e iniziale del pezzo (§ 1, schermata “Equipaggiamento”).</div>
 </div>
 </section>
 

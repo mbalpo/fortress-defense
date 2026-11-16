@@ -108,3 +108,11 @@ function battle(extra) {
     at(60, 560, () => ["slow", "para", "weak", "vuln", "burn", "destr"].forEach((k, i) => DRAW.statusIcon(k, i * 16 - 0, 0, DRAW.STATUS_ICONS.find((q) => q[0] === k)[2], { destrN: 3 })));
     ctx.save(); ctx.translate(0, 0); DRAW.drawEnemy({ def: ENEMY_DEFS.brute, x: 300, y: 600, hp: 0.6, maxHp: 1, flash: 0, shape: DRAW.ICON_SHAPE, rot: 0.4, boss: false, slowT: 1 }); ctx.restore();`);
   g.save("effetti.png"); }
+// segni sulle carte (1.12.5): chain lv2 e lv3, level up lv1 e lv3
+{ const g = battle(); g.frame(5);
+  g.ev(`const pick2 = (id, f) => { for (const t of [player, ...slots].filter(Boolean)) { const u = t.def.ups.find(f); if (u) return { kind: "up", who: t, up: u }; } };
+    const P = (s, f) => { const u = s.def.ups.find(f); return u && { kind: "up", who: s, up: u }; };
+    const all = [player, ...slots].filter(Boolean), find = (f) => { for (const s of all) { const o = P(s, f); if (o) return o; } };
+    options = [find((u) => u.cat === "chain" && u.lv === 2), find((u) => u.cat === "chain" && u.lv === 3), find((u) => u.cat === "lu" && u.lv === 1), find((u) => u.cat === "lu" && u.lv === 3)].filter(Boolean);
+    state = "upgrade"; alerts.length = 0;`);
+  g.frame(2); g.save("carte-segni.png"); }

@@ -3,6 +3,28 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.5 — segni sulle carte chain e level up, scritta della cupola leggibile, equipaggiamento nel catalogo
+
+Richieste di Marco, applicate al gioco e alla proposta HD-2D.
+
+- **Carte** (`cardMark`, in `upgradeScreen` e `rewardScreen`): sopra il pallino, nel colore del tipo, una catena verticale per livello della chain (affiancate) o una
+  freccia ^ per livello del level up (una sotto l’altra). `describe` passa `cat` e `lv` (solo per il disegno). Nella proposta HD-2D gli stessi segni a pixel.
+  DESIGN.md § 3: nuova voce.
+- **Barra della cupola**: “Cupola 100/100” in bianco col contorno scuro (prima bianco semplice, poco leggibile sul verde), nel gioco e nella proposta.
+- **Catalogo grafico**: equipaggiamento e Moduli escono da “8 · Da aggiungere” (resta il Ranger) e hanno la loro parte nel § 2 (“Torrette, guardiano,
+  equipaggiamento”): una tessera per pezzo e una per Modulo, ognuna nelle 5 rarità (animate per l’ancestrale iridescente). `draw.js` esporta `PIECE_ART`,
+  `pieceIcon`, `modIcon`, `rarColor`, `cardMark`. `tests/catalog.js` controlla anche pezzi e Moduli (6/6).
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.12.5.
+
+**Test**: `npm test` tutti verdi (nuovi controlli del catalogo su pezzi e Moduli). Schermate controllate: `16-carte-standard-chain-levelup.png`, `42-carte-4-rinnovo.png`
+e `hd2d-(orig-)carte-segni.png` (chain lv2 e lv3, level up lv1 e lv3, con 4 carte: il segno sta nella carta).
+
+**Misure con i bot**: non servono (solo disegno).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (sezione dell’equipaggiamento, 89 tessere); rigenerato anche docs/catalogo-grafico-alternativo.html.
+
+Checklist: nuova voce “Segni sulle carte chain e level up: da provare sul telefono”; togliere “Equipaggiamento e Moduli nel catalogo”, se c’era.
+
 ## Proposta grafica HD-2D, fase 4: HUD e schermate (il gioco non cambia)
 
 Ultima fase. Aspetto **[Claude]**. Come deciso, niente pixel art sui testi: stesso carattere, più leggibile possibile a 360 px.

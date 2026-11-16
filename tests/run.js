@@ -58,7 +58,7 @@ const T = [
     /spente le prime, nuovo impatto: 1 ✓/, /\(under\): true ✓/, /ordine di disegno: .* ✓/, /resta fuori: true ✓/, /combo nessuna .* ✓/, /combo kSky  .* ✓/,
     /combo kVortex .* ✓/, /combo kSky\+kVortex .* ✓/, /clone speculare .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
-    /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
+    /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();
