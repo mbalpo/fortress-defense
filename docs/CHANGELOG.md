@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 3: effetti e stati (il gioco non cambia)
+
+Fase 3 di 4. Aspetto **[Claude]**.
+
+- **Nuove primitive** in `docs/hd2d/draw-hd2d.js`: `pxLine` e `pxEllipse` (linee e cerchi di quadratini sulla griglia), `glowPath` (alone additivo lungo una spezzata).
+- **Effetti rifatti** (stesse firme di `FX`): fulmini (`bolt`: alone, tratto a pixel, lampo agli estremi), Sfera statica, aree (`zone`), colpi dei droni dell’Hive
+  (punto, rombo, stella), campo e Esplosione finale della Disruption (fascia a righe che scorrono, bordi tratteggiati in movimento, droni-sprite), bomba, scheggia e
+  mina dell’Aeroblast (sprite, miccia e spia che lampeggiano), sfere del Thunderbolt, raggi del Beam (come il Laser), ruota della Firewheel (raggi e bordo a pixel,
+  scia di lingue di fuoco a pixel), onda e droni dell’Hive (droni che crescono col livello, ali che sbattono), proiettile della Railgun, fulmine globulare del
+  Teslacoil (anche la carica sulla bobina), buco nero del Vortex (materia a pixel che spiraleggia dentro), anelli delle esplosioni.
+- **Cupola**: bordo a pixel doppio con un lampo che lo percorre e luci lungo il bordo, celle esagonali appena accennate che si accendono a turno; onda Repulsiva,
+  gas Congelante e bordo delle abilità a pixel.
+- **Stati**: icone a pixel 7×7 su un tondo scuro (distruzione: una riga per pila); **barra della vita** a pixel con il contorno e la riga chiara.
+- Tolta `flame` (sostituita ovunque da `pixelFlame`). `tests/tools/hd2d-shots.js`: tavola `hd2d-effetti.png`.
+
+**Test**: `npm test` tutti verdi (il gioco non cambia); catalogo alternativo rigenerato, tessere ed effetti controllati nel browser senza errori.
+
+Catalogo grafico: non cambiato; docs/catalogo-grafico-alternativo.html rigenerato.
+
+Checklist: nessuna voce nuova (resta la fase 4: HUD, numeri del danno, mirino, schermate).
+
 ## Proposta grafica HD-2D, fase 2: Aeroblast a cannone girevole (il gioco non cambia)
 
 Richiesta di Marco: l’Aeroblast più simile a un cannone che ruota secondo la direzione del colpo. Aspetto **[Claude]**.

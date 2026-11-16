@@ -85,3 +85,26 @@ function battle(extra) {
     ctx.save(); const s2 = slots[3]; ctx.translate(180, 530); ctx.scale(3.5, 3.5); ctx.translate(0, -GROUND_Y);
     const keep = pickTargets; pickTargets = () => []; DRAW.TURRET_ART.aero(0, GROUND_Y, c, { def: s2.def, up: {}, st: {}, x: 0, y: GROUND_Y + 14, cd: 1, __aim: -1.2, __t: clock, __cd: 1, __rec: 0.8 }); pickTargets = keep; ctx.restore();`);
   g.save("aero-zoom.png"); }
+// fase 3: tavola degli effetti ingranditi (×2,5), a un istante fisso
+{ const g = battle(); g.frame(5);
+  g.ev(`state = "pause"; ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); ctx.fillStyle = "#14112a"; ctx.fillRect(0, 0, W, H);
+    const Z = 2.5, at = (x, y, fn) => { ctx.save(); ctx.translate(x, y); ctx.scale(Z, Z); fn(); ctx.restore(); };
+    const pts = [{ x: -12, y: -14 }, { x: -4, y: -6 }, { x: -9, y: 1 }, { x: 3, y: 5 }, { x: 0, y: 12 }];
+    at(45, 50, () => FX.bolt({ t: 0.15 }, pts, TYPES.electric.color, 0.15, 1.5));
+    at(125, 50, () => FX.teslaOrb({ x: 0, y: 0, r: 14, t: 2, age: 0.37 }));
+    at(205, 50, () => FX.zone({ x: 0, y: 0, r: 14, t: 2 }, TYPES.electric.color));
+    at(290, 50, () => { FX.hiveShot({ lvl: 1, px: -10, py: 8, x: -10, y: 2 }); FX.hiveShot({ lvl: 2, px: 0, py: 8, x: 0, y: 2 }); FX.hiveShot({ lvl: 3, px: 11, py: 8, x: 11, y: 2 }); });
+    at(45, 135, () => { FX.aeroBomb({ x: -6, y: 0 }); FX.aeroShard({ x: 8, y: 0 }); });
+    at(125, 135, () => FX.aeroMine({ x: 0, y: 0, age: 0.1 }));
+    at(205, 135, () => FX.fieldOrb({ x: 0, y: 0 }));
+    at(290, 135, () => { FX.hiveDrone({ x: -9, y: 0, lvl: 1, kami: 0 }); FX.hiveDrone({ x: 9, y: 0, lvl: 2, kami: 1 }); });
+    at(45, 220, () => FX.railShot({ x: 0, y: 0 }, -0.8));
+    at(125, 220, () => FX.teslaBall({ x: 0, y: 0, age: 0.3 }));
+    at(205, 220, () => FX.vortex({ x: 0, y: 0, spin: 2 }, 14));
+    at(290, 220, () => FX.hiveWave({ t: 0.18 }, 0, 12, -Math.PI / 2, 22));
+    at(90, 320, () => FX.wheelDrone({ x: 10, y: 0, rot: 0.6, trail: [{ x: -26, y: 8, t: 0.5 }, { x: -16, y: 5, t: 1.1 }, { x: -5, y: 2, t: 1.7 }] }, { rad: 14, mini: false }, 2));
+    at(250, 320, () => FX.beamLinks({ links: [[{ x: 0, y: 16 }, { x: 0, y: -8 }], [{ x: 0, y: -8 }, { x: -16, y: -2 }], [{ x: 0, y: -8 }, { x: 14, y: -16 }]] }, { x: 0, y: 16 }));
+    ctx.save(); ctx.translate(0, 360); FX.disrField({ y: 30, age: 1, t: 2 }, 180, 30, 14); FX.disrBlast({ t: 0.2 }, 70, 14); ctx.restore();
+    at(60, 560, () => ["slow", "para", "weak", "vuln", "burn", "destr"].forEach((k, i) => DRAW.statusIcon(k, i * 16 - 0, 0, DRAW.STATUS_ICONS.find((q) => q[0] === k)[2], { destrN: 3 })));
+    ctx.save(); ctx.translate(0, 0); DRAW.drawEnemy({ def: ENEMY_DEFS.brute, x: 300, y: 600, hp: 0.6, maxHp: 1, flash: 0, shape: DRAW.ICON_SHAPE, rot: 0.4, boss: false, slowT: 1 }); ctx.restore();`);
+  g.save("effetti.png"); }

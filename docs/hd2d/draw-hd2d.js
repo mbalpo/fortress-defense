@@ -5,7 +5,8 @@
    la carica solo il catalogo alternativo (npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html) e tests/tools/hd2d-shots.js.
    Fase 1: campo di battaglia, Sky Guard, Laser, Gravity Vortex Gun, guardiano, navicella, asteroide, meteora, frammento roccioso,
    missili, Area infuocata, varchi, raggi laser, esplosioni, colpi del guardiano. Fase 2: le altre 8 torrette, cristallo-cometa, nave aliena e nave madre.
-   Il resto (effetti delle fasi 3-4, stati, HUD, schermate) è ancora il disegno di app/draw.js.
+   Fase 3: tutti gli altri effetti di FX, sfere del Thunderbolt, fulmine globulare, cupola, icone degli stati, barra della vita.
+   Il resto (fase 4: HUD, numeri del danno, mirino, schermate) è ancora il disegno di app/draw.js.
    Tutto quello che si vede sul canvas: primitive (testi, pulsanti, forme), torrette (TURRET_ART), guardiano,
    nemici e indicatori di stato, proiettili ed effetti (FX), HUD, avvisi e schermate (menu, carte, pausa, vittoria, sconfitta).
    Lo usano il gioco (app/index.html) e il catalogo grafico (docs/catalogo-grafico.html, npm run catalog).
@@ -57,13 +58,25 @@ function drawDomeFill() {
   g.addColorStop(1, "rgba(63,224,255," + (0.05 + 0.13 * frac + domeFlash * 0.5) + ")");
   ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI, Math.PI * 2); ctx.closePath();
   ctx.fillStyle = g; ctx.fill();
+  // HD-2D: celle esagonali appena accennate che si accendono a turno, come una rete di energia
+  const t0 = Math.floor(clock * 3), col = frac > 0.35 ? "#7fe8ff" : "#ff8080";
+  for (let k = 0; k < 40; k++) {
+    const an = Math.PI + hash2(k, 51) * Math.PI, d = 0.35 + 0.6 * hash2(k, 52), on = hash2(k, t0) > 0.75;
+    if (!on) continue;
+    const hx = DOME.cx + Math.cos(an) * DOME.rx * d, hy = DOME.cy + Math.sin(an) * DOME.ry * d;
+    pxEllipse(hx, hy, 4, 3.5, col, 0.18 + 0.2 * frac, 0, null);
+  }
+  ctx.globalAlpha = 1;
 }
-function drawDomeEdge() {
-  const frac = clamp(domeHp / domeMax, 0, 1);
-  ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI, Math.PI * 2);
-  ctx.lineWidth = 2 + domeFlash * 8;
-  ctx.strokeStyle = frac > 0.35 ? "rgba(127,232,255," + (0.35 + 0.4 * frac + domeFlash) + ")" : "rgba(255,110,110," + (0.5 + domeFlash) + ")";
-  ctx.stroke();
+function drawDomeEdge() {                         // HD-2D: bordo a pixel doppio, un lampo che lo percorre, luci lungo il bordo
+  const frac = clamp(domeHp / domeMax, 0, 1), col = frac > 0.35 ? "#7fe8ff" : "#ff6e6e";
+  pxEllipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, col, Math.min(1, 0.45 + 0.4 * frac + domeFlash), Math.PI, Math.PI * 2);
+  pxEllipse(DOME.cx, DOME.cy, DOME.rx - 2, DOME.ry - 2, col, Math.min(1, 0.15 + 0.15 * frac + domeFlash), Math.PI, Math.PI * 2, 2);
+  const sweep = Math.PI + ((clock * 0.18) % 1) * Math.PI;
+  pxEllipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, "#ffffff", 0.9, sweep, sweep + 0.12);
+  ctx.globalAlpha = 1;
+  light(DOME.cx + Math.cos(sweep) * DOME.rx, DOME.cy + Math.sin(sweep) * DOME.ry, 22, col, 0.6);
+  for (let i = 1; i < 6; i++) { const t = Math.PI + i * Math.PI / 6; light(DOME.cx + Math.cos(t) * DOME.rx, DOME.cy + Math.sin(t) * DOME.ry, 16 + domeFlash * 40, col, 0.25 + domeFlash); }
   if (AB.gasT > 0) FX.domeGas(AB.gasH, AB.gasT);
   // abilità attive: bordo colorato (riflettente argento, ustionante arancione, potenziante oro, rigenerazione verde)
   const tint = AB.reflectT > 0 ? "#e8eefc" : AB.burnT > 0 ? "#ff8a3d" : AB.powerT > 0 ? "#ffd166" : AB.regenT > 0 ? "#3fe0a0" : null;
@@ -87,12 +100,6 @@ function drawGround() {                          // HD-2D: piattaforma di lastre
     ctx.setLineDash([2, 2]); ctx.lineWidth = 1; ctx.strokeStyle = "#5a6aa0"; ctx.strokeRect(SLOT_X[i] - 10, GROUND_Y - 8, 20, 8); ctx.setLineDash([]);
   }
   for (const x of [8, W - 8]) light(x, GROUND_Y + 4, 26, "#ffb070", 0.5);
-}
-// lingua di fuoco: base in (x, y), alta h, larga 2w; arancione fuori, giallo dentro; a = trasparenza
-function flame(x, y, h, w, a) {
-  const tongue = (hh, ww, c) => { ctx.beginPath(); ctx.moveTo(x - ww, y); ctx.quadraticCurveTo(x - ww * 0.7, y - hh * 0.55, x, y - hh); ctx.quadraticCurveTo(x + ww * 0.7, y - hh * 0.55, x + ww, y);
-    ctx.quadraticCurveTo(x, y + ww * 0.8, x - ww, y); ctx.fillStyle = c; ctx.fill(); };
-  ctx.globalAlpha = 0.85 * a; tongue(h, w, "#ff6a2a"); ctx.globalAlpha = 0.9 * a; tongue(h * 0.6, w * 0.55, "#ffd166"); ctx.globalAlpha = 1;
 }
 function poly(pts, fill, stroke, lw) {
   ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath();
@@ -693,21 +700,23 @@ const STATUS_ICONS = [
   ["destr", (e) => e.destrN > 0 && e.destrT > 0, "#8aa0c8"],
   ["vuln", (e) => e.vulnT > 0, "#ff4d6d"], ["burn", (e) => e.burnT > 0, "#ff7a3d"],
 ];
+// HD-2D: icone a pixel 7×7 su un tondo scuro col contorno; distruzione: una riga ondulata per pila (fino a 5)
+const STATUS_GRID = {
+  slow: [".......", "w.....w", ".w...w.", "..w.w..", "w..w..w", ".w...w.", "..w.w.."],
+  para: ["....ww.", "...ww..", "..ww...", ".wwwww.", "...ww..", "..ww...", ".ww...."],
+  weak: ["..www..", ".w...w.", "w.....w", "w.www.w", "w.....w", ".w...w.", "..www.."],
+  vuln: ["...w...", "..www..", ".w.w.w.", "wwwwwww", ".w.w.w.", "..www..", "...w..."],
+  burn: ["...w...", "..ww...", "..ww.w.", ".wwwww.", ".wwYww.", ".wYYYw.", "..www.."],
+};
 function statusIcon(kind, x, y, c, e) {
-  disc(x, y, kind === "destr" ? 7.5 : 6.5, "rgba(7,11,22,0.78)");
-  ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 1.7; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.beginPath();
-  if (kind === "slow") { ctx.moveTo(x - 3.5, y - 2); ctx.lineTo(x, y + 2.5); ctx.lineTo(x + 3.5, y - 2); ctx.stroke(); }
-  else if (kind === "para") { ctx.moveTo(x + 1.5, y - 4.5); ctx.lineTo(x - 2.5, y + 0.5); ctx.lineTo(x + 0.5, y + 0.5); ctx.lineTo(x - 1.5, y + 4.5); ctx.lineTo(x + 2.5, y - 0.5); ctx.lineTo(x - 0.5, y - 0.5); ctx.closePath(); ctx.fill(); }
-  else if (kind === "weak") { ctx.arc(x, y, 3.8, 0, 6.2832); ctx.moveTo(x - 2, y); ctx.lineTo(x + 2, y); ctx.stroke(); }
-  else if (kind === "vuln") { ctx.arc(x, y, 3.2, 0, 6.2832); ctx.moveTo(x, y - 5); ctx.lineTo(x, y + 5); ctx.moveTo(x - 5, y); ctx.lineTo(x + 5, y); ctx.stroke(); }
-  else if (kind === "destr") {                   // distruzione: una linea ondulata per pila (fino a 5)
-    const n = Math.min(5, e.destrN), sp = n > 3 ? 2.3 : 2.9, y0 = y - (n - 1) * sp / 2;
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < n; i++) { const yy = y0 + i * sp; ctx.moveTo(x - 5, yy); for (let k = 1; k <= 8; k++) ctx.lineTo(x - 5 + k * 1.25, yy + Math.sin(k * 1.25) * 1.3); }
-    ctx.stroke();
+  blit(procSprite("statusBadge:" + (kind === "destr" ? 1 : 0), kind === "destr" ? 11 : 9, kind === "destr" ? 11 : 9, (i, j) => {
+    const R = kind === "destr" ? 5 : 4; return Math.hypot(i - R, j - R) <= R + 0.3 ? "#0b0820" : null; }), x, y, kind === "destr" ? 6 : 5, kind === "destr" ? 6 : 5);
+  if (kind === "destr") {
+    const n = Math.min(5, e.destrN), y0 = y - (n - 1) * PX;
+    for (let i = 0; i < n; i++) for (let k = -3; k <= 3; k++) pxDot(x + k * PX - 1, y0 + i * PX * 2 + ((k + i) % 2 ? 0 : -PX * 0.5), c, 1);
+    ctx.globalAlpha = 1; return;
   }
-  else { ctx.moveTo(x, y - 4.8); ctx.quadraticCurveTo(x + 4.6, y, x, y + 4.6); ctx.quadraticCurveTo(x - 4.6, y, x, y - 4.8); ctx.fill(); }
+  blit(gridSprite("status:" + kind + ":" + c, STATUS_GRID[kind], { w: c, Y: "#fff6b0" }), x, y, 3.5, 3.5);
 }
 function drawStatus(e) {
   const act = STATUS_ICONS.filter((t) => t[1](e)); if (!act.length) return;
@@ -782,8 +791,12 @@ function drawEnemy(e) {
   }
   if (e.hp < e.maxHp || e.boss) {
     const w = r * 2, by = y - r * (look === "shard" ? 1.05 : 1) - 8;
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, by, w, 3);
-    ctx.fillStyle = TYPES[e.def.type].color; ctx.fillRect(x - r, by, w * clamp(e.hp / e.maxHp, 0, 1), 3);
+    // HD-2D: barra a pixel con il contorno, il fondo scuro e la riga chiara in alto
+    const bx = Math.round((x - r) / PX) * PX, bw = Math.round(w / PX) * PX, bY = Math.round(by / PX) * PX, fw = Math.round(bw * clamp(e.hp / e.maxHp, 0, 1) / PX) * PX, tc = TYPES[e.def.type].color;
+    ctx.fillStyle = OUTLINE; ctx.fillRect(bx - 1, bY - 1, bw + 2, PX * 2 + 2);
+    ctx.fillStyle = "#2a2040"; ctx.fillRect(bx, bY, bw, PX * 2);
+    ctx.fillStyle = mix(tc, "#171338", 0.35); ctx.fillRect(bx, bY, fw, PX * 2);
+    ctx.fillStyle = mix(tc, "#fffbea", 0.35); ctx.fillRect(bx, bY, fw, PX);
   }
   drawStatus(e);
 }
@@ -1544,26 +1557,36 @@ function pixelFlame(x, y, h, w, a, seed) {
   ctx.globalAlpha = 1;
 }
 // fulmine globulare: alone tremolante, nucleo chiaro e piccoli archi che si staccano dalla superficie (niente Math.random: solo funzione del tempo)
-function ballLightning(x, y, r, age) {
-  const fl = 0.75 + 0.25 * Math.sin(age * 43) * Math.sin(age * 17 + 1);
-  disc(x, y, r * 2.3, TYPES.electric.color, 0.10 * fl);
-  disc(x, y, r * 1.5, TYPES.electric.color, 0.28 * fl);
-  ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.2; ctx.lineCap = "round";
-  for (let k = 0; k < 4; k++) {
-    const a0 = age * (k % 2 ? 5 : -4) + k * 1.571, len = r * (1.5 + 0.7 * Math.sin(age * 29 + k * 3));
-    ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(age * 23 + k));
-    ctx.beginPath(); ctx.moveTo(x + Math.cos(a0) * r * 0.6, y + Math.sin(a0) * r * 0.6);
-    for (let i = 1; i <= 3; i++) {
-      const rr = r * 0.6 + (len - r * 0.6) * i / 3, aa = a0 + 0.35 * Math.sin(age * 61 + i * 2.3 + k);
-      ctx.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  disc(x, y, r * 0.95, "#fff6b0", 0.9); disc(x, y, r * 0.5, "#ffffff");
+// HD-2D: linea e cerchio fatti di quadratini sulla griglia dei pixel
+function pxLine(x1, y1, x2, y2, col, a) {
+  const n = Math.max(1, Math.round(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)) / PX));
+  if (a != null) ctx.globalAlpha = a; ctx.fillStyle = col;
+  for (let i = 0; i <= n; i++) ctx.fillRect(Math.round((x1 + (x2 - x1) * i / n) / PX) * PX, Math.round((y1 + (y2 - y1) * i / n) / PX) * PX, PX, PX);
 }
-function thunderDraw(s) {
-  for (const o of s.st.sph || []) { disc(o.x, o.y, 9, TYPES.electric.color, 0.25); disc(o.x, o.y, 5, "#fff6b0"); }
+function pxEllipse(x, y, rx, ry, col, a, a0, a1, gap) {
+  const n = Math.max(8, Math.round((a1 == null ? 6.2832 : a1 - a0) * Math.max(rx, ry) / PX)), s0 = a0 || 0, span = a1 == null ? 6.2832 : a1 - a0;
+  if (a != null) ctx.globalAlpha = a; ctx.fillStyle = col;
+  for (let i = 0; i < n; i++) { if (gap && i % gap === 0) continue; const t = s0 + span * i / n; ctx.fillRect(Math.round((x + Math.cos(t) * rx) / PX) * PX, Math.round((y + Math.sin(t) * ry) / PX) * PX, PX, PX); }
+}
+// alone additivo lungo una spezzata (fulmini, raggi del Beam)
+function glowPath(pts, color, w, a) {
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = color;
+  for (const [lw, al] of [[w * 4, 0.08], [w * 2, 0.2]]) { ctx.globalAlpha = al * a; ctx.lineWidth = lw; ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke(); }
+  ctx.restore();
+}
+// fulmine globulare a pixel (Teslacoil: proiettile, carica sulla bobina): sfera che crepita e archi a zig-zag che si staccano
+function ballLightning(x, y, r, age) {
+  const R = Math.max(1, Math.round(r / PX)), a = ctx.globalAlpha, t0 = Math.floor(age * 18);
+  pixelOrb(x, y, R, TYPES.electric.color, age);
+  for (let k = 0; k < 3; k++) {
+    if (hash2(k, t0) < 0.35) continue;
+    const an = hash2(k + 4, t0) * 6.2832, l = r * (1.6 + hash2(k + 8, t0)), mx = x + Math.cos(an + 0.4) * l * 0.55, my = y + Math.sin(an + 0.4) * l * 0.55;
+    pxLine(x + Math.cos(an) * r, y + Math.sin(an) * r, mx, my, "#fff6b0", a); pxLine(mx, my, x + Math.cos(an) * l, y + Math.sin(an) * l, "#ffe14d", a);
+  }
+  ctx.globalAlpha = a; light(x, y, r * 4, TYPES.electric.color, 0.8 * a);
+}
+function thunderDraw(s) {                         // Thunderbolt · sfere sulla barriera
+  for (const o of s.st.sph || []) { pixelOrb(o.x, o.y, 3, TYPES.electric.color, clock + o.x); light(o.x, o.y, 26, TYPES.electric.color, 0.7); }
 }
 function teslaDraw(s) {
   if (s.st.charge > 0) { const k = 1 - s.st.charge / (s.st.chargeT || 0.7); ballLightning(s.x, s.y - 20, 2 + 4 * k, s.st.charge * 3); }
@@ -1572,39 +1595,35 @@ function teslaDraw(s) {
 // o = l’entità; gli altri argomenti sono i valori che l’entità non tiene in sé (posizione fissa, colore, durata…)
 const FX = {
   ring(o, x, y, r1, color, life) {               // anello che si stringe e svanisce (esplosioni, impatti); HD-2D: lampo e schegge a pixel
-    const k = clamp(o.t / life, 0, 1); ctx.globalAlpha = k; ctx.strokeStyle = color; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(x, y, r1 * (1 - k * 0.9), 0, 6.2832); ctx.stroke();
+    const k = clamp(o.t / life, 0, 1), rr = r1 * (1 - k * 0.9);
+    pxEllipse(x, y, rr, rr, color, k); if (rr > 6) pxEllipse(x, y, rr - PX, rr - PX, "#fff3c0", k * 0.5, 0, null, 2);
+    ctx.globalAlpha = k;
     for (let i = 0; i < 8; i++) {
       const a = i * 0.785 + x * 0.1, d = r1 * (0.3 + (1 - k) * 0.9);
       ctx.fillStyle = i % 2 ? color : "#fff3c0"; ctx.fillRect(Math.round((x + Math.cos(a) * d) / PX) * PX, Math.round((y + Math.sin(a) * d) / PX) * PX, PX, PX);
     }
     ctx.globalAlpha = 1; light(x, y, r1 * 1.8, color, k * k);
   },
-  bolt(o, pts, color, life, w) {                 // fulmine a zig-zag
-    ctx.globalAlpha = clamp(o.t / life, 0, 1); ctx.strokeStyle = color; ctx.lineWidth = w || 2; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.stroke(); ctx.globalAlpha = 1;
+  bolt(o, pts, color, life, w) {                 // fulmine a zig-zag; HD-2D: alone additivo, tratto a pixel con il nucleo chiaro, lampo alle estremità
+    const a = clamp(o.t / life, 0, 1);
+    glowPath(pts, color, (w || 2) * 1.6, a);
+    for (let i = 1; i < pts.length; i++) pxLine(pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y, i % 2 ? "#ffffff" : color, a);
+    ctx.globalAlpha = 1; light(pts[pts.length - 1].x, pts[pts.length - 1].y, 22, color, a); light(pts[0].x, pts[0].y, 14, color, 0.5 * a);
   },
-  teslaOrb(o) {                                  // Teslacoil · Sfera statica: fulmine globulare grande quanto l’area, trasparente (non copre i nemici)
-    const k = Math.min(1, o.t / 0.5), age = o.age, r = o.r, x = o.x, y = o.y, c = TYPES.electric.color;
+  teslaOrb(o) {                                  // Teslacoil · Sfera statica: area elettrica trasparente (non copre i nemici); HD-2D: bordo a pixel che pulsa, archi a pixel, nucleo
+    const k = Math.min(1, o.t / 0.5), age = o.age, r = o.r, x = o.x, y = o.y, c = TYPES.electric.color, t0 = Math.floor(age * 16);
     const fl = 0.75 + 0.25 * Math.sin(age * 43) * Math.sin(age * 17 + 1);
-    disc(x, y, r, c, 0.07 * fl * k);                                     // alone tremolante, appena velato
-    disc(x, y, r * 0.55, c, 0.06 * fl * k);
-    ctx.globalAlpha = 0.45 * fl * k; ctx.strokeStyle = c; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke();
-    ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.2; ctx.lineCap = "round";
-    for (let j = 0; j < 6; j++) {                                        // archi dal nucleo verso il bordo, che girano e tremano
-      const a0 = age * (j % 2 ? 3 : -2.5) + j * 1.047, len = r * (0.75 + 0.25 * Math.sin(age * 29 + j * 3));
-      ctx.globalAlpha = (0.35 + 0.45 * Math.abs(Math.sin(age * 23 + j))) * k;
-      ctx.beginPath(); ctx.moveTo(x + Math.cos(a0) * 4, y + Math.sin(a0) * 4);
+    disc(x, y, r, c, 0.05 * fl * k);
+    pxEllipse(x, y, r, r, c, 0.55 * fl * k, 0, null, 3);
+    for (let j = 0; j < 5; j++) {                // archi dal nucleo verso il bordo, che cambiano forma 16 volte al secondo
+      const a0 = age * (j % 2 ? 3 : -2.5) + j * 1.257; let px = x + Math.cos(a0) * 4, py = y + Math.sin(a0) * 4;
       for (let i = 1; i <= 4; i++) {
-        const rr = 4 + (len - 4) * i / 4, aa = a0 + 0.3 * Math.sin(age * 61 + i * 2.3 + j);
-        ctx.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
+        const rr = 4 + (r * 0.85 - 4) * i / 4, aa = a0 + (hash2(i + j * 5, t0) - 0.5) * 0.6, nx = x + Math.cos(aa) * rr, ny = y + Math.sin(aa) * rr;
+        pxLine(px, py, nx, ny, i < 3 ? "#fff6b0" : c, (0.4 + 0.5 * hash2(j, t0)) * k); px = nx; py = ny;
       }
-      ctx.stroke();
     }
-    ctx.globalAlpha = 1;
-    disc(x, y, 4, "#fff6b0", 0.55 * k); disc(x, y, 2, "#ffffff", 0.8 * k);   // nucleo piccolo e semitrasparente
+    ctx.globalAlpha = 1; pixelOrb(x, y, 1, "#fff6b0", age);
+    light(x, y, r * 1.6, c, 0.45 * k * fl);
   },
   fireField(o) {                                 // Sky Guard · Area infuocata; HD-2D: brace a terra (ovale in prospettiva), lingue di fuoco a pixel, scintille, luce calda
     const fade = Math.min(1, o.t / 0.5, o.age / 0.15), r = o.r, x = o.x, y = o.y, ry = r * 0.62;
@@ -1635,17 +1654,19 @@ const FX = {
     const fl = 0.85 + 0.15 * Math.sin(o.age * 13) * Math.sin(o.age * 7 + 1);
     light(x, y - 4, r * 2.4 * fl, "#ff7a3d", 0.75 * fade); light(x, y - 6, r * 1.1, "#ffd27a", 0.5 * fade * fl);
   },
-  hiveShot(o) {                                  // Hive · colpo del drone: lv1 punto viola, lv2 rombo più grande e chiaro, lv3 stella rosa con alone
-    const c = ["#b07cff", "#d9a4ff", "#ff9be6"][o.lvl - 1], r = [3.2, 4, 4.8][o.lvl - 1];
-    glow(o.px, o.py, o.x, o.y, c, r * 0.9, 0.7);
-    if (o.lvl === 1) disc(o.x, o.y, r, c);
-    else if (o.lvl === 2) poly([[o.x, o.y - r * 1.3], [o.x + r, o.y], [o.x, o.y + r * 1.3], [o.x - r, o.y]], c, "#ffffff", 1);
-    else { disc(o.x, o.y, r * 1.8, c, 0.3); const pts = []; for (let i = 0; i < 10; i++) { const a = i * 0.6283 - 1.5708, rr2 = i % 2 ? r * 0.5 : r * 1.3; pts.push([o.x + Math.cos(a) * rr2, o.y + Math.sin(a) * rr2]); } poly(pts, c, "#ffffff", 1); }
+  hiveShot(o) {                                  // Hive · colpo del drone: lv1 punto viola, lv2 rombo più grande e chiaro, lv3 stella rosa; HD-2D: a pixel con la scia e la luce
+    const c = ["#b07cff", "#d9a4ff", "#ff9be6"][o.lvl - 1];
+    pxLine(o.px, o.py, o.x, o.y, c, 0.5); ctx.globalAlpha = 1;
+    const G = [["kk", "kk"], [".k.", "kwk", ".k."], ["..k..", ".kwk.", "kwwwk", ".kwk.", "..k.."]][o.lvl - 1];
+    const sp = gridSprite("hiveShot:" + o.lvl, G, { k: c, w: "#ffffff" });
+    blit(sp, o.x, o.y, sp.width / 2, sp.height / 2);
+    light(o.x, o.y, 8 + o.lvl * 4, c, 0.8);
   },
-  zone(o, color) {                               // area a terra che dura
-    ctx.globalAlpha = 0.22 * Math.min(1, o.t / 0.5); ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 0.6 * Math.min(1, o.t / 0.5); ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
+  zone(o, color) {                               // area che dura; HD-2D: velo a retino e bordo a pixel che gira
+    const a = Math.min(1, o.t / 0.5);
+    disc(o.x, o.y, o.r, color, 0.12 * a);
+    pxEllipse(o.x, o.y, o.r, o.r, color, 0.7 * a, clock, clock + 6.2832, 4);
+    ctx.globalAlpha = 1; light(o.x, o.y, o.r * 1.3, color, 0.35 * a);
   },
   missile(o, mini) {                             // Sky Guard · missile; HD-2D: sprite a pixel, scia di fumo, fiamma in coda che illumina
     const ca = Math.cos(o.a), sa = Math.sin(o.a), L = mini ? 5 : 8;
@@ -1675,83 +1696,104 @@ const FX = {
   laserSpin(o, rays) {                           // combo Laser del guardiano · laser rotante
     for (const r of rays) for (const g of o.segs(r)) hdBeam(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1);
   },
-  disrField(o, x0, y0, hh) {                     // Disruption Drone · due droni volano ai lati e tra loro si forma il campo
-    const k = clamp(o.age / 0.4, 0, 1), a = clamp(o.t / 0.6, 0, 1);
+  disrField(o, x0, y0, hh) {                     // Disruption Drone · due droni volano ai lati e tra loro si forma il campo; HD-2D: fascia a righe che scorrono, bordi a pixel
+    const k = clamp(o.age / 0.4, 0, 1), a = clamp(o.t / 0.6, 0, 1), c = TYPES.force.color;
     if (k >= 1) {
-      const f = clamp((o.age - 0.4) / 0.2, 0, 1) * a;
-      ctx.globalAlpha = 0.2 * f; ctx.fillStyle = TYPES.force.color; ctx.fillRect(0, o.y - hh, W, hh * 2);
-      ctx.globalAlpha = 0.8 * f; ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(0, o.y - hh); ctx.lineTo(W, o.y - hh); ctx.moveTo(0, o.y + hh); ctx.lineTo(W, o.y + hh); ctx.stroke();
+      const f = clamp((o.age - 0.4) / 0.2, 0, 1) * a, off = Math.floor(o.age * 30) % 6;
+      ctx.globalAlpha = 0.12 * f; ctx.fillStyle = c; ctx.fillRect(0, o.y - hh, W, hh * 2);
+      ctx.globalAlpha = 0.22 * f;
+      for (let yy = o.y - hh + off; yy < o.y + hh; yy += 6) ctx.fillRect(0, Math.round(yy / PX) * PX, W, PX);   // righe che scorrono
+      const sh = Math.floor(o.age * 40) % 8;
+      for (const yy of [o.y - hh, o.y + hh]) for (let xx = -8 + sh; xx < W; xx += 8) { ctx.globalAlpha = f; ctx.fillStyle = (xx / 8 | 0) % 2 ? "#ffffff" : c; ctx.fillRect(Math.round(xx / PX) * PX, Math.round(yy / PX) * PX, PX * 2, PX); }
       ctx.globalAlpha = 1;
+      for (let xx = 30; xx < W; xx += 75) light(xx, o.y, hh * 2.2, c, 0.35 * f);
     }
     for (const tx of [14, W - 14]) {
       const px = x0 + (tx - x0) * k, py = y0 + (o.y - y0) * k;
       ctx.globalAlpha = k >= 1 ? a : 1;
-      ctx.beginPath(); ctx.moveTo(px, py - 7); ctx.lineTo(px + 7, py); ctx.lineTo(px, py + 7); ctx.lineTo(px - 7, py); ctx.closePath();
-      ctx.fillStyle = TYPES.force.color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.stroke();
-      ctx.globalAlpha = 1;
+      blit(gridSprite("disrDrone:" + c, DISR_DRONE, turretPal(c)), px, py, 3.5, 3.5);
+      ctx.globalAlpha = 1; light(px, py, 16, c, 0.7 * (k >= 1 ? a : 1));
     }
   },
-  disrBlast(o, y, hh) {                          // Disruption Drone · Esplosione finale: lampo su tutto il campo
-    ctx.globalAlpha = 0.5 * clamp(o.t / 0.35, 0, 1); ctx.fillStyle = "#e6d4ff"; ctx.fillRect(0, y - hh, W, hh * 2); ctx.globalAlpha = 1;
+  disrBlast(o, y, hh) {                          // Disruption Drone · Esplosione finale: lampo su tutto il campo; HD-2D: lampo, schegge a pixel e luce
+    const a = clamp(o.t / 0.35, 0, 1);
+    ctx.globalAlpha = 0.35 * a; ctx.fillStyle = "#e6d4ff"; ctx.fillRect(0, y - hh, W, hh * 2);
+    for (let i = 0; i < 30; i++) pxDot(hash2(i, 1) * W, y + (hash2(i, 2) - 0.5) * hh * 2 * (1.6 - a), i % 3 ? "#ffffff" : TYPES.force.color, a);
+    ctx.globalAlpha = 1; for (let xx = 40; xx < W; xx += 70) light(xx, y, hh * 3, "#e6d4ff", a);
   },
-  aeroBomb(o) {                                  // Aeroblast · bomba
-    disc(o.x, o.y, 4.6, "#c7d1e6"); ctx.fillStyle = "#26345c"; ctx.fillRect(o.x - 4.6, o.y - 1, 9.2, 2); disc(o.x, o.y - 5.4, 1.4, "#ffb347");
+  aeroBomb(o) {                                  // Aeroblast · bomba; HD-2D: sprite a pixel con la miccia che sfavilla
+    blit(procSprite("aeroBomb", 7, 7, (i, j) => { const dx = i - 3, dy = j - 3; if (Math.hypot(dx, dy) > 3.3) return null; if (j === 4) return "#3a4a78";
+      const l = -dx * 0.5 - dy * 0.6; return l > 1.2 ? METAL.e : l > 0 ? METAL.d : l > -1.4 ? METAL.c : METAL.b; }), o.x, o.y, 4, 4);
+    pxDot(o.x, o.y - 8, Math.floor(clock * 20) % 2 ? "#ffd166" : "#ffffff", 1); ctx.globalAlpha = 1; light(o.x, o.y - 8, 12, "#ffb347", 0.8);
   },
-  aeroShard(o) {                                 // Aeroblast · scheggia della salva
-    poly([[o.x, o.y - 3], [o.x + 2.4, o.y + 2], [o.x - 2.4, o.y + 2]], TYPES.physical.color);
+  aeroShard(o) {                                 // Aeroblast · scheggia della salva; HD-2D: triangolino a pixel
+    blit(gridSprite("aeroShard", [".k.", "kwk", "kwk"], { k: OUTLINE, w: TYPES.physical.color }), o.x, o.y, 1.5, 1.5);
   },
-  aeroMine(o) {                                  // Aeroblast · mina con le punte
-    ctx.strokeStyle = "#8a97b8"; ctx.lineWidth = 1.4; ctx.beginPath();
-    for (let i = 0; i < 4; i++) { const a = i * 0.7854; ctx.moveTo(o.x - Math.cos(a) * 12, o.y - Math.sin(a) * 12); ctx.lineTo(o.x + Math.cos(a) * 12, o.y + Math.sin(a) * 12); }
-    ctx.lineWidth = 2.2; ctx.stroke(); disc(o.x, o.y, 8, "#26345c"); disc(o.x, o.y, 4.4, TYPES.physical.color, 0.6 + 0.4 * Math.sin(o.age * 6));   // doppia dalla 1.12.0
+  aeroMine(o) {                                  // Aeroblast · mina con le punte (doppia dalla 1.12.0); HD-2D: sprite con la spia che lampeggia
+    blit(gridSprite("aeroMine", [
+      ".....e.....", ".e...c...e.", "..c.kkk.c..", "...kedck...", "..kedddcbk.", "eckddwdcbce", "..kcdddbbk.", "...kccbbk..", "..c.kkk.b..", ".e...b...b.", ".....b....."],
+      Object.assign(turretPal(TYPES.physical.color), { w: "#26345c" })), o.x, o.y, 5.5, 5.5);
+    const on = Math.sin(o.age * 6) > 0;
+    pxDot(o.x, o.y, on ? "#ff5a5a" : "#5a2030", 1); ctx.globalAlpha = 1; if (on) light(o.x, o.y, 14, "#ff5a5a", 0.7);
   },
-  fieldOrb(o) {                                  // Thunderbolt · sfera del campo elettrico
-    disc(o.x, o.y, 6, TYPES.electric.color, 0.9); ring(o.x, o.y, 0, "#fff", 0.001);
+  fieldOrb(o) {                                  // Thunderbolt · sfera del campo elettrico; HD-2D: sfera a pixel che crepita
+    pixelOrb(o.x, o.y, 3, TYPES.electric.color, clock + o.x * 0.1); light(o.x, o.y, 22, TYPES.electric.color, 0.7);
   },
-  beamLinks(o, pos) {                            // Beam · raggio continuo e ramificazioni
-    for (const [a, b] of o.links) glow(a.x, a.y - (a === pos ? 0 : 0), b.x, b.y, TYPES.energy.color, 2.6, 1);
+  beamLinks(o, pos) {                            // Beam · raggio continuo e ramificazioni; HD-2D: fascio con alone e scintille
+    for (const [a, b] of o.links) hdBeam(a.x, a.y, b.x, b.y, TYPES.energy.color, 2.2, 1);
   },
-  wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia
-    for (const p of o.trail) {                   // scia di fuoco (1.12.2): brace e due lingue che tremolano e si spengono
-      const q = clamp(p.t / trailT, 0, 1), f = 0.5 + 0.5 * Math.sin(clock * 10 + p.x * 0.37 + p.y * 0.21);
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 14);
-      g.addColorStop(0, "rgba(255,170,60," + (0.5 * q) + ")"); g.addColorStop(1, "rgba(255,80,30,0)");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 6.2832); ctx.fill();
-      flame(p.x - 6, p.y + 5, (9 + 6 * f) * q + 3, 4, q);
-      flame(p.x + 1, p.y + 6, (13 + 6 * (1 - f)) * q + 3, 4.5, q);
-      flame(p.x + 7, p.y + 4, (8 + 5 * f) * q + 3, 3.5, q);
+  wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia; HD-2D: scia di lingue a pixel, ruota a raggi, luce calda
+    for (const p of o.trail) {
+      const q = clamp(p.t / trailT, 0, 1), f = 0.5 + 0.5 * Math.sin(clock * 10 + p.x * 0.37 + p.y * 0.21), s = Math.floor(p.x * 7 + p.y * 3);
+      pixelFlame(p.x - 5, p.y + 4, (7 + 5 * f) * q + 2, 3, q, s);
+      pixelFlame(p.x + 4, p.y + 5, (10 + 5 * (1 - f)) * q + 2, 3.5, q, s + 1);
+      light(p.x, p.y, 20 * q + 4, "#ff7a3d", 0.45 * q);
     }
-    ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(o.x, o.y, opt.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
-    for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; glow(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, "#ffb347", 2, 0.8); }
-    disc(o.x, o.y, opt.mini ? 3 : 5, "#ffe0b0");
+    disc(o.x, o.y, opt.rad, TYPES.fire.color, 0.1);
+    pxEllipse(o.x, o.y, opt.rad, opt.rad, "#ff8a3d", 0.6, o.rot, o.rot + 6.2832, 3);
+    for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; pxLine(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, k ? "#ffb347" : "#fff3b0", 1); }
+    ctx.globalAlpha = 1; pixelOrb(o.x, o.y, opt.mini ? 1 : 2, "#ffb347", clock);
+    light(o.x, o.y, opt.rad * 1.8, "#ff8a3d", 0.8);
   },
-  hiveWave(o, x, y, ang, len) {                  // Hive · onda d’urto a ventaglio
+  hiveWave(o, x, y, ang, len) {                  // Hive · onda d’urto a ventaglio; HD-2D: archi di pixel che si allargano
     const k = 1 - clamp(o.t / 0.35, 0, 1);
     for (let i = 0; i < 3; i++) {
       const r = len * clamp(k * 1.2 - i * 0.12, 0, 1); if (r <= 0) continue;
-      ctx.globalAlpha = (1 - k) * 0.9; ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 2.6 - i * 0.7;
-      ctx.beginPath(); ctx.arc(x, y, r, ang - HIVE_HALF, ang + HIVE_HALF); ctx.stroke();
+      pxEllipse(x, y, r, r, i ? TYPES.force.color : "#ffe0ff", (1 - k) * (1 - i * 0.25), ang - HIVE_HALF, ang + HIVE_HALF);
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1; light(x + Math.cos(ang) * len * k, y + Math.sin(ang) * len * k, len * 0.6, TYPES.force.color, (1 - k) * 0.6);
   },
-  hiveDrone(o) {                                 // Hive · drone esagonale (arancione quando è kamikaze)
-    const r = 4.5 + o.lvl * 1.5, pts = [];
-    for (let i = 0; i < 6; i++) pts.push([o.x + Math.cos(i * 1.0472 + 0.5236) * r, o.y + Math.sin(i * 1.0472 + 0.5236) * r]);
-    poly(pts, o.kami > 0 ? "#ff7a3d" : TYPES.force.color, "#ffffff", 1); disc(o.x, o.y, r * 0.35, "#070b16");
+  hiveDrone(o) {                                 // Hive · drone esagonale (arancione quando è kamikaze); HD-2D: sprite che cresce col livello, ali che sbattono
+    const c = o.kami > 0 ? "#ff7a3d" : TYPES.force.color, P = ramp(c), n = 3 + o.lvl;
+    const sp = procSprite("hiveDrone:" + c + ":" + o.lvl, n * 2 + 1, n * 2 + 1, (i, j) => {
+      const dx = i - n, dy = j - n; if (Math.abs(dx) + Math.abs(dy) * 0.6 > n || Math.abs(dy) > n * 0.9) return null;
+      if (Math.abs(dx) <= 0.6 && Math.abs(dy) <= 0.6) return "#120c26";
+      return dx + dy < -n * 0.4 ? P[5] : dx + dy < 0 ? P[4] : dx + dy < n * 0.5 ? P[3] : P[2];
+    });
+    if (Math.floor(clock * 20) % 2) { pxDot(o.x - n * PX - PX, o.y - PX, "#e8e0ff", 0.8); pxDot(o.x + n * PX + PX, o.y - PX, "#e8e0ff", 0.8); ctx.globalAlpha = 1; }
+    blit(sp, o.x, o.y, n + 1, n + 1);
+    light(o.x, o.y, 12 + o.lvl * 3, c, 0.55);
   },
-  railShot(o, a) {                               // Railgun · proiettile a punta con una scia corta (non una linea)
+  railShot(o, a) {                               // Railgun · proiettile a punta con una scia corta; HD-2D: sprite ruotato, scia a pixel, luce fredda
     const ca = Math.cos(a), sa = Math.sin(a), x = o.x, y = o.y;
-    ctx.globalAlpha = 0.35; ctx.strokeStyle = TYPES.physical.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - ca * 18, y - sa * 18); ctx.lineTo(x - ca * 6, y - sa * 6); ctx.stroke(); ctx.globalAlpha = 1;
-    poly([[x + ca * 7, y + sa * 7], [x - ca * 5 - sa * 3, y - sa * 5 + ca * 3], [x - ca * 5 + sa * 3, y - sa * 5 - ca * 3]], "#f4f7ff", TYPES.physical.color, 1);
+    for (let i = 1; i <= 4; i++) pxDot(x - ca * (4 + i * 4), y - sa * (4 + i * 4), i < 2 ? "#ffffff" : TYPES.physical.color, 0.7 - i * 0.15);
+    ctx.globalAlpha = 1;
+    const sp = gridSprite("railShot", ["kkkk...", "kdeeewk", "kkkk..."], turretPal(TYPES.physical.color));
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, -5 * PX, -1.5 * PX, sp.width * PX, sp.height * PX); ctx.imageSmoothingEnabled = true; ctx.restore();
+    light(x, y, 18, "#bfe6ff", 0.7);
   },
-  teslaBall(o) { ballLightning(o.x, o.y, 6, o.age); },   // Teslacoil · fulmine globulare in volo
-  vortex(o, R) {                                 // Gravity Vortex Gun · buco nero con le spirali
-    disc(o.x, o.y, R, "#1a0b3a", 0.35);
-    ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 2; ctx.globalAlpha = 0.9;
-    ctx.beginPath(); ctx.arc(o.x, o.y, R * 0.6, o.spin, o.spin + 4.2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(o.x, o.y, R * 0.3, -o.spin, -o.spin + 4.2); ctx.stroke(); ctx.globalAlpha = 1;
-    disc(o.x, o.y, 6, "#000");
+  teslaBall(o) { ballLightning(o.x, o.y, 6, o.age); },   // Teslacoil · fulmine globulare in volo (HD-2D: a pixel)
+  vortex(o, R) {                                 // Gravity Vortex Gun · buco nero; HD-2D: nucleo nero, anello di materia a pixel che spiraleggia dentro, luce viola
+    const c = TYPES.force.color;
+    disc(o.x, o.y, R, "#1a0b3a", 0.3);
+    for (let k = 0; k < 26; k++) {
+      const t = ((o.spin * 0.12 + k / 26) % 1 + 1) % 1, an = o.spin * (1 + t) + k * 2.4, rr = R * (1 - t * 0.85);
+      pxDot(o.x + Math.cos(an) * rr, o.y + Math.sin(an) * rr * 0.9, t > 0.7 ? "#ffffff" : k % 3 ? c : "#ff9be6", 0.35 + 0.65 * t);
+    }
+    pxEllipse(o.x, o.y, R * 0.42, R * 0.42, "#ffe0ff", 0.8, o.spin * 2, o.spin * 2 + 4.5);
+    ctx.globalAlpha = 1;
+    blit(procSprite("vortexCore", 7, 7, (i, j) => (Math.hypot(i - 3, j - 3) <= 3.2 ? "#000000" : null), false), o.x, o.y, 3.5, 3.5);
+    light(o.x, o.y, R * 2, c, 0.7);
   },
   portals(o, A, rA, B) {                         // Gravity Vortex Gun · varchi ovali: ingresso azzurro (buco nel pavimento), uscita rosa (buco nel soffitto)
     const a = clamp(o.t / 0.6, 0, 1);
@@ -1784,26 +1826,29 @@ const FX = {
     ctx.globalAlpha = 1;
     if (!fan && !frag) light(o.x, o.y, charged ? 20 : 9, charged ? "#fff6b0" : tint || TYPES.physical.color, clone ? 0.25 : 0.45);   // HD-2D: ogni colpo illumina
   },
-  domeWave(o) {                                  // barriera · Repulsiva: onda d’urto su metà cupola (o.side −1 sinistra, 1 destra), si allarga e svanisce
-    const k = 1 - o.t / 0.6, a0 = o.side < 0 ? Math.PI : Math.PI * 1.5;
-    ctx.globalAlpha = clamp(o.t / 0.6, 0, 1); ctx.strokeStyle = "#b07cff"; ctx.lineWidth = 6 - 3 * k;
-    ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + 6 + 60 * k, DOME.ry + 6 + 60 * k, 0, a0, a0 + Math.PI / 2); ctx.stroke();
+  domeWave(o) {                                  // barriera · Repulsiva: onda d’urto su metà cupola (o.side −1 sinistra, 1 destra); HD-2D: tre fasce di pixel
+    const k = 1 - o.t / 0.6, a0 = o.side < 0 ? Math.PI : Math.PI * 1.5, a = clamp(o.t / 0.6, 0, 1);
+    for (let i = 0; i < 3; i++) pxEllipse(DOME.cx, DOME.cy, DOME.rx + 6 + 60 * k - i * 4, DOME.ry + 6 + 60 * k - i * 4, i ? "#b07cff" : "#e6d4ff", a * (1 - i * 0.3), a0, a0 + Math.PI / 2);
     ctx.globalAlpha = 1;
+    for (let i = 0; i < 4; i++) { const t = a0 + (i + 0.5) * Math.PI / 8; light(DOME.cx + Math.cos(t) * (DOME.rx + 60 * k), DOME.cy + Math.sin(t) * (DOME.ry + 60 * k), 30, "#b07cff", 0.5 * a); }
   },
-  domeGas(h, t) {                                // barriera · Congelante: fascia di gas alta h sopra il bordo, svanisce nell’ultimo secondo
-    ctx.globalAlpha = 0.22 * clamp(t, 0, 1);
+  domeGas(h, t) {                                // barriera · Congelante: fascia di gas alta h sopra il bordo; HD-2D: velo a retino e fiocchi a pixel
+    const a = clamp(t, 0, 1);
+    ctx.globalAlpha = 0.16 * a;
     ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + h, DOME.ry + h, 0, Math.PI, Math.PI * 2); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx, DOME.ry, 0, Math.PI * 2, Math.PI, true);
     ctx.fillStyle = "#9fe8ff"; ctx.fill();
-    ctx.globalAlpha = 0.5 * clamp(t, 0, 1);
-    for (let i = 0; i < 18; i++) {               // fiocchi che salgono piano
-      const a = Math.PI * (1.04 + 0.92 * ((i * 0.37) % 1)), r = (((i * 0.61) + clock * 0.15) % 1) * h;
-      disc(DOME.cx + (DOME.rx + r) * Math.cos(a), DOME.cy + (DOME.ry + r) * Math.sin(a), 1.6, "#e8f8ff");
+    for (let i = 0; i < 4; i++) pxEllipse(DOME.cx, DOME.cy, DOME.rx + h * (i + 1) / 5, DOME.ry + h * (i + 1) / 5, "#c8f4ff", 0.22 * a, Math.PI + clock * 0.1 * (i % 2 ? 1 : -1), Math.PI * 2 + clock * 0.1 * (i % 2 ? 1 : -1), 3);
+    for (let i = 0; i < 24; i++) {               // fiocchi che salgono piano
+      const an = Math.PI * (1.04 + 0.92 * ((i * 0.37) % 1)), r = (((i * 0.61) + clock * 0.15) % 1) * h;
+      pxDot(DOME.cx + (DOME.rx + r) * Math.cos(an), DOME.cy + (DOME.ry + r) * Math.sin(an), "#f0fbff", 0.7 * a);
     }
     ctx.globalAlpha = 1;
   },
-  domeAura(color) {                              // barriera · bordo di un’abilità attiva (Riflettente, Ustionante, Potenziante, Rigenerazione)
-    ctx.beginPath(); ctx.ellipse(DOME.cx, DOME.cy, DOME.rx + 3, DOME.ry + 3, 0, Math.PI, Math.PI * 2);
-    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.45 + 0.25 * Math.sin(clock * 8); ctx.stroke(); ctx.globalAlpha = 1;
+  domeAura(color) {                              // barriera · bordo di un’abilità attiva; HD-2D: bordo a pixel che pulsa e scintille che corrono
+    const p = 0.55 + 0.3 * Math.sin(clock * 8);
+    pxEllipse(DOME.cx, DOME.cy, DOME.rx + 3, DOME.ry + 3, color, p, Math.PI, Math.PI * 2);
+    for (let i = 0; i < 6; i++) { const t = Math.PI + ((clock * 0.25 + i / 6) % 1) * Math.PI; pxDot(DOME.cx + Math.cos(t) * (DOME.rx + 5), DOME.cy + Math.sin(t) * (DOME.ry + 5), "#ffffff", 0.9); light(DOME.cx + Math.cos(t) * (DOME.rx + 4), DOME.cy + Math.sin(t) * (DOME.ry + 4), 18, color, 0.5); }
+    ctx.globalAlpha = 1;
   },
   shieldCount(x, y, n) {                         // barriera · immunità accumulate: scudo con il numero
     poly([[x - 7, y - 8], [x + 7, y - 8], [x + 7, y], [x, y + 8], [x - 7, y]], "#e8eefc", "#7fe8ff", 1.2);
