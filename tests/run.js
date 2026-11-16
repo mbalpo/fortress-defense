@@ -54,6 +54,9 @@ const T = [
   ["schermate.js", "griglia dei livelli, guida (stati e carte), potenziamenti presi dalla scelta delle carte", [/tocco su “Livello” nel menu → stato levels .* ✓/, /Sigilli: 31 .* ✓/,
     /con Sigilli da prendere .* ✓/, /secondo tocco sul 52 in Epica → parte: play epic 52 ✓/, /prima del 50: .* ✓/, /tocco su “Guida” → stato guide .* ✓/, /carte della Sky Guard: .* ✓/,
     /scorrimento oltre la fine .* ✓/, /trascinare 100 px .* ✓/, /tutte le entità, .* ✓/, /tasto B → vista .* ✓/, /tasto 1 mentre la vista è aperta .* ✓/, /Esc → di nuovo le carte: .* ✓/]],
+  ["aspetto.js", "aree in fiamme della Sky Guard (limite, sotto i nemici), varchi ovali, colori dei colpi del guardiano", [/limite 2\) ✓/, /limite 4\) ✓/, /limite 5\) ✓/,
+    /spente le prime, nuovo impatto: 1 ✓/, /\(under\): true ✓/, /ordine di disegno: .* ✓/, /resta fuori: true ✓/, /combo nessuna .* ✓/, /combo kSky  .* ✓/,
+    /combo kVortex .* ✓/, /combo kSky\+kVortex .* ✓/, /clone speculare .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /sezioni fisse: .* ✓/]],
 ];

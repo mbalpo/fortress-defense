@@ -967,7 +967,7 @@ function onDeath(e) {
   if (e.burnT > 0 && e.skyBurnT > 0 && e.skyBurnS && has(e.skyBurnS, "burn3")) { const s = e.skyBurnS, x = e.x, y = e.y; later(0.05, () => skyCombust(s, x, y)); }
 }
 
-// ---- entità temporanee: ognuna ha update(dt), draw() e dead ----
+// ---- entità temporanee: ognuna ha update(dt), draw() e dead; under = disegnata sotto i nemici ----
 const spawnEnt = (o) => { ents.push(o); return o; };
 function later(sec, fn) { spawnEnt({ t: sec, dead: false, draw() {}, update(dt) { this.t -= dt; if (this.t <= 0) { this.dead = true; fn(); } } }); }
 function ring(x, y, r1, color, life) {
@@ -1058,10 +1058,11 @@ function skyStats(s) {
 function skyFire(s) {
   const list = living().filter((e) => dist(e.x, e.y, s.x, s.y) <= rangeOf(s) + e.def.r);
   if (!list.length) return false;
-  const cnt = 2 + N(s, "msl") + (has(s, "plus2") ? 2 : 0);
+  const cnt = skyCount(s);
   for (let k = 0; k < cnt; k++) missile(s, s.x + (k - (cnt - 1) / 2) * 6, s.y - 10, false, list[Math.floor(Math.random() * list.length)]);
   return true;
 }
+const skyCount = (s) => 2 + N(s, "msl") + (has(s, "plus2") ? 2 : 0);    // missili per salva
 function missile(s, x, y, mini, target) {
   const turn = mini ? 6 : 3.5, sp = mini ? 300 : 240;
   spawnEnt({ x, y, a: -Math.PI / 2 + rnd(-0.7, 0.7), t: target, age: 0, dead: false,
@@ -1090,7 +1091,8 @@ function skyImpact(s, x, y, mini, echo) {
   if (mini || echo) return;
   const splits = has(s, "split3") ? 9 : has(s, "split2") ? 6 : has(s, "split1") ? 3 : 0;
   for (let k = 0; k < splits; k++) missile(s, x, y, true, randEnemy());
-  if (has(s, "fire")) zone(x, y, rad, 5, (e) => skyBurn(s, e, 1.5, 5 * dmgM(s)), TYPES.fire.color, "fireField");   // area in fiamme (1.12.2)
+  if (has(s, "fire") && ents.reduce((n, o) => n + (o.fireField === s && !o.dead ? 1 : 0), 0) < skyCount(s))   // area in fiamme (1.12.2): al massimo
+    Object.assign(zone(x, y, rad, 5, (e) => skyBurn(s, e, 1.5, 5 * dmgM(s)), TYPES.fire.color, "fireField"), { fireField: s, under: true });   // tante quanti i missili per salva (1.12.4)
   if (has(s, "again")) later(0.5, () => skyImpact(s, x, y, false, true));
 }
 // tutte le bruciature della Sky Guard passano da qui: chain Bruciatura (danno +60%, esplosione alla morte)
@@ -1724,12 +1726,15 @@ function vortex(s, pos, a) {
     finish() { this.dead = true; if (has(s, "wh1") && this.A) portals(s, this.A, { x: this.x, y: this.y }); },
     draw() { FX.vortex(this, R); } });
 }
+// varchi ovali (1.12.4): buchi nel pavimento (ingresso) e nel soffitto (uscita) visti di sbieco, alti PORTAL_FLAT della larghezza;
+// l’ingresso cattura chi tocca l’ovale (stessa larghezza di prima, meno profondo lungo il cammino)
+const PORTAL_FLAT = 0.42;
 function portals(s, A, B) {
   const rA = 22 * (has(s, "wh2") ? 1.6 : 1);
-  spawnEnt({ t: has(s, "whT") ? 6 : 4, dead: false,
+  spawnEnt({ t: has(s, "whT") ? 6 : 4, dead: false, under: true,             // buchi nel pavimento e nel soffitto: sotto i nemici
     update(dt) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
-      for (const e of living()) if (e.tpCd <= 0 && !e.boss && dist(e.x, e.y, A.x, A.y) <= rA + e.def.r) {
+      for (const e of living()) if (e.tpCd <= 0 && !e.boss && ((e.x - A.x) / (rA + e.def.r)) ** 2 + ((e.y - A.y) / (rA * PORTAL_FLAT + e.def.r)) ** 2 <= 1) {
         e.x = clamp(B.x + rnd(-8, 8), 10, W - 10); e.y = Math.max(0, B.y); e.tpCd = 2;
         if (has(s, "wh3")) slow(e, 2);
       }
@@ -1834,6 +1839,9 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
   // combo per proiettile (non per il clone): danno extra da fuoco o force, frammentazione
   const fire = !clone && comboOn(p, "kSky"), force = !clone && comboOn(p, "kVortex");
   let canFrag = !clone && !fan && !frag && comboOn(p, "kRail"), proc = o.proc || null;
+  // con Proiettili incendiari o Proiettili gravitazionali i colpi si alternano nei colori dei tipi attivi (fisico, fuoco, force): solo disegno
+  const tints = ["physical"].concat(fire ? ["fire"] : [], force ? ["force"] : []);
+  const tint = TYPES[tints.length > 1 ? tints[(p.st.tintN = (p.st.tintN || 0) + 1) % tints.length] : "physical"].color;
   const l = t ? (dist(t.x, t.y, x, y) || 1) : 1;
   spawnEnt({ x, y, vx: t ? (t.x - x) / l : Math.cos(ang), vy: t ? (t.y - y) / l : Math.sin(ang),
     t: t || null, life: fan || frag ? 0.7 : 6, hit: new Set(o.skip || []), reb: false, out: false, dead: false,
@@ -1869,7 +1877,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
       }
       if (this.y < -20 || this.y > H + 20 || this.x < -20 || this.x > W + 20) this.dead = true;
     },
-    draw() { FX.guardBullet(this, charged, clone, fan, frag); } });
+    draw() { FX.guardBullet(this, charged, clone, fan, frag, tint); } });
 }
 
 /* ---------- COMBO DEL GUARDIANO (una per torretta; valori provvisori, DESIGN.md § 10) ---------- */
@@ -2430,7 +2438,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.12.3";
+const APP_VERSION = "1.12.4";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {

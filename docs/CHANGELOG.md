@@ -3,6 +3,32 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.4 — colori dei colpi del guardiano, varchi ovali, Area infuocata sotto i nemici e con limite, catalogo completo
+
+Richieste di Marco. Aspetto dei varchi **[Claude]** (DESIGN.md § 10).
+
+- **Guardiano**: con Proiettili incendiari (Sky Guard) e/o Proiettili gravitazionali (Vortex) i colpi si alternano nei colori dei tipi attivi: fisico, fuoco, force
+  (`playerBullet` sceglie `tint` con un contatore in `p.st.tintN`; `FX.guardBullet` ha il parametro `tint`). Clone speculare bianco, Colpo caricato giallo. Solo disegno.
+- **Wormhole** (`FX.portals`): varchi ovali (`PORTAL_FLAT` = 0,42), fondo scuro sfumato verso la parete lontana, tre anelli che ruotano e scendono nell’ingresso
+  (salgono nell’uscita), bordo vicino più spesso. L’ingresso cattura chi tocca l’ovale (prima il cerchio): stessa larghezza, meno profondo. Disegnati sotto i nemici.
+- **Area infuocata della Sky Guard**: disegnata sotto i nemici (nuovo campo `under` delle entità: `draw()` disegna prima le entità `under`, poi i nemici, poi il resto);
+  al massimo `skyCount(s)` aree a schermo per torretta, cioè i missili della salva (2 + “+1 missile” + 2 con Salva potenziata). Oltre, l’impatto non accende l’area.
+  Effetto sul bilanciamento non misurato (riguarda solo chi prende Area infuocata).
+- **Catalogo grafico**: aggiunte le tessere di `FX.fireField` (Area infuocata) e `FX.hiveShot` (colpi dei droni dell’Hive, tre livelli) nella sezione 4 “Proiettili ed
+  effetti”, che le segnava come mancanti; la tessera di `FX.guardBullet` mostra anche i colpi arancione e viola; descrizione della scena delle combo aggiornata.
+- DESIGN.md § 10: tre voci nuove. `APP_VERSION` e `VERSION` di `sw.js`: 1.12.4.
+
+**Test**: nuovo `tests/aspetto.js` (limite delle aree con 2, 4 e 5 missili; aree che si riaccendono dopo lo spegnimento; `under` e ordine di disegno; presa ovale
+dell’ingresso: dentro al lato, fuori sopra dove il cerchio prendeva; colori dei colpi senza combo, con una, con entrambe; clone bianco). `npm test`: tutti verdi.
+Screenshot rigenerati e controllati; scena di prova con fiamme, varchi e salve colorate controllata a parte.
+
+**Misure con i bot**: non fatte (il limite delle aree riduce un po’ la bruciatura della Sky Guard con Area infuocata).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (tessere nuove `FX.fireField`, `FX.hiveShot`; `FX.guardBullet` e `FX.portals` aggiornate).
+
+Checklist: nuove voci “Colori dei colpi del guardiano con le combo: da provare sul telefono”, “Varchi ovali del wormhole: da provare sul telefono”,
+“Area infuocata con limite = missili per salva: misurare con i bot se pesa sul bilanciamento?”.
+
 ## 1.12.3 — griglia dei livelli, guida, potenziamenti presi dalla scelta delle carte
 
 Punti 7, 8 e 9 delle richieste di Marco. Impaginazione e testi della guida **[Claude]** (DESIGN.md § 6).

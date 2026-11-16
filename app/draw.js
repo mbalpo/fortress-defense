@@ -944,8 +944,9 @@ function draw() {
     slots.forEach((s) => { if (s) drawTurret(s); });
     drawPlayer();
     if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
+    for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
     enemies.forEach(drawEnemy);
-    for (const o of ents) o.draw();
+    for (const o of ents) if (!o.under) o.draw();
     drawDomeEdge(); drawFortress();
     for (const f of floaters) drawFloater(f);
     ctx.globalAlpha = 1;
@@ -1151,17 +1152,28 @@ const FX = {
     ctx.beginPath(); ctx.arc(o.x, o.y, R * 0.3, -o.spin, -o.spin + 4.2); ctx.stroke(); ctx.globalAlpha = 1;
     disc(o.x, o.y, 6, "#000");
   },
-  portals(o, A, rA, B) {                         // Gravity Vortex Gun · varchi: ingresso azzurro, uscita rosa
+  portals(o, A, rA, B) {                         // Gravity Vortex Gun · varchi ovali: ingresso azzurro (buco nel pavimento), uscita rosa (buco nel soffitto)
     const a = clamp(o.t / 0.6, 0, 1);
-    for (const [p, r, c] of [[A, rA, "#7fe8ff"], [B, 18, "#ff9bf0"]]) {
-      ctx.globalAlpha = a; ctx.strokeStyle = c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.stroke();
-      ctx.globalAlpha = 0.25 * a; ctx.fillStyle = c; ctx.fill(); ctx.globalAlpha = 1;
+    for (const [p, r, c, dir] of [[A, rA, "#7fe8ff", 1], [B, 18, "#ff9bf0", -1]]) {
+      const ry = r * PORTAL_FLAT;
+      const g = ctx.createRadialGradient(p.x, p.y + dir * ry * 0.3, 0, p.x, p.y, r);   // fondo scuro spostato verso la parete lontana: profondità
+      g.addColorStop(0, "#000000"); g.addColorStop(0.7, "#0a0f22"); g.addColorStop(1, c);
+      ctx.globalAlpha = 0.85 * a; ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, ry, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = c; ctx.lineWidth = 1;
+      for (let i = 1; i <= 3; i++) {             // anelli interni che scendono nel buco (salgono per l’uscita) e ruotano
+        const k = 1 - i * 0.22, ph = (clock * 0.8 + i * 0.33) % 1;
+        ctx.globalAlpha = 0.5 * a * (1 - ph * 0.5);
+        ctx.beginPath(); ctx.ellipse(p.x, p.y + dir * ry * (1 - k) * 0.9, r * k, ry * k, 0, clock * 3 * dir + i, clock * 3 * dir + i + 4.2); ctx.stroke();
+      }
+      ctx.globalAlpha = a; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, ry, 0, 0, 6.2832); ctx.stroke();
+      ctx.globalAlpha = 0.35 * a; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, ry, 0, dir > 0 ? 0 : Math.PI, dir > 0 ? Math.PI : 6.2832); ctx.stroke();   // bordo vicino più spesso
+      ctx.globalAlpha = 1;
     }
   },
-  guardBullet(o, charged, clone, fan, frag) {    // guardiano · tracciante corto (il colpo caricato è più grande, con l’alone elettrico)
+  guardBullet(o, charged, clone, fan, frag, tint) {   // guardiano · tracciante corto (il colpo caricato è più grande, con l’alone elettrico; tint = colore del tipo con le combo fuoco/force)
     if (charged) disc(o.x, o.y, 6, TYPES.electric.color, 0.35);
     ctx.globalAlpha = clone ? 0.6 : 1;
-    ctx.strokeStyle = charged ? "#fff6b0" : TYPES.physical.color; ctx.lineWidth = charged ? 3.4 : fan || frag ? 1.4 : 2.2; ctx.lineCap = "round";
+    ctx.strokeStyle = charged ? "#fff6b0" : tint || TYPES.physical.color; ctx.lineWidth = charged ? 3.4 : fan || frag ? 1.4 : 2.2; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(o.x - o.vx * (charged ? 12 : 7), o.y - o.vy * (charged ? 12 : 7)); ctx.lineTo(o.x, o.y); ctx.stroke();
     ctx.globalAlpha = 1;
   },

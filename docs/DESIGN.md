@@ -291,6 +291,13 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 
 - Sky Guard: 3 mini-missili al lv1 (dove la descrizione diceva “X”), bruciatura 3 s, area infuocata 5 s  **[Claude]**
 - **Grafica del fuoco** (1.12.2) **[deciso]** (Marco): l’Area infuocata della Sky Guard è un disco di brace con lingue di fuoco che tremolano e scintille (prima un cerchio); anche la scia della Firewheel è fatta di lingue di fuoco e bagliore che si spengono. Solo disegno. **[Claude]** (aspetto)
+- **Area infuocata, limite e livello** (1.12.4) **[deciso]** (Marco): le aree in fiamme si disegnano sotto i nemici e ogni Sky Guard ne ha al massimo tante a schermo
+  quanti sono i missili della sua salva (2 + “+1 missile” + 2 con Salva potenziata); oltre, l’impatto non accende l’area (come le mine). Non misurato con i bot. **[Claude]** (non misurato)
+- **Varchi del wormhole ovali** (1.12.4) **[deciso]** (Marco): ingresso e uscita sono ovali (altezza 0,42 della larghezza), come buchi nel pavimento e nel soffitto visti di sbieco,
+  con il fondo scuro e anelli che scendono (salgono nell’uscita); disegnati sotto i nemici. L’ingresso cattura chi tocca l’ovale: stessa larghezza di prima,
+  meno profondo lungo il cammino. **[Claude]** (aspetto, presa ovale)
+- **Colori dei colpi del guardiano** (1.12.4) **[deciso]** (Marco): con Proiettili incendiari e/o Proiettili gravitazionali i colpi si alternano nei colori dei tipi attivi
+  (fisico bianco, fuoco arancione, force viola), uno per colpo in ordine; il Clone speculare (che non ha queste combo) resta bianco, il Colpo caricato giallo. Solo disegno.
 - Sky Guard (revisione 1): mini-missile esplosivo = area piena del missile principale (30 px, cresce con “Raggio d’impatto”) al 35% del danno;
   Missili incendiari = bruciatura 3 s a 6 al secondo su chi è colpito dall’impatto; Bruciatura intensa = +60% su tutte le bruciature della Sky Guard
   (anche area infuocata e scia); Combustione = esplosione di 40 px al 60% del danno del missile, solo per chi muore con una bruciatura **della Sky Guard**

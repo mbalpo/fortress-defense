@@ -208,7 +208,7 @@ function scenes(turretIds) {
   add(4, "effetti-guardiano", "Guardiano", "Salve con ventaglio, rimbalzo ed esplosioni; frenesia attiva (sagoma arancione).",
     { progress: P1, setup: START(23) + " " + CLEAR + " " + FX_FOES.map(([k, x, y]) => FOE(k, x, y)).join(" ") +
       " Object.assign(player.up, { proj: 2, fan: 1, ricochet: 1, boom1: 1, boomP: 1, frenzy1: 1 }); player.level = 3; player.st.frenzyT = 1e6;", each: KEEP, frames: 60 }, ["FX.guardBullet", "guardianShape", "FX.ring"]);
-  add(4, "effetti-combo", "Combo del guardiano", "Clone speculare (Hive), laser rotante (Laser), mini-drone (Firewheel), con Vortex in campo.",
+  add(4, "effetti-combo", "Combo del guardiano", "Clone speculare (Hive), laser rotante (Laser), mini-drone (Firewheel); con Vortex in campo i colpi si alternano bianco e viola (Proiettili gravitazionali).",
     { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([["hive", 2, {}], ["laser", 2, { multi1: 1 }], ["wheel", 2, { mini1: 1 }], ["vortex", 2, {}]]) +
       " player.level = 2; Object.assign(player.up, { kHive: 1, kLaser: 1, kWheel: 1, kVortex: 1, proj: 1 }); player.x = player.targetX = 120; " +
       [[90, 260], [250, 230], [150, 330], [290, 380], [60, 400], [200, 160]].map(([x, y], i) => FOE(i % 2 ? "shell" : "brute", x, y)).join(" ") +
@@ -264,16 +264,18 @@ function tiles(M) {
     aeroBomb: ["FX.aeroBomb({ x: 0, y: 2 });", [-10, -10, 20, 20], 4],
     aeroShard: ["FX.aeroShard({ x: 0, y: 0 });", [-10, -10, 20, 20], 4],
     aeroMine: ["FX.aeroMine({ x: 0, y: 0, age: T });", [-10, -10, 20, 20], 4],
+    fireField: ["const o = { x: 0, y: 0, r: 30, t: 5 - (T % 5.4), age: T % 5.4 }; if (o.t > 0) FX.fireField(o);", [-44, -50, 88, 90], 2],
     fieldOrb: ["FX.fieldOrb({ x: 0, y: 0 }); ents.length = 0;", [-10, -10, 20, 20], 4],
     beamLinks: ["const pos = { x: 0, y: 40 }, p = { x: 0, y: -24 }; FX.beamLinks({ links: [[pos, p], [p, { x: -36, y: -6 }], [p, { x: 34, y: -36 }]] }, pos);", [-44, -44, 88, 90], 2],
     wheelDrone: ["FX.wheelDrone({ x: 10, y: 0, rot: T * 8, trail: [{ x: -50, y: 18, t: 0.5 }, { x: -32, y: 10, t: 1.1 }, { x: -12, y: 4, t: 1.7 }] }, { rad: 28, mini: false }, 2);", [-60, -34, 104, 68], 2],
     hiveWave: ["const o = { t: 0.35 - (T % 0.7) }; if (o.t > 0) FX.hiveWave(o, 0, 30, -Math.PI / 2, 60);", [-50, -36, 100, 72], 2],
+    hiveShot: ["[1, 2, 3].forEach((lvl, i) => { const q = (T * 1.5 + i * 0.2) % 1, x = -30 + i * 30, y = 20 - q * 40; FX.hiveShot({ lvl, px: x, py: y + 6, x, y }); });", [-44, -26, 88, 52], 3],
     hiveDrone: ["FX.hiveDrone({ x: -14, y: 0, lvl: 1, kami: 0 }); FX.hiveDrone({ x: 14, y: 0, lvl: 2, kami: 1 });", [-28, -14, 56, 28], 3],
     railShot: ["FX.railShot({ x: 6, y: -6 }, -Math.PI / 4);", [-20, -20, 40, 40], 3],
     teslaBall: ["FX.teslaBall({ x: 0, y: 0, age: T });", [-18, -18, 36, 36], 4],
     vortex: ["FX.vortex({ x: 0, y: 0, spin: T * 4 }, 32);", [-36, -36, 72, 72], 2],
     portals: ["FX.portals({ t: 4 }, { x: -34, y: 0 }, 22, { x: 36, y: 0 });", [-60, -28, 120, 56], 2],
-    guardBullet: ["[[false, false, false, null], [false, false, true, null], [false, true, false, null], [true, false, false, null]].forEach(([charged, clone, fan], i) => FX.guardBullet({ x: -24 + i * 16, y: 6, vx: 0, vy: -1 }, charged, clone, fan, false));", [-32, -16, 64, 32], 3],
+    guardBullet: ["[[false, false, false, null], [false, false, true, null], [false, true, false, null], [true, false, false, null], [false, false, false, TYPES.fire.color], [false, false, false, TYPES.force.color]].forEach(([charged, clone, fan, tint], i) => FX.guardBullet({ x: -40 + i * 16, y: 6, vx: 0, vy: -1 }, charged, clone, fan, false, tint));", [-48, -16, 96, 32], 3],
     domeWave: ["const o = { t: 0.6 - (T % 1), side: Math.floor(T) % 2 ? 1 : -1 }; if (o.t > 0) FX.domeWave(o);", [0, 380, 360, 200], 1],
     domeGas: ["FX.domeGas(60 + 80 * ((T * 0.25) % 1), 1);", [0, 330, 360, 250], 1],
     domeAura: ["DRAW.drawDomeEdge(); FX.domeAura(['#e8eefc', '#ff8a3d', '#ffd166', '#3fe0a0'][Math.floor(T) % 4]);", [0, 440, 360, 140], 1],
