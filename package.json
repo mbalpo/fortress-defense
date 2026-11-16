@@ -9,7 +9,8 @@
     "screenshots": "node tests/tools/screens.js",
     "calibrate": "node tests/tools/calib2.js 1,5,8,10,11,15,20,25,30",
     "design-lists": "node tests/tools/design-lists.js",
-    "catalog": "node tests/tools/catalog.js"
+    "catalog": "node tests/tools/catalog.js",
+    "catalog-hd2d": "node tests/tools/catalog.js --hd2d"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.1.0",

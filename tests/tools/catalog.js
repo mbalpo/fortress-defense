@@ -5,12 +5,17 @@
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const ROOT = path.join(__dirname, "..", ".."), APP = path.join(ROOT, "app");
-const OUT = path.join(ROOT, "docs", "catalogo-grafico.html");
+// --hd2d: catalogo alternativo (proposta grafica HD-2D): stesse scene e tessere, disegnate da docs/hd2d/draw-hd2d.js invece di app/draw.js;
+// il gioco non cambia (npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html)
+const ALT = process.argv.includes("--hd2d");
+const DRAW_FILE = ALT ? "docs/hd2d/draw-hd2d.js" : "app/draw.js";
+const OUT = path.join(ROOT, "docs", ALT ? "catalogo-grafico-alternativo.html" : "catalogo-grafico.html");
+const OUT_REL = "docs/" + path.basename(OUT), TITLE = ALT ? "catalogo grafico alternativo (HD-2D, proposta)" : "catalogo grafico";
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 
 /* ---------- hash: tutti i file di app/ e questo generatore ---------- */
 function hashedFiles() {
-  return [...fs.readdirSync(APP).filter((f) => !f.startsWith(".")).sort().map((f) => "app/" + f), "tests/tools/catalog.js"];
+  return [...fs.readdirSync(APP).filter((f) => !f.startsWith(".")).sort().map((f) => "app/" + f), "tests/tools/catalog.js", ...(ALT ? [DRAW_FILE] : [])];
 }
 function computeHash() {
   const all = crypto.createHash("sha256"), each = {};
@@ -35,7 +40,7 @@ function parts() {
   let game = html.slice(b + 8, html.indexOf("</script>", b));
   if (!game.includes(HOOK)) throw new Error("index.html: manca la fine dello script del gioco (" + JSON.stringify(HOOK) + ")");
   game = game.replace(HOOK, "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);   // aggancio del catalogo: esegue codice nell’ambito del gioco\n})();");
-  const draw = read("app/draw.js");
+  const draw = read(DRAW_FILE);
   for (const [n, t] of Object.entries({ css, markup, draw, game })) if (/<\/script|<!--/i.test(t)) throw new Error(n + ": contiene </script o <!-- e non si può incorporare");
   const icons = Object.fromEntries(["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"].map((f) => [f, icon(f)]));
   const version = (html.match(/const APP_VERSION = "([^"]+)"/) || [])[1];
@@ -419,7 +424,7 @@ function page(P, M, S, T, H) {
 <meta name="catalogo-hash" content="${H.hash}">
 <meta name="catalogo-versione" content="${esc(P.version)}">
 <meta name="catalogo-data" content="${now.toISOString()}">
-<title>Fortress Defense · catalogo grafico</title>
+<title>Fortress Defense · ${TITLE}</title>
 <link rel="icon" type="image/png" href="${P.icons["icon-192.png"]}">
 <style>
   :root { color-scheme: dark; --bg: #070b16; --panel: #101a33; --line: #2c4272; --text: #e8eefc; --muted: #9fb4d9; --dim: #6f82ad; --ok: #3fe0a0; --gold: #ffd166; }
@@ -474,10 +479,10 @@ function page(P, M, S, T, H) {
 </head>
 <body>
 <header>
-  <h1>Fortress Defense · catalogo grafico</h1>
-  <div class="facts"><span>Versione <b>${esc(P.version)}</b></span><span>Generato il <b>${date}</b></span><span>Hash <b>${H.hash.slice(0, 16)}</b></span><span>File: <code>docs/catalogo-grafico.html</code> (<code>npm run catalog</code>)</span></div>
+  <h1>Fortress Defense · ${TITLE}</h1>
+  <div class="facts"><span>Versione <b>${esc(P.version)}</b></span><span>Generato il <b>${date}</b></span><span>Hash <b>${H.hash.slice(0, 16)}</b></span><span>File: <code>${OUT_REL}</code> (<code>npm run ${ALT ? "catalog-hd2d" : "catalog"}</code>)</span></div>
   <p class="hashes">Hash completo ${H.hash} · ${hashRows}</p>
-  <p>Tutto quello che si vede qui è disegnato dal codice del gioco: il modulo <code>app/draw.js</code> e lo script di <code>app/index.html</code>, incorporati in questa pagina.
+  <p>Tutto quello che si vede qui è disegnato dal codice del gioco: il modulo <code>${DRAW_FILE}</code> e lo script di <code>app/index.html</code>, incorporati in questa pagina.
   Ogni schermata è il gioco vero, fermato in uno stato preciso e mosso da un orologio che si controlla dalla barra (play/pausa, un fotogramma alla volta, rallentatore).
   Le tessere piccole usano le stesse funzioni (<code>TURRET_ART</code>, <code>drawEnemy</code>, <code>statusIcon</code>, <code>FX</code>…) con valori di esempio.</p>
   <section class="rules" id="vincoli" data-voce="vincoli">
@@ -584,8 +589,8 @@ ${palette}
 </section>
 
 <section id="codice"><h2>Codice di disegno</h2>
-<p>Il modulo completo, così com’è in <code>app/draw.js</code>. Lo script del gioco (<code>index.html</code>) è incorporato più sotto in forma non visibile e serve alle scene.</p>
-<details><summary>app/draw.js (${P.draw.split("\n").length} righe)</summary><pre id="src-draw">${esc(P.draw)}</pre></details>
+<p>Il modulo completo, così com’è in <code>${DRAW_FILE}</code>. Lo script del gioco (<code>index.html</code>) è incorporato più sotto in forma non visibile e serve alle scene.</p>
+<details><summary>${DRAW_FILE} (${P.draw.split("\n").length} righe)</summary><pre id="src-draw">${esc(P.draw)}</pre></details>
 </section>
 </main>
 <footer>Fortress Defense ${esc(P.version)} · catalogo generato da <code>tests/tools/catalog.js</code> · se un file del gioco cambia, <code>npm test</code> lo rigenera e un test controlla che non sia indietro.</footer>
@@ -678,7 +683,7 @@ function main() {
   const P = parts(), M = meta(P), S = scenes(M.turretIds), T = tiles(M);
   verify(P, S);
   fs.writeFileSync(OUT, page(P, M, S, T, H));
-  console.log("Catalogo grafico: rigenerato → docs/catalogo-grafico.html");
+  console.log("Catalogo grafico" + (ALT ? " alternativo" : "") + ": rigenerato → " + OUT_REL);
   console.log("  versione " + P.version + " · hash " + H.hash + " · " + S.length + " scene · " + T.length + " tessere · " + Math.round(fs.statSync(OUT).size / 1024) + " KB");
 }
 module.exports = { computeHash, writtenHash, parts, meta, OUT, buildDoc };

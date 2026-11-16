@@ -3,6 +3,30 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 1 (il gioco non cambia)
+
+Richiesta di Marco: un reskin in stile HD-2D come proposta, in un catalogo a parte. Fase 1 di 4: prova di stile. Tutto l’aspetto è **[Claude]**.
+
+- **`docs/hd2d/draw-hd2d.js`**: copia di `app/draw.js` con le stesse funzioni e firme, non caricata dal gioco. Motore: sprite a griglia di caratteri o generati
+  da funzione (`gridSprite`, `procSprite`, contorno automatico), ingranditi a 2 px logici senza smussare (`blit`); rampe di colore con ombre fredde e luci calde
+  (`ramp`); luci additive raccolte durante il disegno del mondo e stese alla fine (`light`, `drawLights`); ombre a terra (`groundShadow`); profondità di campo
+  sulla fascia lontana in alto (`tiltShift`, sfocatura per riduzione, senza `ctx.filter`); velo di colore e vignettatura (`grade`); pulviscolo e bokeh (`motes`).
+- **Rifatti in fase 1**: fondo a plastico (cielo con pianeta ad anelli, creste all’orizzonte, piana in prospettiva con crateri e massi, retino ordinato 4×4),
+  piattaforma di lastre; Sky Guard, Laser e Gravity Vortex Gun; guardiano (normale, frenesia, clone); frammento roccioso, asteroide e meteora (16 pose di rotazione
+  con la luce fissa, bitorzoli, crateri, coda di fiamme a pixel), navicella (luci a turno); missili (sprite, scia di fumo), Area infuocata (ovale in prospettiva,
+  lingue di fuoco a pixel, braci, scintille), varchi del wormhole (scintille e luce), raggi laser (alone, nucleo bianco, scintille), esplosioni, colpi del guardiano.
+  Il resto (altre torrette e nemici, stati, HUD, schermate) è ancora il disegno attuale.
+- **Catalogo**: `npm run catalog-hd2d` → `docs/catalogo-grafico-alternativo.html` (stesse scene e tessere, disegno HD-2D). `tests/tools/catalog.js` accetta `--hd2d`.
+- **Schermate di prova**: `node tests/tools/hd2d-shots.js` → `tests/screenshots/hd2d-battaglia*.png`, `hd2d-sprite.png` (con `--orig` le stesse col disegno attuale).
+
+**Test**: `npm test` tutti verdi (il gioco non cambia). Catalogo alternativo generato con tutte le scene senza errori (jsdom) e aperto in un browser vero.
+
+**Misure con i bot**: non servono.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (solo il generatore, nessun disegno cambiato); nuovo docs/catalogo-grafico-alternativo.html.
+
+Checklist: nuova voce “Proposta HD-2D: decidere se proseguire con le fasi 2-4 (torrette e nemici rimasti, effetti e stati, HUD e schermate)”.
+
 ## 1.12.4 — colori dei colpi del guardiano, varchi ovali, Area infuocata sotto i nemici e con limite, catalogo completo
 
 Richieste di Marco. Aspetto dei varchi **[Claude]** (DESIGN.md § 10).
