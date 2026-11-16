@@ -6,7 +6,8 @@
    Fase 1: campo di battaglia, Sky Guard, Laser, Gravity Vortex Gun, guardiano, navicella, asteroide, meteora, frammento roccioso,
    missili, Area infuocata, varchi, raggi laser, esplosioni, colpi del guardiano. Fase 2: le altre 8 torrette, cristallo-cometa, nave aliena e nave madre.
    Fase 3: tutti gli altri effetti di FX, sfere del Thunderbolt, fulmine globulare, cupola, icone degli stati, barra della vita.
-   Il resto (fase 4: HUD, numeri del danno, mirino, schermate) è ancora il disegno di app/draw.js.
+   Fase 4: primitive (dischi a pixel, angoli a gradini, testi con l’ombra, pulsanti a pannello), cielo anche dietro i menu, HUD, barre, numeri del danno,
+   mirino, scudo, titoli. Restano come prima solo le icone vettoriali dei pezzi dell’equipaggiamento e dell’albero, e la schermata iniziale (HTML in index.html).
    Tutto quello che si vede sul canvas: primitive (testi, pulsanti, forme), torrette (TURRET_ART), guardiano,
    nemici e indicatori di stato, proiettili ed effetti (FX), HUD, avvisi e schermate (menu, carte, pausa, vittoria, sconfitta).
    Lo usano il gioco (app/index.html) e il catalogo grafico (docs/catalogo-grafico.html, npm run catalog).
@@ -16,7 +17,7 @@
    così le funzioni qui sotto leggono lo stato del gioco (state, slots, enemies, player, clock…) e i dati (TYPES, W, H…)
    come se fossero scritte lì, senza passarli a mano. Di conseguenza: qui solo disegno, nessuna regola di gioco;
    i nomi definiti qui non devono ripetere quelli del gioco; per un elemento nuovo, aggiungilo anche al catalogo.
-   Canvas logico 360×640; colore = tipo di danno (TYPES); nessuno sprite, solo forme.
+   Canvas logico 360×640; colore = tipo di danno (TYPES); sprite a pixel generati dal codice (nessun file di immagine).
    ===================================================================== */
 function FORTRESS_DRAW() {
 
@@ -27,16 +28,35 @@ function glow(x1, y1, x2, y2, color, w, a) {
   ctx.globalAlpha = 0.95 * a; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   ctx.globalAlpha = 1;
 }
-function disc(x, y, r, color, a) { ctx.globalAlpha = a == null ? 1 : a; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1; }
-function rr(x, y, w, h, r) {
-  ctx.beginPath(); ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+// HD-2D: dischi a pixel (cerchio pieno disegnato una volta per raggio e colore), sotto i 2 px un quadratino
+function disc(x, y, r, color, a) {
+  ctx.globalAlpha = a == null ? 1 : a;
+  if (r < PX) { ctx.fillStyle = color; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+  else { const n = Math.max(1, Math.round(r / PX)); blit(procSprite("disc:" + n + ":" + color, n * 2 + 1, n * 2 + 1, (i, j) => (Math.hypot(i - n, j - n) <= n + 0.35 ? color : null), false), x, y, n + 1.5, n + 1.5); }
+  ctx.globalAlpha = 1;
 }
+// HD-2D: rettangoli con gli angoli a gradini (due scalini) invece che arrotondati; sotto i 3 px di raggio, angoli vivi
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  if (r < 3 || w < 12 || h < 12) { ctx.rect(x, y, w, h); return; }
+  const c = r >= 6 ? 3 : 2;
+  ctx.moveTo(x + 2 * c, y); ctx.lineTo(x + w - 2 * c, y); ctx.lineTo(x + w - 2 * c, y + c); ctx.lineTo(x + w - c, y + c); ctx.lineTo(x + w - c, y + 2 * c); ctx.lineTo(x + w, y + 2 * c);
+  ctx.lineTo(x + w, y + h - 2 * c); ctx.lineTo(x + w - c, y + h - 2 * c); ctx.lineTo(x + w - c, y + h - c); ctx.lineTo(x + w - 2 * c, y + h - c); ctx.lineTo(x + w - 2 * c, y + h);
+  ctx.lineTo(x + 2 * c, y + h); ctx.lineTo(x + 2 * c, y + h - c); ctx.lineTo(x + c, y + h - c); ctx.lineTo(x + c, y + h - 2 * c); ctx.lineTo(x, y + h - 2 * c);
+  ctx.lineTo(x, y + 2 * c); ctx.lineTo(x + c, y + 2 * c); ctx.lineTo(x + c, y + c); ctx.lineTo(x + 2 * c, y + c); ctx.closePath();
+}
+// HD-2D: stesso carattere del gioco (leggibile a 360 px), con un’ombra scura di 1 px; i titoli (da 20 px) hanno anche il contorno
 function txt(s, x, y, size, color, align, weight) {
   ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillStyle = color || "#e8eefc"; ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
-  ctx.fillText(s, x, y);
+  ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
+  const a = ctx.globalAlpha;
+  if (size >= 20) { ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = OUTLINE; ctx.strokeText(s, x, y + 1); }
+  if (size >= 24 && color && color[0] === "#") {   // titoli grandi: alone del loro colore
+    const w = ctx.measureText(s).width, cx = ctx.textAlign === "center" ? x : ctx.textAlign === "right" ? x - w / 2 : x + w / 2;
+    light(cx, y, w * 0.7, color, 0.3 * a);
+  }
+  ctx.globalAlpha = a * 0.75; ctx.fillStyle = OUTLINE; ctx.fillText(s, x, y + 1); ctx.globalAlpha = a;
+  ctx.fillStyle = color || "#e8eefc"; ctx.fillText(s, x, y);
 }
 // testo che deve stare in maxW: se è più largo il corpo scende fino a 9 px (rete di sicurezza; tests/testi.js controlla i testi delle carte)
 function fitTxt(s, x, y, maxW, size, color, align, weight) {
@@ -46,8 +66,12 @@ function fitTxt(s, x, y, maxW, size, color, align, weight) {
 function button(x, y, w, h, label, onTap, opts) {
   opts = opts || {};
   buttons.push({ x, y, w, h, onTap, release: !!opts.release });   // release: si attiva al rilascio sullo stesso pulsante (carte)
-  rr(x, y, w, h, 8); ctx.fillStyle = opts.fill || "rgba(18,30,58,0.92)"; ctx.fill();
-  ctx.lineWidth = 1.5; ctx.strokeStyle = opts.stroke || "#2c4272"; ctx.stroke();
+  // HD-2D: pannello a gradini con il contorno scuro, smusso chiaro in alto e ombra in basso, bordo colorato di 2 px
+  rr(x - 1, y - 1, w + 2, h + 2, 8); ctx.fillStyle = OUTLINE; ctx.fill();
+  rr(x, y, w, h, 8); ctx.fillStyle = opts.fill || "rgba(24,20,56,0.95)"; ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fillRect(x + 6, y + 3, w - 12, PX);
+  ctx.fillStyle = "rgba(0,0,0,0.28)"; ctx.fillRect(x + 6, y + h - 5, w - 12, PX);
+  rr(x + 1, y + 1, w - 2, h - 2, 8); ctx.lineWidth = 2; ctx.strokeStyle = opts.stroke || "#3a3a78"; ctx.stroke();
   if (label) txt(label, x + w / 2, y + h / 2 + 1, opts.size || 13, opts.color || "#e8eefc", "center");
 }
 
@@ -61,10 +85,10 @@ function drawDomeFill() {
   // HD-2D: celle esagonali appena accennate che si accendono a turno, come una rete di energia
   const t0 = Math.floor(clock * 3), col = frac > 0.35 ? "#7fe8ff" : "#ff8080";
   for (let k = 0; k < 40; k++) {
-    const an = Math.PI + hash2(k, 51) * Math.PI, d = 0.35 + 0.6 * hash2(k, 52), on = hash2(k, t0) > 0.75;
+    const an = Math.PI + hash2(k, 51) * Math.PI, d = 0.35 + 0.6 * hash2(k, 52), on = hash2(k, t0) > 0.82;
     if (!on) continue;
     const hx = DOME.cx + Math.cos(an) * DOME.rx * d, hy = DOME.cy + Math.sin(an) * DOME.ry * d;
-    pxEllipse(hx, hy, 4, 3.5, col, 0.18 + 0.2 * frac, 0, null);
+    pxEllipse(hx, hy, 4, 3.5, col, 0.07 + 0.08 * frac, 0, null);
   }
   ctx.globalAlpha = 1;
 }
@@ -812,27 +836,36 @@ function drawHud() {
   const fb = enemies.find((e) => e.final && !e.dead);
   if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
     txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
-    rr(30, 100, 300, 12, 6); ctx.fillStyle = "rgba(7,11,22,0.85)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
-    const k = clamp(fb.hp / fb.maxHp, 0, 1);
-    if (k > 0) { rr(32, 102, 296 * k, 8, 4); ctx.fillStyle = TYPES[fb.def.type].color; ctx.fill(); }
+    ctx.fillStyle = "#ffd166"; ctx.fillRect(28, 98, 304, 16);                     // HD-2D: cornice dorata e barra a pixel con le tacche
+    pxBar(32, 102, 296, 8, fb.hp / fb.maxHp, TYPES[fb.def.type].color, true);
   } else if (enemies.some((e) => e.boss && !e.dead)) txt("MINI-BOSS", W / 2, 62, 12, "#ffd166", "center", "800");
   if (has(player, "frenzy1")) {
     const f = frenzyOn(player), k = f ? clamp(player.st.frenzyT / frenzyDur(player), 0, 1) : (player.st.charge || 0);
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(10, 76, 110, 6);
-    ctx.fillStyle = f ? "#ff9a5a" : "#7fa0e0"; ctx.fillRect(10, 76, 110 * k, 6);
+    pxBar(10, 76, 110, 6, k, f ? "#ff9a5a" : "#7fa0e0");
+    if (f || k >= 1) light(10 + 110 * k, 79, 14, f ? "#ff9a5a" : "#7fa0e0", 0.5 + 0.3 * Math.sin(clock * 8));
     txt(f ? (player.st.paused ? "Frenesia in pausa" : "Frenesia!") : (k >= 1 ? "Frenesia pronta" : "Frenesia"), 126, 79, 10, f ? "#ff9a5a" : "#6f82ad", "left", "600");
   }
 }
 function drawFortress() {
   const y = H - FORT_H;
-  ctx.fillStyle = "#101a33"; ctx.fillRect(0, y, W, FORT_H);
+  ctx.fillStyle = "#120f2a"; ctx.fillRect(0, y, W, FORT_H); ctx.fillStyle = "#2a2650"; ctx.fillRect(0, y, W, PX);   // HD-2D: zoccolo scuro, barra a pixel con le tacche
   const frac = clamp(domeHp / domeMax, 0, 1);
-  ctx.fillStyle = frac > 0.35 ? "#3fe0a0" : "#ff5a5a"; ctx.fillRect(10, y + 9, (W - 20) * frac, 8);
-  ctx.strokeStyle = "#2c4272"; ctx.lineWidth = 1; ctx.strokeRect(10, y + 9, W - 20, 8);
+  pxBar(10, y + 8, W - 20, 10, frac, frac > 0.35 ? "#3fe0a0" : "#ff5a5a", true);
   txt("Cupola " + Math.ceil(domeHp) + "/" + domeMax, W / 2, y + 13, 10, "#e8eefc", "center", "700");
   if (domeShield > 0) FX.shieldCount(W - 30, y + 13, domeShield);                // immunità accumulate (Impenetrabile)
 }
-function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, W, H); }
+// HD-2D: barra a pixel (contorno scuro, fondo, riempimento con la riga chiara in alto, tacche ogni 10%)
+function pxBar(x, y, w, h, k, col, notch) {
+  x = Math.round(x / PX) * PX; y = Math.round(y / PX) * PX; w = Math.round(w / PX) * PX; h = Math.max(PX * 2, Math.round(h / PX) * PX);
+  const fw = Math.round(w * clamp(k, 0, 1) / PX) * PX;
+  ctx.fillStyle = OUTLINE; ctx.fillRect(x - PX, y - PX, w + PX * 2, h + PX * 2);
+  ctx.fillStyle = "#231c46"; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = mix(col, "#171338", 0.3); ctx.fillRect(x, y, fw, h);
+  ctx.fillStyle = col; ctx.fillRect(x, y, fw, h - PX);
+  ctx.fillStyle = mix(col, "#fffbea", 0.45); ctx.fillRect(x, y, fw, PX);
+  if (notch) { ctx.fillStyle = "rgba(10,7,22,0.45)"; for (let i = 1; i < 10; i++) ctx.fillRect(x + Math.round(w * i / 10 / PX) * PX, y, PX / 2, h); }
+}
+function dim(a) { ctx.fillStyle = "rgba(10,7,28," + a + ")"; ctx.fillRect(0, 0, W, H); }   // HD-2D: velo viola notte
 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
 const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre" };
@@ -972,8 +1005,12 @@ function overlay(title, lines, color, y0) {
   lines.forEach((l, i) => txt(l, W / 2, (y0 || 190) + 48 + i * 22, 14, "#9fb4d9", "center", "500"));
 }
 function menuScreen() {
-  dim(0.8);
-  txt("FORTRESS DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800");
+  dim(0.62);                                       // HD-2D: velo più leggero, il cielo si vede; titolo dorato col contorno e la luce
+  ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineJoin = "round"; ctx.lineWidth = 6; ctx.strokeStyle = OUTLINE; ctx.strokeText("FORTRESS DEFENSE", W / 2, 72);
+  const tg = ctx.createLinearGradient(0, 58, 0, 84); tg.addColorStop(0, "#fff6d6"); tg.addColorStop(0.5, "#ffd166"); tg.addColorStop(1, "#e08a3a");
+  ctx.fillStyle = tg; ctx.fillText("FORTRESS DEFENSE", W / 2, 70);
+  light(W / 2, 70, 120, "#ffb347", 0.35);
   txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
   button(36, 130, 56, 56, "−", () => { selLevel = Math.max(1, selLevel - 1); }, { size: 26 });
   button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
@@ -1064,6 +1101,7 @@ function upgradeScreen() {
   options.forEach((opt, i) => {
     const x = 20, y = 140 + i * step, w = 320, o = describe(opt), c = TYPES[o.type].color;
     button(x, y, w, h, "", () => pick(i), { stroke: c, release: true });
+    light(x + 26, y + h / 2, 40, c, 0.45);          // HD-2D: il pallino del tipo illumina la carta
     disc(x + 26, y + h / 2, 13, c);
     txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
     txt(o.head, x + 52, y + 22 * k, 11, c, "left", "700");
@@ -1449,9 +1487,10 @@ function guideCards() {
 }
 
 function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
-  ctx.strokeStyle = locked ? "#ffd166" : "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
-  ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
-  ctx.moveTo(x, y - 18); ctx.lineTo(x, y - 6); ctx.moveTo(x, y + 6); ctx.lineTo(x, y + 18); ctx.stroke(); ctx.globalAlpha = 1;
+  const c = locked ? "#ffd166" : "#e8eefc", sp = locked ? 0 : Math.sin(clock * 6);   // HD-2D: anello e tacche a pixel; agganciato si stringe e illumina
+  pxEllipse(x, y, 12 - (locked ? 2 : 0), 12 - (locked ? 2 : 0), c, 0.9, clock * (locked ? 2 : 0.5), clock * (locked ? 2 : 0.5) + 6.2832, 4);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) pxLine(x + dx * (17 + sp), y + dy * (17 + sp), x + dx * 7, y + dy * 7, c, 0.9);
+  ctx.globalAlpha = 1; if (locked) light(x, y, 20, c, 0.5);
 }
 function unlockScreen() {                       // avviso di sblocco sopra la schermata di vittoria: si chiude solo con “Ho capito” (o Invio)
   buttons.length = 0;                            // i pulsanti della vittoria sotto non rispondono finché l’avviso è aperto
@@ -1468,25 +1507,22 @@ function unlockScreen() {                       // avviso di sblocco sopra la sc
   button(90, y0 + h - 60, 180, 44, "Ho capito", closeUnlocks, { size: 15, stroke: "#ffd166" });
 }
 function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
-  ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700");
+  ctx.globalAlpha = clamp(f.life / 0.7, 0, 1);                                  // HD-2D: cifre col contorno scuro, come nei giochi di ruolo
+  ctx.font = "800 12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = OUTLINE; ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = f.color; ctx.fillText(f.txt, f.x, f.y);
 }
 function draw() {
   buttons = [];
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#0a1020"); g.addColorStop(1, "#16254a");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#9fb4d9";
-  for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
-  ctx.globalAlpha = 1;
+  // HD-2D: lo stesso cielo per la battaglia e per i menu, con le stelle che brillano
+  blit(hdBackground(), 0, 0, 0, 0);
+  for (let k = 0; k < 30; k++) {
+    const tw = Math.sin(clock * (1.5 + hash2(k, 21) * 2) + k * 1.7); if (tw < 0.4) continue;
+    ctx.fillStyle = rgba("#e8f0ff", (tw - 0.4) * 1.6); ctx.fillRect(Math.round(hash2(k, 22) * W / PX) * PX, Math.round(hash2(k, 23) * (HORIZON - 60) / PX) * PX, PX, PX);
+  }
 
   if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear" && state !== "levels" && state !== "guide") {
     // HD-2D: cielo fino all’orizzonte, terreno, effetti a terra, poi sprite; luci tutte insieme; atmosfera
     HD.lights = [];
-    blit(hdBackground(), 0, 0, 0, 0);
-    for (let k = 0; k < 30; k++) {                 // stelle che brillano
-      const tw = Math.sin(clock * (1.5 + hash2(k, 21) * 2) + k * 1.7); if (tw < 0.4) continue;
-      ctx.fillStyle = rgba("#e8f0ff", (tw - 0.4) * 1.6); ctx.fillRect(Math.round(hash2(k, 22) * W / PX) * PX, Math.round(hash2(k, 23) * (HORIZON - 60) / PX) * PX, PX, PX);
-    }
     drawGround();
     for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata, varchi) sotto i nemici
     drawDomeFill();
@@ -1512,6 +1548,7 @@ function draw() {
       ctx.globalAlpha = 1;
     }
   }
+  if (state === "menu" || state === "save" || state === "tree" || state === "gear" || state === "levels" || state === "guide") { drawGround(); grade(); motes(); }   // HD-2D: i menu sul cielo
   if (state === "menu" || state === "save") menuScreen();          // il pannello del salvataggio sta sopra al menu
   else if (state === "upgrade") upgradeScreen();
   else if (state === "won") { wonScreen(); if (unlockNotes.length) unlockScreen(); }
@@ -1851,8 +1888,10 @@ const FX = {
     ctx.globalAlpha = 1;
   },
   shieldCount(x, y, n) {                         // barriera · immunità accumulate: scudo con il numero
-    poly([[x - 7, y - 8], [x + 7, y - 8], [x + 7, y], [x, y + 8], [x - 7, y]], "#e8eefc", "#7fe8ff", 1.2);
-    txt(String(n), x, y - 1, 9, "#070b16", "center", "800");
+    blit(gridSprite("shield", ["kkkkkkkkk", "kbwwwwwck", "kbwwwwwck", "kbwwwwwck", "kbwwwwwck", ".kbwwwck.", "..kbwck..", "...kck...", "....k...."],
+      { k: OUTLINE, w: "#e8eefc", b: "#ffffff", c: "#7fe8ff" }), x, y, 4.5, 4.5);   // HD-2D: scudo a pixel
+    ctx.font = "800 9px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#070b16"; ctx.fillText(String(n), x, y - 2);
+    light(x, y, 16, "#7fe8ff", 0.4);
   },
 };
 

@@ -3,6 +3,30 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 4: HUD e schermate (il gioco non cambia)
+
+Ultima fase. Aspetto **[Claude]**. Come deciso, niente pixel art sui testi: stesso carattere, più leggibile possibile a 360 px.
+
+- **Primitive** (`docs/hd2d/draw-hd2d.js`): `disc` disegna dischi a pixel; `rr` fa angoli a due gradini (tutti i pannelli, le carte, le righe dell’albero e
+  dell’equipaggiamento); `txt` aggiunge un’ombra scura di 1 px, il contorno dai 20 px e un alone del colore dai 24 px; `button` è un pannello con il contorno scuro,
+  lo smusso chiaro in alto, l’ombra in basso e il bordo colorato di 2 px; `dim` è un velo viola notte; nuova `pxBar` (barra a pixel con le tacche).
+- **Fondo**: lo stesso cielo stellato e la piattaforma anche dietro menu, albero, equipaggiamento, griglia dei livelli e guida (prima un gradiente con le stelle).
+- **HUD**: barra della frenesia e del boss finale a pixel (cornice dorata, tacche), barra della cupola a pixel con le tacche sullo zoccolo scuro, numeri del danno
+  col contorno scuro, mirino a pixel che si stringe e si illumina quando aggancia, scudo dell’Impenetrabile a pixel.
+- **Schermate**: titolo del menu dorato col contorno e la luce (velo del menu più leggero: il cielo si vede); nelle carte il pallino del tipo illumina la carta.
+- **Cupola**: celle esagonali più discrete (si notavano troppo).
+- **Restano come prima**: le icone vettoriali dei pezzi dell’equipaggiamento e dell’albero (con gli angoli a gradini) e la schermata iniziale e il pannello del
+  salvataggio, che sono HTML e CSS in `app/index.html`, non disegno del canvas.
+
+**Test**: `npm test` tutti verdi (il gioco non cambia); catalogo alternativo rigenerato; nel browser controllate senza errori menu, battaglia, avviso, mirino,
+pausa (due schede), albero (torrette e abilità), equipaggiamento (pezzi e fusione), carte, vittoria, sconfitta, griglia dei livelli, guida, abilità in battaglia.
+Prestazioni su telefono **non misurate**: luci, retini e sprite costano più del disegno attuale.
+
+Catalogo grafico: non cambiato; docs/catalogo-grafico-alternativo.html rigenerato (proposta completa).
+
+Checklist: sostituire “Proposta HD-2D: decidere se proseguire” con “Proposta HD-2D completa (docs/catalogo-grafico-alternativo.html): decidere se adottarla
+nel gioco (prima: prova di fluidità sul telefono)”.
+
 ## Proposta grafica HD-2D, fase 3: effetti e stati (il gioco non cambia)
 
 Fase 3 di 4. Aspetto **[Claude]**.
