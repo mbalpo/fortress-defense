@@ -140,7 +140,7 @@ const LV = { hp0: 0.42, hpSlope: 0.08, hpSlopeHi: 0.02, dmg: 0.01, speed: 0.002,
 // fino a D=10 la vita sale in fretta (da nemici deboli al "muro"); dopo sale piano, perché le scelte per partita non crescono
 // difficoltà effettiva: tra il 20 e il 30 sale piano (la potenza del giocatore è ferma fino al boss del 30); dal 31 sale di 0,2 per livello,
 // tarata con i bot che spendono i Sigilli attesi nell’albero (1,5 per livello dal 31) perché i livelli tra un muro e l’altro restino intorno al 60-80%
-const EFF_SLOPE_31 = 0.8, EFF_JUMP_31 = 2;   // 1.11.0: pendenza da 0,2 a 0,8 e scalino di 2 dal 31, con l’equipaggiamento atteso (muri dal 40 al 50-70%)
+const EFF_SLOPE_31 = 1.2, EFF_JUMP_31 = 3;   // 1.12.0: pendenza 1,2 e scalino di 3 dal 31 (1.11.0: 0,8 e 2), con albero, equipaggiamento e un po’ di Epica attesi (muri dal 40 al 50-70%)
 const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (D - 30);
 const levelHp    = (D) => { D = effD(D); return D <= 10 ? LV.hp0 + LV.hpSlope * (D - 1) : LV.hp0 + LV.hpSlope * 9 + LV.hpSlopeHi * (D - 10); };
 const levelDmg   = (D) => 1 + LV.dmg * (effD(D) - 1);
@@ -166,7 +166,7 @@ const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed:
 // 10, 20, 30 sul pool libero; dal 40 con l’albero atteso e le abilità della barriera, 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
 // fattore per singolo muro (1.11.0): corregge i muri che con l’equipaggiamento atteso uscivano dalla fascia 50-70% [Claude, provvisorio]
-const FINAL_BOSS_K = { 80: 1.3, 100: 1.3, 140: 0.45, 150: 1.1, 170: 1.9 };
+const FINAL_BOSS_K = { 40: 1.2, 60: 0.6, 80: 1.3, 90: 0.6, 100: 0.75, 120: 1.15, 130: 1.15, 170: 1.5, 190: 0.75 };
 const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35)) * (FINAL_BOSS_K[lv] || 1);
 // vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
 const WALL_ENEMY_HP = { 10: 0.93 };
@@ -1254,12 +1254,16 @@ function salvo(s, x, y, cnt) {
       draw() { FX.aeroShard(this); } });
   }
 }
+// mine (Aeroblast, combo del guardiano, Barriera minata): dalla 1.12.0 disegno e contatto doppi (16 px), esplosione sempre di 34 px [Marco];
+// al massimo MINE_MAX mine a schermo: oltre, la mina nuova non nasce
+const MINE_MAX = 25;
 function mine(s, x, y) {
+  if (ents.reduce((n, o) => n + (o.mine && !o.dead ? 1 : 0), 0) >= MINE_MAX) return null;
   const st = aeroStats(s), mul = has(s, "mineD") ? 1.6 : 1;
-  return spawnEnt({ x, y, age: 0, dead: false,
+  return spawnEnt({ x, y, age: 0, dead: false, mine: true,
     update(dt) {
       this.age += dt; if (this.age > 25) { this.dead = true; return; }
-      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 8) {
+      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 16) {
         this.dead = true; ring(this.x, this.y, 34, TYPES.physical.color, 0.3);
         for (const f of living()) if (dist(f.x, f.y, this.x, this.y) <= 34 + f.def.r) {
           damage(f, st.dmg * 0.9 * mul, "physical", false, "aero"); if (has(s, "mineK")) knock(f, 14);
@@ -1866,7 +1870,7 @@ function guardProc(p, proc, e) {
   if (proc.disr && !e.dead) { const s = partner("disr"); destruction(s, e, disrDmg(s)); }
   if (proc.aero) {
     const list = (p.st.mines = (p.st.mines || []).filter((m) => !m.dead));
-    if (list.length < 5) list.push(mine(partner("aero"), e.x, e.y));
+    if (list.length < 5) { const m = mine(partner("aero"), e.x, e.y); if (m) list.push(m); }
   }
   if (proc.thunder) thunderFork(partner("thunder"), e);
 }
@@ -2383,7 +2387,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.12.0";
+const APP_VERSION = "1.12.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {

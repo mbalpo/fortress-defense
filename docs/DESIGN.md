@@ -84,10 +84,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Formule (in `app/index.html`, sezione CAMPAGNA):
   - vita dei nemici: `levelHp(D)` = 0,42 + 0,08·(D−1) fino a D=10, poi +0,02 per livello (valori in `LV`);
   - difficoltà effettiva `effD`: piena fino a 20, al **30%** tra 20 e 30 (la potenza del giocatore è ferma fino al boss del 30),
-    dal 31 sale di **0,8 per livello con uno scalino di 2** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.11.0; al 200 effD = 161; prima 0,2 senza scalino, al 200 effD = 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
+    dal 31 sale di **1,2 per livello con uno scalino di 3** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.12.1; al 200 effD = 230; 1.11.0: 0,8 e 2, effD 161; prima 0,2 senza scalino, effD 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
-  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro dalla 1.11.0 (`FINAL_BOSS_K`: 80 ×1,3, 100 ×1,3, 140 ×0,45, 150 ×1,1, 170 ×1,9) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
+  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro (`FINAL_BOSS_K`, dalla 1.12.1: 40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,75, 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
     al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
@@ -294,6 +294,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Disruption Drone (revisione 1): Esplosione finale = 3× il danno di un colpo del campo su tutta la fascia; Campo attrattivo = danno +40% e a ogni colpo
   il nemico fa metà della strada verso la linea centrale del campo (anche verso il basso; non i boss)  **[da rivedere]**
 - Aeroblast: schegge al 30% del danno, seconda salva dopo 0,5 s, mine di 25 s, doppia esplosione al 60% dopo 1 s  **[Claude]**
+- **Mine** (Aeroblast, combo del guardiano, Barriera minata; 1.12.0) **[deciso]** (Marco): disegno grande il doppio e contatto a 16 px dal centro (prima 8), esplosione sempre di 34 px; **al massimo 25 mine a schermo** (oltre, la nuova non nasce). Nessuna nuova taratura per questo.
 - Aeroblast (revisione 1): Esplosioni ampie = raggio 40 → 56 px; Gittata massima = altri +30% della portata base, che si somma a Gittata estesa (260 → 338 → 416 px)  **[da rivedere]**
 - Thunderbolt: fulmine ogni 1,6 s, ramificazioni al 50%, sfera sul campo 30% per 4 s  **[Claude]**
 - Thunderbolt (revisione 1): paralisi della chain **30% per 1 s** (1,5 s al lv2) **[deciso]**; Scossa continua = un colpo ogni 0,3 s al 25% del danno del fulmine
@@ -376,8 +377,8 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
-- **Difficoltà dal livello 31**: ritarata nella 1.11.0 con albero ed equipaggiamento attesi (pendenza 0,8, scalino 2, fattori del boss per muro, § 5 e § 16):
-  muri dal 40 al 200 in media al 59,8%, dentro la fascia 50-70% (§ 15, **[deciso]**). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
+- **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
+  muri dal 40 al 200 in media al 59,3%, dentro la fascia 50-70% (§ 15, **[deciso]**). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
   vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%): **va bene così** **[deciso]** (Marco, dopo la 1.11.0). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
@@ -735,6 +736,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
   da 1,1 a 1,3 (35,1%) e poi **1,5**: muri dal 50 al 200 in media **31,1%** (200 partite ciascuno: 50 26,0% · 60 30,5% · 70 34,0% · 80 18,0% · 90 16,5% · 100 41,5% ·
   110 35,5% · 120 41,5% · 130 33,0% · 140 17,0% · 150 34,5% · 160 42,5% · 170 47,0% · 180 36,5% · 190 18,0% · 200 25,5%); il 40 (senza abilità) 35,5%.
 - **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
+- **Taratura 1.12.1, con Sigilli maggiori e un po’ di Epica** (`EQUIP=1.5 node tests/tools/curva.js …`, `EPICA` = livelli di Epica per livello di Standard dal 50, default 0,5
+  **[Claude] [provvisorio]**, accettato da Marco come “un po’ di Epica”): ogni livello di Epica dà 3 Sigilli, i maggiori dei boss (≈ 0,27 dai mini-boss, 1 dal boss finale ogni 10)
+  e un drop di Epica. Al 100 i bot hanno 175 Sigilli e 8 maggiori, al 200 475 e 27; spendono un maggiore come 5 Sigilli e saltano lo Sblocco permanente.
+  Con la curva della 1.11.0 (e i costi della 1.12.0): media **81%** (110-180 tra 90 e 98%). Prove: pendenza 1,0 e scalino 3 → media 68%; **1,2 e scalino 3** → 56,8% (da 27,5 a 78).
+  **Finale** (1,2, scalino 3, `FINAL_BOSS_K` del § 5; 200 partite per muro): 40 69,5 · 50 45,0 · 60 45,5 · 70 73,0 · 80 57,0 · 90 41,5 · 100 48,5 · 110 53,5 · 120 74,5 · 130 72,5 ·
+  140 45,0 · 150 55,0 · 160 61,5 · 170 73,0 · 180 71,0 · 190 50,5 · 200 71,0: **media 59,3%**. Con le mine nuove (doppie, al massimo 25).
 - **Taratura 1.11.0, con l’equipaggiamento atteso** (`EQUIP=1.5 node tests/tools/curva.js …`; equipaggiamento da `tests/tools/equip-atteso.js`: drop veri per 1,5 vittorie
   per livello dal 30, poi fusioni, pezzo più raro e Moduli migliori; al 40 guardiano +29%, al 100 +97%, al 200 +152%). Obiettivo **[deciso]**: muri dal 40 tra il 50 e il 70%.
   Con la curva della 1.8.0 i muri dal 40 al 200 erano al **93%** (40 82% · 100 99% · 170-200 98-100%). Prove (100 partite per muro, 40/70/100/140/200): pendenza 0,5 →

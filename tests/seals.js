@@ -184,6 +184,12 @@ console.log("— 1.12.0: Frenesia potenziata, Sigilli maggiori, abilità d’ing
   console.log("abilità d’ingresso: salvataggio vecchio (senza majors) al 45 →", old("treeLv('ab:regen')"), "| salvataggio nuovo →", nu("treeLv('ab:regen')"), "costo", nu("nodeCost(TREE_NODE['ab:regen'])"),
     "| in partita senza comprarle:", (nu("startRun('standard')"), nu("AB.list.length")),
     ok(old("treeLv('ab:regen')") === 1 && nu("treeLv('ab:regen')") === 0 && nu("nodeCost(TREE_NODE['ab:regen'])") === 1 && nu("AB.list.length") === 0));
+  const mn = fresh(45, { majors: 0 }).ev;
+  mn("startRun('standard'); enemies = []; queue = []; ents = []; window.__a = makeShooter(TURRETS.aero, 180, 600);");
+  const n = mn("(() => { for (let i = 0; i < 30; i++) mine(__a, 20 + i * 10, 300); return ents.filter((o) => o.mine).length; })()");
+  const near = mn(`(() => { ents = []; const m = mine(__a, 180, 300); spawn({ enemy: "drone", x: 180 }); const e = enemies[0]; Object.assign(e, { y: 300 + e.def.r + 15, speed: 0 }); m.update(0.016); const a = m.dead;
+    const m2 = mine(__a, 100, 300); Object.assign(e, { x: 100, y: 300 + e.def.r + 17 }); m2.update(0.016); return [a, m2.dead]; })()`);
+  console.log("mine: 30 richieste → a schermo", n, "| nemico a 15 px dal bordo → scoppia", near[0], "| a 17 px →", near[1], ok(n === 25 && near[0] === true && near[1] === false));
 }
 
 console.log("— Nodo “Più carte, più danno” —");

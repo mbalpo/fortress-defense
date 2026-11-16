@@ -929,8 +929,8 @@ const FX = {
   },
   aeroMine(o) {                                  // Aeroblast · mina con le punte
     ctx.strokeStyle = "#8a97b8"; ctx.lineWidth = 1.4; ctx.beginPath();
-    for (let i = 0; i < 4; i++) { const a = i * 0.7854; ctx.moveTo(o.x - Math.cos(a) * 6, o.y - Math.sin(a) * 6); ctx.lineTo(o.x + Math.cos(a) * 6, o.y + Math.sin(a) * 6); }
-    ctx.stroke(); disc(o.x, o.y, 4, "#26345c"); disc(o.x, o.y, 2.2, TYPES.physical.color, 0.6 + 0.4 * Math.sin(o.age * 6));
+    for (let i = 0; i < 4; i++) { const a = i * 0.7854; ctx.moveTo(o.x - Math.cos(a) * 12, o.y - Math.sin(a) * 12); ctx.lineTo(o.x + Math.cos(a) * 12, o.y + Math.sin(a) * 12); }
+    ctx.lineWidth = 2.2; ctx.stroke(); disc(o.x, o.y, 8, "#26345c"); disc(o.x, o.y, 4.4, TYPES.physical.color, 0.6 + 0.4 * Math.sin(o.age * 6));   // doppia dalla 1.12.0
   },
   fieldOrb(o) {                                  // Thunderbolt · sfera del campo elettrico
     disc(o.x, o.y, 6, TYPES.electric.color, 0.9); ring(o.x, o.y, 0, "#fff", 0.001);

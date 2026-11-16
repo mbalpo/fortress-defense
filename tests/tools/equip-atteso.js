@@ -40,11 +40,12 @@ const STRATEGY = `(() => {
   return JSON.stringify(g);
 })()`;
 
-function gearFor(L, vit = 1.5, seed = 1) {
+function gearFor(L, vit = 1.5, seed = 1, epic = 0) {   // epic = livelli di Epica completati (1.12.0), un drop ciascuno
   const g = makeGame({ patch: EV, seed, cleared: Math.max(30, L - 1), level: Math.max(30, L - 1), storage: { "fortress-progress-v1": JSON.stringify({ cleared: Math.max(30, L - 1), seen: [] }) } });
   const ev = g.win.__ev;
   let acc = 0;
   for (let lv = 30; lv < L; lv++) { acc += vit; while (acc >= 1) { acc -= 1; ev(`rollDrops(diffOf(${lv}, false), false)`); } }
+  for (let lv = 1; lv <= epic; lv++) ev(`rollDrops(diffOf(${lv}, true), true)`);
   return JSON.parse(ev(STRATEGY));
 }
 module.exports = { gearFor };

@@ -3,6 +3,25 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.1 — taratura con i Sigilli maggiori e un po’ di Epica, mine doppie
+
+- **Bot con un po’ di Epica** (`tests/tools/curva.js`, `equip-atteso.js`): dal 50 il giocatore atteso completa 1 livello di Epica ogni 2 di Standard (`EPICA`, default 0,5):
+  Sigilli dell’Epica, Sigilli maggiori dei boss e drop di Epica. La spesa dei bot conta un maggiore come 5 Sigilli, salta lo Sblocco permanente, dà le abilità d’ingresso dal 40.
+- **Curva dal 31**: pendenza da 0,8 a **1,2**, scalino da 2 a **3**; `FINAL_BOSS_K` rifatto (40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,75, 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75).
+- **Mine** (decisione di Marco): disegno doppio, contatto a 16 px (prima 8), esplosione sempre di 34 px, **al massimo 25 a schermo** (`MINE_MAX`); la combo dell’Aeroblast
+  accetta che la mina non nasca.
+- DESIGN.md: § 5 formule, § 10 mine, § 11 difficoltà, § 16 “Taratura 1.12.1”. `APP_VERSION` e `VERSION` di `sw.js`: 1.12.1.
+
+**Misure con i bot** (equipaggiamento atteso e un po’ di Epica, 200 partite per muro): con la curva della 1.11.0 media 81%; pendenza 1,0 → 68%; 1,2 → 56,8%; **finale 59,3%**
+(40 69,5 · 50 45,0 · 60 45,5 · 70 73,0 · 80 57,0 · 90 41,5 · 100 48,5 · 110 53,5 · 120 74,5 · 130 72,5 · 140 45,0 · 150 55,0 · 160 61,5 · 170 73,0 · 180 71,0 · 190 50,5 · 200 71,0).
+I muri più lontani dalla fascia (90 41,5, 120 74,5) sono a meno di 10 punti, vicino al rumore (±7).
+
+**Test**: `seals.js`, nuovo controllo delle mine (30 richieste → 25 a schermo; scoppia a 15 px dal bordo del nemico, non a 17). `npm test`: tutti verdi. Screenshot 31 (mine) controllato.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (mine doppie).
+
+Checklist: aggiornare “Taratura dal 31” (rifatta con maggiori ed Epica, ipotesi 1 livello di Epica ogni 2 di Standard); nuova voce “Mine doppie e limite di 25: da provare”.
+
 ## 1.12.0 — Sigilli maggiori, costi nuovi dell’albero, Ventaglio e Frenesia potenziati, Moduli rari
 
 Richieste di Marco, punti 1-5 (i punti 6-11 sono nel prossimo lavoro).
