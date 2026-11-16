@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Proposta grafica HD-2D, fase 2: torrette e nemici rimasti (il gioco non cambia)
+
+Fase 2 di 4. Aspetto **[Claude]**.
+
+- **Le altre 8 torrette** in `TURRET_GRID` (`docs/hd2d/draw-hd2d.js`), con la sagoma di quelle attuali: Disruption Drone (piattaforma con l’antenna e due droni
+  a rombo che ondeggiano), Aeroblast (mortaio che si allarga in alto, lampade sulla base), Thunderbolt (traliccio con le croci e la sfera a pixel che crepita),
+  Beam (parabola con l’ago che pulsa), Firewheel (fionda a Y con l’elastico e la palla di fuoco), Hive (alveare a fasce, porta scura, api che girano),
+  Railgun (due rotaie con le bobine, carica che sale tra le rotaie), Teslacoil (bobina ad anelli con la sfera e le scintille). Parti animate e luci in `hdTurretExtra`.
+- **Nemici**: cristallo-cometa (cristallo a facce con lo spigolo illuminato e coda di scintille), nave aliena e nave madre (scafo a punta generato dal profilo
+  attuale, bordo dorato, cabina luminosa, oblò, giunture, motori in alto con le fiamme a pixel; la nave madre con le ali). Nuove primitive `pxDot`, `pixelOrb`.
+- `tests/tools/hd2d-shots.js`: nuova tavola `hd2d-sprite-2.png` (11 torrette, cristallo, navi nei 5 tipi).
+
+**Test**: `npm test` tutti verdi (il gioco non cambia); catalogo alternativo rigenerato, tutte le scene senza errori anche nel browser.
+
+Catalogo grafico: non cambiato; docs/catalogo-grafico-alternativo.html rigenerato.
+
+Checklist: nessuna voce nuova (resta “Proposta HD-2D: decidere se proseguire”, ora con le fasi 3-4: effetti e stati, HUD e schermate).
+
 ## Proposta grafica HD-2D, fase 1: ritocchi (il gioco non cambia)
 
 Osservazioni di Marco sulla prova di stile.

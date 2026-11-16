@@ -60,3 +60,14 @@ function battle(extra) {
     foe(ENEMY_DEFS.spitter, 60, 510, { flash: 0.1 }); foe(ENEMY_DEFS.shell, 160, 510, { hp: 0.5, slowT: 1, burnT: 1 });
     DRAW.FX.portals({ t: 4 }, { x: 260, y: 500 }, 22, { x: 320, y: 560 });`);
   g.save("sprite.png"); }
+
+// fase 2: le 11 torrette, cristallo-cometa, nave aliena e nave madre nei 5 tipi
+{ const g = battle(); g.frame(30);
+  g.ev(`state = "pause"; ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); ctx.fillStyle = "#1b2238"; ctx.fillRect(0, 0, W, H);
+    const at = (x, y, z, fn) => { ctx.save(); ctx.translate(x, y); ctx.scale(z, z); fn(); ctx.restore(); };
+    Object.keys(TURRETS).forEach((id, i) => at(30 + (i % 6) * 60, 80 + Math.floor(i / 6) * 90, 1.8, () => DRAW.TURRET_ART[id](0, 0, TYPES[TURRETS[id].type].color)));
+    const foe = (def, x, y, z, extra) => at(x, y, z, () => DRAW.drawEnemy(Object.assign({ def, x: 0, y: 0, hp: 1, maxHp: 1, flash: 0, shape: DRAW.ICON_SHAPE, rot: 0.4, boss: false }, extra || {})));
+    TYPE_KEYS.forEach((t, i) => foe(Object.assign({}, ENEMY_DEFS.wisp, { type: t }), 36 + i * 70, 250, 1.8));
+    TYPE_KEYS.forEach((t, i) => foe(Object.assign(bossDef(1, 5), { type: t }), 36 + i * 72, 360, 1.1, { boss: true, hp: 0.7 }));
+    TYPE_KEYS.slice(0, 3).forEach((t, i) => foe(Object.assign(finalBossDef(10), { type: t }), 60 + i * 120, 520, 1, { boss: true, hp: 0.7 }));`);
+  g.save("sprite-2.png"); }

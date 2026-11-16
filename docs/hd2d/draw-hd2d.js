@@ -4,7 +4,8 @@
    Copia di app/draw.js con un altro aspetto: pixel art con luci moderne, cielo stellato fino all’orizzonte, ombre a terra. NON è usata dal gioco:
    la carica solo il catalogo alternativo (npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html) e tests/tools/hd2d-shots.js.
    Fase 1: campo di battaglia, Sky Guard, Laser, Gravity Vortex Gun, guardiano, navicella, asteroide, meteora, frammento roccioso,
-   missili, Area infuocata, varchi, raggi laser, esplosioni, colpi del guardiano. Il resto è ancora il disegno di app/draw.js.
+   missili, Area infuocata, varchi, raggi laser, esplosioni, colpi del guardiano. Fase 2: le altre 8 torrette, cristallo-cometa, nave aliena e nave madre.
+   Il resto (effetti delle fasi 3-4, stati, HUD, schermate) è ancora il disegno di app/draw.js.
    Tutto quello che si vede sul canvas: primitive (testi, pulsanti, forme), torrette (TURRET_ART), guardiano,
    nemici e indicatori di stato, proiettili ed effetti (FX), HUD, avvisi e schermate (menu, carte, pausa, vittoria, sconfitta).
    Lo usano il gioco (app/index.html) e il catalogo grafico (docs/catalogo-grafico.html, npm run catalog).
@@ -272,9 +273,9 @@ function saucerSprite(col, blink) {
   });
 }
 
-/* ---------- sprite a griglia: torrette (Sky Guard, Laser, Gravity Vortex Gun) e guardiano ---------- */
-// lettere: k contorno · a-e metallo dal più scuro · 1-5 colore del tipo (rampa, 3 = base) · w bianco caldo · y luce gialla · v vuoto · o arancione
-function turretPal(c) { const P = ramp(c); return Object.assign({ k: OUTLINE, w: "#fffbea", y: "#ffd27a", v: "#0a0418", o: "#ff9a4a" }, METAL, { 1: P[1], 2: P[2], 3: P[3], 4: P[4], 5: P[5] }); }
+/* ---------- sprite a griglia: le 11 torrette e il guardiano ---------- */
+// lettere: k contorno · a-e metallo dal più scuro · 1-5 colore del tipo (rampa, 3 = base) · w bianco caldo · y luce gialla · v vuoto · o arancione · n elastico
+function turretPal(c) { const P = ramp(c); return Object.assign({ k: OUTLINE, w: "#fffbea", y: "#ffd27a", v: "#0a0418", o: "#ff9a4a", n: "#c9b28a" }, METAL, { 1: P[1], 2: P[2], 3: P[3], 4: P[4], 5: P[5] }); }
 const TURRET_GRID = {
   sky: [                         // lanciamissili: due tubi inclinati con le testate pronte, base con le prese d’aria accese
     "................",
@@ -327,6 +328,142 @@ const TURRET_GRID = {
     "...kkdcccbbkk...",
     "..kdccccccbbbk..",
     "kkkkkkkkkkkkkkkk"],
+  disr: [                        // piattaforma con l’antenna; i due droni a rombo si disegnano a parte e ondeggiano
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    ".......kk.......",
+    "......k54k......",
+    "......k32k......",
+    ".......kdk......",
+    "......kdcbk.....",
+    "..kkkkkdcbkkkk..",
+    ".kddccccccccbbk.",
+    "kd3ccc3cc3ccc3ak",
+    "kkkkkkkkkkkkkkkk"],
+  aero: [                        // mortaio: canna corta che si allarga in alto, bordo nel colore del tipo
+    "................",
+    "................",
+    "................",
+    "kkkkkkkkkkkkkkkk",
+    "k54444444443332k",
+    "kkkkkkkkkkkkkkkk",
+    ".kedddcccccbbbk.",
+    ".kedddcccccbbbk.",
+    "..kedcccccbbak..",
+    "..kedcccccbbak..",
+    "...kdccccbbak...",
+    "...kkkkkkkkkk...",
+    "..kcyccccccybk..",
+    ".kdccccccccccbk.",
+    ".kbbbbbbbbbbbak.",
+    "kkkkkkkkkkkkkkkk"],
+  thunder: [                     // traliccio con le croci; la sfera in cima si disegna a parte e crepita
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    ".......kk.......",
+    "......kdbk......",
+    "......kdbk......",
+    ".....kdkkbk.....",
+    ".....kdbdbk.....",
+    ".....kkdbkk.....",
+    "....kdkbdkbk....",
+    "....kdbkkdbk....",
+    "...kdkdbbdkbk...",
+    "..kdccbkkbbbak..",
+    "kkkkkkkkkkkkkkkk"],
+  beam: [                        // parabola con l’ago al centro
+    "................",
+    "................",
+    "......kkk.......",
+    "......k5k.......",
+    "kk....k4k....kk.",
+    "kek...kdk...kbk.",
+    ".kek..kdk..kbk..",
+    ".kddkkkdkkkcbk..",
+    "..kddcccccccbk..",
+    "...kkdcccbkkk...",
+    ".....kkdbkk.....",
+    "......kdbk......",
+    "......kdbk......",
+    "....kkdcbbkk....",
+    "...kdccccbbak...",
+    "kkkkkkkkkkkkkkkk"],
+  wheel: [                       // fionda: forcella a Y con l’elastico; la palla di fuoco si disegna a parte
+    "................",
+    "................",
+    "................",
+    ".kk..........kk.",
+    "kdck........kcbk",
+    "kdck........kcbk",
+    ".kdck......kcbk.",
+    ".kdcnn....nncbk.",
+    "..kdcknnnnkcbk..",
+    "...kdcckkccbk...",
+    "....kdccccbk....",
+    ".....kdccbk.....",
+    "......kdbk......",
+    "....kkkdbkkk....",
+    "...kdcccccbbk...",
+    "kkkkkkkkkkkkkkkk"],
+  hive: [                        // alveare a fasce, porta scura in basso; le api girano attorno
+    "................",
+    "................",
+    "................",
+    "................",
+    "......kkkk......",
+    ".....k3443k.....",
+    "....kkkkkkkk....",
+    "....kdccccbk....",
+    "...kkkkkkkkkk...",
+    "...k23344332k...",
+    "..kkkkkkkkkkkk..",
+    "..kdcccvvccbbk..",
+    ".kkkkkvvvvkkkkk.",
+    ".k2334vvvv4332k.",
+    ".k223333333322k.",
+    "kkkkkkkkkkkkkkkk"],
+  rail: [                        // due rotaie alte con le bobine; tra le rotaie corre la carica
+    "...kkk....kkk...",
+    "...kek....kek...",
+    "...kek....kek...",
+    "...kdk....kdk...",
+    "..kk3kk..kk3kk..",
+    "..k343k..k343k..",
+    "..kk3kk..kk3kk..",
+    "...kdk....kdk...",
+    "...kdk....kdk...",
+    "..kk3kk..kk3kk..",
+    "..k343k..k343k..",
+    "..kkkkkkkkkkkk..",
+    ".kdcc3cccc3cbbk.",
+    ".kdccccccccccbk.",
+    "kdccccccccccbbak",
+    "kkkkkkkkkkkkkkkk"],
+  tesla: [                       // bobina ad anelli con la sfera in cima
+    "................",
+    ".......kk.......",
+    "......kwyk......",
+    "......kyok......",
+    ".......kk.......",
+    ".....kkkkkk.....",
+    "....k345543k....",
+    ".....kkdbkk.....",
+    "....kkkkkkkk....",
+    "...k34555432k...",
+    "....kkkdbkkk....",
+    "..kkkkkkkkkkkk..",
+    "..k3455555432k..",
+    "...kkkkdbkkkk...",
+    "...kdcccccbbak..",
+    "kkkkkkkkkkkkkkkk"],
 };
 function turretSprite(id, c) { return gridSprite("t:" + id + ":" + c, TURRET_GRID[id], turretPal(c)); }
 function hdTurret(id, x, g, c) {
@@ -342,8 +479,106 @@ function hdTurret(id, x, g, c) {
       ctx.fillRect(Math.round((x + Math.cos(ang) * rr) / PX) * PX - 1, Math.round((g - 19 + Math.sin(ang) * rr * 0.9) / PX) * PX - 1, PX, PX);
     }
     ctx.globalAlpha = a; light(x, g - 19, 26, c, 0.7 * a);
+  } else hdTurretExtra(id, x, g, c, a);
+}
+// HD-2D: quadratino allineato alla griglia dei pixel
+function pxDot(x, y, col, a) { if (a != null) ctx.globalAlpha = a; ctx.fillStyle = col; ctx.fillRect(Math.round(x / PX) * PX, Math.round(y / PX) * PX, PX, PX); }
+// sfera di energia a pixel (raggio R in pixel dello sprite) che crepita: bordo che cambia 15 volte al secondo, qualche scintilla fuori
+function pixelOrb(x, y, R, col, t) {
+  const t0 = Math.floor(t * 15), a = ctx.globalAlpha, bx = Math.round(x / PX) * PX, by = Math.round(y / PX) * PX;
+  for (let j = -R - 1; j <= R + 1; j++) for (let i = -R - 1; i <= R + 1; i++) {
+    const d = Math.hypot(i, j); if (d > R + 0.4) continue;
+    if (d > R - 0.6 && hash2(i + t0, j - t0) > 0.6) continue;
+    ctx.fillStyle = d < R * 0.4 ? "#ffffff" : d < R * 0.75 ? "#fff6b0" : col; ctx.fillRect(bx + i * PX, by + j * PX, PX, PX);
+  }
+  for (let k = 0; k < 3; k++) { const an = hash2(k, t0) * 6.2832, d = (R + 1.5 + hash2(k + 5, t0)) * PX; pxDot(x + Math.cos(an) * d, y + Math.sin(an) * d, "#fff6b0", a * 0.8); }
+  ctx.globalAlpha = a;
+}
+const DISR_DRONE = ["...k...", "..k5k..", ".k453k.", "k45332k", ".k322k.", "..k2k..", "...k..."];
+// parti animate delle torrette della fase 2 (droni, sfere, fiamme, api, cariche) e le loro luci
+function hdTurretExtra(id, x, g, c, a) {
+  if (id === "disr") {
+    for (const s of [-1, 1]) {
+      const dy = Math.sin(clock * 2.6 + s) * 1.6;
+      blit(gridSprite("disrDrone:" + c, DISR_DRONE, turretPal(c)), x + s * 8, g - 21 + dy, 3.5, 3.5);
+      light(x + s * 8, g - 21 + dy, 14, c, 0.6 * a);
+    }
+    light(x, g - 15, 10, c, 0.5 * a);
+  } else if (id === "aero") { light(x - 9, g - 7, 8, "#ffd27a", 0.6 * a); light(x + 9, g - 7, 8, "#ffd27a", 0.6 * a); light(x, g - 22, 18, c, 0.3 * a); }
+  else if (id === "thunder") { pixelOrb(x, g - 25, 3, c, clock); light(x, g - 25, 30 + 4 * Math.sin(clock * 23), c, 0.85 * a); }
+  else if (id === "beam") { const f = 0.7 + 0.3 * Math.sin(clock * 6); pxDot(x - 1, g - 27, "#ffffff", a); ctx.globalAlpha = a; light(x - 1, g - 26, 22 * f, c, 0.9 * a); }
+  else if (id === "wheel") {
+    pixelOrb(x, g - 15, 2, "#ff8a3d", clock);
+    pixelFlame(x, g - 17, 8 + 3 * Math.sin(clock * 9), 3, a, 7);
+    light(x, g - 17, 26, "#ff8a3d", 0.8 * a);
+  } else if (id === "hive") {
+    for (let k = 0; k < 3; k++) {                // api che girano attorno all’alveare
+      const an = clock * (2 + k * 0.4) + k * 2.1, bx = x + Math.cos(an) * (12 + k * 2), by = g - 16 + Math.sin(an) * 6;
+      pxDot(bx, by, k % 2 ? c : "#ffe0ff", a);
+    }
+    ctx.globalAlpha = a; light(x, g - 8, 14, c, 0.5 * a);
+  } else if (id === "rail") {                    // carica che sale tra le rotaie
+    const t0 = Math.floor(clock * 18);
+    for (let k = 0; k < 6; k++) { const yy = g - 8 - ((clock * 40 + k * 4) % 22); if (hash2(k, t0) > 0.25) pxDot(x + (hash2(k + 9, t0) > 0.5 ? 0 : -PX), yy, k % 2 ? "#ffffff" : c, a); }
+    ctx.globalAlpha = a; light(x, g - 20, 20, "#bfe6ff", 0.55 * a);
+  } else if (id === "tesla") {
+    const t0 = Math.floor(clock * 12);
+    for (let k = 0; k < 2; k++) { const an = hash2(k, t0) * 6.2832; pxDot(x + Math.cos(an) * 7, g - 27 + Math.sin(an) * 5, "#fff6b0", a); }
+    ctx.globalAlpha = a; light(x, g - 27, 20, "#ffe14d", 0.8 * a); light(x, g - 14, 14, c, 0.35 * a);
   }
 }
+
+/* ---------- nemici della fase 2: cristallo-cometa, nave aliena (mini-boss), nave madre (boss finale) ---------- */
+function shardSprite(col) {
+  const P = ramp(col);
+  return procSprite("shard:" + col, 9, 13, (i, j) => {
+    const dx = i - 4, dy = j - 5;
+    if (Math.abs(dx) / 4.1 + (dy < 0 ? -dy / 5.2 : dy / 7.2) > 1) return null;
+    if (dx === 0 && dy < 3) return "#ffffff";                      // spigolo centrale illuminato
+    if (dy === 0) return P[4];
+    return dy < 0 ? (dx < 0 ? P[5] : P[3]) : (dx < 0 ? P[3] : P[1]);
+  });
+}
+// nave: scafo a punta verso il basso (scende), bordo dorato, cabina luminosa, motori in alto con le fiamme; la nave madre ha le ali
+function shipSprite(col, mother, r) {
+  const P = ramp(col), R = r / PX, wf = mother ? 1.2 : 1.05;
+  const hull = [[0, 1], [wf, -0.15], [0.55, -0.85], [-0.55, -0.85], [-wf, -0.15]];
+  const wings = mother ? [[[0.9, -0.35], [1.55, -0.75], [1.2, 0.1]], [[-0.9, -0.35], [-1.55, -0.75], [-1.2, 0.1]]] : [];
+  const inPoly = (pts, x, y) => { let c = false; for (let a = 0, b = pts.length - 1; a < pts.length; b = a++) { const [xa, ya] = pts[a], [xb, yb] = pts[b]; if ((ya > y) !== (yb > y) && x < (xb - xa) * (y - ya) / (yb - ya) + xa) c = !c; } return c; };
+  const ext = mother ? 1.6 : 1.1, w = Math.ceil(R * ext) * 2 + 1, top = Math.ceil(R * 0.9), h = top + Math.ceil(R) + 1, cx = (w - 1) / 2;
+  const part = (i, j) => { const x = (i - cx) / R, y = (j - top) / R; return inPoly(hull, x, y) ? 1 : wings.some((p) => inPoly(p, x, y)) ? 2 : 0; };
+  return procSprite("ship:" + col + ":" + (mother ? 1 : 0), w, h, (i, j) => {
+    const p = part(i, j); if (!p) return null;
+    const x = (i - cx) / R, y = (j - top) / R;
+    if (!part(i - 1, j) || !part(i + 1, j) || !part(i, j - 1) || !part(i, j + 1) || (p === 2 && part(i, j + 1) === 1)) return x < 0.05 ? "#ffd166" : "#b8862a";   // bordo dorato
+    if (Math.hypot(x, y - 0.1) < 0.14) return "#fff6b0";            // cabina
+    if (Math.hypot(x, y - 0.1) < 0.3) return Math.hypot(x, y - 0.1) < 0.22 ? "#5a3a6a" : "#1a1030";
+    for (const d of [-0.3, 0.3]) if (Math.hypot(x - d, y + 0.82) < 0.13) return "#ffd18a";   // motori
+    for (const d of [-0.55, 0.55]) if (Math.hypot(x - d, y + 0.25) < 0.1) return "#1a1030";  // oblò
+    if (Math.abs(y + 0.45) < 0.035 || (p === 2 && Math.abs(Math.abs(x) - 1.2) < 0.04)) return P[1];   // giunture
+    if (Math.abs(x) < 0.04) return P[4];                                                           // costola centrale
+    const lam = -x * 0.55 - y * 0.35 + (hash2(i, j) - 0.5) * 0.15;
+    return lam > 0.35 ? P[4] : lam > 0 ? P[3] : lam > -0.35 ? P[2] : P[1];
+  });
+}
+function hdEnemy2(e, c, look) {
+  const x = e.x, y = e.y, r = e.def.r, a = ctx.globalAlpha;
+  if (look === "shard") {
+    const t0 = Math.floor(clock * 14);           // coda di scintille sopra (scende)
+    for (let k = 0; k < 9; k++) { const q = k / 9; if (hash2(k, t0) < q * 0.8) continue;
+      pxDot(x + (hash2(k + 3, t0) - 0.5) * r * (0.5 + q), y - r * 1.1 - k * PX * 1.5, q < 0.3 ? "#ffffff" : "#7ff6ff", a * (1 - q * 0.8)); }
+    ctx.globalAlpha = a;
+    blit(shardSprite(c), x, y, 5, 6);
+    light(x, y - 2, r * 2.6, c, 0.6 * a); light(x, y - 4, r * 0.8, "#ffffff", 0.3 * a);
+    return;
+  }
+  const mother = look === "mothership", sp = shipSprite(c, mother, r), cx = (sp.width - 1) / 2, top = Math.ceil(r / PX * 0.9) + 1;
+  for (const d of [-0.3, 0.3]) pixelFlame(x + d * r, y - r * 0.85, (mother ? 14 : 10) + 4 * Math.sin(clock * 11 + d * 7), mother ? 4.5 : 3.5, a, d > 0 ? 3 : 9);
+  blit(sp, x, y, cx + 0.5, top + 0.5);
+  light(x, y + r * 0.1, r * 1.3, "#fff6b0", 0.5 * a); light(x, y, r * 2.6, c, 0.4 * a);
+  for (const d of [-0.3, 0.3]) light(x + d * r, y - r * 0.9, r * 0.9, "#ffb070", 0.6 * a);
+}
+
 // guardiano visto di spalle: cannone alzato a destra, mano sinistra che lo afferra, zaino con la luce
 // generata a strati (dal fondo: braccio sinistro, busto, gambe, testa, collo, braccio destro, cannone, mano): l’avambraccio sinistro passa
 // dietro la testa e ricompare con la mano sull’attacco del cannone; le due braccia hanno lo stesso spessore; il collo stacca la testa dalle spalle
@@ -388,46 +623,14 @@ const BODY = "#2b3a66", BODY2 = "#44598f", DARK = "#070b16";
 const TURRET_ART = {
   sky(x, g, c) { hdTurret("sky", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   laser(x, g, c) { hdTurret("laser", x, g, c); },   // HD-2D: sprite in TURRET_GRID
-  disr(x, g, c) {                // piattaforma con due droni
-    ctx.fillStyle = BODY; ctx.fillRect(x - 11, g - 5, 22, 5); ctx.fillStyle = BODY2; ctx.fillRect(x - 2, g - 12, 4, 8);
-    for (const dx of [-7, 7]) poly([[x + dx, g - 22], [x + dx + 5, g - 16.5], [x + dx, g - 11], [x + dx - 5, g - 16.5]], c, "#ffffff", 0.8);
-  },
-  aero(x, g, c) {                // mortaio: canna corta e larga
-    poly([[x - 6, g], [x + 6, g], [x + 10, g - 17], [x - 10, g - 17]], BODY2);
-    ctx.fillStyle = c; ctx.fillRect(x - 10.5, g - 20, 21, 3.5); ctx.fillStyle = BODY; ctx.fillRect(x - 8, g - 9, 16, 3);
-  },
-  thunder(x, g, c) {             // torre a traliccio con la sfera in cima
-    poly([[x - 7, g], [x + 7, g], [x + 2.5, g - 23], [x - 2.5, g - 23]], BODY, BODY2, 1.2);
-    ctx.strokeStyle = BODY2; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - 5.5, g - 6); ctx.lineTo(x + 4, g - 14); ctx.moveTo(x + 5.5, g - 6); ctx.lineTo(x - 4, g - 14); ctx.stroke();
-    disc(x, g - 27, 6.5, c, 0.3); disc(x, g - 27, 4.2, c);
-  },
-  beam(x, g, c) {                // parabola con l’ago
-    ctx.fillStyle = BODY; ctx.fillRect(x - 3, g - 10, 6, 10);
-    ctx.beginPath(); ctx.arc(x, g - 22, 11, 0.15 * Math.PI, 0.85 * Math.PI); ctx.lineWidth = 3.2; ctx.strokeStyle = BODY2; ctx.stroke();
-    ctx.strokeStyle = c; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x, g - 11); ctx.lineTo(x, g - 26); ctx.stroke(); disc(x, g - 27, 2.6, c);
-  },
-  wheel(x, g, c) {               // fionda con la palla di fuoco
-    ctx.strokeStyle = BODY2; ctx.lineWidth = 3.6; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x, g); ctx.lineTo(x, g - 11); ctx.lineTo(x - 8.5, g - 25); ctx.moveTo(x, g - 11); ctx.lineTo(x + 8.5, g - 25); ctx.stroke();
-    ctx.strokeStyle = "#c9b28a"; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(x - 8.5, g - 25); ctx.quadraticCurveTo(x, g - 13, x + 8.5, g - 25); ctx.stroke();
-    disc(x, g - 18.5, 3.8, c);
-  },
-  hive(x, g, c) {                // alveare a fasce
-    let y = g;
-    [[11, 6], [10, 6], [8, 6], [5, 5]].forEach((row, i) => { rr(x - row[0], y - row[1], row[0] * 2, row[1], 3); ctx.fillStyle = i % 2 ? BODY2 : c; ctx.fill(); y -= row[1] - 0.5; });
-    disc(x, g - 5, 2.8, DARK);
-  },
-  rail(x, g, c) {                // due rotaie parallele
-    ctx.fillStyle = BODY; ctx.fillRect(x - 9, g - 8, 18, 8);
-    ctx.fillStyle = "#c7d1e6"; ctx.fillRect(x - 5.5, g - 29, 3, 22); ctx.fillRect(x + 2.5, g - 29, 3, 22);
-    ctx.fillStyle = c; ctx.fillRect(x - 2.5, g - 13, 5, 4);
-  },
-  tesla(x, g, c) {               // bobina ad anelli
-    ctx.fillStyle = BODY2; ctx.fillRect(x - 1.5, g - 22, 3, 22); ctx.fillStyle = BODY; ctx.fillRect(x - 9, g - 4, 18, 4);
-    ctx.strokeStyle = c; ctx.lineWidth = 2;
-    [[9, 7], [7, 12], [5, 17]].forEach((q) => { ctx.beginPath(); ctx.ellipse(x, g - q[1], q[0], 2.4, 0, 0, 6.2832); ctx.stroke(); });
-    disc(x, g - 24, 3.2, "#fff6b0");
-  },
+  disr(x, g, c) { hdTurret("disr", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  aero(x, g, c) { hdTurret("aero", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  thunder(x, g, c) { hdTurret("thunder", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  beam(x, g, c) { hdTurret("beam", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  wheel(x, g, c) { hdTurret("wheel", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  hive(x, g, c) { hdTurret("hive", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  rail(x, g, c) { hdTurret("rail", x, g, c); },   // HD-2D: sprite in TURRET_GRID
+  tesla(x, g, c) { hdTurret("tesla", x, g, c); },   // HD-2D: sprite in TURRET_GRID
   vortex(x, g, c) { hdTurret("vortex", x, g, c); },   // HD-2D: sprite in TURRET_GRID
 };
 function drawTurret(s) {
@@ -523,6 +726,7 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
 function drawEnemy(e) {
   const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, r = e.def.r, look = e.def.look || "rock", x = e.x, y = e.y, shade = "rgba(7,11,22,0.38)";
   if (look === "rock" || look === "asteroid" || look === "meteor" || look === "saucer") hdEnemy(e, c, look);   // HD-2D: sprite
+  else if (look === "shard" || look === "ship" || look === "mothership") hdEnemy2(e, c, look);
   else if (false) {
     if (look === "meteor") tail(e, r, 2.6, "rgba(255,180,90,0.7)");
     rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
