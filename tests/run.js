@@ -57,6 +57,9 @@ const T = [
   ["aspetto.js", "aree in fiamme della Sky Guard (limite, sotto i nemici), varchi ovali, colori dei colpi del guardiano", [/limite 2\) ✓/, /limite 4\) ✓/, /limite 5\) ✓/,
     /spente le prime, nuovo impatto: 1 ✓/, /\(under\): true ✓/, /ordine di disegno: .* ✓/, /resta fuori: true ✓/, /combo nessuna .* ✓/, /combo kSky  .* ✓/,
     /combo kVortex .* ✓/, /combo kSky\+kVortex .* ✓/, /clone speculare .* ✓/]],
+  ["grafica.js", "grafica classica o HD-2D: scelta nel menu, caricamento, partite in HD-2D, cache degli sprite, contatore fps", [/di base: grafica classic .* ✓/,
+    /tocco su “Grafica” nel menu → salvata hd2d .* ✓/, /durante l’ondata .* ✓/, /impostazione salvata “hd2d” al caricamento: grafica hd2d .* ✓/,
+    /contatore fps false → true .* ✓/, /impostazioni non valide ignorate: .* ✓/, /livello 10: \d+ fotogrammi in HD-2D.* ✓/, /livello 30: \d+ fotogrammi in HD-2D.* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
 ];

@@ -3,9 +3,9 @@
 // Ad ogni pubblicazione alzare VERSION (uguale ad APP_VERSION in index.html): se sw.js non cambia, il browser
 // non vede l’aggiornamento. La versione nuova scarica tutti i file in una cache nuova; la schermata iniziale
 // del gioco la attiva e ricarica la pagina. Se cambia l’elenco dei file, aggiornare anche ASSETS.
-const VERSION = "1.12.5";
+const VERSION = "1.13.0";
 const CACHE = "fortress-" + VERSION;
-const ASSETS = ["./", "./index.html", "./draw.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./icon-180.png"];
+const ASSETS = ["./", "./index.html", "./draw.js", "./draw-hd2d.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./icon-180.png"];
 
 self.addEventListener("install", (e) => {
   // cache: "reload" salta la cache HTTP del browser: i file arrivano davvero dal sito

@@ -142,6 +142,12 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Potenziamenti presi dalla scelta delle carte** (1.12.3) **[deciso]**: pulsante “Potenziamenti presi” sotto le carte e nella ricompensa del mini-boss (tasto B): la vista
   “Torri e potenziamenti” della pausa, poi “Torna alle carte”. Questi pulsanti e “Rinnova le carte” si attivano al rilascio, come le carte.
 
+- **Grafica: Classica o HD-2D** (1.13.0) **[deciso]** (Marco): pulsante “Grafica: … ⇄” nel **menu principale** (non durante le ondate): la scelta si salva
+  nelle impostazioni e la pagina si ricarica da sola, perché il disegno si sceglie al caricamento. Di base la classica. HD-2D: pixel art a 2 px logici con luci
+  additive, cielo stellato fino all’orizzonte, sprite generati dal codice; testi nello stesso carattere (leggibilità). Aspetto **[Claude]** (proposta approvata
+  da Marco a fasi, catalogo `docs/catalogo-grafico-alternativo.html`). Fluidità sul telefono da provare: contatore dei fotogrammi al secondo sotto “Liv…”
+  nell’HUD, acceso e spento toccando la versione in basso a destra nel menu. **[da provare]**
+
 ## 7. Salvataggio e PWA
 
 - Menu → “Salvataggio · esporta o importa”: file JSON (sul telefono si apre la condivisione) o codice `FD1:…` (base64 del JSON).

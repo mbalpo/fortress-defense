@@ -1,14 +1,11 @@
-// Proposta grafica HD-2D: schermate di prova con docs/hd2d/draw-hd2d.js al posto di app/draw.js (il gioco non cambia).
-// Uso: node tests/tools/hd2d-shots.js [--orig]  → tests/screenshots/hd2d-*.png (con --orig le stesse scene col disegno attuale, per confronto)
+// Grafica HD-2D: schermate di prova con app/draw-hd2d.js innestato su app/draw.js (window.FORTRESS_GFX = "hd2d").
+// Uso: node tests/tools/hd2d-shots.js [--orig]  → tests/screenshots/hd2d-*.png (con --orig le stesse scene con la grafica classica, per confronto)
 const { JSDOM } = require("jsdom"), fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, "..", "..");
 const ORIG = process.argv.includes("--orig");
 const OUT = path.join(ROOT, "tests", "screenshots"); fs.mkdirSync(OUT, { recursive: true });
-const TAG = '<script src="draw.js"></script>';
-const html = fs.readFileSync(path.join(ROOT, "app", "index.html"), "utf8");
-const draw = fs.readFileSync(path.join(ROOT, ORIG ? "app/draw.js" : "docs/hd2d/draw-hd2d.js"), "utf8");
 const HOOK = "requestAnimationFrame(frame);\n})();";
-const SRC = html.replace(TAG, () => "<script>\n" + draw + "</script>").replace("domeHp: 100,", "domeHp: 100000,")
+const SRC = require("../src").gameHtml(null, ORIG ? undefined : "hd2d").replace("domeHp: 100,", "domeHp: 100000,")
   .replace(HOOK, "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
 const seeded = (seed) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
 

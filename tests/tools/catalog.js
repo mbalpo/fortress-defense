@@ -5,17 +5,17 @@
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const ROOT = path.join(__dirname, "..", ".."), APP = path.join(ROOT, "app");
-// --hd2d: catalogo alternativo (proposta grafica HD-2D): stesse scene e tessere, disegnate da docs/hd2d/draw-hd2d.js invece di app/draw.js;
-// il gioco non cambia (npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html)
+// --hd2d: catalogo della grafica HD-2D (1.13.0): stesse scene e tessere, con app/draw-hd2d.js innestato su app/draw.js
+// (window.FORTRESS_GFX = "hd2d"); npm run catalog-hd2d → docs/catalogo-grafico-alternativo.html
 const ALT = process.argv.includes("--hd2d");
-const DRAW_FILE = ALT ? "docs/hd2d/draw-hd2d.js" : "app/draw.js";
+const DRAW_FILE = ALT ? "app/draw-hd2d.js" : "app/draw.js";
 const OUT = path.join(ROOT, "docs", ALT ? "catalogo-grafico-alternativo.html" : "catalogo-grafico.html");
-const OUT_REL = "docs/" + path.basename(OUT), TITLE = ALT ? "catalogo grafico alternativo (HD-2D, proposta)" : "catalogo grafico";
+const OUT_REL = "docs/" + path.basename(OUT), TITLE = ALT ? "catalogo grafico · grafica HD-2D" : "catalogo grafico · grafica classica";
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 
 /* ---------- hash: tutti i file di app/ e questo generatore ---------- */
 function hashedFiles() {
-  return [...fs.readdirSync(APP).filter((f) => !f.startsWith(".")).sort().map((f) => "app/" + f), "tests/tools/catalog.js", ...(ALT ? [DRAW_FILE] : [])];
+  return [...fs.readdirSync(APP).filter((f) => !f.startsWith(".")).sort().map((f) => "app/" + f), "tests/tools/catalog.js"];
 }
 function computeHash() {
   const all = crypto.createHash("sha256"), each = {};
@@ -40,11 +40,11 @@ function parts() {
   let game = html.slice(b + 8, html.indexOf("</script>", b));
   if (!game.includes(HOOK)) throw new Error("index.html: manca la fine dello script del gioco (" + JSON.stringify(HOOK) + ")");
   game = game.replace(HOOK, "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);   // aggancio del catalogo: esegue codice nell’ambito del gioco\n})();");
-  const draw = read(DRAW_FILE);
-  for (const [n, t] of Object.entries({ css, markup, draw, game })) if (/<\/script|<!--/i.test(t)) throw new Error(n + ": contiene </script o <!-- e non si può incorporare");
+  const draw = read("app/draw.js"), drawHd = read("app/draw-hd2d.js");
+  for (const [n, t] of Object.entries({ css, markup, draw, drawHd, game })) if (/<\/script|<!--/i.test(t)) throw new Error(n + ": contiene </script o <!-- e non si può incorporare");
   const icons = Object.fromEntries(["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"].map((f) => [f, icon(f)]));
   const version = (html.match(/const APP_VERSION = "([^"]+)"/) || [])[1];
-  return { css, markup, draw, game, icons, version, html };
+  return { css, markup, draw, drawHd, game, icons, version, html };
 }
 
 /* ---------- dentro ogni iframe (e in jsdom): orologio, casuale fisso, storage finto ---------- */
@@ -95,7 +95,7 @@ function buildDoc(P, cfg) {
   return "<!DOCTYPE html><html lang=\"it\"><head><meta charset=\"utf-8\"><style>" + P.css + "\nhtml, body { overflow: hidden; }</style></head><body>\n" +
     "<canvas id=\"c\" aria-label=\"Campo di battaglia\"></canvas>\n" + P.markup +
     "<script>window.__CFG = " + JSON.stringify(cfg).replace(/</g, "\\u003c") + ";(" + harness + ")();<\/script>\n" +
-    "<script>" + P.draw + "<\/script>\n<script>" + P.game + "<\/script>\n<script>__cat.boot();<\/script></body></html>";
+    (ALT ? "<script>window.FORTRESS_GFX = \"hd2d\";<\/script>\n" : "") + "<script>" + P.drawHd + "<\/script>\n<script>" + P.draw + "<\/script>\n<script>" + P.game + "<\/script>\n<script>__cat.boot();<\/script></body></html>";
 }
 
 /* ---------- scene (codice eseguito nell’ambito del gioco) ---------- */
@@ -602,7 +602,7 @@ ${palette}
 
 <section id="codice"><h2>Codice di disegno</h2>
 <p>Il modulo completo, così com’è in <code>${DRAW_FILE}</code>. Lo script del gioco (<code>index.html</code>) è incorporato più sotto in forma non visibile e serve alle scene.</p>
-<details><summary>${DRAW_FILE} (${P.draw.split("\n").length} righe)</summary><pre id="src-draw">${esc(P.draw)}</pre></details>
+<details><summary>${DRAW_FILE} (${(ALT ? P.drawHd : P.draw).split("\n").length} righe)</summary><pre id="src-draw">${esc(ALT ? P.drawHd : P.draw)}</pre></details>
 </section>
 </main>
 <footer>Fortress Defense ${esc(P.version)} · catalogo generato da <code>tests/tools/catalog.js</code> · se un file del gioco cambia, <code>npm test</code> lo rigenera e un test controlla che non sia indietro.</footer>

@@ -3,6 +3,38 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.13.0 — grafica HD-2D nel gioco, a scelta nel menu principale
+
+Richiesta di Marco: portare la proposta HD-2D nel gioco con un’opzione per scegliere la grafica, nel menu principale.
+
+- **`app/draw-hd2d.js`** (`FORTRESS_DRAW_HD`, 1.161 righe): solo le differenze HD-2D, ricavate dalla copia completa della proposta (`docs/hd2d/draw-hd2d.js`, tolta).
+  Alla fine di `FORTRESS_DRAW`, `draw.js` legge la grafica scelta (dal localStorage: le impostazioni del gioco lì non esistono ancora; `window.FORTRESS_GFX`
+  la impone per catalogo e test) e, se è HD-2D, valuta `FORTRESS_DRAW_HD` nel proprio ambito: le funzioni di draw.js si sostituiscono assegnandole,
+  `TURRET_ART` (11 voci) e `FX` (29 voci) si completano con `Object.assign`. Schermate, testi, carte e guida restano un solo codice per le due grafiche.
+- **`draw.js` riorganizzato senza cambiare l’aspetto** (61 schermate classiche identiche al pixel prima e dopo): nuovi punti di aggancio `drawSky`, `drawWorld`,
+  `drawMenuBack`, `enemyBody`, `enemyBar`, `bossBar`, `frenzyBar`, `menuTitle`, `cardBadge`; `drawTurret` passa anche la torretta a `TURRET_ART`.
+  La grafica HD-2D dà le stesse immagini della proposta (10 schermate di prova identiche al pixel).
+- **Menu principale**: pulsante “Grafica: Classica ⇄” / “Grafica: HD-2D ⇄” sotto Salvataggio e Guida (`toggleGraphics`: vale solo nel menu, salva e ricarica la
+  pagina con `reloadPage`); suggerimento dei tasti e versione spostati più in basso. Impostazioni: nuovi campi `graphics` e `fps` (valori non validi ignorati).
+- **Contatore dei fotogrammi al secondo** (`drawFps`, entrambe le grafiche): sotto “Liv…” nell’HUD, verde da 50, giallo da 30, rosso sotto; si accende e spegne
+  toccando la versione in basso a destra nel menu (che diventa “v… · fps”).
+- **Memoria**: la cache degli sprite HD-2D si svuota oltre 1.500 sprite (rocce dei nemici morti, colori iridescenti) e si rifà quando serve.
+- **Pubblicazione**: `draw-hd2d.js` in `ASSETS` di `sw.js`; `APP_VERSION` e `VERSION`: 1.13.0. `tests/src.js` incorpora anche `draw-hd2d.js` (`gameHtml(file, gfx)`).
+- **Catalogo**: `npm run catalog-hd2d` usa `draw.js` + `draw-hd2d.js` (titolo “grafica HD-2D”); il catalogo principale si chiama “grafica classica”.
+- CLAUDE.md (struttura, regola del catalogo), DEPLOY.md, DESIGN.md § 6: aggiornati.
+
+**Test**: nuovo `tests/grafica.js` (grafica di base classica; cambio dal menu salvato con ricarica; nessun cambio durante l’ondata; impostazione “hd2d” letta al
+caricamento; contatore fps; impostazioni non valide ignorate; due partite di 3 minuti in HD-2D con tutte le 11 torrette potenziate, senza errori; cache degli sprite
+sotto il tetto, anche abbassato a 300 per vederla svuotare). Aggiornati `swtest.js` (9 file in cache) e `splash.js` (sostituisce ogni `location.reload();`).
+`npm test`: tutti verdi.
+
+**Misure con i bot**: non servono (solo disegno). **Fluidità sul telefono: da provare** con il contatore.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html e docs/catalogo-grafico-alternativo.html.
+
+Checklist: sostituire “Proposta HD-2D completa: decidere se adottarla” con “Grafica HD-2D: provare la fluidità sul telefono (contatore fps: tocco sulla versione
+nel menu), con molti nemici ed effetti”.
+
 ## 1.12.5 — segni sulle carte chain e level up, scritta della cupola leggibile, equipaggiamento nel catalogo
 
 Richieste di Marco, applicate al gioco e alla proposta HD-2D.

@@ -142,7 +142,7 @@ const TURRET_ART = {
   },
 };
 function drawTurret(s) {
-  TURRET_ART[s.id](s.x, GROUND_Y, TYPES[s.def.type].color);
+  TURRET_ART[s.id](s.x, GROUND_Y, TYPES[s.def.type].color, s);   // s: la torretta (la grafica HD-2D orienta la canna dell’Aeroblast)
   txt("L" + s.level + (s.done ? " ★" : " " + s.used + "/3"), s.x, GROUND_Y + 18, 9, s.done ? "#ffd166" : "#9fb4d9", "center", "700");
   const b = BEHAV[s.id]; if (b.draw) b.draw(s);
 }
@@ -231,7 +231,14 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(e.x - r * 0.75, e.y); ctx.lineTo(e.x, e.y - r * len); ctx.lineTo(e.x + r * 0.75, e.y); ctx.closePath(); ctx.fill();
 }
 function drawEnemy(e) {
-  const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, r = e.def.r, look = e.def.look || "rock", x = e.x, y = e.y, shade = "rgba(7,11,22,0.38)";
+  const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";
+  enemyBody(e, c, look);
+  if (e.hp < e.maxHp || e.boss) enemyBar(e, look);
+  drawStatus(e);
+}
+// corpo del nemico (c = colore del tipo, bianco nel lampo del colpo) e barra della vita: punti di aggancio della grafica HD-2D
+function enemyBody(e, c, look) {
+  const r = e.def.r, x = e.x, y = e.y, shade = "rgba(7,11,22,0.38)";
   if (look === "rock" || look === "asteroid" || look === "meteor") {
     if (look === "meteor") tail(e, r, 2.6, "rgba(255,180,90,0.7)");
     rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
@@ -253,12 +260,11 @@ function drawEnemy(e) {
     for (const dx of [-0.3, 0.3]) disc(x + dx * r, y - r * 0.85, r * 0.13, "#ffd18a");
     for (const dx of [-0.55, 0.55]) disc(x + dx * r, y - r * 0.25, r * 0.1, shade);
   }
-  if (e.hp < e.maxHp || e.boss) {
-    const w = r * 2, by = y - r * (look === "shard" ? 1.05 : 1) - 8;
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, by, w, 3);
-    ctx.fillStyle = TYPES[e.def.type].color; ctx.fillRect(x - r, by, w * clamp(e.hp / e.maxHp, 0, 1), 3);
-  }
-  drawStatus(e);
+}
+function enemyBar(e, look) {
+  const r = e.def.r, x = e.x, w = r * 2, by = e.y - r * (look === "shard" ? 1.05 : 1) - 8;
+  ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, by, w, 3);
+  ctx.fillStyle = TYPES[e.def.type].color; ctx.fillRect(x - r, by, w * clamp(e.hp / e.maxHp, 0, 1), 3);
 }
 function drawHud() {
   button(8, 10, 196, 32, "Bersaglio: " + TARGET_LABEL[settings.targeting], toggleTargeting);
@@ -272,16 +278,31 @@ function drawHud() {
   const fb = enemies.find((e) => e.final && !e.dead);
   if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
     txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
-    rr(30, 100, 300, 12, 6); ctx.fillStyle = "rgba(7,11,22,0.85)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
-    const k = clamp(fb.hp / fb.maxHp, 0, 1);
-    if (k > 0) { rr(32, 102, 296 * k, 8, 4); ctx.fillStyle = TYPES[fb.def.type].color; ctx.fill(); }
+    bossBar(fb.hp / fb.maxHp, TYPES[fb.def.type].color);
   } else if (enemies.some((e) => e.boss && !e.dead)) txt("MINI-BOSS", W / 2, 62, 12, "#ffd166", "center", "800");
   if (has(player, "frenzy1")) {
     const f = frenzyOn(player), k = f ? clamp(player.st.frenzyT / frenzyDur(player), 0, 1) : (player.st.charge || 0);
-    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(10, 76, 110, 6);
-    ctx.fillStyle = f ? "#ff9a5a" : "#7fa0e0"; ctx.fillRect(10, 76, 110 * k, 6);
+    frenzyBar(k, f);
     txt(f ? (player.st.paused ? "Frenesia in pausa" : "Frenesia!") : (k >= 1 ? "Frenesia pronta" : "Frenesia"), 126, 79, 10, f ? "#ff9a5a" : "#6f82ad", "left", "600");
   }
+}
+// contatore dei fotogrammi al secondo (1.13.0), acceso e spento toccando la versione nel menu: per provare la fluidità sul telefono
+const FPS = { t: 0, n: 0, v: 0 };
+function drawFps() {
+  const now = performance.now();
+  FPS.n++; if (now - FPS.t >= 500) { FPS.v = Math.round(FPS.n * 1000 / (now - FPS.t)); FPS.t = now; FPS.n = 0; }
+  if (!settings.fps) return;
+  txt(FPS.v + " fps", W - 10, 80, 10, FPS.v >= 50 ? "#3fe0a0" : FPS.v >= 30 ? "#ffd166" : "#ff5a5a", "right", "700");
+}
+// barre dell’HUD: vita del boss finale (k da 0 a 1) e carica della frenesia (f = in frenesia); punti di aggancio della grafica HD-2D
+function bossBar(k, col) {
+  rr(30, 100, 300, 12, 6); ctx.fillStyle = "rgba(7,11,22,0.85)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
+  k = clamp(k, 0, 1);
+  if (k > 0) { rr(32, 102, 296 * k, 8, 4); ctx.fillStyle = col; ctx.fill(); }
+}
+function frenzyBar(k, f) {
+  ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(10, 76, 110, 6);
+  ctx.fillStyle = f ? "#ff9a5a" : "#7fa0e0"; ctx.fillRect(10, 76, 110 * k, 6);
 }
 function drawFortress() {
   const y = H - FORT_H;
@@ -386,6 +407,12 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
   segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
   segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · dettagli nella pausa", "#6f82ad"]], x + 52, y + 46, 10);
 }
+// pallino della carta col numero o la spunta, e il segno delle chain e dei level up sopra (aggancio HD-2D)
+function cardBadge(o, cx, cy, c, label) {
+  cardMark(o, cx, cy - 16, c);
+  disc(cx, cy, 13, c);
+  txt(label, cx, cy + 1, label === "✓" ? 14 : 13, "#070b16", "center", "800");
+}
 // segno sopra il pallino della carta (1.12.5): chain = catene verticali affiancate (una per livello della chain),
 // level up = frecce ^ una sotto l’altra (una per livello); cx = centro del pallino, bot = sopra il pallino, c = colore del tipo
 function cardMark(o, cx, bot, c) {
@@ -452,9 +479,9 @@ function overlay(title, lines, color, y0) {
   txt(title, W / 2, y0 || 190, 30, color || "#e8eefc", "center", "800");
   lines.forEach((l, i) => txt(l, W / 2, (y0 || 190) + 48 + i * 22, 14, "#9fb4d9", "center", "500"));
 }
+function menuTitle() { dim(0.8); txt("FORTRESS DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800"); }   // velo e titolo (aggancio HD-2D)
 function menuScreen() {
-  dim(0.8);
-  txt("FORTRESS DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800");
+  menuTitle();
   txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
   button(36, 130, 56, 56, "−", () => { selLevel = Math.max(1, selLevel - 1); }, { size: 26 });
   button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
@@ -480,8 +507,11 @@ function menuScreen() {
   txt("Boss finale all’ondata 20 dei livelli 10, 20, 30…", 36, 546, 10, "#ffd166", "left", "500");
   button(60, 562, 154, 36, "Salvataggio", openSave, { size: 13, stroke: "#7fa0e0" });
   button(220, 562, 80, 36, "Guida", openGuide, { size: 13, stroke: "#3fe0a0" });
-  txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 614, 11, "#5f7299", "center", "500");
-  txt("v" + APP_VERSION, W - 8, 632, 9, "#3a4a70", "right", "500");
+  // grafica (1.13.0): solo qui nel menu principale, perché vale dal caricamento successivo (la pagina si ricarica da sola)
+  button(60, 603, 240, 22, "Grafica: " + (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + "  ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
+  txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 634, 10, "#5f7299", "center", "500");
+  txt("v" + APP_VERSION + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");
+  buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
 function sealLines() {
@@ -518,9 +548,7 @@ function rewardScreen() {
   rewards.forEach((o, i) => {
     const x = 20, y = 140 + i * 122, w = 320, h = 110, c = TYPES[o.type].color;
     rr(x, y, w, h, 8); ctx.fillStyle = "rgba(18,30,58,0.92)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = c; ctx.stroke();
-    cardMark(o, x + 26, y + h / 2 - 16, c);
-    disc(x + 26, y + h / 2, 13, c);
-    txt("✓", x + 26, y + h / 2 + 1, 14, "#070b16", "center", "800");
+    cardBadge(o, x + 26, y + h / 2, c, "✓");
     txt(o.head, x + 52, y + 22, 11, c, "left", "700");
     fitTxt(o.title, x + 52, y + 46, 260, 16, "#e8eefc", "left", "700");
     fitTxt(o.desc, x + 52, y + 70, 260, 12, "#b9c8e6", "left", "500");
@@ -546,9 +574,7 @@ function upgradeScreen() {
   options.forEach((opt, i) => {
     const x = 20, y = 140 + i * step, w = 320, o = describe(opt), c = TYPES[o.type].color;
     button(x, y, w, h, "", () => pick(i), { stroke: c, release: true });
-    cardMark(o, x + 26, y + h / 2 - 16, c);
-    disc(x + 26, y + h / 2, 13, c);
-    txt(String(i + 1), x + 26, y + h / 2 + 1, 13, "#070b16", "center", "800");
+    cardBadge(o, x + 26, y + h / 2, c, String(i + 1));
     txt(o.head, x + 52, y + 22 * k, 11, c, "left", "700");
     fitTxt(o.title, x + 52, y + 46 * k, 260, 16, "#e8eefc", "left", "700");
     fitTxt(o.desc, x + 52, y + 70 * k, 260, 12, "#b9c8e6", "left", "500");
@@ -953,27 +979,36 @@ function unlockScreen() {                       // avviso di sblocco sopra la sc
 function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
   ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700");
 }
-function draw() {
-  buttons = [];
+// punti di aggancio della grafica HD-2D (app/draw-hd2d.js li sostituisce): cielo, mondo della battaglia, fondo dei menu
+function drawSky() {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, "#0a1020"); g.addColorStop(1, "#16254a");
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#9fb4d9";
   for (const s of stars) { ctx.globalAlpha = s.a; ctx.fillRect(s.x, (s.y + clock * s.v) % H, s.s, s.s); }
   ctx.globalAlpha = 1;
-
-  if (state !== "menu" && state !== "save" && state !== "tree" && state !== "gear" && state !== "levels" && state !== "guide") {
-    drawDomeFill(); drawGround();
-    slots.forEach((s) => { if (s) drawTurret(s); });
-    drawPlayer();
-    if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
-    for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
-    enemies.forEach(drawEnemy);
-    for (const o of ents) if (!o.under) o.draw();
-    drawDomeEdge(); drawFortress();
+}
+function drawWorld() {
+  drawDomeFill(); drawGround();
+  slots.forEach((s) => { if (s) drawTurret(s); });
+  drawPlayer();
+  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
+  for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
+  enemies.forEach(drawEnemy);
+  for (const o of ents) if (!o.under) o.draw();
+  drawDomeEdge(); drawFortress();
+}
+function drawMenuBack() {}
+const MENU_STATES = ["menu", "save", "tree", "gear", "levels", "guide"];
+function draw() {
+  buttons = [];
+  drawSky();
+  if (!MENU_STATES.includes(state)) {
+    drawWorld();
     for (const f of floaters) drawFloater(f);
     ctx.globalAlpha = 1;
     drawHud();
+    drawFps();
     if (state === "play") drawAlert();
     if (state === "play" && waveTime < 0) {
       ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
@@ -983,6 +1018,7 @@ function draw() {
       ctx.globalAlpha = 1;
     }
   }
+  else drawMenuBack();
   if (state === "menu" || state === "save") menuScreen();          // il pannello del salvataggio sta sopra al menu
   else if (state === "upgrade") upgradeScreen();
   else if (state === "won") { wonScreen(); if (unlockNotes.length) unlockScreen(); }
@@ -1227,9 +1263,19 @@ const FX = {
   },
 };
 
+// grafica HD-2D (1.13.0): app/draw-hd2d.js definisce FORTRESS_DRAW_HD, che si innesta qui (valutata in questo ambito, sostituisce funzioni
+// e aggiunge voci a TURRET_ART e FX) se la grafica scelta nel menu è "hd2d". Le impostazioni del gioco qui non esistono ancora:
+// si leggono dal localStorage (stessa chiave di SETTINGS_KEY); window.FORTRESS_GFX la impone (catalogo alternativo, test)
+const GFX = (() => {
+  try { return window.FORTRESS_GFX || (JSON.parse(localStorage.getItem("fortress-proto-v1") || "null") || {}).graphics || "classic"; } catch (e) { return "classic"; }
+})();
+const GFX_ON = GFX === "hd2d" && typeof FORTRESS_DRAW_HD === "function" ? "hd2d" : "classic";
+let GFX_INFO = null;                             // la grafica HD-2D ci mette le sue informazioni per i test (dimensione della cache degli sprite)
+if (GFX_ON === "hd2d") eval("(" + FORTRESS_DRAW_HD + ")")();
+
 // quello che serve fuori: il gioco usa draw, FX, thunderDraw e teslaDraw; il catalogo anche il resto
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
   drawTurret, drawPlayer, guardianShape, drawCrosshair, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
   menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button,
-  PIECE_ART, pieceIcon, modIcon, rarColor, cardMark };
+  PIECE_ART, pieceIcon, modIcon, rarColor, cardMark, GFX_ON, GFX_INFO };
 }
