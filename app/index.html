@@ -1090,7 +1090,7 @@ function skyImpact(s, x, y, mini, echo) {
   if (mini || echo) return;
   const splits = has(s, "split3") ? 9 : has(s, "split2") ? 6 : has(s, "split1") ? 3 : 0;
   for (let k = 0; k < splits; k++) missile(s, x, y, true, randEnemy());
-  if (has(s, "fire")) zone(x, y, rad, 5, (e) => skyBurn(s, e, 1.5, 5 * dmgM(s)), TYPES.fire.color);
+  if (has(s, "fire")) zone(x, y, rad, 5, (e) => skyBurn(s, e, 1.5, 5 * dmgM(s)), TYPES.fire.color, "fireField");   // area in fiamme (1.12.2)
   if (has(s, "again")) later(0.5, () => skyImpact(s, x, y, false, true));
 }
 // tutte le bruciature della Sky Guard passano da qui: chain Bruciatura (danno +60%, esplosione alla morte)
@@ -1498,6 +1498,18 @@ function hiveTarget(s, d) {
   for (const o of s.st.hive || []) if (o !== d && !o.dead && o.t && !o.t.dead) taken.add(o.t);
   return nearestTo(d.x, d.y, 900, taken) || nearestTo(d.x, d.y, 900);
 }
+// colpo del drone dell’Hive: vola in 0,14 s dal drone al nemico (il danno è già applicato); con più proiettili partono sfalsati a ventaglio
+function hiveShotFx(d, e, lvl, k, n) {
+  const x0 = d.x, y0 = d.y, off = n > 1 ? (k - (n - 1) / 2) * 0.5 : 0;
+  spawnEnt({ t: 0, dead: false, lvl, x: x0, y: y0, px: x0, py: y0,
+    update(dt) {
+      this.t += dt; if (this.t >= 0.14) { this.dead = true; return; }
+      const q = this.t / 0.14, tx = e.x, ty = e.y, a = Math.atan2(ty - y0, tx - x0) + off * (1 - q), L = dist(tx, ty, x0, y0);
+      this.px = this.x; this.py = this.y;
+      this.x = x0 + Math.cos(a) * L * q; this.y = y0 + Math.sin(a) * L * q;
+    },
+    draw() { FX.hiveShot(this); } });
+}
 function waveFx(x, y, ang, len) {
   spawnEnt({ t: 0.35, dead: false,
     update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
@@ -1535,11 +1547,16 @@ function hiveDrone(s, x, y, lvl, gen) {
           const e = k === 0 ? tg : (nearestTo(this.x, this.y, HIVE_RANGE + 30, hit) || tg);
           hit.add(e); damage(e, dmg, "force", false, "hive");
           if (has(s, "push")) knock(e, 8);               // Colpi di forza
-          bolt([{ x: this.x, y: this.y }, { x: e.x, y: e.y }], TYPES.force.color, 0.12, 1.8);
+          hiveShotFx(this, e, this.lvl, k, n);            // colpo visibile, diverso per livello del drone (solo disegno)
         }
       }
       this.shots++; this.cd = 1.0;
-      if (this.shots % 3 === 0) { if (this.lvl === 1 && has(s, "evo1")) this.lvl = 2; else if (this.lvl === 2 && has(s, "evo2")) this.lvl = 3; }
+      if (this.shots % 3 === 0) {
+        const lv0 = this.lvl;
+        if (this.lvl === 1 && has(s, "evo1")) this.lvl = 2; else if (this.lvl === 2 && has(s, "evo2")) this.lvl = 3;
+        // dopo un’evoluzione il drone spara ancora almeno 2 colpi (lv2) o 3 (lv3); se ne aveva di più restano quelli [Marco, 1.12.2]
+        if (this.lvl > lv0) this.cap = Math.max(this.cap, this.shots + (this.lvl === 2 ? 2 : 3));
+      }
     },
     die() {
       this.dead = true;
@@ -2387,7 +2404,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.12.1";
+const APP_VERSION = "1.12.2";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
 const $id = (id) => document.getElementById(id);
 function makeSave() {

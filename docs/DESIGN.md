@@ -281,6 +281,7 @@ Force · Buco nero che attrae e danneggia. Portata 260 px, ricarica 5,5 s.
 Accettati: tutti tranne quelli segnati **[da rivedere]**.
 
 - Sky Guard: 3 mini-missili al lv1 (dove la descrizione diceva “X”), bruciatura 3 s, area infuocata 5 s  **[Claude]**
+- **Grafica del fuoco** (1.12.2) **[deciso]** (Marco): l’Area infuocata della Sky Guard è un disco di brace con lingue di fuoco che tremolano e scintille (prima un cerchio); anche la scia della Firewheel è fatta di lingue di fuoco e bagliore che si spengono. Solo disegno. **[Claude]** (aspetto)
 - Sky Guard (revisione 1): mini-missile esplosivo = area piena del missile principale (30 px, cresce con “Raggio d’impatto”) al 35% del danno;
   Missili incendiari = bruciatura 3 s a 6 al secondo su chi è colpito dall’impatto; Bruciatura intensa = +60% su tutte le bruciature della Sky Guard
   (anche area infuocata e scia); Combustione = esplosione di 40 px al 60% del danno del missile, solo per chi muore con una bruciatura **della Sky Guard**
@@ -311,6 +312,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   toccato dal drone, fino a ×2 (vale per ogni drone, si riparte a ogni lancio); Raffreddamento = −5% della ricarica successiva per ogni nemico diverso
   colpito dal lancio, fino a −50% (ricarica 6,5 s → 3,25 s)  **[Claude]**
 - Hive: 3 droni base, 4 colpi base (+2 per pila), droni che sparano entro **62 px** (prima 125) **[deciso]** e si avvicinano fino a 45 px, onda 130 px circa ±35° (182 px con Onda ampia), evoluzione 1→2→4 proiettili. Sciame 35% = probabilità che a fine vita un drone ne lanci uno nuovo; resistenza 30% = probabilità che un drone, finiti i colpi, ne riceva altrettanti  **[Claude]**
+- **Hive, evoluzioni** (1.12.2) **[deciso]** (Marco): dopo l’evoluzione al lv2 il drone spara ancora **almeno 2 colpi**, al lv3 **almeno 3** (se gliene restano di più, restano quelli). **Colpi visibili**: ogni proiettile vola in 0,14 s dal drone al nemico (il danno resta immediato), a ventaglio se sono più di uno; lv1 punto viola, lv2 rombo lilla più grande, lv3 stella rosa con alone **[Claude]** (aspetto).
 - Hive (revisione 2): i droni **non hanno una durata**, restano finché non hanno sparato tutti i colpi **[deciso]** (spariscono comunque a fine ondata);
   Colpi di forza = knockback di 8 px per colpo; Droni kamikaze = finiti i colpi il drone vola verso il nemico più vicino (260 px/s, al massimo 3 s)
   ed esplode in un raggio di 40 px al doppio del danno di un colpo; con Resistenza si tira prima Resistenza  **[Claude]**

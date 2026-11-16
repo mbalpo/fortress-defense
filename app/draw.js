@@ -73,6 +73,12 @@ function drawGround() {
     ctx.strokeRect(SLOT_X[i] - 9, GROUND_Y - 8, 18, 8); ctx.setLineDash([]);
   }
 }
+// lingua di fuoco: base in (x, y), alta h, larga 2w; arancione fuori, giallo dentro; a = trasparenza
+function flame(x, y, h, w, a) {
+  const tongue = (hh, ww, c) => { ctx.beginPath(); ctx.moveTo(x - ww, y); ctx.quadraticCurveTo(x - ww * 0.7, y - hh * 0.55, x, y - hh); ctx.quadraticCurveTo(x + ww * 0.7, y - hh * 0.55, x + ww, y);
+    ctx.quadraticCurveTo(x, y + ww * 0.8, x - ww, y); ctx.fillStyle = c; ctx.fill(); };
+  ctx.globalAlpha = 0.85 * a; tongue(h, w, "#ff6a2a"); ctx.globalAlpha = 0.9 * a; tongue(h * 0.6, w * 0.55, "#ffd166"); ctx.globalAlpha = 1;
+}
 function poly(pts, fill, stroke, lw) {
   ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath();
   if (fill) { ctx.fillStyle = fill; ctx.fill(); }
@@ -882,6 +888,31 @@ const FX = {
     ctx.globalAlpha = 1;
     disc(x, y, 4, "#fff6b0", 0.55 * k); disc(x, y, 2, "#ffffff", 0.8 * k);   // nucleo piccolo e semitrasparente
   },
+  fireField(o) {                                 // Sky Guard · Area infuocata: disco di brace con lingue di fuoco che tremolano e scintille
+    const fade = Math.min(1, o.t / 0.5, o.age / 0.15), r = o.r, x = o.x, y = o.y;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, "rgba(255,200,90,0.45)"); g.addColorStop(0.6, "rgba(255,110,40,0.3)"); g.addColorStop(1, "rgba(200,40,20,0.06)");
+    ctx.globalAlpha = fade; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    const n = Math.max(8, Math.round(r / 4));
+    for (let k = 0; k < n; k++) {                // lingue sul bordo, dal basso verso l’alto
+      const a = k * 6.2832 / n, f = 0.5 + 0.5 * Math.sin(o.age * 9 + k * 1.7);
+      flame(x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8, 9 + 9 * f, 4.5, fade);
+    }
+    for (let k = 0; k < 6; k++) {                // lingue interne e scintille che salgono
+      const a = k * 1.9 + 0.6, d = r * (0.1 + 0.1 * k), f = 0.5 + 0.5 * Math.sin(o.age * 11 + k * 2.3);
+      flame(x + Math.cos(a) * d, y + Math.sin(a) * d, 12 + 10 * f, 5.5, fade);
+      const sy = (o.age * 26 + k * 9) % 22;
+      disc(x + Math.cos(a * 2) * d * 0.8, y - sy, 1.2, "#ffe0b0", fade * (1 - sy / 22));
+    }
+    ctx.globalAlpha = 1;
+  },
+  hiveShot(o) {                                  // Hive · colpo del drone: lv1 punto viola, lv2 rombo più grande e chiaro, lv3 stella rosa con alone
+    const c = ["#b07cff", "#d9a4ff", "#ff9be6"][o.lvl - 1], r = [3.2, 4, 4.8][o.lvl - 1];
+    glow(o.px, o.py, o.x, o.y, c, r * 0.9, 0.7);
+    if (o.lvl === 1) disc(o.x, o.y, r, c);
+    else if (o.lvl === 2) poly([[o.x, o.y - r * 1.3], [o.x + r, o.y], [o.x, o.y + r * 1.3], [o.x - r, o.y]], c, "#ffffff", 1);
+    else { disc(o.x, o.y, r * 1.8, c, 0.3); const pts = []; for (let i = 0; i < 10; i++) { const a = i * 0.6283 - 1.5708, rr2 = i % 2 ? r * 0.5 : r * 1.3; pts.push([o.x + Math.cos(a) * rr2, o.y + Math.sin(a) * rr2]); } poly(pts, c, "#ffffff", 1); }
+  },
   zone(o, color) {                               // area a terra che dura
     ctx.globalAlpha = 0.22 * Math.min(1, o.t / 0.5); ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832); ctx.fill();
@@ -939,7 +970,15 @@ const FX = {
     for (const [a, b] of o.links) glow(a.x, a.y - (a === pos ? 0 : 0), b.x, b.y, TYPES.energy.color, 2.6, 1);
   },
   wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia
-    for (const p of o.trail) disc(p.x, p.y, 6, TYPES.fire.color, clamp(p.t / trailT, 0, 1) * 0.5);
+    for (const p of o.trail) {                   // scia di fuoco (1.12.2): brace e due lingue che tremolano e si spengono
+      const q = clamp(p.t / trailT, 0, 1), f = 0.5 + 0.5 * Math.sin(clock * 10 + p.x * 0.37 + p.y * 0.21);
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 14);
+      g.addColorStop(0, "rgba(255,170,60," + (0.5 * q) + ")"); g.addColorStop(1, "rgba(255,80,30,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 6.2832); ctx.fill();
+      flame(p.x - 6, p.y + 5, (9 + 6 * f) * q + 3, 4, q);
+      flame(p.x + 1, p.y + 6, (13 + 6 * (1 - f)) * q + 3, 4.5, q);
+      flame(p.x + 7, p.y + 4, (8 + 5 * f) * q + 3, 3.5, q);
+    }
     ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(o.x, o.y, opt.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
     for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; glow(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, "#ffb347", 2, 0.8); }
     disc(o.x, o.y, opt.mini ? 3 : 5, "#ffe0b0");

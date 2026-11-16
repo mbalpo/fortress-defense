@@ -130,6 +130,15 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("selLevel = 40; startRun('standard')"); g.frame(60); ev("winLevel()"); g.frame(); g.save("35-avviso-sblocco.png");
     ev("unlockNotes = UNLOCKS.slice(0, 1)"); g.frame(); g.save("36-avviso-sblocco-10.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
+  { // 1.12.2: area in fiamme della Sky Guard, scia di fuoco della Firewheel, colpi dell’Hive per livello (fermati a metà volo)
+    const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
+    ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");
+    ev("for (const [x, y] of [[90, 200], [250, 190], [180, 330]]) { spawn({ enemy: 'shell', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, spin: 0, hp: 1e9, maxHp: 1e9 }); }");
+    ev("zone(90, 200, 40, 5, () => {}, TYPES.fire.color, 'fireField');");
+    ev("const w = makeShooter(TURRETS.wheel, SLOT_X[0], GROUND_Y - 14); w.level = 3; Object.assign(w.up, { trail1: 1, trail3: 1, dur: 3 }); slots[0] = w;");
+    g.frame(140);
+    ev("[[1, 120, 430], [2, 200, 440], [3, 290, 430]].forEach(([l, x, y]) => { for (let k = 0; k < [1, 2, 4][l - 1]; k++) hiveShotFx({ x, y }, enemies[2], l, k, [1, 2, 4][l - 1]); });");
+    g.frame(4); g.save("43-fiamme-hive.png"); }
   { // equipaggiamento (DESIGN.md § 15): menu, pezzi, Moduli in fusione, vittoria con gli oggetti, 4 carte e rinnovo
     const gear = { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:2": 1, "nucleo:0": 3 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:0:23": 2, "arma:0:4": 1, "arma:2:17": 1, "arma:4:19": 1 },
       eq: { arma: { r: 4, m: [[2, 4], [4, 3], [1, 2]] }, testa: { r: 2, m: [[22, 1]] }, armatura: { r: 3, m: [[10, 4], [11, 2], [16, 0]] }, stivali: { r: 0, m: [] }, nucleo: { r: 1, m: [[30, 0], [28, 1]] } } };

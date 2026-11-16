@@ -189,6 +189,14 @@ console.log("— 1.12.0: Frenesia potenziata, Sigilli maggiori, abilità d’ing
   const n = mn("(() => { for (let i = 0; i < 30; i++) mine(__a, 20 + i * 10, 300); return ents.filter((o) => o.mine).length; })()");
   const near = mn(`(() => { ents = []; const m = mine(__a, 180, 300); spawn({ enemy: "drone", x: 180 }); const e = enemies[0]; Object.assign(e, { y: 300 + e.def.r + 15, speed: 0 }); m.update(0.016); const a = m.dead;
     const m2 = mine(__a, 100, 300); Object.assign(e, { x: 100, y: 300 + e.def.r + 17 }); m2.update(0.016); return [a, m2.dead]; })()`);
+  const hv = fresh(45, { majors: 0 }).ev;
+  const evo = hv(`(() => { startRun('standard'); enemies = []; queue = []; ents = []; const h = makeShooter(TURRETS.hive, 180, 600); h.up.evo1 = 1; h.up.evo2 = 1;
+    spawn({ enemy: "brute", x: 180 }); Object.assign(enemies[0], { y: 300, speed: 0, hp: 1e9, maxHp: 1e9 });
+    hiveDrone(h, 180, 340, 1, 0); const d = h.st.hive[0]; d.cap = 3; const out = [];
+    for (let i = 0; i < 3; i++) d.fire(); out.push(d.lvl, d.cap); for (let i = 0; i < 3; i++) d.fire(); out.push(d.lvl, d.cap);
+    const shots = ents.filter((o) => o.lvl && o.px !== undefined).length; return out.concat([shots]); })()`);
+  console.log("Hive, drone con 3 colpi: dopo l’evoluzione al lv2 lv/colpi massimi", evo[0] + "/" + evo[1], "| al lv3", evo[2] + "/" + evo[3], "| colpi visibili in volo", evo[4],
+    ok(evo[0] === 2 && evo[1] === 5 && evo[2] === 3 && evo[3] === 9 && evo[4] > 0));
   console.log("mine: 30 richieste → a schermo", n, "| nemico a 15 px dal bordo → scoppia", near[0], "| a 17 px →", near[1], ok(n === 25 && near[0] === true && near[1] === false));
 }
 

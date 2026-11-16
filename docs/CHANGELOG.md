@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.12.2 — fiamme della Sky Guard e della Firewheel, colpi e evoluzioni dell’Hive
+
+Punti 10 e 11 delle richieste di Marco (il 6, mine doppie, è nella 1.12.1).
+
+- **Area infuocata della Sky Guard** (`FX.fireField`, la zona usa l’aspetto “fireField”): disco di brace sfumato, lingue di fuoco sul bordo e all’interno che tremolano, scintille che salgono.
+  Nuova primitiva `flame` in draw.js (lingua arancione con cuore giallo).
+- **Scia della Firewheel**: ogni tratto è un bagliore sfumato con tre lingue di fuoco che si abbassano e si spengono con la scia (prima dischi trasparenti). Le fiamme si
+  muovono con il tempo del gioco, senza tiri casuali.
+- **Hive**: dopo un’evoluzione il drone spara ancora almeno 2 colpi (lv2) o 3 (lv3) (`cap` alzato se serve); **colpi visibili** (`hiveShotFx`, `FX.hiveShot`): ogni proiettile vola
+  in 0,14 s verso il nemico, a ventaglio se sono più di uno; lv1 punto viola, lv2 rombo lilla, lv3 stella rosa con alone. Il danno resta immediato come prima.
+- DESIGN.md § 10: grafica del fuoco, evoluzioni e colpi dell’Hive. `APP_VERSION` e `VERSION` di `sw.js`: 1.12.2.
+
+**Test**: `seals.js`, nuovo controllo dell’Hive (drone con 3 colpi: lv2 con 5 colpi massimi, lv3 con 9; colpi in volo presenti). `npm test`: tutti verdi.
+Screenshot: nuovo 43 (area in fiamme, scia della Firewheel, colpi dell’Hive dei tre livelli), controllato e ritoccato (fiamme più grandi, scia con bagliore); 02 e 34 controllati.
+
+**Misure con i bot**: non rifatte. L’unica regola cambiata è il minimo di colpi dopo l’evoluzione dell’Hive (piccolo aumento per l’Hive con le Evoluzioni).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (nuove tessere degli effetti `fireField` e `hiveShot`; 77 tessere).
+
+Checklist: nuove voci “Fiamme della Sky Guard e della Firewheel: da vedere sul telefono (anche la fluidità)”, “Colpi dell’Hive per livello: da vedere”; togliere le voci dei punti 10 e 11.
+
 ## 1.12.1 — taratura con i Sigilli maggiori e un po’ di Epica, mine doppie
 
 - **Bot con un po’ di Epica** (`tests/tools/curva.js`, `equip-atteso.js`): dal 50 il giocatore atteso completa 1 livello di Epica ogni 2 di Standard (`EPICA`, default 0,5):

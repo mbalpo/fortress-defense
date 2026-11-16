@@ -35,7 +35,7 @@ const T = [
   ["seals.js", "Sigilli e albero: premi, nodi, torrette equipaggiate, salvataggio v2, nodi a livelli", [/totale 10 Sigilli .* ✓/, /combo Colpi ramificati: .* ✓/,
     /carte scelte in una partita: 19 .* ✓/, /Esc → stato menu .* ✓/, /versione 1 importata: .* ✓/, /codice FD1 andata e ritorno: .* ✓/,
     /costi 111112222233333444440 .* ✓/, /livelli massimi: .* ✓/, /pari \(1 e 1\): .* ✓/, /guardiano davanti .* ✓/, /regola dei livelli .* ✓/, /danno ×2\.0125 .* ✓/, /senza albero: danno ×1\.25 .* ✓/, /cupola: vita 130 .* ✓/, /Ignorare un colpo .* ✓/,
-    /Durata degli stati .* ✓/, /Ventaglio potenziato al 3: .* ✓/, /maggiori per livello: .* ✓/, /senza Sigilli maggiori: .* ✓/, /Frenesia potenziata al 3: .* ✓/, /Epica: mini-boss .* ✓/, /Standard: boss finale → maggiori 0 ✓/, /abilità d’ingresso: .* ✓/, /mine: 30 richieste → a schermo 25 .* ✓/, /livelli oltre il massimo .* ✓/]],
+    /Durata degli stati .* ✓/, /Ventaglio potenziato al 3: .* ✓/, /maggiori per livello: .* ✓/, /senza Sigilli maggiori: .* ✓/, /Frenesia potenziata al 3: .* ✓/, /Epica: mini-boss .* ✓/, /Standard: boss finale → maggiori 0 ✓/, /abilità d’ingresso: .* ✓/, /mine: 30 richieste → a schermo 25 .* ✓/, /Hive, drone con 3 colpi: .* ✓/, /livelli oltre il massimo .* ✓/]],
   ["abilities.js", "abilità della barriera: gruppi, cooldown, le 9 abilità, salvataggio", [/con 40: regen repulse burn ✓/, /dopo 5 s di scelta delle carte .* ✓/,
     /Rigenerazione al 3: .* ✓/, /terza no, massimo 2 .* ✓/, /seconda caduta → stato lost ✓/, /vinto con la cupola piena dopo il Backup: .* ✓/, /Impenetrabile al 3: .* ✓/,
     /Repulsiva al 2, .* ✓/, /al 5: danno alla cupola .* ✓/, /Riflettente al 2: .* ✓/, /con Sky Guard .* ✓/, /con l’Aeroblast in campo: .* ✓/, /al livello 1: mine 4 .* ✓/,
