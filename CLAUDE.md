@@ -47,7 +47,11 @@ proiettili ed effetti in `FX` (le entità della logica chiamano `FX.<nome>(this,
 4. Testi del gioco: apostrofo tipografico ’ e virgolette “ ”; decimali con la virgola; controlla che stiano nei 360 px.
 5. Salvataggio: non rompere la compatibilità. Se cambia il formato alza `SAVE_VERSION` e gestisci la migrazione in `parseSave`.
 6. Ogni lavoro finisce con una voce in `docs/CHANGELOG.md`: cosa è cambiato, test eseguiti, e “Checklist”: voci da aggiungere o togliere
-   nella checklist su claude.ai (Marco la porta al progetto).
+   nella checklist su claude.ai. Poi Claude Code **aggiorna lui la checklist** (artefatto https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX):
+   leggerla tutta con l’azione `read` dell’Artifact, cambiare l’array `DATA` (voci e, se cambiano regole o numeri, i riferimenti da DESIGN.md),
+   pubblicare sullo stesso indirizzo. Le spunte stanno nel browser di Marco, legate a “titolo|gruppo|testo”: se una voce cambia sezione o gruppo
+   con lo stesso testo, aggiungere la vecchia chiave in `RENAMED`; il file salvato dalla lettura ha un involucro nella prima e nell’ultima riga da togliere.
+   Nel CHANGELOG scrivere “Checklist: aggiornata (versione N)”.
 7. Pubblicazione: alza `APP_VERSION` e `VERSION` in `sw.js` (stesso numero, `swtest.js` lo controlla); se cambia l’elenco dei file in `app/`, aggiorna `ASSETS`. Vedi `docs/DEPLOY.md`.
 8. Git: un commit per lavoro, messaggio in italiano.
 9. Quando aggiungi o cambi una torretta, un nemico, uno stato, un effetto o una schermata: controlla che compaia nel catalogo e fai girare `npm run catalog`

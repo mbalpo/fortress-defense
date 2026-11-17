@@ -456,7 +456,7 @@ audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
 
 ## 14. Strumenti di lavoro
 
-- **Checklist di revisione** (artefatto su claude.ai, gestita dal progetto): https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX
+- **Checklist di revisione** (artefatto su claude.ai, aggiornata da Claude Code a fine lavoro, dal 17/11/2026): https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX
 - **Modifiche dal lato codice**: `docs/CHANGELOG.md`, con le voci della checklist da aggiornare.
 - **Catalogo grafico** (`docs/catalogo-grafico.html`): pagina unica con schermate, torrette, guardiano, nemici, proiettili, effetti e animazioni, disegnati dal codice stesso del gioco;
   serve anche da file da passare ad altre IA per migliorare la grafica. Si rigenera con `npm run catalog` (in automatico prima di `npm test`);

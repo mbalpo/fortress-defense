@@ -1,7 +1,7 @@
 # Claude Code + progetto su claude.ai
 
 **Claude Code** costruisce: codice, test, screenshot, calibrazione, pubblicazione.
-**Il progetto su claude.ai** decide: design, proposte di contenuti, numeri, checklist.
+**Il progetto su claude.ai** decide: design, proposte di contenuti, numeri. La checklist di revisione la aggiorna Claude Code a fine lavoro (dal 17/11/2026).
 Il ponte è `docs/DESIGN.md`, la fonte di verità comune.
 
 ## 1. Creare il progetto su claude.ai
@@ -20,7 +20,7 @@ Il ponte è `docs/DESIGN.md`, la fonte di verità comune.
 2. **In Claude Code** incolli quel testo e chiedi di integrarlo in `DESIGN.md` e implementarlo.
    Claude Code prova (`npm test`, screenshot), aggiorna `CHANGELOG.md` e fa il commit.
 3. **Di nuovo nel progetto** sostituisci `DESIGN.md` e `CHANGELOG.md` con le versioni nuove
-   e chiedi di aggiornare la checklist con le voci indicate nel changelog.
+   (la checklist è già aggiornata da Claude Code: qui si spuntano le voci e si discutono quelle aperte).
 
 I file del progetto non si aggiornano da soli: al punto 3 vanno ricaricati, altrimenti le chat del progetto ragionano su una versione vecchia.
 
@@ -29,7 +29,7 @@ I file del progetto non si aggiornano da soli: al punto 3 vanno ricaricati, altr
 ```
 Questo progetto serve a progettare Planet Defense (prima Fortress Defense), il tower defense personale (PWA, solo offline) che Marco sta costruendo,
 ispirato a Galaxy Defense: Fortress TD con grafica e testi originali. Il codice vive in un repository gestito con Claude Code:
-qui si ragiona di design, si prendono decisioni e si tiene la checklist di revisione.
+qui si ragiona di design e si prendono decisioni; la checklist di revisione la aggiorna Claude Code.
 
 - Rispondi in italiano.
 - La fonte di verità è DESIGN.md tra i file del progetto: leggilo prima di rispondere su regole, potenziamenti e numeri.
@@ -40,7 +40,7 @@ qui si ragiona di design, si prendono decisioni e si tiene la checklist di revis
   pronto da passare a Claude Code.
 - Ragiona sui numeri con il budget di scelte (19 per partita, 28 dal livello 11; servono 19, 39 e 64 scelte per riempire i tetti lv1, lv2, lv3)
   e con i risultati di calibrazione del § 5. Quando una stima conta, dì che va misurata con i bot in Claude Code.
-- Checklist di revisione: artefatto https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX — aggiornala quando Marco lo chiede o porta un changelog.
+- Checklist di revisione: artefatto https://claude.ai/artifact/MdJMokJ4LquiwS7M4BViSX — la aggiorna Claude Code a fine lavoro; qui modificala solo se Marco lo chiede.
   Le spunte seguono il testo delle voci: cambia il testo solo se la voce cambia davvero.
 - Non scrivere qui il codice del gioco, salvo brevi esempi: l’implementazione la fa Claude Code.
 ```

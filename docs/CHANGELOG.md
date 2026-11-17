@@ -3,6 +3,19 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Checklist di revisione aggiornata da Claude Code (solo documenti, gioco invariato: resta 1.14.1)
+
+- La checklist su claude.ai era ferma alla 1.2.5. Aggiornata (versione 22 dell’artefatto) con le voci “Checklist” dalla 1.2.0 alla 1.14.1: due sezioni nuove
+  (“Da provare sul telefono”, “Da decidere o confermare”) e tre riferimenti nuovi da DESIGN.md (Equipaggiamento e Moduli con drop e valori X, Sigilli e albero con i maggiori,
+  Barriera e abilità); riscritti progressione, sblocchi, boss e difficoltà; aggiunti i nemici mancanti; tolte le voci superate. Le spunte delle voci spostate restano (`RENAMED`).
+- Da ora la checklist la aggiorna Claude Code alla fine di ogni lavoro: regola 6 di CLAUDE.md, `docs/PROGETTO-claude-ai.md` (anche le istruzioni da incollare), DESIGN.md § 14.
+
+**Test**: nessun codice del gioco cambiato; checklist provata in jsdom (nessun errore, spunte portate sulle voci spostate).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 22). Su claude.ai: incollare di nuovo nelle istruzioni del progetto il testo della sezione 3 di `docs/PROGETTO-claude-ai.md`.
+
 ## 1.14.1 — due Sigilli subito con la cupola al 100%, velocità della partita
 
 - **Sigilli** (Marco): se il primo completamento di un livello (dal 31 in Standard, da subito in Epica) finisce con la cupola al 100%, si prendono subito
