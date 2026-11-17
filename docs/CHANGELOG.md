@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Pubblicazione su GitHub Pages (gioco invariato: resta 1.14.0)
+
+- Nuovo workflow `.github/workflows/pages.yml`: a ogni push su main che tocca `app/` (o il workflow), oppure a mano, pubblica il solo contenuto di `app/`
+  su https://mbalpo.github.io/fortress-defense/ (`checkout@v7`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`; nessuna build).
+- Percorsi in `app/` già tutti relativi (manifest `start_url`, `scope` e `id` a `./`, `ASSETS` di sw.js con `./`, `index.html` senza percorsi assoluti né URL Netlify):
+  nessuna correzione, quindi nessuna versione nuova.
+- `netlify.toml` (solo `publish = "app"`, nessun header né redirect) resta: il vecchio sito Netlify rimane attivo fino alla prova sul telefono. Non c’erano `_headers` né `_redirects`.
+- DEPLOY.md: indirizzo, file pubblicati, nuova procedura di rilascio, push che non toccano `app/` e non pubblicano, cache di 10 minuti di GitHub Pages.
+- Controllo del repository pubblico (cronologia compresa): nessuna chiave, token o password, nessun percorso locale. L’email di lavoro, presente nei metadati di tutti i commit, è stata sostituita nella cronologia con l’indirizzo noreply di GitHub
+  (`git filter-repo --mailmap`, contenuti dei commit identici) e impostata per i commit futuri di questo repository.
+
+**Test**: `npm test`: tutti verdi.
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiungere “Prova su telefono: esportare il salvataggio dal vecchio sito (file o codice FD1:), aprire il nuovo indirizzo, importarlo, reinstallare la PWA;
+poi pubblicare una versione B e riaprire l’app per controllare l’aggiornamento.”
+
 ## DEPLOY.md: contenuto del salvataggio (solo documenti, gioco invariato: resta 1.14.0)
 
 - La sezione SALVATAGGIO diceva che il salvataggio “non contiene la partita in corso” ed elencava solo livelli, nemici e impostazioni. Ora elenca anche Sigilli e maggiori,

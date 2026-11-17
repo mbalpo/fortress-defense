@@ -1,0 +1,38 @@
+# Pubblica su GitHub Pages il solo contenuto di app/ (nessuna build: i file sono già statici).
+# Parte con un push su main che tocca app/ o questo file, oppure a mano da Actions → "Pubblica su GitHub Pages".
+name: Pubblica su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# una pubblicazione alla volta; quella in corso non viene interrotta
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Scarica il repository
+        uses: actions/checkout@v7
+      - name: Configura Pages
+        uses: actions/configure-pages@v6
+      - name: Carica la cartella app/
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: app
+      - name: Pubblica
+        id: deployment
+        uses: actions/deploy-pages@v5

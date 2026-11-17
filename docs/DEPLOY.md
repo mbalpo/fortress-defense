@@ -9,10 +9,30 @@ CONTENUTO
   app/sw.js               service worker: fa partire il gioco anche offline
   app/icon-*.png          icone (192, 512, 512 "maskable" per Android, 180 per iPhone)
 
-PUBBLICARE
-  Carica tutti i file della cartella app/, così come sono, nella stessa cartella di un sito in HTTPS
-  (anche una sottocartella va bene, per esempio https://tuosito.it/fortress/).
-  Il service worker funziona solo in HTTPS, oppure su localhost dal computer:
+INDIRIZZO
+  https://mbalpo.github.io/fortress-defense/
+  GitHub Pages, repository pubblico mbalpo/fortress-defense (Settings → Pages: Source = "GitHub Actions").
+  Si pubblica tutto il contenuto di app/ (i file elencati sopra), nient'altro: docs/, tests/ e il
+  resto del repository non finiscono sul sito. Il sito sta nel sottopercorso /fortress-defense/:
+  in app/ tutti i percorsi devono restare relativi (niente che inizi con "/").
+
+  Il vecchio sito Netlify (netlify.toml, che pubblica app/) resta attivo finché il nuovo indirizzo
+  non è stato provato tutto sul telefono: salvataggio portato, PWA reinstallata, aggiornamento visto.
+
+PUBBLICARE (GitHub Actions, .github/workflows/pages.yml)
+  1. Alza VERSION in app/sw.js e APP_VERSION in app/index.html, con lo stesso valore.
+  2. npm test: tutti verdi (swtest.js controlla che i due numeri coincidano).
+  3. Commit e push su main.
+  4. Il workflow "Pubblica su GitHub Pages" carica app/ e pubblica da solo, in un paio di minuti
+     (avanzamento nella scheda Actions del repository).
+  Parte solo se il push tocca app/ o il workflow stesso: un push che cambia soltanto docs/ o tests/
+  non pubblica nulla. Per ripubblicare senza modifiche: Actions → "Pubblica su GitHub Pages" →
+  "Run workflow".
+  GitHub Pages tiene i file in cache per 10 minuti e non si può cambiare: l'aggiornamento può
+  arrivare sul telefono qualche minuto dopo la pubblicazione.
+
+  Altrove: va bene qualsiasi sito in HTTPS, anche in una sottocartella, caricando i file di app/
+  così come sono. Il service worker funziona solo in HTTPS, oppure su localhost dal computer:
   un sito di test in http non basta per installare il gioco sul telefono.
 
 INSTALLARE SUL TELEFONO
@@ -23,7 +43,7 @@ INSTALLARE SUL TELEFONO
 AGGIORNARE
   Prima di caricare, alza APP_VERSION in index.html e VERSION in sw.js (stesso numero):
   se sw.js non cambia, il browser non vede l'aggiornamento.
-  Sostituisci i file sul sito. Alla prossima apertura con connessione la schermata iniziale
+  Pubblica (vedi sopra). Alla prossima apertura con connessione la schermata iniziale
   mostra "Aggiornamento in corso…", scarica la versione nuova e ricarica; poi compare "Start"
   (la versione è scritta in basso nel menu). Offline, o se il controllo supera 3 secondi,
   compare subito "Start" con la versione già installata.
