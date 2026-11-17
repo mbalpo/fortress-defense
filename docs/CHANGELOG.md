@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Cataloghi grafici di nuovo funzionanti (solo strumenti, gioco invariato: resta 1.13.1)
+
+Segnalazione di Marco: dalle ultime modifiche il catalogo grafico e quello alternativo non mostrano più scene né tessere (il gioco invece va bene).
+
+- **Causa** (1.13.0): `buildDoc` di `tests/tools/catalog.js` gira anche nel browser (la pagina lo incorpora per costruire le scene e l’atelier delle tessere),
+  ma usava `ALT`, che esiste solo nel generatore → nel browser ogni scena e ogni tessera si fermava subito con un errore. In più la pagina non incorporava
+  `draw-hd2d.js` e nel catalogo HD-2D il codice incorporato come `draw.js` era in realtà `draw-hd2d.js`.
+- **Correzione**: la scelta della grafica (`gfx`) e il codice HD-2D (`drawHd`) viaggiano in `P` come gli altri pezzi; la pagina incorpora a parte
+  `draw.js` (`#src-draw`), `draw-hd2d.js` (`#src-draw-hd`, vuoto nel catalogo classico) e la grafica (`#data-gfx`). Il codice mostrato in fondo alla pagina non cambia.
+
+**Test**: `tests/catalog.js` ora costruisce la scena “battaglia” come fa il browser, con `buildDoc` e i pezzi presi dalla pagina generata, per entrambi i
+cataloghi, e controlla che non ci siano errori e che la grafica sia quella giusta (classica / HD-2D). Controprova: sulla pagina vecchia il controllo fallisce.
+`npm test`: tutti verdi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html e docs/catalogo-grafico-alternativo.html.
+
+Checklist: nessuna voce da cambiare; aprendo i due cataloghi, scene e tessere devono animarsi.
+
 ## 1.13.1 — il gioco si chiama Planet Defense
 
 Richiesta di Marco: rinominare il gioco da Fortress Defense a Planet Defense.

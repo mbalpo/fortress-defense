@@ -29,3 +29,25 @@ const fixed = ["vincoli", "scena:menu", "scena:splash-start", "scena:salvataggio
 const missF = fixed.filter((v) => !html.includes('data-voce="' + v + '"'));
 console.log("sezioni fisse: " + (fixed.length - missF.length) + "/" + fixed.length, ok(!missF.length) + (missF.length ? " mancano: " + missF.join(", ") : ""));
 dom.window.close();
+
+// la pagina nel browser: buildDoc e i pezzi del gioco presi dalla pagina stessa (come fa clientRuntime), in entrambi i cataloghi.
+// 1.13.1: buildDoc usava ALT, che nel browser non esiste → tutte le scene e le tessere rotte, mentre la verifica in Node passava.
+const path = require("path");
+for (const file of [C.OUT, path.join(path.dirname(C.OUT), "catalogo-grafico-alternativo.html")]) {
+  const name = path.basename(file);
+  if (!fs.existsSync(file)) { console.log(name + ": mancante ✗ ERRORE"); continue; }
+  const page = fs.readFileSync(file, "utf8"), code = page.match(/const harness = ([\s\S]*?);\nconst buildDoc = ([\s\S]*?);\n\(function clientRuntime/);
+  const doc = new JSDOM(page.replace(/<script>\s*"use strict";[\s\S]*?<\/script>\s*<\/body>/, "</body>")).window.document, $ = (q) => doc.querySelector(q);
+  let errs = [], gfx = "?";
+  try {
+    // ambito come nel browser: solo harness accanto a buildDoc, nessuna variabile del generatore
+    const buildDoc = new Function("const harness = " + code[1] + "; return (" + code[2] + ");")();
+    const P = { css: $("#src-css").textContent, markup: $("#src-markup").textContent, draw: $("#src-draw").textContent, drawHd: $("#src-draw-hd").textContent,
+      gfx: JSON.parse($("#data-gfx").textContent), game: $("#src-game").textContent };
+    const cfg = JSON.parse($("#data-scenes").textContent).find((s) => s.id === "battaglia").cfg;
+    const w = new JSDOM(buildDoc(P, cfg), { runScripts: "dangerously", pretendToBeVisual: true, url: "http://localhost/" }).window;
+    w.__cat.step(10); errs = w.__cat.errors; gfx = w.__ev("DRAW.GFX_ON"); w.close();
+  } catch (e) { errs = [e.message]; }
+  const want = name.includes("alternativo") ? "hd2d" : "classic";
+  console.log(name + " nel browser: scena “battaglia” " + (errs.length ? "errori: " + errs.join("; ") : "senza errori") + " | grafica " + gfx, ok(!errs.length && gfx === want));
+}

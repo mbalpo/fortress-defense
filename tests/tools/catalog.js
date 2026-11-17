@@ -40,11 +40,12 @@ function parts() {
   let game = html.slice(b + 8, html.indexOf("</script>", b));
   if (!game.includes(HOOK)) throw new Error("index.html: manca la fine dello script del gioco (" + JSON.stringify(HOOK) + ")");
   game = game.replace(HOOK, "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);   // aggancio del catalogo: esegue codice nell’ambito del gioco\n})();");
-  const draw = read("app/draw.js"), drawHd = read("app/draw-hd2d.js");
+  // gfx e drawHd stanno in P (non in ALT) perché buildDoc gira anche nel browser, dove ALT non esiste
+  const draw = read("app/draw.js"), drawHd = ALT ? read("app/draw-hd2d.js") : "", gfx = ALT ? "hd2d" : "";
   for (const [n, t] of Object.entries({ css, markup, draw, drawHd, game })) if (/<\/script|<!--/i.test(t)) throw new Error(n + ": contiene </script o <!-- e non si può incorporare");
   const icons = Object.fromEntries(["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"].map((f) => [f, icon(f)]));
   const version = (html.match(/const APP_VERSION = "([^"]+)"/) || [])[1];
-  return { css, markup, draw, drawHd, game, icons, version, html };
+  return { css, markup, draw, drawHd, gfx, game, icons, version, html };
 }
 
 /* ---------- dentro ogni iframe (e in jsdom): orologio, casuale fisso, storage finto ---------- */
@@ -95,7 +96,7 @@ function buildDoc(P, cfg) {
   return "<!DOCTYPE html><html lang=\"it\"><head><meta charset=\"utf-8\"><style>" + P.css + "\nhtml, body { overflow: hidden; }</style></head><body>\n" +
     "<canvas id=\"c\" aria-label=\"Campo di battaglia\"></canvas>\n" + P.markup +
     "<script>window.__CFG = " + JSON.stringify(cfg).replace(/</g, "\\u003c") + ";(" + harness + ")();<\/script>\n" +
-    (ALT ? "<script>window.FORTRESS_GFX = \"hd2d\";<\/script>\n" : "") + "<script>" + P.drawHd + "<\/script>\n<script>" + P.draw + "<\/script>\n<script>" + P.game + "<\/script>\n<script>__cat.boot();<\/script></body></html>";
+    (P.gfx ? "<script>window.FORTRESS_GFX = " + JSON.stringify(P.gfx) + ";<\/script>\n" : "") + (P.drawHd ? "<script>" + P.drawHd + "<\/script>\n" : "") + "<script>" + P.draw + "<\/script>\n<script>" + P.game + "<\/script>\n<script>__cat.boot();<\/script></body></html>";
 }
 
 /* ---------- scene (codice eseguito nell’ambito del gioco) ---------- */
@@ -602,14 +603,17 @@ ${palette}
 
 <section id="codice"><h2>Codice di disegno</h2>
 <p>Il modulo completo, così com’è in <code>${DRAW_FILE}</code>. Lo script del gioco (<code>index.html</code>) è incorporato più sotto in forma non visibile e serve alle scene.</p>
-<details><summary>${DRAW_FILE} (${(ALT ? P.drawHd : P.draw).split("\n").length} righe)</summary><pre id="src-draw">${esc(ALT ? P.drawHd : P.draw)}</pre></details>
+<details><summary>${DRAW_FILE} (${(ALT ? P.drawHd : P.draw).split("\n").length} righe)</summary><pre>${esc(ALT ? P.drawHd : P.draw)}</pre></details>
 </section>
 </main>
 <footer>Planet Defense ${esc(P.version)} · catalogo generato da <code>tests/tools/catalog.js</code> · se un file del gioco cambia, <code>npm test</code> lo rigenera e un test controlla che non sia indietro.</footer>
 <iframe id="atelier" title="atelier" aria-hidden="true" style="position:absolute;left:-10000px;top:0;width:720px;height:1280px;border:0;visibility:hidden"></iframe>
 <script type="text/plain" id="src-css">${P.css}</script>
 <script type="text/plain" id="src-markup">${P.markup}</script>
+<script type="text/plain" id="src-draw">${P.draw}</script>
+<script type="text/plain" id="src-draw-hd">${P.drawHd}</script>
 <script type="text/plain" id="src-game">${P.game}</script>
+<script type="application/json" id="data-gfx">${JSON.stringify(P.gfx)}</script>
 <script type="application/json" id="data-scenes">${JSON.stringify(S.map((s) => ({ id: s.id, cfg: s.cfg }))).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="data-tiles">${JSON.stringify(T.map((t) => ({ key: t.key, code: t.code, box: t.box, zoom: t.zoom, anim: t.anim }))).replace(/</g, "\\u003c")}</script>
 <script>
@@ -626,7 +630,8 @@ const buildDoc = ${buildDoc};
 /* ---------- nel browser: scene, tessere e orologio ---------- */
 function clientRuntime() {
   const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
-  const P = { css: $("#src-css").textContent, markup: $("#src-markup").textContent, draw: $("#src-draw").textContent, game: $("#src-game").textContent };
+  const P = { css: $("#src-css").textContent, markup: $("#src-markup").textContent, draw: $("#src-draw").textContent, drawHd: $("#src-draw-hd").textContent,
+    gfx: JSON.parse($("#data-gfx").textContent), game: $("#src-game").textContent };
   const CFG = Object.fromEntries(JSON.parse($("#data-scenes").textContent).map((s) => [s.id, s.cfg]));
   const TILES = JSON.parse($("#data-tiles").textContent);
   const dpr = Math.min(2, window.devicePixelRatio || 1);
