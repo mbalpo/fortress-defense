@@ -167,10 +167,11 @@ const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed:
 // 10, 20, 30 sul pool libero; dal 40 con l’albero atteso e le abilità della barriera, 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
 // fattore per singolo muro (1.11.0): corregge i muri che con l’equipaggiamento atteso uscivano dalla fascia 50-70% [Claude, provvisorio]
-const FINAL_BOSS_K = { 40: 1.2, 60: 0.6, 80: 1.3, 90: 0.6, 100: 0.75, 120: 1.15, 130: 1.15, 170: 1.5, 190: 0.75 };
+// 50: ×0,6 (1.14.0, Marco) con i maggiori della barriera, che al 50 non si hanno ancora (insieme a WALL_ENEMY_HP[50])
+const FINAL_BOSS_K = { 40: 1.2, 50: 0.6, 60: 0.6, 80: 1.3, 90: 0.6, 100: 0.75, 120: 1.15, 130: 1.15, 170: 1.5, 190: 0.75 };
 const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35)) * (FINAL_BOSS_K[lv] || 1);
-// vita dei nemici normali nei livelli muro (oltre al boss): solo il 10, dove si muore anche prima del boss
-const WALL_ENEMY_HP = { 10: 0.93 };
+// vita dei nemici normali nei livelli muro (oltre al boss): il 10 e il 50 (1.14.0, Marco), dove si muore anche prima del boss
+const WALL_ENEMY_HP = { 10: 0.93, 50: 0.85 };
 const finalBossDef = (lv) => ({ type: TYPE_KEYS[(lv / 10) % 5], hp: finalBossHp(lv), speed: 14, r: 34, dmg: 8, boss: true, final: true, look: "mothership", kbRes: 0.85, statRes: 0.6 });   // vita che cresce con il livello
 const hasMiniBosses = () => mode === "epic" || campLevel >= CAMPAIGN.bossFrom;   // in Epica fin dal livello 1
 const hasFinalBoss = () => campLevel % CAMPAIGN.finalBossEvery === 0;

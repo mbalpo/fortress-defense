@@ -3,6 +3,21 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.0 — muro 50 ritarato (stessa versione, non ancora pubblicata)
+
+Con i maggiori della barriera il muro 50 era sceso al 20% (prima 45,5%): al 50 nessuno ha ancora maggiori. Su proposta di Claude, approvata da Marco, i costi restano e cambia il solo muro 50:
+nemici normali all’85% della vita (`WALL_ENEMY_HP[50] = 0.85`) e boss finale ×0,6 (`FINAL_BOSS_K[50] = 0.6`).
+
+**Bot** (`EQUIP=1.5 node tests/tools/curva.js 50 100`, 200 partite per prova, stessi semi): con maggiori 20,0% → Riduzione danno senza maggiore 24,0% · maggiore dal livello 2 24,5% ·
+solo nemici ×0,85 32,0% / ×0,75 35,0% · solo boss ×0,7 29,5% / ×0,55 38,5% · nemici ×0,8 + boss ×0,55 66,5% · **nemici ×0,85 + boss ×0,6 60,0%** (scelta). Il 40 non cambia (65,5%).
+Le partite dei bot sono deterministiche con gli stessi semi, quindi il 60,0% vale per il codice applicato. Numeri in DESIGN.md § 5 e § 16.
+
+**Test**: `npm test`: tutti verdi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html e docs/catalogo-grafico-alternativo.html (solo il codice incorporato; disegni invariati).
+
+Checklist: aggiungere “muro 50: si supera circa nel 60% delle partite dei bot; da provare a mano”; togliere “Da decidere: muro 50 al 20% con i maggiori della barriera”.
+
 ## 1.14.0 — Continua, lucchetti, azzeramento dell’albero, barriera con maggiori
 
 Implementate le decisioni inserite in DESIGN.md nella voce sotto.

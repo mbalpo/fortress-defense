@@ -103,7 +103,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
   - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro (`FINAL_BOSS_K`, dalla 1.12.1: 40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,75, 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
-    al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
+    al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`); al 50, dalla 1.14.0, l’85% e il boss finale ×0,6 (`FINAL_BOSS_K`, § 16) **[deciso]** (Marco). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
 - Esito attuale (vittorie dei bot): livelli 1-5 100% · 8 circa 40-60% · **10 circa 25-30% (muro)** · 11-15 circa 60-80% (sollievo dopo lo sblocco) ·
@@ -821,7 +821,9 @@ Regole di calcolo **[Claude] [da rivedere]**:
   costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo; effetto dei maggiori sulla barriera: Vita % resta acquistabile fino al livello 5,
   ma Riduzione danno e gli altri 4 nodi richiedono un maggiore e arrivano dopo il primo (Epica); muri 40 e 50.
   **Misura 1.14.0** (`EQUIP=1.5 node tests/tools/curva.js 40,50 100`, 200 partite per muro, stessi semi): 40 **68,5% → 65,5%** · 50 **45,5% → 20,0%** (prima → dopo i maggiori della barriera; al 50 i bot hanno 28 Sigilli e 0 maggiori, quindi la barriera si ferma a Vita % 5).
-  Il 50 scende sotto la fascia del 50-70% (§ 15) **[da rivedere]** (Marco): numeri della curva e costi non toccati.
+  Il 50 scendeva sotto la fascia del 50-70% (§ 15). Prove (200 partite ciascuna, muro 50): Riduzione danno senza maggiore 24,0% (40: 75,5%); maggiore dal livello 2 di ogni nodo
+  24,5% (40: 71,5%); solo nemici ×0,85 / ×0,75 32,0 / 35,0%; solo boss finale ×0,7 / ×0,55 29,5 / 38,5%; nemici ×0,8 + boss ×0,55 66,5%; **nemici ×0,85 + boss ×0,6 60,0%**.
+  **Correzione [deciso]** (Marco, proposta di Claude): costi della barriera invariati, al muro 50 `WALL_ENEMY_HP` 0,85 e `FINAL_BOSS_K` 0,6 → **50 60,0%**, 40 invariato (65,5%).
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.
