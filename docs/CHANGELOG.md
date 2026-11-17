@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: Continua, blocchi, azzeramento, barriera con maggiori (solo DESIGN.md, gioco invariato: resta 1.13.1)
+
+Testo di Marco inserito in `docs/DESIGN.md`; **nulla è ancora implementato**.
+
+- § 2: **Partita in sospeso e Continua** (`fortress-run-v1`, ripresa dall’inizio dell’ondata interrotta, albero ed equipaggiamento in sola lettura finché c’è).
+  § 7: la chiave `fortress-run-v1`; l’esportazione non include la partita in sospeso; formato **versione 5** con `progress.gear.lock`. § 13: tolto “salvataggio della partita in corso”.
+- § 4 e § 16: scheda **Abilità** della barriera bloccata da un overlay fino al completamento del 40.
+- § 16: la **barriera** costa maggiori (1 allo sblocco per Riduzione danno, Vita fissa, Riduzione cooldown, Ignorare un colpo, Più carte più danno; Vita % ai livelli 6, 11, 16):
+  totale dell’albero 145 maggiori. Aggiunto da misurare con i bot (muri 40 e 50).
+- § 16 e § 11: **azzeramento per sezione** con rimborso totale (sostituisce la proposta aperta di rimborso).
+- § 15: **Equipaggia/Installa** a due tocchi; **blocco per esemplare** con lucchetto; **sostituzione** di un Modulo con uno dello stesso effetto e rarità maggiore.
+- § 10: **Thunderbolt**, la sfera si ferma mentre parte il fulmine (0,18 s; 0,38 s col Doppio fulmine).
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiungere da provare, quando saranno implementati: Continua dopo che il telefono scarta l’app; overlay della scheda Abilità prima del 40; costi in maggiori della barriera;
+azzeramento per sezione (saldo di Sigilli e maggiori); lucchetti (divisione e unione delle righe); Equipaggia/Installa a due tocchi; sostituzione dei Moduli; sfera del Thunderbolt ferma durante il fulmine.
+
 ## Cataloghi grafici di nuovo funzionanti (solo strumenti, gioco invariato: resta 1.13.1)
 
 Segnalazione di Marco: dalle ultime modifiche il catalogo grafico e quello alternativo non mostrano più scene né tessere (il gioco invece va bene).
