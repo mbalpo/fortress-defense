@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## DEPLOY.md: contenuto del salvataggio (solo documenti, gioco invariato: resta 1.14.0)
+
+- La sezione SALVATAGGIO diceva che il salvataggio “non contiene la partita in corso” ed elencava solo livelli, nemici e impostazioni. Ora elenca anche Sigilli e maggiori,
+  albero, abilità della barriera, equipaggiamento con i lucchetti, e dice che la partita in sospeso (Continua) non si esporta e viene cancellata importando un salvataggio.
+
+**Test**: nessun codice cambiato; `npm test` non serve.
+
+Catalogo grafico: non cambiato.
+
+Checklist: nessuna voce da cambiare.
+
 ## 1.14.0 — muro 50 ritarato (stessa versione, non ancora pubblicata)
 
 Con i maggiori della barriera il muro 50 era sceso al 20% (prima 45,5%): al 50 nessuno ha ancora maggiori. Su proposta di Claude, approvata da Marco, i costi restano e cambia il solo muro 50:

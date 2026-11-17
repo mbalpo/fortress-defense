@@ -35,8 +35,10 @@ SALVATAGGIO
   oppure come codice di testo da copiare in una nota o in un messaggio.
   Importa da file o incollando il codice: prima di sostituire i progressi
   chiede conferma e mostra cosa contiene il salvataggio.
-  Il salvataggio contiene livelli completati, nemici scoperti e impostazioni
-  (bersaglio). Non contiene la partita in corso.
+  Il salvataggio contiene livelli completati, nemici scoperti, Sigilli e Sigilli
+  maggiori, albero dei potenziamenti, abilità della barriera, equipaggiamento (con i
+  lucchetti) e impostazioni (bersaglio). Non contiene la partita in sospeso (Continua):
+  quella resta solo sul dispositivo, e importando un salvataggio viene cancellata.
 
   I progressi stanno nel browser del dispositivo: disinstallare l'app o cancellare
   i dati del sito li elimina. Esporta prima di farlo.
