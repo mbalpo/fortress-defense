@@ -164,4 +164,19 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     const c = game({ progress: Object.assign({}, gp, { gear: { pcs: {}, mods: {}, eq: { testa: { r: 1, m: [[22, 4], [21, 4]] } } } }), src }), ec = c.w.__ev;
     ec("selLevel = 42; startRun('standard'); queue = []; enemies.length = 0;"); c.frame(80); c.frame(80); c.frame(1);
     ec("wave = 1; endWave()"); c.frame(); c.save("42-carte-4-rinnovo.png"); }
+  { // 1.14.0: Continua nel menu, “sostituirla?”, Abilità bloccate, Azzera, lucchetti, due tocchi, sostituzione dei Moduli, albero in sola lettura
+    const gear = { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:1": 5 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:3:1": 1, "arma:0:4": 1 },
+      eq: { arma: { r: 2, m: [[2, 2, 1], [1, 1], [17, 0]], lk: 1 } }, lock: { "arma:0": 2, "arma:0:1": 1 } };
+    const gp = { cleared: 42, seen: ALL_SEEN, seals: 9, majors: 2, gear, tree: { "player:boom1": 1, "player:std:dmg": 3 } };
+    const g = game({ progress: gp, src }), ev = g.w.__ev;
+    ev("selLevel = 38; startRun('epic' === 'x' ? 'epic' : 'standard'); for (let w = 0; w < 6; w++) { endWave(); if (state === 'upgrade') pick(0); } state = 'menu'; selLevel = 42");
+    g.frame(); g.save("51-menu-continua.png");
+    ev("runArm = 'standard'"); g.frame(); g.save("52-menu-sostituirla.png");
+    ev("runArm = null; openTree(); treeTab = 'player'"); g.frame(); g.save("53-albero-sospeso.png");
+    ev("closeTree(); openGear()"); g.frame(); g.save("54-equipaggiamento-sospeso.png");
+    ev("clearRun(); gearPick('arma'); gearSetTab('pcs'); gearSetMode('use'); tapPiece(3)"); g.frame(); g.save("55-equipaggiamento-lucchetti.png");
+    ev("gearArm = null; gearSetTab('mods'); gearRar = 3; tapMod(1)"); g.frame(); g.save("56-equipaggiamento-sostituzione.png");
+    ev("closeGear(); openTree(); treeTab = 'player'; tapReset()"); g.frame(); g.save("57-albero-azzera.png");
+    const a = game({ progress: { cleared: 36, seen: ALL_SEEN, seals: 4, majors: 0 }, src });
+    a.w.__ev("openTree(); treeTab = 'barrier'; barrierTab = 'abilities'"); a.frame(); a.save("58-albero-abilita-bloccate.png"); }
 }

@@ -38,6 +38,11 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   all’avvio di un’altra partita (avviso a due tocchi “sostituirla?”), con un salvataggio importato e con un `APP_VERSION` diverso. I premi già riscossi non si riscuotono due volte.
   Albero e equipaggiamento sono bloccati finché c’è una partita in sospeso (§ 15, § 16). Scelte di Claude **[Claude] [deciso]**: albero ed equipaggiamento si possono aprire
   in sola lettura, con il messaggio “Partita in sospeso: continua o abbandona per modificare”; i lucchetti restano usabili; le carte dopo l’ondata si estraggono di nuovo, senza salvare il seme.
+  Costruita nella 1.14.0. Dettagli **[Claude]**: pulsante “Continua” (con “Livello N · modalità · ondata X/20”) al posto delle due righe di istruzioni; tasto C; il primo tocco
+  su Standard/Epica (o Invio/E, o un livello dalla griglia) cambia il pulsante in “Sostituire la partita in sospeso?”, il secondo avvia la nuova partita, un tocco altrove annulla;
+  salvati anche i tiri dei Moduli 29 e 30 (guardiano e torrette dal livello 2) e lo stato delle abilità della barriera; il Sigillo maggiore del boss finale vale una volta per partita
+  e si scrive subito nel salvataggio, così rigiocando l’ondata non si riprende. Nel menu, accanto alla versione, il tipo di avvio della pagina (“nuova”, “ricaricata”, “indietro”,
+  “scartata” se il browser segnala `document.wasDiscarded`) **[Claude]**, per confermare quando il sistema scarta l’app.
 - **Nemici scoperti** (per tutta la campagna, salvati sul dispositivo): nella scheda Nemici solo quelli già incontrati, gli altri “sconosciuto”;
   al primo incontro compare l’avviso “Nuovo nemico” (3,5 s, uno alla volta, si ferma in pausa).
   Mini-boss e boss finale si scoprono **tipo per tipo**. **[deciso]**
@@ -498,7 +503,8 @@ audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
     del pezzo**, con i pesi sotto.
 - **Doppioni**: nello stesso pezzo non si installano due Moduli con lo stesso effetto, di qualsiasi rarità; su pezzi diversi gli effetti si sommano
   (probabilità con tetto 100%). **[deciso]** **Sostituzione** **[deciso]** (Marco): un Modulo con lo stesso effetto e rarità maggiore di quello installato lo sostituisce direttamente,
-  anche con slot pieni; il vecchio torna in inventario, senza perdite. A rarità uguale o minore l’installazione è rifiutata, con messaggio. Controllo già nel codice (`canInstall`, `cleanGear`); aggiungere un test.
+  anche con slot pieni; il vecchio torna in inventario, senza perdite. A rarità uguale o minore l’installazione è rifiutata, con messaggio. Nel codice dalla 1.14.0 (`installCheck`; prima c’era solo il rifiuto dei doppioni); test in `tests/v114.js`.
+  Il primo tocco dice “Tocca di nuovo: sostituisce l’epico”, dopo la sostituzione “Il Modulo epico torna in inventario” **[Claude]**.
 
 ### Catalogo degli effetti dei Moduli **[deciso]** (valori X: tabella più sotto)
 
@@ -634,7 +640,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
   **Cambiando pezzo** i Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario **[deciso]** (confermato da Marco); “Togli” rimette in inventario pezzo e Moduli.
 - **Schermata** “Equipaggiamento” (menu, accanto all’albero, dal livello 30): i 6 pezzi in alto (bordo del colore della rarità, Moduli installati), il pezzo scelto con
   statistica e slot, sotto l’inventario di quel pezzo in due schede (Pezzi, Moduli per rarità) con tre modalità: **Equipaggia/Installa** (due tocchi: il primo seleziona e mostra cosa cambia, il secondo conferma; toccare altro annulla), **Fondi** (pezzi: due tocchi;
-  Moduli: si scelgono 5 righe, anche diverse, poi “Fondi ora”), **Scarta** (due tocchi). Un Modulo installato si toglie con due tocchi. Sopra: totale di guardiano, barriera e torri.
+  Moduli: si scelgono 5 righe, anche diverse, poi “Fondi ora”), **Scarta** (due tocchi). Un Modulo installato si toglie con due tocchi.
+  Lucchetti (1.14.0) **[Claude]**: un pulsante con il lucchetto a destra di ogni riga dell’inventario, di ogni Modulo installato e accanto a “Togli” per il pezzo equipaggiato;
+  chiuso e giallo se bloccato. Le righe dei pezzi si stringono se le righe bloccate non ci stanno; al primo tocco di Equipaggia la riga dice cosa cambia
+  (“Tocca di nuovo: danno del guardiano +15% → +21%”, più i Moduli che tornano in inventario). Sopra: totale di guardiano, barriera e torri.
 - **Icone** (1.11.0) **[Claude]**: sagome dei 6 pezzi (cannone, guanto, elmetto, corazza, stivale, nucleo esagonale) e chip per i Moduli (con l’iniziale del pezzo), del colore della rarità; nei 6 riquadri, nelle righe dell’inventario, negli slot e nella vittoria.
 - **Vittoria**: tasselli con gli oggetti presi, del colore della rarità. **Avviso del 30**: “cadono a ogni vittoria. Equipaggiali dal menu.”
 - **Letture degli effetti**:
@@ -657,7 +666,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Sigilli maggiori** (✦, dalla 1.12.0) **[deciso]** (Marco): seconda valuta, per ora solo dai boss in **Epica**: il **boss finale** e, con bassa probabilità, i **mini-boss**,
   ma mai più di 1 per livello dai mini-boss (a parte il boss finale). Valori **[Claude] [provvisorio]**: boss finale 1 a ogni vittoria su di lui (anche rigiocando),
   mini-boss 10% ciascuno; il maggiore si prende subito alla sconfitta del boss (anche se poi la partita è persa). Mostrato a schermo e nella vittoria.
-- **Costi dalla 1.12.0** **[deciso]** (Marco):
+- **Costi dalla 1.12.0** **[deciso]** (Marco; barriera dalla 1.14.0):
   - sblocco delle carte chain e level up (torrette e guardiano): costo uguale al **livello della carta** (lv1 1, lv2 2, lv3 3 Sigilli);
   - **carte standard potenziabili**: si sbloccano con i maggiori. Nodi da 20 livelli (Danno maggiorato di torrette e guardiano, sezione per tipo): **1 maggiore ai livelli 1, 6, 11, 16**
     (4 in tutto) più i Sigilli normali di sempre; nodi da 5 livelli delle torrette (e Durata degli stati): 1 maggiore allo sblocco; guardiano: **+1 proiettile, Ventaglio potenziato
@@ -684,7 +693,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
     - **Controllo**: Barriera repulsiva · Barriera congelante · Barriera riflettente
     - **Offesa**: Barriera ustionante · Barriera minata · Barriera potenziante
   - **Blocco fino al 40** **[deciso]** (Marco): la scheda Abilità resta bloccata finché non si è completato il livello 40; un overlay lo dice, con i livelli completati finora.
-    Finché è bloccata non si comprano, potenziano né equipaggiano abilità. Nodi già comprati prima restano, senza rimborso automatico. Overlay e testo **[deciso]**.
+    Finché è bloccata non si comprano, potenziano né equipaggiano abilità. Nodi già comprati prima restano, senza rimborso automatico. Overlay e testo **[deciso]**. Testi **[Claude]**: lucchetto, “Abilità bloccate”, “Si sbloccano completando il livello 40”, “Livelli completati: N/40” (1.14.0).
 - Le abilità con cooldown hanno un ciclo base di 40 s (Impenetrabile: minimo 20 s). I numeri per livello sono **[da rivedere]**.
 - **Descrizione delle abilità** **[deciso]** (testo di Marco):
   1. **Rigenerazione** (rivista da Marco): rigenera X al secondo per Y secondi, al massimo Z volte; non si riattiva prima di 2·Y secondi dalla fine dell’effetto.
@@ -747,6 +756,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
   e i maggiori spesi lì, per riassegnarli; due tocchi, come “Abbandona”. Letture **[Claude] [da confermare]**: Torrette comprende le 11 torrette e la sezione per tipo, e azzerandola
   tornano non equipaggiate le torrette dello Sblocco permanente; Barriera comprende potenziamenti e abilità, e azzerandola tornano non equipaggiate le abilità. I premi già riscossi
   (`claims`) non cambiano. Il rimborso si calcola dai costi attuali (per nodi comprati con costi vecchi può differire di qualche Sigillo). Non disponibile con una partita in sospeso (§ 2).
+  Costruito nella 1.14.0: pulsante “Azzera” in alto a destra, vale per la sezione aperta e compare solo se c’è qualcosa da azzerare; al primo tocco diventa “Sicuro?” e la riga sotto il titolo
+  mostra il rimborso (“Rimborso: X ◆ e Y ✦”) **[Claude]**.
 - **Torrette equipaggiate**: si scelgono toccando lo Sblocco permanente già comprato (al massimo 4); valgono in **tutti i livelli e le modalità**, come le carte sbloccate
   (lettura **[Claude] [da rivedere]**). Ognuna occupa il primo slot libero (dalla 1.10.1 senza saltare scelte). `META.startTurrets` resta lo sblocco a mano per le prove.
 - **Schermata**: menu → “Albero dei Sigilli” (si apre completando il 31; il pulsante mostra Sigilli ◆ e maggiori ✦): sezioni Guardiano, Torrette (griglia delle 11 torrette, nodi della torretta scelta), Barriera (solo l’elenco di ciò che arriverà).
@@ -809,6 +820,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Da misurare con i bot**: muri 10/20/30 con il pool libero; potenza richiesta fino a 200 livelli (con la formula attuale la vita base dei nemici è ×1,9 al 100 e ×3,2 al 200 rispetto al 30, ma la curva oltre il 30 cambierà);
   costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo; effetto dei maggiori sulla barriera: Vita % resta acquistabile fino al livello 5,
   ma Riduzione danno e gli altri 4 nodi richiedono un maggiore e arrivano dopo il primo (Epica); muri 40 e 50.
+  **Misura 1.14.0** (`EQUIP=1.5 node tests/tools/curva.js 40,50 100`, 200 partite per muro, stessi semi): 40 **68,5% → 65,5%** · 50 **45,5% → 20,0%** (prima → dopo i maggiori della barriera; al 50 i bot hanno 28 Sigilli e 0 maggiori, quindi la barriera si ferma a Vita % 5).
+  Il 50 scende sotto la fascia del 50-70% (§ 15) **[da rivedere]** (Marco): numeri della curva e costi non toccati.
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.

@@ -3,6 +3,45 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.0 — Continua, lucchetti, azzeramento dell’albero, barriera con maggiori
+
+Implementate le decisioni inserite in DESIGN.md nella voce sotto.
+
+- **Partita in sospeso e Continua** (§ 2): a ogni inizio ondata la partita si salva in `fortress-run-v1` (livello, modalità, ondata, carte prese anche dai mini-boss,
+  vita della cupola, frenesia, contatori dei Moduli, tiri dei Moduli 29/30, abilità della barriera, Sigillo maggiore dei boss già preso). Se il sistema scarta l’app, il menu
+  mostra **Continua** (livello, modalità, ondata; tasto C): le carte si rigiocano e si riparte dall’inizio dell’ondata, in pausa. Si cancella con vittoria, sconfitta,
+  “Abbandona”, salvataggio importato e `APP_VERSION` diverso; un’altra partita chiede prima “Sostituire la partita in sospeso?” (due tocchi). Finché c’è, albero ed
+  equipaggiamento si aprono in sola lettura con il messaggio “Partita in sospeso: continua o abbandona per modificare” (i lucchetti restano usabili).
+  Il Sigillo maggiore del boss finale vale una volta per partita e si scrive subito, così rigiocando l’ondata non si riprende.
+- **Tipo di avvio accanto alla versione** nel menu (“nuova”, “ricaricata”, “indietro”, “scartata” con `document.wasDiscarded`): serve a confermare quando il telefono scarta l’app.
+- **Scheda Abilità bloccata fino al 40** (§ 16): overlay con lucchetto e “Livelli completati: N/40”; finché è bloccata non si comprano, potenziano né equipaggiano abilità.
+- **Barriera con i maggiori** (§ 16): 1 maggiore allo sblocco di Riduzione danno, Vita fissa, Riduzione cooldown, Ignorare un colpo, Più carte più danno; Vita % ai livelli 6, 11, 16.
+  Albero intero: 145 maggiori.
+- **Azzeramento per sezione** (§ 16): pulsante “Azzera” in alto a destra nell’albero, per la sezione aperta, due tocchi (“Sicuro?” con il rimborso). Restituisce Sigilli e maggiori
+  ai costi attuali; Torrette comprende la sezione per tipo e toglie le torrette equipaggiate; Barriera comprende le abilità e le toglie dall’equipaggiamento; premi riscossi invariati.
+- **Equipaggiamento** (§ 15): Equipaggia e Installa a due tocchi (il primo mostra cosa cambia: statistica, Moduli che tornano in inventario o Modulo sostituito; toccare altro annulla).
+  **Lucchetti per esemplare** su righe dell’inventario, pezzo equipaggiato e Moduli installati: le righe si dividono in bloccati e non bloccati, i bloccati non si scartano né
+  si fondono, il blocco segue l’esemplare. **Sostituzione dei Moduli**: stesso effetto a rarità maggiore sostituisce quello installato anche con slot pieni (il vecchio torna in
+  inventario); a rarità uguale o minore rifiuto con messaggio. Prima nel codice c’era solo il rifiuto: la sostituzione è nuova.
+- **Thunderbolt** (§ 10): la sfera si ferma mentre parte il suo fulmine (0,18 s; 0,38 s con il Doppio fulmine), in entrambe le grafiche; nessun effetto sul danno.
+- **Salvataggio versione 5**: `progress.gear.lock` e blocco di pezzi equipaggiati e Moduli installati; le versioni precedenti si importano senza blocchi, i bloccati in più si riducono.
+- `APP_VERSION` e `VERSION` di `sw.js`: 1.14.0 (l’elenco dei file non cambia).
+
+**Test**: nuovo `tests/v114.js` (overlay delle Abilità, maggiori della barriera, azzeramento con controllo del saldo, divisione e unione delle righe bloccate, scarto e fusione
+dei bloccati, blocco che segue l’esemplare, sostituzione e doppioni di rarità diverse, salvataggio v5 e import v4, fermo delle sfere, ripristino da checkpoint con le stesse carte,
+cupola, frenesia e contatori, sola lettura di albero ed equipaggiamento, Sigillo maggiore non ripreso, cancellazione con vittoria/sconfitta/Abbandona/import/versione, due tocchi
+“sostituirla?”). Aggiornati, per le decisioni nuove: `equip.js` (equipaggiare e installare a due tocchi, formato con `lock`, versione 5), `seals.js` (maggiori della barriera, versione 5).
+`npm test`: tutti verdi. Schermate nuove 51-58 controllate (menu con Continua e “sostituirla?”, albero ed equipaggiamento in sospeso, lucchetti, sostituzione, Azzera, Abilità bloccate).
+
+**Bot** (muri 40 e 50, `EQUIP=1.5 node tests/tools/curva.js 40,50 100`, 200 partite per muro, stessi semi): 40 **68,5% → 65,5%** · 50 **45,5% → 20,0%** (prima → dopo i maggiori della barriera; al 50 i bot hanno 28 Sigilli e 0 maggiori, quindi la barriera si ferma a Vita % 5). Il 50 scende sotto la fascia decisa del 50-70%: non ho toccato curva né costi, decide Marco (annotato in DESIGN.md § 16).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html e docs/catalogo-grafico-alternativo.html (sfere del Thunderbolt).
+
+Checklist: aggiungere da provare sul telefono: Continua dopo che il telefono scarta l’app (e cosa dice il tipo di avvio accanto alla versione); “Sostituire la partita in sospeso?”;
+albero ed equipaggiamento in sola lettura con una partita in sospeso; overlay delle Abilità prima del 40; costi in maggiori della barriera; Azzera per ogni sezione (saldo di Sigilli
+e maggiori); lucchetti (divisione e unione delle righe, scarto e fusione rifiutati); Equipaggia/Installa a due tocchi; sostituzione dei Moduli; sfera del Thunderbolt ferma durante il fulmine.
+Da confermare (letture di Claude): contenuto delle sezioni Torrette e Barriera nell’azzeramento. Da decidere: muro 50 al 20% con i maggiori della barriera.
+
 ## Decisioni di design: Continua, blocchi, azzeramento, barriera con maggiori (solo DESIGN.md, gioco invariato: resta 1.13.1)
 
 Testo di Marco inserito in `docs/DESIGN.md`; **nulla è ancora implementato**.

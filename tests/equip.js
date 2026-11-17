@@ -33,12 +33,12 @@ console.log("— Inventario e salvataggio versione 3 —");
     ok(JSON.stringify(g.pcs) === '{"arma:2":3}' && JSON.stringify(g.mods) === '{"arma:1:17":2,"nucleo:4:30":1}' && JSON.stringify(g.eq.arma) === '{"r":1,"m":[[17,0],[2,1]]}'
       && !g.eq.testa && JSON.stringify(g.eq.stivali) === '{"r":0,"m":[]}'));
   const save = J(ev, "makeSave()");
-  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 4 && save.progress.gear.pcs["arma:2"] === 3));
+  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 5 && save.progress.gear.pcs["arma:2"] === 3));
   const code = ev("makeCode()"); ev("progress.gear = emptyGear()"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice andata e ritorno: arma", JSON.stringify(J(ev, "progress.gear.eq.arma")), "| salvato:", !!stored().gear.eq.arma, ok(J(ev, "progress.gear.eq.arma").m.length === 2 && stored().gear.pcs["arma:2"] === 3));
   const v2 = JSON.stringify({ game: "fortress-defense", version: 2, progress: { cleared: 40, seen: [], seals: 3, claims: [], tree: {}, loadout: [] }, settings: {} });
   const d2 = JSON.parse(ev(`JSON.stringify(parseSave(${JSON.stringify(v2)}))`));
-  console.log("versione 2 importata: Sigilli", d2.seals, "| inventario vuoto", JSON.stringify(d2.gear), ok(d2.seals === 3 && JSON.stringify(d2.gear) === '{"pcs":{},"mods":{},"eq":{}}'));
+  console.log("versione 2 importata: Sigilli", d2.seals, "| inventario vuoto", JSON.stringify(d2.gear), ok(d2.seals === 3 && JSON.stringify(d2.gear) === '{"pcs":{},"mods":{},"eq":{},"lock":{}}'));
   const old = fresh(32); console.log("memoria senza equipaggiamento: inventario", JSON.stringify(old.ev("progress.gear")), "| errori:", old.g.errors.length, ok(!old.g.errors.length && old.ev("gearItems(progress.gear)") === 0));
 }
 
@@ -166,12 +166,17 @@ console.log("— Schermata —");
   g.click(242, 376); g.frame();
   const T = g.texts.join("|");
   console.log("aperta dal menu:", ev("state"), "| testi:", /EQUIPAGGIAMENTO/.test(T), /Tocca per equipaggiare/.test(T), ok(ev("state") === "gear" && /Tocca per equipaggiare/.test(T) && !g.errors.length));
+  ev("tapPiece(4)"); g.frame(); const P1 = g.texts.join("|"), a0 = ev("gearArm"), eq0 = ev("!!progress.gear.eq.arma");
   ev("tapPiece(4)"); g.frame();
-  console.log("equipaggia l’arma ancestrale con un tocco: slot", ev("progress.gear.eq.arma.r + 1"), ok(ev("progress.gear.eq.arma.r") === 4));
+  console.log("equipaggia l’arma ancestrale in due tocchi (1.14.0): primo → in attesa", a0, "equipaggiata", eq0, "| mostra cosa cambia", /Tocca di nuovo: danno del guardiano \+0% → \+28%/.test(P1),
+    "| secondo → slot", ev("progress.gear.eq.arma.r + 1"), ok(a0 === "p4" && !eq0 && /Tocca di nuovo: danno del guardiano \+0% → \+28%/.test(P1) && ev("progress.gear.eq.arma.r") === 4));
+  ev("tapPiece(4)"); ev("tapPiece(0)"); const a2 = ev("gearArm"); ev("gearArm = null"); g.frame();
+  console.log("toccare un’altra riga annulla: in attesa", a2, "| arma ancora ancestrale", ev("progress.gear.eq.arma.r"), ok(a2 === "p0" && ev("progress.gear.eq.arma.r") === 4));
   ev("gearSetMode('fuse'); tapPiece(0)"); const armed = ev("gearArm"); ev("tapPiece(0)");
   console.log("fusione dei pezzi in due tocchi: in attesa", armed, "→ armi rare", ev("progress.gear.pcs['arma:1']"), ok(armed === "p0" && ev("progress.gear.pcs['arma:1']") === 1));
-  ev("gearSetTab('mods'); gearSetMode('use'); tapMod(1); tapMod(2)"); g.frame();
-  console.log("installati con un tocco:", JSON.stringify(J(ev, "progress.gear.eq.arma.m")), ok(J(ev, "progress.gear.eq.arma.m").length === 2));
+  ev("gearSetTab('mods'); gearSetMode('use'); tapMod(1)"); const m1 = J(ev, "progress.gear.eq.arma.m").length; ev("tapMod(1); tapMod(2); tapMod(2)"); g.frame();
+  console.log("primo tocco su un Modulo: installati", m1, ok(m1 === 0));
+  console.log("installati con due tocchi:", JSON.stringify(J(ev, "progress.gear.eq.arma.m")), ok(J(ev, "progress.gear.eq.arma.m").length === 2));
   ev("gearSetMode('fuse'); tapMod(1); tapMod(1); tapMod(2)"); g.frame(); const F = g.texts.join("|");
   console.log("fusione dei Moduli: scelti", ev("fuseCount()"), "(ne restano 2 + 1) | pulsante", /Fondi 3\/5/.test(F), ok(ev("fuseCount()") === 3 && /Fondi 3\/5/.test(F)));
   ev("tapSlot(0)"); const a1 = ev("gearArm"); ev("tapSlot(0)");

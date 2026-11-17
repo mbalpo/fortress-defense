@@ -488,12 +488,21 @@ function menuScreen() {
   button(100, 128, 160, 60, "", openLevels, { fill: "rgba(18,30,58,0.6)", stroke: "#2c4272" });   // tocco: griglia dei livelli (1.12.3)
   txt("Livello " + selLevel + " ▦", W / 2, 150, 22, "#e8eefc", "center", "800");
   txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
-  txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
-  txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
-  button(60, 254, 240, 46, "Standard", () => startRun("standard"), { size: 16, stroke: "#3fe0a0" });
+  const r = suspended;
+  if (r) {                                       // partita in sospeso (1.14.0): Continua sopra “Standard”, al posto delle istruzioni
+    button(60, 196, 240, 50, "", continueRun, { stroke: "#ffd166", fill: "rgba(255,209,102,0.12)" });
+    txt("Continua", W / 2, 212, 16, "#ffd166", "center", "800");
+    txt("Livello " + r.lv + " · " + (r.mode === "epic" ? "Epica" : "Standard") + " · ondata " + r.wave + "/" + N_WAVES, W / 2, 233, 11, "#e8eefc", "center", "600");
+  } else {
+    txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
+    txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
+  }
+  const ask = (m) => r && runArm === m;          // secondo tocco: sostituisce la partita in sospeso
+  button(60, 254, 240, 46, ask("standard") ? "Sostituire la partita in sospeso?" : "Standard", () => startOrArm("standard"),
+    { size: ask("standard") ? 13 : 16, stroke: ask("standard") ? "#ffd166" : "#3fe0a0", color: ask("standard") ? "#ffd166" : "#e8eefc" });
   const eu = epicUnlocked();
-  button(60, 306, 240, 46, eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
-    () => { if (eu) startRun("epic"); }, { size: eu ? 16 : 12, stroke: eu ? "#ff7a3d" : "#2c3a5f", color: eu ? "#e8eefc" : "#6f82ad" });
+  button(60, 306, 240, 46, ask("epic") ? "Sostituire la partita in sospeso?" : eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
+    () => { if (eu) startOrArm("epic"); }, { size: ask("epic") ? 13 : eu ? 16 : 12, stroke: ask("epic") ? "#ffd166" : eu ? "#ff7a3d" : "#2c3a5f", color: ask("epic") ? "#ffd166" : eu ? "#e8eefc" : "#6f82ad" });
   const to = treeOpen(), go = gearOpen();
   button(60, 358, 116, 36, to ? "Albero " + progress.seals + "◆" + (progress.majors ? " " + progress.majors + "✦" : "") : "Albero · liv " + CAMPAIGN.sealsFrom, openTree,
     { size: to ? 13 : 12, stroke: to ? "#c9a2ff" : "#2c3a5f", color: to ? "#e8eefc" : "#6f82ad" });
@@ -510,7 +519,7 @@ function menuScreen() {
   // grafica (1.13.0): solo qui nel menu principale, perché vale dal caricamento successivo (la pagina si ricarica da sola)
   button(60, 603, 240, 22, "Grafica: " + (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + "  ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
   txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 634, 10, "#5f7299", "center", "500");
-  txt("v" + APP_VERSION + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");
+  txt("v" + APP_VERSION + (LAUNCH ? " · " + LAUNCH : "") + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");   // LAUNCH: tipo di avvio
   buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
@@ -610,8 +619,13 @@ function treeNodeRow(n, y, x0, w0) {
 function treeScreen() {
   dim(0.92);
   button(8, 8, 62, 30, "‹ Menu", closeTree, { size: 12 });
-  txt("ALBERO DEI SIGILLI", W / 2 + 22, 18, 16, "#e8eefc", "center", "800");
-  txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo" : " Sigilli") + " · ✦ " + progress.majors + (progress.majors === 1 ? " maggiore" : " maggiori") + " da spendere", W / 2 + 22, 36, 11, "#c9a2ff", "center", "700");
+  txt("ALBERO DEI SIGILLI", W / 2 + 6, 18, 16, "#e8eefc", "center", "800");
+  const rf = sectionRefund(treeSection()), armR = treeArm === "reset";
+  if (runPending()) txt(SUSPENDED_MSG, W / 2 + 32, 36, 9, "#ffd166", "center", "600");   // sola lettura
+  else if (armR) txt("Rimborso: " + rf.seals + " ◆ e " + rf.majors + " ✦ · tocca di nuovo “Azzera”", W / 2 + 22, 36, 10, "#ffd166", "center", "700");
+  else txt("◆ " + progress.seals + (progress.seals === 1 ? " Sigillo" : " Sigilli") + " · ✦ " + progress.majors + (progress.majors === 1 ? " maggiore" : " maggiori") + " da spendere", W / 2 + 22, 36, 11, "#c9a2ff", "center", "700");
+  if (!runPending() && rf.nodes)                 // azzeramento della sezione aperta: due tocchi
+    button(292, 6, 60, 24, armR ? "Sicuro?" : "Azzera", tapReset, { size: 11, stroke: armR ? "#ffd166" : "#ff7a3d", color: armR ? "#ffd166" : "#e8eefc" });
   TREE_TABS.forEach(([id, label], i) => {
     const on = treeTab === id;
     button(16 + i * 112, 50, 104, 30, label, () => { treeTab = id; treeArm = null; },
@@ -653,8 +667,8 @@ function treeScreen() {
 }
 // abilità della barriera: tre gruppi, un pallino per equipaggiare (una per gruppo), la riga per comprare i livelli
 function treeAbilities() {
-  const open = abilitiesOpen(), eq = equippedAbilities();
-  txt(open ? "Una abilità per gruppo · tocca il pallino per equipaggiarla" : "Si equipaggiano completando il livello " + CAMPAIGN.barrierUnlock, 16, 128, 11, open ? "#9fb4d9" : "#ff9a5a", "left", "600");
+  const open = abilitiesOpen(), eq = equippedAbilities(), nb = buttons.length;
+  txt(open ? "Una abilità per gruppo · tocca il pallino per equipaggiarla" : "Si sbloccano completando il livello " + CAMPAIGN.barrierUnlock, 16, 128, 11, open ? "#9fb4d9" : "#ff9a5a", "left", "600");
   let y = 140;
   AB_GROUPS.forEach(([g, label, ids]) => {
     txt(label, 16, y + 8, 12, "#c9a2ff", "left", "800"); y += 18;
@@ -668,12 +682,37 @@ function treeAbilities() {
     });
     y += 4;
   });
+  if (!open) {                                   // bloccata fino al 40 (1.14.0): overlay sopra le righe, che non rispondono ai tocchi
+    buttons.length = nb;
+    ctx.fillStyle = "rgba(7,11,22,0.78)"; ctx.fillRect(8, 136, W - 16, y - 136);
+    const cy = 136 + (y - 136) / 2;
+    rr(40, cy - 56, W - 80, 112, 12); ctx.fillStyle = "rgba(18,30,58,0.97)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ff9a5a"; ctx.stroke();
+    lockIcon(W / 2, cy - 30, 22, true, "#ff9a5a");
+    txt("Abilità bloccate", W / 2, cy - 2, 15, "#e8eefc", "center", "800");
+    txt("Si sbloccano completando il livello " + CAMPAIGN.barrierUnlock, W / 2, cy + 20, 11, "#9fb4d9", "center", "600");
+    txt("Livelli completati: " + progress.cleared + "/" + CAMPAIGN.barrierUnlock, W / 2, cy + 38, 11, "#ffd166", "center", "700");
+  }
+}
+// lucchetto (1.14.0): centro (x, y), altezza s; chiuso o aperto
+function lockIcon(x, y, s, closed, c) {
+  const k = s / 20;
+  ctx.beginPath(); ctx.arc(x, y - 2 * k, 5 * k, Math.PI, closed ? 0 : -0.35 * Math.PI); if (closed) ctx.lineTo(x + 5 * k, y + 1 * k);
+  ctx.moveTo(x - 5 * k, y - 2 * k); ctx.lineTo(x - 5 * k, y + 1 * k);
+  ctx.lineWidth = 2 * k; ctx.strokeStyle = c; ctx.stroke();
+  rr(x - 7.5 * k, y, 15 * k, 10 * k, 2 * k); ctx.fillStyle = closed ? c : "rgba(0,0,0,0)"; ctx.fill(); ctx.lineWidth = 1.4 * k; ctx.stroke();
+  disc(x, y + 5 * k, 1.6 * k, closed ? "#070b16" : c);
+}
+// pulsante del lucchetto: 28×h, a destra delle righe
+function lockButton(x, y, h, closed, onTap) {
+  button(x, y, 28, h, "", onTap, { stroke: closed ? "#ffd166" : "#2c4272", fill: closed ? "rgba(255,209,102,0.12)" : "rgba(18,30,58,0.92)" });
+  lockIcon(x + 14, y + h / 2 - 1, Math.min(18, h - 4), closed, closed ? "#ffd166" : "#6f82ad");
 }
 
 /* ---------- EQUIPAGGIAMENTO ---------- */
 // colore della rarità: pieno, l’ancestrale iridescente (la tinta gira col tempo)
 const rarColor = (r) => r === 4 ? "hsl(" + Math.round((clock * 90) % 360) + ",85%,70%)" : RARITY[r].color;
 const RAR_SHORT = ["Comune", "Raro", "Epico", "Legg.", "Ancest."];
+const rarArt = (r) => ["il comune", "il raro", "l’epico", "il leggendario", "l’ancestrale"][r];   // rarità con l’articolo (“sostituisce l’epico”)
 // icone dei pezzi (disegno originale, sagome semplici): centro (x, y), lato s, colore c della rarità
 const PIECE_ART = {
   arma(x, y, s, c) {               // cannone del guardiano: canna obliqua, bocca luminosa, impugnatura
@@ -754,14 +793,16 @@ function gearScreen() {
     txt(RARITY[e.r].name, 48 + tw(P.name, 14, "800") + 8, y + 2, 12, rarColor(e.r), "left", "700");
     txt(STAT_TXT[P.stat] + " +" + fmt(P.base[e.r]) + "%", 48, y + 18, 11, "#9fb4d9", "left", "500");
     const arm = gearArm === "u";
+    lockButton(220, y - 8, 26, !!e.lk, tapLockEq);
     button(252, y - 8, 96, 26, arm ? "Tocca ancora" : "Togli", tapUnequip, { size: 11, stroke: arm ? "#ffd166" : "#2c4272", color: arm ? "#ffd166" : "#9fb4d9" });
     for (let i = 0; i <= e.r; i++) {
       const yy = y + 30 + i * 26, m = e.m[i];
       if (m) {
         const armed = gearArm === "s" + i;
-        button(12, yy, 336, 24, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
+        lockButton(320, yy, 24, !!m[2], () => tapLockSlot(i));
+        button(12, yy, 304, 24, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
         modIcon(pc, 25, yy + 12, 16, rarColor(m[1]));
-        txt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + 12, 11, armed ? "#ffd166" : "#e8eefc", "left", "600");
+        fitTxt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + 12, 274, 11, armed ? "#ffd166" : "#e8eefc", "left", "600");
       } else {
         rr(12, yy, 336, 24, 8); ctx.lineWidth = 1; ctx.strokeStyle = "#24345a"; ctx.stroke();
         txt("Slot libero · Moduli: " + P.name.toLowerCase(), 24, yy + 12, 10, "#5f7299", "left", "500");
@@ -788,35 +829,65 @@ function gearScreen() {
   });
   y += 64;
   if (gearTab === "pcs") {
+    // righe per rarità; gli esemplari bloccati hanno una riga a parte (1.14.0), che non si scarta e non si fonde
+    const rows = [];
     for (let r = 0; r < 5; r++) {
-      const n = qty(g.pcs, pcKey(pc, r)), yy = y + r * 40, armed = gearArm === "p" + r;
-      let sub = "";
-      if (gearMode === "use") sub = n ? (e && e.r === r ? "Uguale a quello equipaggiato" : "Tocca per equipaggiare (" + (r + 1) + (r ? " slot)" : " slot)")) : "";
-      else if (gearMode === "fuse") sub = r >= 4 ? "Rarità massima" : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali";
-      else sub = n ? (armed ? "Tocca di nuovo per scartarne uno" : "Tocca per scartarne uno") : "";
-      button(12, yy, 336, 36, "", () => tapPiece(r), { stroke: armed ? "#ffd166" : n ? rarColor(r) : "#24345a", fill: n ? "rgba(18,30,58,0.92)" : "rgba(10,16,32,0.6)" });
-      pieceIcon(pc, 32, yy + 18, 22, n ? rarColor(r) : "#3a4a70");
-      txt(RARITY[r].name, 52, yy + 12, 12, n ? rarColor(r) : "#4a5a80", "left", "700");
-      txt("×" + n, 338, yy + 12, 12, n ? "#e8eefc" : "#4a5a80", "right", "700");
-      if (sub) txt(sub, 52, yy + 27, 10, armed ? "#ffd166" : "#8a9ac0", "left", "500");
+      const k = pcKey(pc, r), u = freeN(g, "pcs", k), l = lockN(g, k);
+      if (u || !l) rows.push({ r, lk: false, n: u }); if (l) rows.push({ r, lk: true, n: l });
     }
+    const step = Math.min(40, 226 / rows.length), h = step - 4, compact = h < 30;
+    rows.forEach(({ r, lk, n }, i) => {
+      const yy = y + i * step, armed = gearArm === "p" + r + (lk ? "L" : ""), k = pcKey(pc, r);
+      let sub = "";
+      if (gearMode === "use") {
+        const pv = equipPreview(pc, r);
+        sub = !n ? "" : pv.same ? "Uguale a quello equipaggiato" : armed ? "Tocca di nuovo: " + STAT_TXT[P.stat] + " +" + fmt(pv.from) + "% → +" + fmt(pv.to) + "%"
+          + (pv.back ? " · " + pv.back + (pv.back === 1 ? " Modulo torna" : " Moduli tornano") + " in inventario" : "") : "Tocca per equipaggiare (" + (r + 1) + " slot)";
+      } else if (lk) sub = n ? "Bloccati: togli il lucchetto per " + (gearMode === "fuse" ? "fonderli" : "scartarli") : "";
+      else if (gearMode === "fuse") sub = r >= 4 ? "Rarità massima" : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali non bloccati";
+      else sub = n ? (armed ? "Tocca di nuovo per scartarne uno" : "Tocca per scartarne uno") : "";
+      if (n) lockButton(320, yy, h, lk, () => tapLock("pcs", k, lk));
+      button(12, yy, n ? 304 : 336, h, "", () => tapPiece(r, lk), { stroke: armed ? "#ffd166" : n ? rarColor(r) : "#24345a", fill: n ? "rgba(18,30,58,0.92)" : "rgba(10,16,32,0.6)" });
+      pieceIcon(pc, 32, yy + h / 2, Math.min(22, h - 4), n ? rarColor(r) : "#3a4a70");
+      txt("×" + n, n ? 308 : 338, yy + (compact ? h / 2 : 12), compact ? 10 : 12, n ? "#e8eefc" : "#4a5a80", "right", "700");
+      if (compact) {
+        txt(RAR_SHORT[r], 52, yy + h / 2, 10, n ? rarColor(r) : "#4a5a80", "left", "700");
+        if (sub) fitTxt(sub, 104, yy + h / 2, 170, 9, armed ? "#ffd166" : "#8a9ac0", "left", "500");
+      } else {
+        txt(RARITY[r].name, 52, yy + 12, 12, n ? rarColor(r) : "#4a5a80", "left", "700");
+        if (sub) fitTxt(sub, 52, yy + 27, 254, 10, armed ? "#ffd166" : "#8a9ac0", "left", "500");
+      }
+    });
   } else {
     for (let r = 0; r < 5; r++) {
       const on = gearRar === r, n = Object.entries(g.mods).reduce((a, [k, v]) => a + (k.startsWith(pc + ":" + r + ":") ? v : 0), 0);
       button(12 + r * 68, y, 64, 22, "", () => gearSetRar(r), { stroke: on ? rarColor(r) : "#2c4272", fill: on ? "rgba(127,160,224,0.14)" : "rgba(18,30,58,0.92)" });
       txt(RAR_SHORT[r] + " " + n, 44 + r * 68, y + 12, 10, n || on ? rarColor(r) : "#4a5a80", "center", "700");
     }
-    const list = P.pool.filter((fx) => qty(g.mods, modKey(pc, gearRar, fx)) > 0);
-    if (!list.length) txt("Nessun Modulo " + RARITY[gearRar].name.toLowerCase() + " per questo pezzo", W / 2, y + 50, 11, "#6f82ad", "center", "500");
-    list.forEach((fx, i) => {
-      const yy = y + 28 + i * 23, n = qty(g.mods, modKey(pc, gearRar, fx)), armed = gearArm === "m" + fx, sel = gearFuse[fx] || 0;
-      button(12, yy, 336, 21, "", () => tapMod(fx), { stroke: armed ? "#ffd166" : sel ? "#c9a2ff" : "#2c4272" });
-      modIcon(null, 22, yy + 10.5, 13, rarColor(gearRar));
-      txt(armed ? "Tocca di nuovo per scartarne uno" : modText(fx, gearRar), 34, yy + 11, 10, armed ? "#ffd166" : "#e8eefc", "left", "600");
-      txt((sel ? sel + " scelti · " : "") + "×" + n, 338, yy + 11, 10, sel ? "#c9a2ff" : "#9fb4d9", "right", "700");
+    const rows = [];
+    for (const fx of P.pool) {
+      const k = modKey(pc, gearRar, fx), u = freeN(g, "mods", k), l = lockN(g, k);
+      if (u) rows.push({ fx, lk: false, n: u }); if (l) rows.push({ fx, lk: true, n: l });
+    }
+    if (!rows.length) txt("Nessun Modulo " + RARITY[gearRar].name.toLowerCase() + " per questo pezzo", W / 2, y + 50, 11, "#6f82ad", "center", "500");
+    const step = Math.min(23, 196 / Math.max(1, rows.length)), h = step - 2, fs = step < 18 ? 9 : 10;
+    rows.forEach(({ fx, lk, n }, i) => {
+      const yy = y + 28 + i * step, armed = gearArm === "m" + fx + (lk ? "L" : ""), sel = lk ? 0 : gearFuse[fx] || 0, k = modKey(pc, gearRar, fx);
+      let label = modText(fx, gearRar);
+      if (armed && gearMode === "use") {
+        const old = (progress.gear.eq[pc] || { m: [] }).m.find((x) => x[0] === fx);
+        label = old ? "Tocca di nuovo: sostituisce " + rarArt(old[1]) : "Tocca di nuovo per installarlo";
+      } else if (armed) label = "Tocca di nuovo per scartarne uno";
+      lockButton(320, yy, h, lk, () => tapLock("mods", k, lk));
+      button(12, yy, 304, h, "", () => tapMod(fx, lk), { stroke: armed ? "#ffd166" : sel ? "#c9a2ff" : lk ? "#6b5a2a" : "#2c4272" });
+      modIcon(null, 22, yy + h / 2, Math.min(13, h - 4), rarColor(gearRar));
+      const right = (sel ? sel + " scelti · " : "") + "×" + n;
+      fitTxt(label, 34, yy + h / 2, 266 - tw(right, fs, "700"), fs, armed ? "#ffd166" : "#e8eefc", "left", "600");
+      txt(right, 308, yy + h / 2, fs, sel ? "#c9a2ff" : "#9fb4d9", "right", "700");
     });
   }
-  if (gearMsg) txt(gearMsg, W / 2, 630, 10, "#ffd166", "center", "600");
+  if (gearMsg) fitTxt(gearMsg, W / 2, 630, 340, 10, "#ffd166", "center", "600");
+  else if (runPending()) txt(SUSPENDED_MSG, W / 2, 630, 10, "#ffd166", "center", "600");   // sola lettura (i lucchetti restano usabili)
   else if (gearTab === "mods" && gearMode === "fuse") txt(gearRar >= 4 ? "Rarità massima: niente fusione" : "Scegli 5 Moduli (anche diversi), poi “Fondi ora”", W / 2, 630, 10, "#8a9ac0", "center", "500");
 }
 // oggetti presi a fine livello (schermata di vittoria): tasselli colorati per rarità, al massimo 3 per riga

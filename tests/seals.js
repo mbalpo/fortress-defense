@@ -99,7 +99,7 @@ console.log("— Salvataggio versione 2 —");
   console.log("caricato: Sigilli", ev("progress.seals"), "| premi", ev("progress.claims.join()"), "| nodi", ev("Object.keys(progress.tree).join()"),
     ok(ev("progress.seals") === 5 && ev("progress.claims.join()") === "s31,s31p" && ev("Object.keys(progress.tree).join()") === "sky:burn1"));
   const save = JSON.parse(ev("JSON.stringify(makeSave())"));
-  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 4 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
+  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 5 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
   const v1 = JSON.stringify({ game: "fortress-defense", version: 1, progress: { cleared: 12, seen: [] }, settings: {} });
   const d1 = JSON.parse(ev(`JSON.stringify(parseSave(${JSON.stringify(v1)}))`));
   console.log("versione 1 importata: livelli", d1.cleared, "| Sigilli", d1.seals, "| nodi", Object.keys(d1.tree).length, ok(d1.cleared === 12 && d1.seals === 0 && !Object.keys(d1.tree).length));
@@ -121,13 +121,14 @@ console.log("— Fase 2: nodi a livelli —");
   console.log("maggiori per livello: +1 missile", mOf("sky:std:msl"), "| guardiano +1 proiettile", mOf("player:std:proj"), "| Ventaglio", mOf("player:fan"), "| Frenesia", mOf("player:frenzy"),
     "| Danno del guardiano", mOf("player:std:dmg").slice(0, 6) + "…", "| Durata degli stati", mOf("types:status"), "| Danno Fire", mOf("types:dmg:fire").slice(0, 6) + "…", "| Vita %", mOf("barrier:hp").slice(0, 6) + "…",
     ok(mOf("sky:std:msl") === "10000" && mOf("player:std:proj") === "111" && mOf("player:fan") === "111" && mOf("player:frenzy") === "111" && mOf("player:std:dmg").startsWith("100001")
-      && mOf("types:status") === "10000" && mOf("types:dmg:fire").startsWith("100001") && /^0+$/.test(mOf("barrier:hp"))));
+      && mOf("types:status") === "10000" && mOf("types:dmg:fire").startsWith("100001") && mOf("barrier:hp") === "00000100001000010000" && mOf("barrier:red") === "10000" && mOf("barrier:cards") === "10000"));   // barriera dalla 1.14.0
   ev("progress.majors = 0"); console.log("senza Sigilli maggiori: Ventaglio", ev("nodeState(TREE_NODE['player:fan'])"), "| Vita % (solo normali)", ev("nodeState(TREE_NODE['barrier:hp'])"),
     ok(ev("nodeState(TREE_NODE['player:fan'])") === "poor" && ev("nodeState(TREE_NODE['barrier:hp'])") === "ready"));
   console.log("livelli massimi: Danno maggiorato", ev("TREE_NODE['sky:std:dmg'].max"), "| +1 missile", ev("TREE_NODE['sky:std:msl'].max"), "| Danno Fire", ev("TREE_NODE['types:dmg:fire'].max"),
     "| tutte", ev("TREE_NODE['types:all'].max"), "| Vita %", ev("TREE_NODE['barrier:hp'].max"), "| Più carte", ev("TREE_NODE['barrier:cards'].max"),
     ok(ev("[TREE_NODE['sky:std:dmg'].max, TREE_NODE['sky:std:msl'].max, TREE_NODE['types:dmg:fire'].max, TREE_NODE['types:all'].max, TREE_NODE['barrier:hp'].max, TREE_NODE['barrier:cards'].max].join()") === "20,5,20,20,20,5"));
-  ev("buyNode(TREE_NODE['barrier:hp'])"); ev("buyNode(TREE_NODE['barrier:red'])");
+  ev("buyNode(TREE_NODE['barrier:hp'])"); console.log("Riduzione danno senza maggiori:", ev("nodeState(TREE_NODE['barrier:red'])"), ok(ev("nodeState(TREE_NODE['barrier:red'])") === "poor"));
+  ev("progress.majors = 1"); ev("buyNode(TREE_NODE['barrier:red'])");
   console.log("Riduzione danno oltre il livello di Vita %:", ev("nodeState(TREE_NODE['barrier:red'])"), "| dopo Vita % al 2:", (ev("buyNode(TREE_NODE['barrier:hp'])"), ev("nodeState(TREE_NODE['barrier:red'])")),
     ok(ev("treeLv('barrier:red')") === 1 && ev("nodeState(TREE_NODE['barrier:red'])") === "ready"));
   ev("progress.tree['barrier:hp'] = 1"); console.log("regola dei livelli con Vita % al 1:", ev("nodeState(TREE_NODE['barrier:red'])"), ok(ev("nodeState(TREE_NODE['barrier:red'])") === "req"));

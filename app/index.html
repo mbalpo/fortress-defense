@@ -477,12 +477,14 @@ function stdFx(kind, v, L) {                    // effetto per pila della carta 
 // valori dei nodi della sezione per tipo e della barriera, per livello
 const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02, cards: 0.05 };
 const TREE_CAP = { red: 0.4, abCd: 0.6 };      // tetti sul totale (equipaggiamento + albero): riduzione del danno e del cooldown delle abilità
-// maj(L) = Sigilli maggiori per il livello L (oltre ai Sigilli normali levelCost(L)); senza maj nessun maggiore (barriera)
+// maj(L) = Sigilli maggiori per il livello L (oltre ai Sigilli normali levelCost(L)); senza maj nessun maggiore
 const lvNode = (id, who, name, max, fx, req, maj) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)),
   mcosts: Array.from({ length: max }, (_, i) => maj ? maj(i + 1) : 0), req: req || [], fx });
 // schemi dei Sigilli maggiori [deciso, Marco]: uno ogni 5 livelli (1, 6, 11, 16: nodi da 20 livelli e sezione per tipo), solo allo sblocco (carte standard
 // da 5 livelli delle torrette), uno per ogni livello (+1 proiettile, Ventaglio potenziato e Frenesia potenziata del guardiano)
 const MAJ_EVERY5 = (L) => (L - 1) % 5 === 0 ? 1 : 0, MAJ_FIRST = (L) => L === 1 ? 1 : 0, MAJ_EACH = () => 1;
+// barriera (1.14.0, Marco): 1 maggiore allo sblocco di ogni nodo; Vita %, radice dell’albero, ai livelli 6, 11, 16 ma non all’1
+const MAJ_ROOT = (L) => L > 1 && (L - 1) % 5 === 0 ? 1 : 0;
 function buildTree(who) {
   const def = who === "player" ? PLAYER_DEF : TURRETS[who], ups = TREE_LOCKS[who].map((id) => def.ups.find((u) => u.id === id));
   const whole = ups.find((u) => u.cat === "chain" && def.ups.filter((v) => v.chain === u.chain).every((v) => TREE_LOCKS[who].includes(v.id))).chain;
@@ -513,13 +515,13 @@ const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree
 TREE.types = [...TYPE_KEYS.map((t) => lvNode("types:dmg:" + t, "types", "Danno " + TYPES[t].name, 20, (L) => "danno +" + pctS(TREE_VAL.typeDmg * L), null, MAJ_EVERY5)),
   lvNode("types:all", "types", "Danno di tutte le torrette", 20, (L) => "danno +" + pctS(TREE_VAL.allDmg * L), null, MAJ_EVERY5),
   lvNode("types:status", "types", "Durata degli stati", 5, (L) => "durata +" + pctS(TREE_VAL.statDur * L), null, MAJ_EVERY5)];
-TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + pctS(TREE_VAL.hpPct * L)),
-  lvNode("barrier:red", "barrier", "Riduzione danno", 5, (L) => "danno subito −" + pctS(TREE_VAL.red * L), ["barrier:hp"]),
-  lvNode("barrier:flat", "barrier", "Vita fissa", 5, (L) => "vita +" + TREE_VAL.hpFlat * L, ["barrier:red"]),
-  lvNode("barrier:cd", "barrier", "Riduzione cooldown abilità", 5, (L) => "cooldown −" + pctS(TREE_VAL.abCd * L), ["barrier:red"]),
-  lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"]),
+TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + pctS(TREE_VAL.hpPct * L), null, MAJ_ROOT),
+  lvNode("barrier:red", "barrier", "Riduzione danno", 5, (L) => "danno subito −" + pctS(TREE_VAL.red * L), ["barrier:hp"], MAJ_FIRST),
+  lvNode("barrier:flat", "barrier", "Vita fissa", 5, (L) => "vita +" + TREE_VAL.hpFlat * L, ["barrier:red"], MAJ_FIRST),
+  lvNode("barrier:cd", "barrier", "Riduzione cooldown abilità", 5, (L) => "cooldown −" + pctS(TREE_VAL.abCd * L), ["barrier:red"], MAJ_FIRST),
+  lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"], MAJ_FIRST),
   // Marco: la torretta o il guardiano con più carte scelte nella partita ha +5/10/15/20/25% di danno (a parità: tutti quelli in testa)
-  lvNode("barrier:cards", "barrier", "Più carte, più danno", 5, (L) => "chi ha più carte: danno +" + pctS(TREE_VAL.cards * L), ["barrier:red"])];
+  lvNode("barrier:cards", "barrier", "Più carte, più danno", 5, (L) => "chi ha più carte: danno +" + pctS(TREE_VAL.cards * L), ["barrier:red"], MAJ_FIRST)];
 // Abilità della barriera (DESIGN.md § 16, fase 3): 3 gruppi, una abilità equipaggiata per gruppo, dal livello 40 completato.
 // La prima di ogni gruppo è l’abilità d’ingresso (livello 1 senza spesa); la seconda si sblocca con un nodo, la terza dopo la seconda.
 // Valori per livello 1-5 [Claude, provvisori] salvo quelli dati da Marco (Potenziante, Congelante: gas e altezza, mine da 4).
@@ -602,11 +604,17 @@ const DROP = { pieces: 2, mods: 2, modExtra: 0.5, epicMods: 1 };
 const DROP_RARITY = [[30, [80, 18, 2, 0, 0]], [60, [55, 30, 13, 2, 0]], [100, [35, 35, 22, 7, 1]], [140, [20, 35, 30, 12, 3]], [180, [10, 30, 35, 19, 6]]];
 const GEAR_NEAR = 80;                            // “vicino alla barriera / alla fortezza”: entro 80 px dal bordo della cupola
 // chiavi e conteggi dell’inventario (servono già al caricamento dei progressi)
-const emptyGear = () => ({ pcs: {}, mods: {}, eq: {} });
+const emptyGear = () => ({ pcs: {}, mods: {}, eq: {}, lock: {} });
 const gearOpen = () => progress.cleared >= CAMPAIGN.equipUnlock;
 const pcKey = (p, r) => p + ":" + r, modKey = (p, r, fx) => p + ":" + r + ":" + fx;
 const qty = (o, k) => o[k] || 0;
 const bump = (o, k, n) => { const v = (o[k] || 0) + n; if (v > 0) o[k] = v; else delete o[k]; };
+// blocco per esemplare (1.14.0, Marco): lock = quanti esemplari di ogni riga dell’inventario sono bloccati; lk sul pezzo equipaggiato e
+// terzo elemento 1 sui Moduli installati. Un esemplare bloccato non si scarta e non entra nelle fusioni.
+const lockN = (g, k) => (g.lock && g.lock[k]) || 0;
+const freeN = (g, kind, k) => qty(g[kind], k) - lockN(g, k);              // esemplari non bloccati della riga
+function take(g, kind, k, lk) { bump(g[kind], k, -1); if (lk) bump(g.lock, k, -1); }
+function put(g, kind, k, lk) { bump(g[kind], k, 1); if (lk) bump(g.lock, k, 1); }
 const okR = (r) => Number.isInteger(r) && r >= 0 && r < 5, okFx = (p, fx) => PIECES[p] && PIECES[p].pool.includes(fx);
 
 /* =====================================================================
@@ -735,6 +743,27 @@ function buyNode(n) {
   if (nodeState(n) !== "ready") return false;
   progress.seals -= nodeCost(n); progress.majors -= nodeMCost(n); progress.tree[n.id] = nodeLv(n) + 1; saveProgress(); return true;
 }
+// azzeramento per sezione (1.14.0, Marco): nodi della sezione a zero, Sigilli e maggiori restituiti ai costi attuali; premi riscossi invariati.
+// Letture [Claude, da confermare]: Torrette = 11 torrette + sezione per tipo (le torrette equipaggiate tornano non equipaggiate);
+// Barriera = potenziamenti + abilità (nessuna abilità equipaggiata)
+const SECTION_NODES = { player: () => TREE.player, turrets: () => [...TURRET_ORDER.flatMap((id) => TREE[id]), ...TREE.types],
+  barrier: () => [...TREE.barrier, ...TREE.abilities] };
+function sectionRefund(sec) {
+  let seals = 0, majors = 0, nodes = 0;
+  for (const n of SECTION_NODES[sec]()) {
+    const L = Math.min(nodeLv(n), n.max); if (!L) continue;
+    nodes++; for (let i = 0; i < L; i++) { seals += n.costs[i]; majors += n.mcosts ? n.mcosts[i] : 0; }
+  }
+  return { seals, majors, nodes };
+}
+function resetSection(sec) {
+  const r = sectionRefund(sec); if (!r.nodes) return null;
+  for (const n of SECTION_NODES[sec]()) delete progress.tree[n.id];
+  progress.seals += r.seals; progress.majors += r.majors;
+  if (sec === "turrets") progress.loadout = [];
+  if (sec === "barrier") progress.abilities = {};
+  saveProgress(); return r;
+}
 function toggleEquip(id) {
   if (!progress.tree[id + ":perm"]) return false;
   const i = progress.loadout.indexOf(id);
@@ -760,15 +789,16 @@ const MAJOR = { final: 1, miniChance: 0.1 };
 let majorGain = 0, miniMajor = false;
 function majorDrop(e) {
   let n = 0;
-  if (e.final) n = MAJOR.final;
+  if (e.final) { if (!finalMajor) { n = MAJOR.final; finalMajor = true; } }
   else if (!miniMajor && Math.random() < MAJOR.miniChance) { n = 1; miniMajor = true; }
   if (!n) return;
-  progress.majors += n; majorGain += n; saveProgress();
+  progress.majors += n; majorGain += n; saveProgress(); runFlags();
   floaters.push({ x: clamp(e.x, 90, W - 90), y: Math.max(60, e.y - 40), life: 1.6, txt: "+" + n + " Sigillo maggiore ✦", color: "#ffd166" });
 }
 // abilità equipaggiate per gruppo (senza scelta: quelle d’ingresso)
 const equippedAbilities = () => progress.abilities || Object.fromEntries(AB_GROUPS.map(([g, , ids]) => [g, ids[0]]));
 function equipAbility(id) {                     // tocco sul pallino: equipaggia nel suo gruppo o toglie
+  if (!abilitiesOpen()) return false;
   const g = AB_GROUP_OF[id], cur = { ...equippedAbilities() };
   if (cur[g] === id) delete cur[g];
   else { if (treeLv("ab:" + id) < 1) return false; cur[g] = id; }
@@ -778,6 +808,7 @@ function equipAbility(id) {                     // tocco sul pallino: equipaggia
 /* ---------- EQUIPAGGIAMENTO: inventario, pezzi equipaggiati, Moduli, fusione, drop (DESIGN.md § 15) ---------- */
 // progress.gear: pcs = pezzi in inventario { "arma:2": n } (pezzo:rarità); mods = Moduli in inventario { "arma:2:17": n } (pezzo:rarità:effetto);
 // eq = pezzi equipaggiati { arma: { r, m: [[effetto, rarità], …] } } (i Moduli installati non stanno nell’inventario)
+// lock = esemplari bloccati per riga { "arma:2": n, "arma:2:17": n }; eq.arma.lk = 1 se il pezzo equipaggiato è bloccato; [effetto, rarità, 1] = Modulo installato bloccato
 function cleanGear(p) {                           // da dati qualsiasi: tiene solo pezzi, Moduli e installazioni validi
   const g = emptyGear(), src = p && p.gear && typeof p.gear === "object" ? p.gear : {}, n = (v) => clamp(Math.floor(+v) || 0, 0, 1e5);
   if (src.pcs && typeof src.pcs === "object") for (const k in src.pcs) { const [pc, r] = k.split(":"); if (PIECES[pc] && okR(+r) && n(src.pcs[k])) g.pcs[pcKey(pc, +r)] = n(src.pcs[k]); }
@@ -787,40 +818,73 @@ function cleanGear(p) {                           // da dati qualsiasi: tiene so
   if (src.eq && typeof src.eq === "object") for (const pc of PIECE_IDS) {
     const e = src.eq[pc]; if (!e || !okR(e.r)) continue;
     const m = [];
-    for (const x of Array.isArray(e.m) ? e.m : []) if (Array.isArray(x) && okFx(pc, x[0]) && okR(x[1]) && !m.some((y) => y[0] === x[0]) && m.length < e.r + 1) m.push([x[0], x[1]]);
-    g.eq[pc] = { r: e.r, m };
+    for (const x of Array.isArray(e.m) ? e.m : []) if (Array.isArray(x) && okFx(pc, x[0]) && okR(x[1]) && !m.some((y) => y[0] === x[0]) && m.length < e.r + 1) m.push(x[2] ? [x[0], x[1], 1] : [x[0], x[1]]);
+    g.eq[pc] = e.lk ? { r: e.r, m, lk: 1 } : { r: e.r, m };
+  }
+  // bloccati: solo righe esistenti, mai più degli esemplari posseduti (versioni 1-4: nessun blocco)
+  if (src.lock && typeof src.lock === "object") for (const k in src.lock) {
+    const c = Math.min(n(src.lock[k]), qty(g.pcs, k) || qty(g.mods, k)); if (c > 0) g.lock[k] = c;
   }
   return g;
 }
 const gearCount = (g, kind, pc) => Object.entries(g[kind]).reduce((a, [k, v]) => a + (!pc || k.startsWith(pc + ":") ? v : 0), 0);
-// equipaggia un pezzo dell’inventario: quello di prima torna in inventario; i suoi Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario
-function equipPiece(pc, r) {
-  const g = progress.gear; if (!gearOpen() || !qty(g.pcs, pcKey(pc, r))) return false;
+// equipaggia un pezzo dell’inventario: quello di prima torna in inventario; i suoi Moduli passano al nuovo finché ci sono slot, gli altri tornano in inventario.
+// lk: si prende un esemplare bloccato (la riga dei bloccati); il blocco segue l’esemplare
+function equipPiece(pc, r, lk) {
+  const g = progress.gear, k = pcKey(pc, r); if (!gearOpen() || !qty(g.pcs, k)) return false;
+  lk = lk ? lockN(g, k) > 0 : freeN(g, "pcs", k) <= 0;                      // senza esemplari della riga chiesta si usa l’altra
   const old = g.eq[pc], m = old ? old.m : [];
-  bump(g.pcs, pcKey(pc, r), -1);
-  if (old) bump(g.pcs, pcKey(pc, old.r), 1);
-  m.slice(r + 1).forEach(([fx, mr]) => bump(g.mods, modKey(pc, mr, fx), 1));
-  g.eq[pc] = { r, m: m.slice(0, r + 1) };
+  take(g, "pcs", k, lk);
+  if (old) put(g, "pcs", pcKey(pc, old.r), old.lk);
+  m.slice(r + 1).forEach(([fx, mr, ml]) => put(g, "mods", modKey(pc, mr, fx), ml));
+  g.eq[pc] = lk ? { r, m: m.slice(0, r + 1), lk: 1 } : { r, m: m.slice(0, r + 1) };
   saveProgress(); return true;
 }
-function unequipPiece(pc) {                      // toglie il pezzo: pezzo e Moduli tornano in inventario
+// cosa cambia equipaggiando la rarità r al posto del pezzo attuale (per il primo tocco): statistica base e Moduli che tornano in inventario
+function equipPreview(pc, r) {
+  const e = progress.gear.eq[pc];
+  return { from: e ? PIECES[pc].base[e.r] : 0, to: PIECES[pc].base[r], back: e ? Math.max(0, e.m.length - (r + 1)) : 0, same: !!e && e.r === r };
+}
+function unequipPiece(pc) {                      // toglie il pezzo: pezzo e Moduli tornano in inventario (con il loro blocco)
   const g = progress.gear, e = g.eq[pc]; if (!e) return false;
-  bump(g.pcs, pcKey(pc, e.r), 1); e.m.forEach(([fx, mr]) => bump(g.mods, modKey(pc, mr, fx), 1));
+  put(g, "pcs", pcKey(pc, e.r), e.lk); e.m.forEach(([fx, mr, ml]) => put(g, "mods", modKey(pc, mr, fx), ml));
   delete g.eq[pc]; saveProgress(); return true;
 }
-// installa un Modulo nel pezzo equipaggiato del suo tipo: serve uno slot libero e nessun Modulo con lo stesso effetto in quel pezzo
-const canInstall = (pc, fx) => { const e = progress.gear.eq[pc]; return !!e && e.m.length < e.r + 1 && !e.m.some((x) => x[0] === fx); };
-function installMod(pc, r, fx) {
-  const g = progress.gear; if (!qty(g.mods, modKey(pc, r, fx)) || !canInstall(pc, fx)) return false;
-  bump(g.mods, modKey(pc, r, fx), -1); g.eq[pc].m.push([fx, r]); saveProgress(); return true;
+// installare un Modulo nel pezzo equipaggiato del suo tipo: "ok" (slot libero), "replace" (stesso effetto a rarità minore: lo sostituisce, anche con
+// slot pieni [deciso, Marco]), "dup" (stesso effetto a rarità uguale o maggiore), "full" (nessuno slot libero), "none" (nessun pezzo)
+function installCheck(pc, fx, r) {
+  const e = progress.gear.eq[pc]; if (!e) return "none";
+  const same = e.m.find((x) => x[0] === fx);
+  if (same) return r !== undefined && r > same[1] ? "replace" : "dup";
+  return e.m.length < e.r + 1 ? "ok" : "full";
+}
+const canInstall = (pc, fx, r) => { const c = installCheck(pc, fx, r); return c === "ok" || c === "replace"; };
+function installMod(pc, r, fx, lk) {
+  const g = progress.gear, k = modKey(pc, r, fx); if (!qty(g.mods, k)) return false;
+  const c = installCheck(pc, fx, r); if (c !== "ok" && c !== "replace") return false;
+  lk = lk ? lockN(g, k) > 0 : freeN(g, "mods", k) <= 0;
+  take(g, "mods", k, lk);
+  const e = g.eq[pc], m = lk ? [fx, r, 1] : [fx, r], i = e.m.findIndex((x) => x[0] === fx);
+  if (i >= 0) { const [, or, ol] = e.m[i]; put(g, "mods", modKey(pc, or, fx), ol); e.m[i] = m; }      // il vecchio torna in inventario, senza perdite
+  else e.m.push(m);
+  saveProgress(); return c;
 }
 function removeMod(pc, i) {                       // gratis e senza perdite: torna in inventario [deciso]
   const g = progress.gear, e = g.eq[pc]; if (!e || !e.m[i]) return false;
-  const [fx, r] = e.m.splice(i, 1)[0]; bump(g.mods, modKey(pc, r, fx), 1); saveProgress(); return true;
+  const [fx, r, lk] = e.m.splice(i, 1)[0]; put(g, "mods", modKey(pc, r, fx), lk); saveProgress(); return true;
 }
-// fusione: 5 pezzi uguali (stesso tipo e rarità) → 1 della rarità successiva
+// lucchetto: riga dell’inventario non bloccata → blocca un esemplare; riga bloccata → ne sblocca uno (torna con i simili)
+function toggleLock(kind, k, locked) {
+  const g = progress.gear;
+  if (locked) { if (!lockN(g, k)) return false; bump(g.lock, k, -1); }
+  else { if (freeN(g, kind, k) <= 0) return false; bump(g.lock, k, 1); }
+  saveProgress(); return true;
+}
+function lockEquipped(pc) { const e = progress.gear.eq[pc]; if (!e) return false; if (e.lk) delete e.lk; else e.lk = 1; saveProgress(); return true; }
+function lockSlot(pc, i) { const e = progress.gear.eq[pc]; if (!e || !e.m[i]) return false; const [fx, r, lk] = e.m[i]; e.m[i] = lk ? [fx, r] : [fx, r, 1]; saveProgress(); return true; }
+// fusione: 5 pezzi uguali (stesso tipo e rarità) e non bloccati → 1 della rarità successiva
 function fusePieces(pc, r) {
-  const g = progress.gear; if (r >= 4 || qty(g.pcs, pcKey(pc, r)) < 5) return false;
+  const g = progress.gear; if (r >= 4 || freeN(g, "pcs", pcKey(pc, r)) < 5) return false;
   bump(g.pcs, pcKey(pc, r), -5); bump(g.pcs, pcKey(pc, r + 1), 1); saveProgress(); return true;
 }
 // fusione dei Moduli: 5 dello stesso pezzo e della stessa rarità, anche con effetti diversi (sel = { effetto: quanti });
@@ -837,12 +901,12 @@ function rollModFx(pc, r) {
 }
 function fuseMods(pc, r, sel) {
   const g = progress.gear, ids = Object.keys(sel).map(Number);
-  if (r >= 4 || ids.reduce((a, fx) => a + sel[fx], 0) !== 5 || ids.some((fx) => qty(g.mods, modKey(pc, r, fx)) < sel[fx])) return null;
+  if (r >= 4 || ids.reduce((a, fx) => a + sel[fx], 0) !== 5 || ids.some((fx) => freeN(g, "mods", modKey(pc, r, fx)) < sel[fx])) return null;   // solo non bloccati
   ids.forEach((fx) => bump(g.mods, modKey(pc, r, fx), -sel[fx]));
   const fx = rollModFx(pc, r + 1); bump(g.mods, modKey(pc, r + 1, fx), 1); saveProgress(); return fx;
 }
-function discard(kind, key) {                     // scarto a mano, senza compenso [deciso]
-  const g = progress.gear; if (!qty(g[kind], key)) return false;
+function discard(kind, key) {                     // scarto a mano, senza compenso [deciso]; mai un esemplare bloccato
+  const g = progress.gear; if (freeN(g, kind, key) <= 0) return false;
   bump(g[kind], key, -1); saveProgress(); return true;
 }
 // drop: a ogni vittoria dal livello 30 (difficoltà almeno 30, quindi anche ogni livello di Epica), anche rigiocando
@@ -1300,7 +1364,8 @@ function thunderTick(s, dt) {
   while (sp.length < cnt) sp.push(Object.assign(orbStart(sp.length), { aura: 0 }));
   sp.length = cnt;
   for (const o of sp) {
-    o.th += o.dir * 0.55 * dt;
+    if (o.hold > 0) o.hold -= dt;                // ferma mentre parte il suo fulmine (1.14.0): sfera e fulmine sono una cosa sola
+    else o.th += o.dir * 0.55 * dt;
     if (o.th > ORB_B) { o.th = ORB_B; o.dir = -1; }
     if (o.th < ORB_A) { o.th = ORB_A; o.dir = 1; }
     o.x = DOME.cx + DOME.rx * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
@@ -1312,7 +1377,7 @@ function thunderTick(s, dt) {
 }
 function thunderFire(s) {
   if (!living().length) return false;
-  for (const o of s.st.sph || []) thunderBolt(s, o.x, o.y);
+  for (const o of s.st.sph || []) { o.hold = THUNDER_HOLD[0]; thunderBolt(s, o.x, o.y, false, o); }
   return true;
 }
 // again = colpo in più del level up “Doppio fulmine” (non ne genera altri)
@@ -1336,7 +1401,9 @@ function thunderFork(s, e0) {
     hit.add(e); forkHit(s, e, dmg); bolt(zigzag(e0.x, e0.y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5);
   }
 }
-function thunderBolt(s, x, y0, again) {
+// fermo della sfera [Claude]: quanto il fulmine (0,18 s); con il Doppio fulmine fino al secondo (0,2 + 0,18 s)
+const THUNDER_HOLD = [0.18, 0.38];
+function thunderBolt(s, x, y0, again, orb) {
   const w = 10 * (has(s, "wide") ? 1.8 : 1), dmg = thunderDmg(s);
   const zap = (e) => thunderZap(s, e, dmg);
   const hit = new Set();
@@ -1356,7 +1423,7 @@ function thunderBolt(s, x, y0, again) {
     bolt(zigzag(x, best.y, best.x, best.y, 4), TYPES.electric.color, 0.15, 1.5);
   }
   if (has(s, "orb") && Math.random() < 0.3) { const e = randEnemy(); if (e) fieldOrb(s, e.x, e.y, B || 3, dmg); }
-  if (!again && has(s, "twice") && Math.random() < 0.5) later(0.2, () => thunderBolt(s, x, y0, true));
+  if (!again && has(s, "twice") && Math.random() < 0.5) { if (orb) orb.hold = THUNDER_HOLD[1]; later(0.2, () => thunderBolt(s, x, y0, true)); }
 }
 function fieldOrb(s, x, y, B, dmg) {
   spawnEnt({ x, y, t: 4, acc: 0, dead: false,
@@ -2015,6 +2082,7 @@ function describe(opt) {
   return { head: d.name + " · " + lab, title: u.name, desc: u.desc, note, type: d.type, cat: u.cat, lv: u.lv };   // cat e lv: segno sopra il pallino (1.12.5)
 }
 function applyOption(opt) {
+  runCards.push(opt.kind === "new" ? ["n", opt.id] : ["u", opt.who.id, opt.up.id]);   // carte prese, per la partita in sospeso
   if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = newTurret(opt.id, f); }
   else applyUp(opt.who, opt.up);
 }
@@ -2053,15 +2121,66 @@ function markSeen(e) {
   const k = seenKey(e.def); if (!e.def.look || progress.seen.includes(k)) return;
   progress.seen.push(k); saveProgress(); alerts.push({ def: e.def, t: ALERT_T });
 }
-function startRun(m) {
-  alerts = []; unlockNotes = [];
+/* ---------- PARTITA IN SOSPESO (DESIGN.md § 2, 1.14.0) ----------
+   A ogni inizio ondata la partita si salva in RUN_KEY: livello, modalità, ondata, carte prese (rigiocate alla ripresa), vita della cupola, frenesia,
+   contatori e flag “una volta per partita”. Continua riparte dall’inizio dell’ondata interrotta, in pausa. Si cancella con vittoria, sconfitta,
+   “Abbandona”, un salvataggio importato e un APP_VERSION diverso; un’altra partita la sostituisce (avviso a due tocchi nel menu). */
+const RUN_KEY = "fortress-run-v1";               // la chiave non cambia con i rinominamenti del gioco
+let suspended = null;                            // la partita salvata (null se non c’è); letta all’avvio (loadRun)
+let runCards = [], runP2 = false, finalMajor = false, runArm = null;   // runArm: modalità in attesa del secondo tocco “sostituirla?”
+const runPending = () => !!suspended;
+const RUN_C = ["gearAbsorb", "counterLeft", "lowImmUsed", "domeImmT", "healLeft", "refreshLeft", "runPicks", "miniMajor", "finalMajor", "majorGain"];
+function runCounters() { return { gearAbsorb, counterLeft, lowImmUsed, domeImmT, healLeft, refreshLeft, runPicks, miniMajor, finalMajor, majorGain }; }
+function writeRun() { try { localStorage.setItem(RUN_KEY, JSON.stringify(suspended)); } catch (e) {} }
+function saveRun() {
+  suspended = { v: 1, app: APP_VERSION, lv: campLevel, mode, wave, cards: runCards.slice(), t2: turretsLv2, p2: runP2, dome: domeHp,
+    frz: { charge: player.st.charge || 0, frenzyT: player.st.frenzyT || 0 }, c: runCounters(), ab: AB, shield: domeShield, power: powerBonus };
+  writeRun();
+}
+function clearRun() { suspended = null; runArm = null; try { localStorage.removeItem(RUN_KEY); } catch (e) {} }
+// flag “una volta per partita” presi a metà ondata (Sigillo maggiore dei boss): si scrivono subito, così rigiocando l’ondata non si riprendono
+function runFlags() { if (!suspended || state === "menu") return; suspended.c = Object.assign(suspended.c || {}, { miniMajor, finalMajor, majorGain }); writeRun(); }
+function loadRun() {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(RUN_KEY) || "null"); } catch (e) {}
+  const ok = r && r.v === 1 && r.app === APP_VERSION && (r.mode === "standard" || r.mode === "epic" && epicUnlocked()) && Number.isInteger(r.lv)
+    && r.lv >= 1 && r.lv <= maxSelectable() && Number.isInteger(r.wave) && r.wave >= 1 && r.wave <= N_WAVES && Array.isArray(r.cards) && Number.isFinite(r.dome) && r.dome > 0;
+  if (!ok) { if (r) clearRun(); return null; }
+  return r;
+}
+function decodeCard(c) {
+  if (!Array.isArray(c)) return null;
+  if (c[0] === "n") return TURRETS[c[1]] && slots.indexOf(null) >= 0 && !slots.some((s) => s && s.id === c[1]) ? { kind: "new", id: c[1] } : null;
+  const who = c[1] === "player" ? player : slots.find((s) => s && s.id === c[1]), up = who && who.def.ups.find((u) => u.id === c[2]);
+  return up ? { kind: "up", who, up } : null;
+}
+function resumeRun(r) {                          // dopo startRun: rigioca le carte e riparte dall’inizio dell’ondata salvata, in pausa
+  for (const c of r.cards) { const opt = decodeCard(c); if (opt) applyOption(opt); }
+  domeHp = clamp(r.dome, 1, domeMax);
+  if (r.frz) { player.st.charge = +r.frz.charge || 0; player.st.frenzyT = +r.frz.frenzyT || 0; }
+  const c = r.c || {};
+  gearAbsorb = +c.gearAbsorb || 0; counterLeft = +c.counterLeft || 0; lowImmUsed = !!c.lowImmUsed; domeImmT = +c.domeImmT || 0; healLeft = +c.healLeft || 0;
+  refreshLeft = +c.refreshLeft || 0; runPicks = +c.runPicks || 0; miniMajor = !!c.miniMajor; finalMajor = !!c.finalMajor; majorGain = +c.majorGain || 0;
+  if (r.ab && Array.isArray(r.ab.list) && r.ab.list.every((a) => a && ABILITIES[a.id])) AB = r.ab;
+  domeShield = +r.shield || 0; powerBonus = +r.power || 0;
+  startWave(r.wave); pauseGame();
+}
+function continueRun() { const r = suspended; if (!r) return; runArm = null; selLevel = r.lv; startRun(r.mode, r); }
+// avvio di un’altra partita con una in sospeso: il primo tocco chiede “sostituirla?”, il secondo la sostituisce
+function startOrArm(m) {
+  if (suspended && runArm !== m) { runArm = m; return; }
+  runArm = null; startRun(m);
+}
+function startRun(m, resume) {
+  alerts = []; unlockNotes = []; runCards = []; finalMajor = false;
   pressing = false;
   mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
-  GEAR = gearStats(progress.gear); gearRun();
+  GEAR = gearStats(progress.gear); gearRun(); if (resume) turretsLv2 = !!resume.t2;
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan"); player.frzL = treeLv("player:frenzy");
-  if (GEAR.p2 && Math.random() < GEAR.p2) fromLv2(player);                                   // Modulo 29: guardiano dal livello 2
+  runP2 = resume ? !!resume.p2 : !!GEAR.p2 && Math.random() < GEAR.p2;
+  if (runP2) fromLv2(player);                                                                 // Modulo 29: guardiano dal livello 2
   statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
   startAbilities();
   slots = [null, null, null, null];
@@ -2074,7 +2193,7 @@ function startRun(m) {
     if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
     slots[f] = newTurret(id, f);
   }
-  startWave(1);
+  if (resume) resumeRun(resume); else startWave(1);
 }
 
 // tra un’ondata e l’altra la frenesia attiva resta in pausa e continua nell’ondata successiva
@@ -2091,6 +2210,7 @@ function startWave(n) {
     queue.push({ t: 2, enemy: "boss", def: finalBossDef(campLevel), x: W / 2 });
   queue.sort((a, b) => a.t - b.t);
   state = "play";
+  saveRun();                                     // partita in sospeso: si riparte da qui
 }
 
 function spawn(q) {
@@ -2253,12 +2373,12 @@ function update(dt) {
   enemies = enemies.filter((e) => !e.dead);
   floaters = floaters.filter((f) => f.life > 0);
 
-  if (domeHp <= 0 && !tryBackup()) { domeHp = 0; state = "lost"; return; }
+  if (domeHp <= 0 && !tryBackup()) { domeHp = 0; state = "lost"; clearRun(); return; }
   if (waveTime >= 0 && !queue.length && !enemies.length) endWave();
 }
 
 function winLevel() {
-  state = "won";
+  state = "won"; clearRun();
   const before = progress.cleared;
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
   unlockNotes = UNLOCKS.filter((u) => before < u.lv && progress.cleared >= u.lv);
@@ -2278,12 +2398,22 @@ function retry() { selLevel = campLevel; startRun(mode); }
 function nextOrRetry() {
   if (mode === "standard" && campLevel < CAMPAIGN.maxLevel) { selLevel = campLevel + 1; startRun("standard"); } else retry();
 }
-function toMenu() { state = "menu"; selLevel = clamp(selLevel, 1, maxSelectable()); }
+function toMenu() { clearRun(); state = "menu"; selLevel = clamp(selLevel, 1, maxSelectable()); }
 // schermata dell’albero: sezione (player | turrets | barrier), torretta scelta, nodo in attesa del secondo tocco
 let treeTab = "turrets", treeSel = "sky", treeArm = null, barrierTab = "nodes";   // treeSel: id della torretta o "types" (sezione condivisa)
 function openTree() { if (!treeOpen()) return; state = "tree"; treeArm = null; }
+const treeSection = () => treeTab;                // player | turrets | barrier
+function tapReset() {                            // “Azzera”: due tocchi, come “Abbandona”
+  if (runPending()) return;
+  if (!sectionRefund(treeSection()).nodes) { treeArm = null; return; }
+  if (treeArm !== "reset") { treeArm = "reset"; return; }
+  treeArm = null; resetSection(treeSection());
+}
 function closeTree() { state = "menu"; treeArm = null; }
-function tapNode(n) {                            // primo tocco: seleziona; secondo tocco: compra (i Sigilli non si rimborsano, per ora)
+const SUSPENDED_MSG = "Partita in sospeso: continua o abbandona per modificare";
+function tapNode(n) {                            // primo tocco: seleziona; secondo tocco: compra (rimborso solo azzerando la sezione)
+  if (runPending()) { treeArm = null; return; }  // partita in sospeso: albero in sola lettura
+  if (n.kind === "ability" && !abilitiesOpen()) { treeArm = null; return; }   // scheda Abilità bloccata fino al 40
   if (n.kind === "perm" && nodeOwned(n)) { toggleEquip(n.who); treeArm = null; return; }
   if (nodeState(n) === "max") { treeArm = null; return; }
   if (treeArm !== n.id) { treeArm = n.id; return; }
@@ -2302,35 +2432,54 @@ function gearSetRar(r) { gearRar = r; gearReset(); gearMsg = ""; }
 const fuseCount = () => Object.values(gearFuse).reduce((a, n) => a + n, 0);
 function gearSetMode(m) {                          // “Fondi” con 5 Moduli scelti: esegue la fusione
   if (m === "fuse" && gearMode === "fuse" && gearTab === "mods" && fuseCount() === 5) {
+    if (gearRO()) return;
     const fx = fuseMods(gearSel, gearRar, gearFuse); gearReset();
     gearMsg = fx ? "Nuovo Modulo " + RARITY[gearRar + 1].name.toLowerCase() + ": " + modText(fx, gearRar + 1) : ""; return;
   }
   gearMode = m; gearReset(); gearMsg = "";
 }
-function tapPiece(r) {                             // riga dei pezzi in inventario (rarità r) del pezzo scelto
-  const k = pcKey(gearSel, r), n = qty(progress.gear.pcs, k); gearMsg = "";
-  if (!n || (gearMode === "fuse" && (r >= 4 || n < 5))) { gearArm = null; return; }
-  if (gearMode === "use") { equipPiece(gearSel, r); gearArm = null; return; }
-  if (gearArm !== "p" + r) { gearArm = "p" + r; return; }          // fondere e scartare chiedono due tocchi
+// partita in sospeso: equipaggiamento in sola lettura (i lucchetti restano usabili)
+function gearRO() { if (!runPending()) return false; gearArm = null; gearMsg = SUSPENDED_MSG; return true; }
+const LOCKED_MSG = "Bloccato: togli il lucchetto per scartarlo o fonderlo";
+// riga dei pezzi in inventario (rarità r, esemplari bloccati se lk) del pezzo scelto. Tutte le modalità chiedono due tocchi (1.14.0)
+function tapPiece(r, lk) {
+  const g = progress.gear, k = pcKey(gearSel, r), n = lk ? lockN(g, k) : freeN(g, "pcs", k), id = "p" + r + (lk ? "L" : ""); gearMsg = "";
+  if (gearRO()) return;
+  if (!n) { gearArm = null; return; }
+  if (gearMode !== "use" && lk) { gearArm = null; gearMsg = LOCKED_MSG; return; }
+  if (gearMode === "fuse" && (r >= 4 || n < 5)) { gearArm = null; return; }
+  if (gearArm !== id) { gearArm = id; return; }                    // primo tocco: seleziona e mostra cosa cambia
   gearArm = null;
-  if (gearMode === "fuse") { fusePieces(gearSel, r); gearMsg = "Fusione: 5 pezzi → 1 " + RARITY[r + 1].name.toLowerCase(); } else discard("pcs", k);
+  if (gearMode === "use") equipPiece(gearSel, r, lk);
+  else if (gearMode === "fuse") { fusePieces(gearSel, r); gearMsg = "Fusione: 5 pezzi → 1 " + RARITY[r + 1].name.toLowerCase(); } else discard("pcs", k);
 }
-function tapMod(fx) {                              // riga dei Moduli in inventario (rarità gearRar) del pezzo scelto
-  const r = gearRar, k = modKey(gearSel, r, fx), n = qty(progress.gear.mods, k), e = progress.gear.eq[gearSel]; gearMsg = "";
+const INSTALL_MSG = { none: "Prima equipaggia un pezzo", dup: "Effetto già installato a rarità uguale o maggiore", full: "Nessuno slot libero" };
+function tapMod(fx, lk) {                          // riga dei Moduli in inventario (rarità gearRar) del pezzo scelto
+  const g = progress.gear, r = gearRar, k = modKey(gearSel, r, fx), n = lk ? lockN(g, k) : freeN(g, "mods", k), id = "m" + fx + (lk ? "L" : ""); gearMsg = "";
+  if (gearRO()) return;
   if (!n) return;
+  if (gearMode !== "use" && lk) { gearArm = null; gearMsg = LOCKED_MSG; return; }
   if (gearMode === "use") {
-    if (!installMod(gearSel, r, fx)) gearMsg = !e ? "Prima equipaggia un pezzo" : e.m.some((x) => x[0] === fx) ? "Effetto già installato in questo pezzo" : "Nessuno slot libero";
-    return;
+    const c = installCheck(gearSel, fx, r);
+    if (INSTALL_MSG[c]) { gearArm = null; gearMsg = INSTALL_MSG[c]; return; }
+    if (gearArm !== id) { gearArm = id; return; }
+    const old = (progress.gear.eq[gearSel].m.find((x) => x[0] === fx) || [])[1];
+    gearArm = null; if (installMod(gearSel, r, fx, lk) === "replace") gearMsg = "Il Modulo " + RARITY[old].name.toLowerCase() + " torna in inventario"; return;
   }
   if (gearMode === "fuse") { if (r >= 4) return; const c = gearFuse[fx] || 0; if (c < n && fuseCount() < 5) gearFuse[fx] = c + 1; else delete gearFuse[fx]; return; }
-  if (gearArm !== "m" + fx) { gearArm = "m" + fx; return; }
+  if (gearArm !== id) { gearArm = id; return; }
   gearArm = null; discard("mods", k);
 }
 function tapSlot(i) {                              // Modulo installato: primo tocco seleziona, secondo lo toglie (torna in inventario)
+  if (gearRO()) return;
   if (gearArm !== "s" + i) { gearArm = "s" + i; return; }
   gearArm = null; removeMod(gearSel, i);
 }
-function tapUnequip() { if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel); }
+function tapUnequip() { if (gearRO()) return; if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel); }
+// lucchetti: un tocco, anche con una partita in sospeso
+function tapLock(kind, k, lk) { gearArm = null; gearMsg = ""; toggleLock(kind, k, lk); }
+function tapLockEq() { gearArm = null; gearMsg = ""; lockEquipped(gearSel); }
+function tapLockSlot(i) { gearArm = null; gearMsg = ""; lockSlot(gearSel, i); }
 let pauseTab = "enemies", pauseQuit = false;
 // griglia dei livelli (1.12.3): modalità mostrata, pagina da 50, filtro “solo con Sigilli da prendere”, livello scelto
 let lvMode = "standard", lvPage = 0, lvFilter = false, lvSel = 1;
@@ -2344,7 +2493,11 @@ function sealStatus(m, lv) {
 }
 const sealsOpen = (m, lv) => { const st = sealStatus(m, lv); return st.first === "open" || st.full === "open"; };
 function pickLevel(lv) { if (lv > maxSelectable()) return; if (lvSel === lv) { playLevel(); return; } lvSel = lv; }   // secondo tocco sullo stesso livello: gioca
-function playLevel() { selLevel = lvSel; if (lvMode === "epic" && !epicUnlocked()) return; startRun(lvMode); }
+function playLevel() {
+  selLevel = lvSel; if (lvMode === "epic" && !epicUnlocked()) return;
+  if (suspended) { state = "menu"; runArm = lvMode; return; }      // partita in sospeso: si conferma nel menu (“sostituirla?”)
+  startRun(lvMode);
+}
 // guida (1.12.3): scheda (stati | carte), entità scelta per le carte, scorrimento dell’elenco
 let guideTab = "status", guideSel = "player", guideScroll = 0, guideDrag = null;
 function openGuide() { state = "guide"; guideScroll = 0; }
@@ -2376,6 +2529,7 @@ cv.addEventListener("pointerdown", (e) => {
   }
   if (state === "tree") treeArm = null;          // tocco fuori dai nodi: annulla l’acquisto in attesa
   if (state === "gear") gearArm = null;
+  if (state === "menu") runArm = null;           // tocco fuori dai pulsanti: annulla “sostituirla?”
   if (state === "guide") guideDrag = { y: p.y, s: guideScroll };   // trascinare scorre l’elenco delle carte
   if (state === "play") {
     dragging = true; pressing = true; player.targetX = p.x; setPress(p);   // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
@@ -2421,8 +2575,9 @@ window.addEventListener("keydown", (e) => {
   else if (state === "upgrade" && rewards && (k === "enter" || k === " " || k === "1")) pick(0);
   else if (state === "upgrade" && (k === "1" || k === "2" || k === "3" || k === "4")) pick(+k - 1);
   else if (state === "upgrade" && k === "r") refreshCards();
-  else if (state === "menu" && (k === "enter" || k === " ")) startRun("standard");
-  else if (state === "menu" && k === "e") { if (epicUnlocked()) startRun("epic"); }
+  else if (state === "menu" && (k === "enter" || k === " ")) startOrArm("standard");
+  else if (state === "menu" && k === "e") { if (epicUnlocked()) startOrArm("epic"); }
+  else if (state === "menu" && k === "c" && suspended) continueRun();
   else if (state === "won" && unlockNotes.length && (k === "enter" || k === " " || k === "escape")) closeUnlocks();   // prima si chiude l’avviso
   else if (state === "won" && unlockNotes.length) return;
   else if (state === "won" && (k === "enter" || k === " ")) nextOrRetry();
@@ -2450,9 +2605,9 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.13.1";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 4, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
-// versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori
+const APP_VERSION = "1.14.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 5, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+// versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
@@ -2488,6 +2643,7 @@ function applySave(d) {
   progress.seals = d.seals; progress.majors = d.majors; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear;
   settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
   saveProgress(); saveSettings(); selLevel = maxSelectable();
+  clearRun();                                    // con un salvataggio importato la partita in sospeso non vale più
 }
 let pendingSave = null;
 const gearItems = (g) => gearCount(g, "pcs") + gearCount(g, "mods") + Object.values(g.eq).reduce((a, e) => a + 1 + e.m.length, 0);
@@ -2547,6 +2703,15 @@ try { if (navigator.storage && navigator.storage.persist) navigator.storage.pers
 
 player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2;
 slots = [null, null, null, null];
+suspended = loadRun();                           // partita in sospeso (scartata se di un’altra versione o non valida)
+// tipo di avvio della pagina, accanto alla versione nel menu: per capire se il sistema ha scartato l’app in background
+const LAUNCH = (() => {
+  try {
+    if (document.wasDiscarded) return "scartata";
+    const nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    return { navigate: "nuova", reload: "ricaricata", back_forward: "indietro", prerender: "prerender" }[nav && nav.type] || "";
+  } catch (e) { return ""; }
+})();
 
 let last = 0;
 function frame(t) {
