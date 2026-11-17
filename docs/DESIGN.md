@@ -31,6 +31,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Frenesia** (chain del guardiano): la barra si carica nel tempo e parte da sola; va in pausa se non ci sono nemici a schermo e nessun dito premuto, cioè scorre anche mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]** (lettura della pressione **[Claude]**)
 - **Pausa**: pulsante in alto (o Esc/P), si attiva da sola se si cambia app. Due schede: “Nemici del livello” e “Torri e potenziamenti”.
   “Abbandona” chiede un secondo tocco. **[deciso]**
+- **Velocità della partita** (1.14.1) **[deciso]** (Marco): tasto semitrasparente prima del contatore “Nemici”, solo durante l’ondata: **1x → 1,5x → 2x → 1x** a ogni tocco.
+  La scelta resta per le ondate e le partite seguenti (impostazioni, `fortress-proto-v1`, campo `speed`). Dettagli **[Claude]**: la logica avanza in passi da al massimo 0,05 s,
+  come a 1x, quindi danni, collisioni, cooldown e bilanciamento non cambiano (cambia solo quanto tempo di gioco passa per fotogramma); anche le animazioni accelerano;
+  a 1x il tasto è più trasparente, a 1,5x e 2x ha il bordo verde. A 2x il telefono fa il doppio dei calcoli: se scende di fotogrammi, controllare con il contatore fps (tocco sulla versione nel menu).
 - **Partita in sospeso e Continua** **[deciso]** (Marco): a ogni inizio ondata (e all’inizio del livello) la partita si salva in una chiave separata del localStorage (`fortress-run-v1`);
   se il sistema scarta l’app in background, il menu mostra **Continua** sopra “Standard”, con livello, modalità e ondata. Il salvataggio contiene livello, modalità, ondata,
   carte prese (anche quelle dei mini-boss), vita della cupola, frenesia, contatori e flag “una volta per partita” (Backup, Modulo 14, Sigillo maggiore già preso dai boss).
@@ -417,7 +421,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
   con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
 - **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
-- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): premio della cupola solo da un completamento successivo al primo, Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
+- **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
@@ -680,7 +684,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **3** per livello, dal livello 1 di Epica.
   Si riscuotono al primo completamento. Non si riottengono completando di nuovo il livello, tranne **una sola volta per livello e modalità**, completandolo con la
   **barriera al 100% a fine livello** (la vita si misura alla fine: contano anche cure e Backup). Ogni livello e modalità paga quindi al massimo due volte.
-  *(Se il primo completamento è già perfetto, il secondo premio resta riscuotibile con una rigiocata perfetta: lettura da confermare.)* Un solo premio ciascuno, della stessa entità.
+  Dalla 1.14.1 **[deciso]** (Marco): se il **primo completamento è già con la cupola al 100%**, i due premi si prendono **subito insieme**, senza rigiocare. Un solo premio ciascuno, della stessa entità.
 - **Struttura** **[deciso]**: una schermata con tre sezioni: **Barriera**, **Guardiano**, **Torrette** (con una sezione condivisa per tipo). Regola dei livelli (proposta di Marco): un nodo non supera il livello del nodo da cui dipende.
 - **Tetti** **[deciso]** il principio, valori **[Claude] [da rivedere]**: hanno un tetto sul totale (equip + albero) solo la **riduzione del cooldown delle abilità** e la **riduzione del danno subito**.
   Il tetto sta sopra il massimo dell’equipaggiamento (cooldown −50%, danno −30%), così i nodi dell’albero servono anche a chi ha l’equip massimo. Nessuna abilità dura quanto il suo cooldown minimo. Gli altri bonus (danni di tipo, ecc.) non hanno tetto.
@@ -745,7 +749,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - Restano libere: chain Frenesia (lv1, Carica rapida, lv3), Ventaglio, Perforazione II, Cadenza maggiorata, le tre carte standard.
 
 ### Fase 1 costruita (1.5.0)
-- **Premi** come sopra. Lettura applicata: il premio della cupola al 100% si prende solo con un completamento **successivo** al primo (anche se il primo era già perfetto). **[da rivedere]** (la lettura era da confermare)
+- **Premi** come sopra. Fino alla 1.14.0 il premio della cupola al 100% si prendeva solo con un completamento **successivo** al primo; dalla 1.14.1 un primo completamento perfetto dà subito tutti e due i premi **[deciso]** (Marco).
 - **Nodi** (generati da `TREE_LOCKS`): per ogni torretta 3 nodi della chain in sequenza, 1 per il lv2 dell’altra chain, 1 per il level up lv1, 1 per il level up lv2, e lo **Sblocco permanente** che richiede
   **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
   Ogni nodo di sblocco ha un solo livello.

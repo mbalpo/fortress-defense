@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.1 — due Sigilli subito con la cupola al 100%, velocità della partita
+
+- **Sigilli** (Marco): se il primo completamento di un livello (dal 31 in Standard, da subito in Epica) finisce con la cupola al 100%, si prendono subito
+  tutti e due i premi (primo completamento e cupola), senza rigiocare. Prima il premio della cupola richiedeva un completamento successivo al primo (lettura di Claude, ora superata).
+  Il Backup continua a escludere il premio della cupola. Schermata di vittoria: “+2 Sigilli ◆ (…)” e sotto “Primo completamento e cupola al 100%”. Salvataggio invariato (stesse chiavi `s31`/`s31p`).
+- **Velocità della partita** (Marco): tasto semitrasparente prima di “Nemici”, solo durante l’ondata: 1x → 1,5x → 2x → 1x. Resta per le ondate e le partite seguenti
+  (impostazioni, campo `speed`; valori non validi ignorati). La logica avanza in passi da al massimo 0,05 s come a 1x, quindi il bilanciamento non cambia;
+  anche il tempo di `clock` (rampa dell’Amplificatore, animazioni) accelera. Scelte di Claude: posizione e aspetto del tasto (più trasparente a 1x, bordo verde a 1,5x e 2x), `Nemici` spostato a destra.
+- DESIGN.md: § 2 (velocità), § 16 (flusso dei Sigilli e fase 1), § 11 (tolta la lettura da confermare sul premio della cupola).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/speed.js` (tre tocchi, tempo di gioco ×1,5 e ×2, passi da 0,05 s su un fotogramma lento, impostazione salvata e ricaricata);
+`tests/seals.js`: “Standard 32, primo già al 100%” ora dà 2 Sigilli e la rigiocata 0. `npm run screenshots`: nuove `59-velocita-1-5x.png` e `60-vittoria-due-sigilli.png`, testi nei bordi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; cambia solo la versione).
+
+Checklist: togliere “Premio della cupola solo da un completamento successivo al primo (da confermare)”; aggiungere “Primo completamento con la cupola al 100%: due premi subito”
+e “Prova su telefono: velocità 2x con il contatore fps in una battaglia affollata (boss finale), la scelta resta riaprendo l’app”.
+
 ## Pubblicazione su GitHub Pages (gioco invariato: resta 1.14.0)
 
 - Nuovo workflow `.github/workflows/pages.yml`: a ogni push su main che tocca `app/` (o il workflow), oppure a mano, pubblica il solo contenuto di `app/`

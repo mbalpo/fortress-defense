@@ -273,7 +273,12 @@ function drawHud() {
     ctx.fillStyle = "#e8eefc"; ctx.fillRect(222, 18, 4, 16); ctx.fillRect(232, 18, 4, 16);
   }
   txt("Ondata " + wave + "/" + N_WAVES, W - 10, 26, 14, "#e8eefc", "right", "700");
-  txt("Nemici: " + (queue.length + enemies.length) + "", 10, 62, 12, "#9fb4d9", "left", "500");
+  if (state === "play") {                          // velocità della partita (1.14.1): tasto semitrasparente prima di “Nemici”
+    ctx.save(); ctx.globalAlpha = settings.speed === 1 ? 0.55 : 0.85;
+    button(8, 51, 38, 22, String(settings.speed).replace(".", ",") + "x", cycleSpeed, { size: 11, stroke: settings.speed === 1 ? "#2c4272" : "#3fe0a0" });
+    ctx.restore();
+  }
+  txt("Nemici: " + (queue.length + enemies.length) + "", 52, 62, 12, "#9fb4d9", "left", "500");
   txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
   const fb = enemies.find((e) => e.final && !e.dead);
   if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
@@ -531,6 +536,7 @@ function sealLines0() {
   const g = sealGain; if (!g || g.why === "none") return [];
   const one = (n) => n + (n === 1 ? " Sigillo" : " Sigilli");
   if (g.why === "first") return ["+" + one(g.got) + " ◆ (" + one(progress.seals) + ")", g.next ? "Rigiocalo con la cupola al 100%: +" + one(g.got) : ""].filter(Boolean);
+  if (g.why === "both") return ["+" + one(g.got) + " ◆ (" + one(progress.seals) + ")", "Primo completamento e cupola al 100%"];
   if (g.why === "full") return ["Cupola al 100%: +" + one(g.got) + " ◆ (" + one(progress.seals) + ")"];
   if (g.why === "needFull") return ["Sigilli già riscossi: rigiocalo con la cupola al 100%"];
   return ["Sigilli di questo livello già riscossi"];

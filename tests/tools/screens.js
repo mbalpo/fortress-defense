@@ -130,6 +130,9 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("selLevel = 40; startRun('standard')"); g.frame(60); ev("winLevel()"); g.frame(); g.save("35-avviso-sblocco.png");
     ev("unlockNotes = UNLOCKS.slice(0, 1)"); g.frame(); g.save("36-avviso-sblocco-10.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
+  { const g = game({ progress: prog, src }), ev = g.w.__ev;          // 1.14.1: primo completamento con la cupola al 100% (Epica: 3 + 3) e tasto della velocità a 1,5x
+    ev("selLevel = 38; startRun('epic')"); g.frame(200); ev("cycleSpeed()"); g.frame(); g.save("59-velocita-1-5x.png"); ev("cycleSpeed(); cycleSpeed()");
+    ev("domeHp = domeMax; winLevel()"); g.frame(); g.save("60-vittoria-due-sigilli.png"); }
   { // 1.12.2: area in fiamme della Sky Guard, scia di fuoco della Firewheel, colpi dell’Hive per livello (fermati a metà volo)
     const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
     ev("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0;");

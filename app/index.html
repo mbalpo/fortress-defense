@@ -634,12 +634,15 @@ const PLAYER_SPEED = 520, PLAYER_MIN = 26, PLAYER_MAX = W - 26;
 const SETTINGS_KEY = "fortress-proto-v1";
 const TARGET_LABEL = { closest: "Più vicino", highest: "Vita più alta" };
 // graphics: "classic" o "hd2d" (1.13.0, la legge anche draw.js al caricamento); fps: contatore dei fotogrammi acceso
-const settings = { targeting: "closest", graphics: "classic", fps: false };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
+// speed: velocità della partita (1.14.1, Marco): 1, 1,5 o 2, scelta con il tasto accanto a “Nemici” e tenuta per le ondate e le partite seguenti
+const SPEEDS = [1, 1.5, 2];
+const settings = { targeting: "closest", graphics: "classic", fps: false, speed: 1 };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
 try {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
   if (s && (s.targeting === "closest" || s.targeting === "highest")) settings.targeting = s.targeting;
   if (s && (s.graphics === "classic" || s.graphics === "hd2d")) settings.graphics = s.graphics;
   if (s && s.fps === true) settings.fps = true;
+  if (s && SPEEDS.includes(s.speed)) settings.speed = s.speed;
 } catch (e) { /* storage non disponibile: si gioca lo stesso */ }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
 // grafica classica o HD-2D: si cambia solo dal menu principale e vale ricaricando la pagina (il disegno si sceglie al caricamento)
@@ -771,12 +774,17 @@ function toggleEquip(id) {
   if (i >= 0) progress.loadout.splice(i, 1); else if (progress.loadout.length < 4) progress.loadout.push(id); else return false;
   saveProgress(); return true;
 }
-// premio di Sigilli a fine livello: primo completamento, oppure (una sola volta) una rigiocata con la cupola al 100%
+// premio di Sigilli a fine livello: primo completamento, oppure (una sola volta) un completamento con la cupola al 100%;
+// dalla 1.14.1 (Marco) un primo completamento già al 100% li dà tutti e due insieme ("both")
 function sealReward(m, lv, full) {
   const epic = m === "epic";
   if (!epic && lv < CAMPAIGN.sealsFrom) return { got: 0, why: "none" };
   const key = (epic ? "e" : "s") + lv, n = epic ? CAMPAIGN.sealsEpic : CAMPAIGN.sealsStandard;
-  if (!progress.claims.includes(key)) { progress.claims.push(key); progress.seals += n; return { got: n, why: "first", next: !progress.claims.includes(key + "p") }; }
+  if (!progress.claims.includes(key)) {
+    progress.claims.push(key); progress.seals += n;
+    if (full && !progress.claims.includes(key + "p")) { progress.claims.push(key + "p"); progress.seals += n; return { got: 2 * n, why: "both", each: n }; }
+    return { got: n, why: "first", next: !progress.claims.includes(key + "p") };
+  }
   if (!progress.claims.includes(key + "p")) {
     if (!full) return { got: 0, why: "needFull" };
     progress.claims.push(key + "p"); progress.seals += n; return { got: n, why: "full" };
@@ -2513,6 +2521,10 @@ function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit
 /* =====================================================================
    INPUT E AVVIO
    ===================================================================== */
+function cycleSpeed() {
+  settings.speed = SPEEDS[(SPEEDS.indexOf(settings.speed) + 1) % SPEEDS.length];
+  saveSettings();
+}
 function toggleTargeting() {
   settings.targeting = settings.targeting === "closest" ? "highest" : "closest";
   saveSettings();
@@ -2606,7 +2618,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.14.0";
+const APP_VERSION = "1.14.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 5, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 const $id = (id) => document.getElementById(id);
@@ -2717,8 +2729,13 @@ const LAUNCH = (() => {
 let last = 0;
 function frame(t) {
   const dt = Math.min(0.05, (t - last) / 1000 || 0);
-  last = t; clock += dt;
-  if (state === "play") update(dt);
+  last = t;
+  // velocità 1,5x e 2x: la logica avanza in passi da al massimo 0,05 s (come a 1x), così danni, collisioni e bilanciamento non cambiano;
+  // anche clock è tempo di gioco (lo usano la rampa dell’Amplificatore e le animazioni). Ci si ferma appena la partita cambia stato.
+  if (state === "play") {
+    const total = dt * settings.speed, n = Math.max(1, Math.ceil(total / 0.05 - 1e-9));
+    for (let i = 0; i < n && state === "play"; i++) { clock += total / n; update(total / n); }
+  } else clock += dt;
   draw();
   requestAnimationFrame(frame);
 }

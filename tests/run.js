@@ -46,6 +46,7 @@ const T = [
     /premere e rilasciare sulla stessa carta → scelta, ondata 2 .* ✓/, /tasto 3 appena comparsa → scelta subito: true .* ✓/, /“Continua” premuto e rilasciato sopra → ondata 2 ✓/, /Standard e pausa alla pressione .* ✓/]],
   ["sblocchi.js", "avvisi di sblocco a fine livello (10, 20, 30, 31, 40, 50), chiusura a mano", [/livello 10 completato la prima volta → avviso: true .* ✓/, /livello 30 completato .* ✓/, /livello 50 completato .* ✓/,
     /nessun avviso: true ✓/, /“Livello 11” sotto l’avviso → ignorato, stato: won ✓/, /Invio di nuovo → parte il livello 11: play 11 ✓/, /tocco su “Ho capito” → chiuso: true ✓/]],
+  ["speed.js", "1.14.1: velocità della partita 1x/1,5x/2x, passi da 0,05 s, impostazione salvata", [/tre tocchi: 1\.5 → 2 → 1 ✓/, /fotogramma lento a 2x: passi \[0\.05,0\.05\] ✓/, /errori JS: nessuno/]],
   ["v114.js", "1.14.0: partita in sospeso e Continua, Abilità bloccate fino al 40, maggiori della barriera, azzeramento per sezione, blocco per esemplare, sostituzione dei Moduli, sfere del Thunderbolt",
     [/livello 35: overlay true .* ✓/, /livello 40: overlay false .* ✓/, /barriera 8 \| albero intero 145 ✓/, /secondo tocco: Torrette azzerate.* ✓/, /= iniziale .* ✓/, /lucchetto della riga da 4 → 3 \+ 2 ✓/,
       /tutti bloccati: .* ✓/, /“Togli”: il blocco segue .* ✓/, /secondo tocco: installati \[\[1,3\],\[2,2\]\].* ✓/, /rifiutato, .* ✓/, /versione 5 \| codice .* ✓/, /versione 4 importata: nessun blocco .* ✓/,
