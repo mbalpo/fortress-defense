@@ -111,15 +111,35 @@ console.log("— Firewheel Drone e cupola —");
       ok(total > 0 && out === total && bounces > 0 && back === 0 && minK > 1));
   }
 }
-console.log("— colpi del guardiano che rimbalzano e cupola —");
+console.log("— colpi del guardiano che rimbalzano sui bordi (1.14.4) e cupola —");
 for (const clone of [false, true]) {
+  // colpo senza bersaglio verso l’alto a sinistra (dx −0,6, dy −0,8) da (60, 300): bordo sinistro a (0, 220), poi verso destra;
+  // A (60, 140) e B (120, 60) sono sul tratto dopo il rimbalzo, C (210, 60) dopo il rimbalzo sul bordo alto. Con 1 perforazione: A e B, poi si ferma
+  const { g, X, mk, run } = setup(); const p = X.player(); p.up.ricochet = 1; p.up.pierce = 1;
+  const A = mk("shell", 60, 140), B = mk("shell", 120, 60), C = mk("shell", 210, 60);
+  A.speed = B.speed = C.speed = 0; const h = [A.hp, B.hp, C.hp];
+  const before = X.ents().length; X.playerBullet(p, 60, 300, null, 10, Math.atan2(-0.8, -0.6), clone ? { clone: true } : null);
+  const b = X.ents()[before];
+  for (let i = 0; i < 120 && !b.dead; i++) run(1);
+  console.log((clone ? "rimbalzo del clone" : "rimbalzo del guardiano") + " sul bordo sinistro: rimbalzi", b.edges || 0, "| A colpito", A.hp < h[0], "| B colpito", B.hp < h[1],
+    "| C (dopo il bordo alto) colpito", C.hp < h[2], "| finito con le perforazioni:", b.dead,
+    ok(b.edges === 1 && A.hp < h[0] && B.hp < h[1] && C.hp === h[2] && b.dead));
+}
+{
+  // senza nemici: bordo sinistro, bordo alto, poi scende e si ferma appena rientra nella cupola
   const { g, X, mk, run } = setup(); const p = X.player(); p.up.ricochet = 1;
-  const A = mk("shell", 60, 400), B = mk("shell", 150, 540);           // B è un nemico finto dentro la cupola, solo per far passare il rimbalzo dentro
-  A.speed = B.speed = 0; const hA = A.hp, hB = B.hp;
-  const before = X.ents().length; X.playerBullet(p, 60, 300, A, 10, Math.PI / 2, clone ? { clone: true } : null);
+  const before = X.ents().length; X.playerBullet(p, 60, 300, null, 10, Math.atan2(-0.8, -0.6));
   const b = X.ents()[before]; let last = null, inside = 0;
-  for (let i = 0; i < 120 && !b.dead; i++) { run(1); if (!b.dead) { last = { x: b.x, y: b.y }; if (inDome(X, b.x, b.y) < 1) inside++; } }
-  console.log((clone ? "rimbalzo del clone" : "rimbalzo del guardiano verso un punto dentro la cupola") + ": A colpito", A.hp < hA, "| B (dentro) colpito", B.hp < hB,
-    "| si ferma al passaggio del bordo: ultima posizione fuori, fine appena dentro, a", last ? Math.hypot(b.x - last.x, b.y - last.y).toFixed(1) : "-", "px (un passo) | fotogrammi visibili dentro:", inside,
-    ok(A.hp < hA && B.hp === hB && b.dead && inside === 0 && last && inDome(X, last.x, last.y) > 1 && inDome(X, b.x, b.y) <= 1 && Math.hypot(b.x - last.x, b.y - last.y) <= 10.5));
+  for (let i = 0; i < 400 && !b.dead; i++) { run(1); if (!b.dead) { last = { x: b.x, y: b.y }; if (inDome(X, b.x, b.y) < 1) inside++; } }
+  console.log("rimbalzo senza nemici: rimbalzi", b.edges, "| si ferma al passaggio del bordo della cupola, ultima posizione fuori, a",
+    last ? Math.hypot(b.x - last.x, b.y - last.y).toFixed(1) : "-", "px | fotogrammi visibili dentro:", inside,
+    ok(b.edges >= 2 && b.dead && inside === 0 && last && inDome(X, last.x, last.y) > 1 && inDome(X, b.x, b.y) <= 1 && Math.hypot(b.x - last.x, b.y - last.y) <= 10.5));
+}
+{
+  // senza Rimbalzo lo stesso colpo esce dallo schermo a sinistra
+  const { g, X, mk, run } = setup(); const p = X.player(); p.up.pierce = 1;
+  const A = mk("shell", 60, 140); A.speed = 0; const h = A.hp;
+  const before = X.ents().length; X.playerBullet(p, 60, 300, null, 10, Math.atan2(-0.8, -0.6));
+  const b = X.ents()[before]; for (let i = 0; i < 120 && !b.dead; i++) run(1);
+  console.log("senza Rimbalzo: esce dallo schermo", b.dead, "| A colpito", A.hp < h, ok(b.dead && A.hp === h && !b.edges));
 }

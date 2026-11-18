@@ -3,6 +3,25 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.4 — Rimbalzo del guardiano sui bordi, testi delle carte con i numeri
+
+- **Rimbalzo del guardiano** (Marco): ora funziona come il raggio del Laser. Un proiettile che tocca un bordo dello schermo (lati e alto) rimbalza indietro con la
+  traiettoria riflessa, senza limite di rimbalzi, finché non esaurisce le perforazioni; dopo un rimbalzo non insegue più il bersaglio. Prima, finite le perforazioni,
+  cercava un altro nemico entro 180 px (una volta). Vale anche per il Clone; non per Ventaglio e frammenti. Restano la regola della revisione 4 (dopo un rimbalzo, rientrando
+  nella cupola si ferma) e i rimbalzi di nemico in nemico del Colpo caricato (Teslacoil). Testo della carta: “I proiettili rimbalzano sui bordi”.
+- **Testi delle carte** (Marco: proposte approvate): applicate le 73 descrizioni con i numeri di `docs/proposte-testi.md` (Sky Guard, Laser, Disruption Drone, Aeroblast,
+  Thunderbolt, Beam, Firewheel, Hive, Railgun, Teslacoil, Gravity Vortex Gun e guardiano), così come proposte. Il file resta come registro, segnato come applicato.
+- DESIGN.md: § 8 (elenchi dei potenziamenti aggiornati dal codice con `npm run design-lists`), § 10 (Rimbalzo del guardiano, Colpo caricato).
+- Misura leggera (60 partite per bot, random / smart): muro 20 30 / 43% (1.14.2: 29 / 36% su 400), muro 50 58 / 50% (55 / 55%): nessun muro sotto la soglia.
+
+**Test**: `npm test`: tutti verdi. `tests/rev3.js`: rimbalzo sul bordo sinistro (guardiano e clone: 1 rimbalzo, colpiti i due nemici del tratto riflesso, fermo dopo
+le perforazioni), senza nemici (bordo sinistro e alto, poi si ferma appena rientra nella cupola), senza Rimbalzo il colpo esce dallo schermo; `tests/newfx.js` conta i rimbalzi sui bordi;
+`tests/testi.js`: tutte le descrizioni nuove entro 260 px.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; cambia la versione, i testi delle carte nella scheda della guida).
+
+Checklist: aggiornata (versione 26).
+
 ## 1.14.3 — testo delle carte standard potenziate dall’albero
 
 - **Correzione** (segnalata da Marco): con una carta standard potenziata nell’albero dei Sigilli (es. Danno maggiorato del guardiano) la carta nella scelta mostrava

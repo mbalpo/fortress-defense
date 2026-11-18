@@ -1,4 +1,7 @@
-# Proposte di testo per le descrizioni senza numero (1.14.2) — da approvare
+# Proposte di testo per le descrizioni senza numero (1.14.2) — approvate da Marco, applicate nella 1.14.4
+
+Tutte applicate così come sono (73 carte; Attrazione del Beam senza numero, come proposto). Unica eccezione: Rimbalzo del guardiano,
+che nella 1.14.4 cambia meccanica (rimbalzo sui bordi dello schermo) e ha il testo “I proiettili rimbalzano sui bordi”.
 
 Raccolta delle descrizioni di carte (S/C/L/K di `PLAYER_DEF.ups` e `TURRETS[…].ups`) che non riportano il numero principale dell’effetto.
 I valori sono letti da `app/index.html` (righe del file attuale, non ancora modificato). Le proposte sono misurate con lo stesso metodo di
