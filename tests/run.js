@@ -56,7 +56,7 @@ const T = [
     /ripulito: .* ✓/, /versione 2 importata: .* ✓/, /livello 29: nessuno .* ✓/, /rarità \(%\) D 30: .* ✓/, /fusione di Moduli: .* ✓/, /conti attesi ✓/,
     /tetto della riduzione del danno: .* ✓/, /colpo del guardiano: .* ✓/, /Modulo 22 ancestrale: carte offerte 4 ✓/, /Modulo 12: carte contate, .* ✓/, /guardiano dal livello 2: .* ✓/,
     /Modulo 10: .* ✓/, /Modulo 14: .* ✓/, /Modulo 16: .* ✓/, /Esc → stato menu .* ✓/, /vittoria al 30: .* ✓/]],
-  ["testi.js", "testi delle carte e dei Moduli entro i bordi (font del gioco)", [/carte, titoli: .* ✓/, /carte, descrizioni: .* ✓/, /carte, note: .* ✓/, /Moduli, righe .* ✓/]],
+  ["testi.js", "testi delle carte e dei Moduli entro i bordi (font del gioco)", [/carte, titoli: .* ✓/, /carte, descrizioni: .* ✓/, /carte standard potenziate dall’albero \(tutti i livelli dei nodi\): .* ✓/, /carte, note: .* ✓/, /Moduli, righe .* ✓/]],
   ["schermate.js", "griglia dei livelli, guida (stati e carte), potenziamenti presi dalla scelta delle carte", [/tocco su “Livello” nel menu → stato levels .* ✓/, /Sigilli: 31 .* ✓/,
     /con Sigilli da prendere .* ✓/, /Epica \(3 completati\): .* parte: play epic 4 difficoltà 34 ✓/, /Epica dal menu con 50 completati: livello 1 .* ✓/, /livello 2 di Epica: .* ✓/,
     /Livello successivo in Epica: .* ✓/, /migrazione: .* ✓/, /esporta e importa: .* ✓/, /un level up per entità: .* ✓/, /prima del 50: .* ✓/, /tocco su “Guida” → stato guide .* ✓/, /carte della Sky Guard: .* ✓/,
@@ -71,6 +71,8 @@ const T = [
     /danno del buco nero, 2 pile con il nodo al 3: ×1.120 .* ✓/, /testi: nodo al 3 .* ✓/, /Repulsiva “spinta 50 px · ogni 26 s” .* ✓/, /in partita il ciclo vero è 26 s.* ✓/,
     /tocco rapido sull’Aeroblast: raggio sullo slot 0 .* ✓/, /sostituisce il precedente .* 354 px ✓/, /velo oltre 500 px: .* ✓/, /portata dal centro in basso: .* true,true,true .* ✓/, /dopo 2 s il raggio sparisce: null ✓/,
     /pressione lunga .* ✓/, /tocco che si sposta di 30 px: .* ✓/, /in pausa: tocco .* ✓/, /scelta delle carte: raggio tolto .* errori JS: nessuno ✓/]],
+  ["v1143.js", "1.14.3: testo delle carte standard con il valore potenziato dall’albero, uguale all’effetto", [/Danno maggiorato con il nodo al 5: “Danno \+75%” .* ✓/,
+    /\+1 proiettile con il nodo al 2: .* ✓/, /Railgun: perforazione al 3 .* ✓/, /Hive al 1 .* ✓/, /senza nodo resta il testo di base: .* ✓/, /danno del guardiano con 2 pile: ×2.500 .* ✓/, /errori JS: nessuno ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
 ];

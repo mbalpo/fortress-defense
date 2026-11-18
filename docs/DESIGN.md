@@ -800,6 +800,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
   bonus a numero (+1 perforazione della Railgun, Più colpi dell’Hive) ×(1 + 0,4·L) arrotondato (Railgun 1 → 3, Hive 2 → 6);
   malus (+1 missile, sfera, drone, proiettile, rimbalzo) −1/3 per livello: zero al 3, poi diventa bonus (−15% → +10% al 5; Laser −20% → +13,3%).
   Le carte con malus restano “+1” (il numero non cresce).
+  **Testo della carta** (1.14.3): nella scelta delle carte, nelle ricompense dei mini-boss e nei potenziamenti presi la descrizione mostra il valore potenziato dal nodo
+  (es. Danno maggiorato al 5: “Danno +75%”), uguale all’effetto applicato; il malus è arrotondato all’intero (“danno −13%”) per stare nei 260 px della carta. **[Claude]**
 - **Guardiano**: Danno maggiorato come le torrette (20 livelli); +1 proiettile: solo riduzione del malus (3 livelli, zero al 3); Ventaglio ampliato: +1 proiettile secondario
   per livello (3 livelli, da 4 a 7, sempre entro ±0,6 rad). +1 perforazione resta senza nodo.
 - **Sezione condivisa “Tipi”** (solo torrette): danno di un tipo +6% per livello (5 nodi, **fino al 20**: +120%), danno di tutte le torrette +3% (**fino al 20**: +60%), **durata degli stati +6%** (fino al 5)

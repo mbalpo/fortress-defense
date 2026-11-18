@@ -3,6 +3,23 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.3 — testo delle carte standard potenziate dall’albero
+
+- **Correzione** (segnalata da Marco): con una carta standard potenziata nell’albero dei Sigilli (es. Danno maggiorato del guardiano) la carta nella scelta mostrava
+  sempre il valore di base (“Danno +25%”). Era solo un errore di testo: l’effetto applicava già il valore potenziato (`dmgM` → `stdB`, e così `stdR`, `stdM`, `stdC`
+  per tutte le carte standard). Nuova `stdDesc(s, u)` usata da `describe`: la descrizione riporta il numero potenziato (Danno maggiorato al 5 “Danno +75%”,
+  Railgun perforazione al 3 “Perfora 2 nemici in più”, Hive al 1 “I droni sparano 3 volte in più”, malus ridotti o diventati bonus, Vortex “…, danno +4%”).
+  Vale per la scelta delle carte, le ricompense dei mini-boss e i potenziamenti presi. Malus arrotondato all’intero nel testo della carta (Laser “danno −13%”) per stare nei 260 px [Claude].
+- DESIGN.md § 16: testo della carta.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/v1143.js` (testi con il nodo per guardiano, Railgun, Hive, Vortex, Laser; senza nodo testo di base; danno del guardiano
+con 2 pile e nodo al 5 = ×2,5, come il “+75%” scritto); `tests/testi.js`: larghezza delle descrizioni potenziate a tutti i livelli dei nodi (353 testi, tutti entro 260 px).
+`npm run screenshots`: nessuna schermata nuova (le carte potenziate sono coperte dal controllo delle larghezze).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; cambia solo la versione).
+
+Checklist: aggiornata (versione 25).
+
 ## 1.14.2 — Epica separata, portata dal centro, raggio al tocco, Vortex rev. 3, Modulo 10 in %, testi delle abilità
 
 - **Epica con avanzamento separato** (Marco): nuovo campo `clearedEpic`; il livello 1 di Epica ha difficoltà 31. Selettore e griglia dei livelli separati da Standard
