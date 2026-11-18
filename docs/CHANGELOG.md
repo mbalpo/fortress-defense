@@ -18,7 +18,7 @@ Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenera
   `FX.hiveSparks` (scintille dei droni statici); missili sovraccarichi con l’alone elettrico; il laser del Campo laser usa `FX.laserRays`, i buchi neri statici `FX.vortex`.
 - **Letture di Claude** dove la patch non dava un numero (DESIGN.md § 10, **[da rivedere]**), le principali: n. 13 “rallenta ulteriormente” = rallentamento di 1,5 s che resta fuori dal campo;
   n. 18 contatto = entro 45 px dal drone; n. 20 inseguimento con un percorso che si allunga; n. 29 “raggio dell’onda” letto come area di 130 px attorno a ogni colpito,
-  spinta di 16 px (**da confermare**: letto come distanza sarebbero 130 px di knockback a ogni fulmine).
+  spinta di 16 px (letto come distanza sarebbero 130 px di knockback a ogni fulmine): **confermata da Marco**.
 - **Misura leggera con i bot** (10 partite per bot, random / smart): combo tra torrette offerte 0,3 / 0,1 a partita al livello 15, 0 / 0 al 25 (pool libero), 0,1 / 0,3 al 25
   con il pool completo; prese al massimo 0,2. Conferma che escono meno di una volta a partita; nessun valore cambiato (DESIGN.md § 11).
 - DESIGN.md: § 3 (regole delle combo tra torrette, carte bloccate), § 10 (le 33 combo, numeri provvisori, letture di Claude), § 11 (aperti e misura), § 12;
@@ -32,8 +32,8 @@ level up in attesa), conteggi (3 da principale, 6 in tutto, nessuna coppia dello
 
 Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; nuove scene “Combo tra torrette”: Hive, Disruption Drone, Sky Guard e Thunderbolt).
 
-Checklist: aggiornata (versione 27): nuovo gruppo “Combo tra due torrette (1.15)” da provare sul telefono; da decidere frequenza, nomi e numeri, Fulmini d’urto
-e letture di Claude; tra i valori di Claude i numeri provvisori e i nomi delle carte; nei riferimenti le combo di ogni torretta e la regola nel Sistema di progressione;
+Checklist: aggiornata (versione 28): nuovo gruppo “Combo tra due torrette (1.15)” da provare sul telefono; da decidere frequenza, nomi e numeri
+e letture di Claude (la lettura dei Fulmini d’urto, confermata da Marco, non c’è più); tra i valori di Claude i numeri provvisori e i nomi delle carte; nei riferimenti le combo di ogni torretta e la regola nel Sistema di progressione;
 tolte la sezione “Chain e level up mancanti per torre” (ultima voce: definire le combo tra torrette) e la domanda “Sblocco delle combo: condizioni oppure chip?”.
 
 ## 1.14.4 — Rimbalzo del guardiano sui bordi, testi delle carte con i numeri

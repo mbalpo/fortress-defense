@@ -514,7 +514,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   22 e 31: laser rotante di 110 px che segue il primo colpito, 2 raggi a croce (3 a 60° con Mini-raggi rimbalzanti) al danno dei mini-raggi; solo se il colpo prende qualcuno. 23: idem.
   25: mini-drone della Firewheel (durata, danno, Mini-droni incendiari e potenziati), che non ferma la torretta. 27: si decide a fine corsa del proiettile; varchi con durata, ingresso e uscita della chain.
   28: scia lungo tutto il fulmine verticale (un punto ogni 22 px), non sulle ramificazioni.
-  29: “raggio dell’onda” letto come area: chi è entro 130 px (182 con Onda ampia) da un colpito è spinto indietro di 16 px come dall’onda dell’Hive (20,8 con Onda finale), una volta per fulmine. **Da confermare.**
+  29: “raggio dell’onda” letto come area: chi è entro 130 px (182 con Onda ampia) da un colpito è spinto indietro di 16 px come dall’onda dell’Hive (20,8 con Onda finale), una volta per fulmine. **[deciso]** (Marco: lettura confermata, non 130 px di spinta)
   33: mine dell’Aeroblast a ogni esplosione della sfera (2 con Più mine), anche senza colpiti.
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
 - Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita base 400 al livello 10, 2250 al 20, 1450 al 30, dal 40 con la formula del § 5, danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
