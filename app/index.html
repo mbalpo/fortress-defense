@@ -168,7 +168,7 @@ const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed:
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
 // fattore per singolo muro (1.11.0): corregge i muri che con l’equipaggiamento atteso uscivano dalla fascia 50-70% [Claude, provvisorio]
 // 50: ×0,6 (1.14.0, Marco) con i maggiori della barriera, che al 50 non si hanno ancora (insieme a WALL_ENEMY_HP[50])
-const FINAL_BOSS_K = { 40: 1.2, 50: 0.6, 60: 0.6, 80: 1.3, 90: 0.6, 100: 0.75, 120: 1.15, 130: 1.15, 170: 1.5, 190: 0.75 };
+const FINAL_BOSS_K = { 40: 1.2, 50: 0.6, 60: 0.6, 80: 1.3, 90: 0.6, 100: 0.65, 120: 1.15, 130: 1.15, 170: 1.5, 190: 0.75 };
 const finalBossHp = (lv) => FINAL_BOSS_HP[lv] || FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, lv / 10 - 4), 0.35)) * (FINAL_BOSS_K[lv] || 1);
 // vita dei nemici normali nei livelli muro (oltre al boss): il 10 e il 50 (1.14.0, Marco), dove si muore anche prima del boss
 const WALL_ENEMY_HP = { 10: 0.93, 50: 0.85 };
@@ -408,7 +408,7 @@ const TURRETS = {
   ]},
   vortex: { name: "Gravity Vortex Gun", type: "force", range: 260, reload: 5.5, blurb: "Buco nero che attrae e danneggia", ups: [
     S("dmg", "Danno maggiorato", "Danno +25%"),
-    S("len", "Percorso più lungo", "Lunghezza percorsa +30%"),
+    S("len", "Percorso più lungo", "Lunghezza percorsa +20%"),
     S("rad", "Raggio maggiore", "Raggio del buco nero +25%"),
     C("wh1", "worm", 1, "Wormhole", "Due varchi: si riemerge dal secondo"),
     C("wh2", "worm", 2, "Varco ampio", "L’ingresso del wormhole è più grande"),
@@ -462,13 +462,17 @@ const CAT_NAME = { lu: "Level up", std: "Standard" };
 const STD_BOOST = { bonus: 0.4, reduce: 0.2, max: 5, maxDmg: 20 };   // i nodi del danno arrivano al 20 (crescita lunga, campagna fino a 200 e oltre)
 const STD_KIND = { dmg: ["pct", 0.25], msl: ["mal", 0.15], rad: ["pct", 0.3], "vortex:rad": ["pct", 0.25], bounce: ["mal", 0.15], "laser:bounce": ["mal", 0.2],
   dur: ["pct", 0.3], height: ["pct", 0.3], proj: ["mal", 0.15], fast: ["fast", 0.1], sph: ["mal", 0.15], cd: ["red", 0.12], drone: ["mal", 0.15],
-  hits: ["cnt", 2], pierce: ["cnt", 1], len: ["pct", 0.3] };
+  hits: ["cnt", 2], pierce: ["cnt", 1], len: ["vlen", 0.2] };
+// Gravity Vortex Gun, “Percorso più lungo” (revisione 3, 1.14.2): +20% di percorso per pila, non moltiplicato dal nodo dell’albero;
+// il nodo dà +2% di danno dei buchi neri per pila e per livello (al 5: +10% per pila, +30% con 3 pile) [deciso, Marco; valori Claude]
+const VLEN_DMG = 0.02;
 const stdKind = (who, id) => STD_KIND[who + ":" + id] || STD_KIND[id];
 const fanK = (L) => 0.3 + 0.5 * L / 3;           // Ventaglio potenziato: danno dei secondari rispetto al principale
 const frenzyK = (L) => 1.35 + 0.55 * L;         // Frenesia potenziata: moltiplicatore del danno in frenesia (×1,35 → ×3)
 const fmt = (x) => String(Math.round(x * 10) / 10).replace(".", ",");          // decimali con la virgola
 const pctS = (x) => fmt(x * 100) + "%";
 function stdFx(kind, v, L) {                    // effetto per pila della carta con il nodo al livello L
+  if (kind === "vlen") return "percorso +" + pctS(v) + (L ? " e danno +" + pctS(VLEN_DMG * L) : "");
   if (kind === "pct") return "+" + pctS(v * (1 + STD_BOOST.bonus * L));
   if (kind === "red") return "ricarica −" + pctS(v * (1 + STD_BOOST.reduce * L));
   if (kind === "fast") return "danno +" + pctS(v * (1 + STD_BOOST.bonus * L)) + ", ricarica −" + pctS(v * (1 + STD_BOOST.reduce * L));
@@ -477,7 +481,7 @@ function stdFx(kind, v, L) {                    // effetto per pila della carta 
 }
 // valori dei nodi della sezione per tipo e della barriera, per livello
 const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02, cards: 0.05 };
-const TREE_CAP = { red: 0.4, abCd: 0.6 };      // tetti sul totale (equipaggiamento + albero): riduzione del danno e del cooldown delle abilità
+const TREE_CAP = { red: 0.5, abCd: 0.6 };      // tetti sul totale (META + albero + equipaggiamento): riduzione del danno (50% dalla 1.14.2, prima 40%) e del cooldown delle abilità
 // maj(L) = Sigilli maggiori per il livello L (oltre ai Sigilli normali levelCost(L)); senza maj nessun maggiore
 const lvNode = (id, who, name, max, fx, req, maj) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)),
   mcosts: Array.from({ length: max }, (_, i) => maj ? maj(i + 1) : 0), req: req || [], fx });
@@ -529,18 +533,21 @@ TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + 
 const AB_GROUPS = [["resist", "Resistere", ["regen", "backup", "impen"]], ["control", "Controllo", ["repulse", "freeze", "reflect"]],
   ["offense", "Offesa", ["burn", "mines", "power"]]];
 const AB_CD = 40;                                   // ciclo base delle abilità con cooldown (s)
+// testi (1.14.2, [deciso] Marco: ogni valore, durata e cooldown nel testo; testi [Claude]): il cooldown è quello effettivo, con le riduzioni
+// di albero ed equipaggiamento (abCdShow); l’attesa della Rigenerazione (2 × durata) non è ridotta dal nodo cooldown
+const abCdTxt = () => " · ogni " + fmt(AB_CD * abCdShow()) + " s";
 const ABILITIES = {
   regen:   { name: "Rigenerazione", rate: [2, 2.5, 3, 3.5, 4], dur: [5, 5, 6, 6, 7], uses: [1, 2, 2, 3, 3],      // % della vita massima al secondo, s, volte
-    fx: (L, v) => fmt(v.rate) + "%/s per " + v.dur + " s, ×" + v.uses },
-  backup:  { name: "Barriera di backup", pct: [20, 30, 40, 50, 60], fx: (L, v) => "vita " + v.pct + "%" },
-  impen:   { name: "Barriera impenetrabile", every: [40, 35, 30, 25, 20], fx: (L, v) => "scudo ogni " + v.every + " s" },   // minimo 20 s
-  repulse: { name: "Barriera repulsiva", cd: true, knock: [50, 70, 90, 110, 130], fx: (L, v) => "spinta " + v.knock + " px" },
+    fx: (L, v) => "sotto il 40%: " + fmt(v.rate) + "%/s per " + v.dur + " s, ×" + v.uses + " · attesa " + 2 * v.dur + " s" },
+  backup:  { name: "Barriera di backup", pct: [20, 30, 40, 50, 60], fx: (L, v) => "una volta: la vita torna al " + v.pct + "%" },
+  impen:   { name: "Barriera impenetrabile", every: [40, 35, 30, 25, 20], fx: (L, v) => "scudo ogni " + fmt(abEvery(v, abCdShow())) + " s" },   // minimo 20 s
+  repulse: { name: "Barriera repulsiva", cd: true, knock: [50, 70, 90, 110, 130], fx: (L, v) => "spinta " + v.knock + " px" + abCdTxt() },
   freeze:  { name: "Barriera congelante", cd: true, weak: [25, 30, 35, 40, 45], height: [60, 80, 100, 120, 140], dur: 8,
-    fx: (L, v) => "−" + v.weak + "%, " + v.height + " px" },
-  reflect: { name: "Barriera riflettente", cd: true, frac: [30, 40, 50, 60, 70], dur: [4, 5, 6, 7, 8], fx: (L, v) => v.frac + "% per " + v.dur + " s" },
-  burn:    { name: "Barriera ustionante", cd: true, dur: [5, 6, 7, 8, 9], dps: 6, fx: (L, v) => "brucia per " + v.dur + " s" },
-  mines:   { name: "Barriera minata", cd: true, count: [4, 5, 6, 7, 8], fx: (L, v) => v.count + " mine" },
-  power:   { name: "Barriera potenziante", cd: true, pct: [15, 21.25, 27.5, 33.75, 40], dur: [6, 7, 8, 9, 10], fx: (L, v) => "+" + fmt(v.pct) + "% per " + v.dur + " s" },
+    fx: (L, v) => "nemici −" + v.weak + "% danno, " + v.height + " px, " + v.dur + " s" + abCdTxt() },
+  reflect: { name: "Barriera riflettente", cd: true, frac: [30, 40, 50, 60, 70], dur: [4, 5, 6, 7, 8], fx: (L, v) => v.frac + "% per " + v.dur + " s" + abCdTxt() },
+  burn:    { name: "Barriera ustionante", cd: true, dur: [5, 6, 7, 8, 9], dps: 6, fx: (L, v) => "brucia " + v.dur + " s" + abCdTxt() },
+  mines:   { name: "Barriera minata", cd: true, count: [4, 5, 6, 7, 8], fx: (L, v) => v.count + " mine" + abCdTxt() },
+  power:   { name: "Barriera potenziante", cd: true, pct: [15, 21.25, 27.5, 33.75, 40], dur: [6, 7, 8, 9, 10], fx: (L, v) => "+" + fmt(v.pct) + "% per " + v.dur + " s" + abCdTxt() },
 };
 // valori di un’abilità al livello L (1-5): ogni lista diventa il suo elemento
 const abVal = (id, L) => { const a = ABILITIES[id], o = {}; for (const k in a) o[k] = Array.isArray(a[k]) ? a[k][Math.max(1, Math.min(5, L)) - 1] : a[k]; return o; };
@@ -581,7 +588,7 @@ const MOD = {
   7:  { w: 2, v: [3, 5, 8, 11, 15], t: (v) => "Intervallo tra le salve −" + fmt(v) + "%" },
   8:  { w: 2, v: [10, 18, 27, 38, 50], t: (v) => "Le salve allungano i debuff +" + fmt(v) + "%" },
   9:  { w: 2, v: [0.3, 0.5, 0.7, 0.9, 1.2], t: (v) => "+" + fmt(v) + "% danni per Modulo installato" },
-  10: { w: 1, v: [[5, 50, 3], [8, 100, 4], [12, 150, 5], [16, 200, 6], [20, 300, 8]], t: (v) => "Ignora " + v[0] + " danni · contrattacco " + v[1] + "% ×" + v[2] },
+  10: { w: 1, v: [[5, 50, 3], [8, 100, 4], [12, 150, 5], [16, 200, 6], [20, 300, 8]], t: (v) => "Barriera: danno −" + v[0] + "%, contrattacco " + v[1] + "% ×" + v[2] },
   11: { w: 3, v: [[8, 3], [15, 5], [25, 8], [35, 11], [50, 15]], t: (v) => "Barriera: vita +" + v[0] + "%, danno −" + v[1] + "%" },
   12: { w: 2, v: [[-10, 0.4], [-6, 0.6], [-3, 0.8], [2, 1], [5, 1.2]], t: (v) => "Danni " + sgn(v[0]) + "%, +" + fmt(v[1]) + "% per carta scelta" },
   13: { w: 3, v: [5, 9, 14, 20, 28], t: (v) => "+" + fmt(v) + "% danni vicino alla barriera" },
@@ -691,8 +698,14 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // abilities = abilità della barriera equipaggiate { resist, control, offense }; null = quelle d’ingresso (mai cambiate)
 // gear = equipaggiamento: inventario, pezzi equipaggiati e Moduli installati (cleanGear)
 // majors = Sigilli maggiori da spendere (dalla 1.12.0: boss in Epica)
-const progress = { cleared: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} } };
+const progress = { cleared: 0, clearedEpic: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} } };
 // Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
+// livelli di Epica completati (1.14.2): numerazione propria; i salvataggi senza il campo lo ricavano dalle chiavi “e<N>” dei premi riscossi
+function cleanEpic(p) {
+  if (p && Number.isFinite(p.clearedEpic)) return clamp(Math.floor(p.clearedEpic), 0, CAMPAIGN.maxLevel);
+  const ks = p && Array.isArray(p.claims) ? p.claims.map((k) => /^e(\d{1,3})p?$/.exec(k)).filter(Boolean).map((m) => +m[1]) : [];
+  return clamp(Math.max(0, ...ks), 0, CAMPAIGN.maxLevel);
+}
 function cleanSeals(p) {
   const tree = {};
   if (p && p.tree && typeof p.tree === "object") for (const k in p.tree) { const L = Math.floor(+p.tree[k]); if (TREE_IDS.has(k) && L > 0) tree[k] = Math.min(L, TREE_NODE[k].max); }
@@ -711,13 +724,18 @@ function cleanSeals(p) {
 try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
   if (p && Number.isFinite(p.cleared)) progress.cleared = clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel);
+  progress.clearedEpic = cleanEpic(p);
   if (p && Array.isArray(p.seen)) progress.seen = p.seen.filter((k) => typeof k === "string" && k !== "ship" && k !== "mothership").slice(0, 50);   // vecchie scoperte generiche dei boss, non più valide
   Object.assign(progress, cleanSeals(p));
   progress.gear = cleanGear(p);
 } catch (e) { /* storage non disponibile: si riparte da zero */ }
 function saveProgress() { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {} }
-const maxSelectable = () => Math.min(progress.cleared + 1, CAMPAIGN.maxLevel);
-let campLevel = 1, selLevel = maxSelectable(), bossBonus = 0, bonusLeft = 0, bonusMode = false, rewards = null;
+// livello più alto selezionabile: Standard fino a “completati + 1”, Epica fino a “Epica completati + 1” (1.14.2)
+const maxSelectable = (m) => Math.min((m === "epic" ? progress.clearedEpic : progress.cleared) + 1, CAMPAIGN.maxLevel);
+// livello scelto: selLevel per Standard, selEpic per Epica (selettori separati, 1.14.2)
+const selOf = (m) => m === "epic" ? selEpic : selLevel;
+function setSel(m, lv) { lv = clamp(lv, 1, maxSelectable(m)); if (m === "epic") selEpic = lv; else selLevel = lv; }
+let campLevel = 1, selLevel = maxSelectable(), selEpic = maxSelectable("epic"), bossBonus = 0, bonusLeft = 0, bonusMode = false, rewards = null;
 const towerCap = () => CAMPAIGN.towerCaps.reduce((c, [n, cap]) => progress.cleared >= n ? cap : c, 1);
 // avvisi di sblocco a fine livello (primo completamento in Standard): titolo e righe; si chiudono a mano
 const UNLOCKS = [
@@ -934,7 +952,7 @@ function rollDrops(D, epic) {
 let gearGain = null;                              // oggetti presi nell’ultima vittoria (schermata di vittoria)
 // statistiche dell’equipaggiamento per la partita: frazioni (0,1 = 10%); i “+X% danni” del guardiano si sommano in pdmg (un solo bonus)
 function gearStats(gear) {
-  const s = { pdmg: 0, hp: 0, tdmg: 0, type: {}, crit: 0, perTower: 0, proj: 0, perNear: 0, debuff: 0, rate: 0, ext: 0, perMod: 0, absorb: 0, counter: 0, counterN: 0,
+  const s = { pdmg: 0, hp: 0, tdmg: 0, type: {}, crit: 0, perTower: 0, proj: 0, perNear: 0, debuff: 0, rate: 0, ext: 0, perMod: 0, counter: 0, counterN: 0,
     red: 0, perCard: 0, nearB: 0, lowImm: 0, abCd: 0, heal: 0, pierce: 0, high: 0, explo: 0, maxHp: 0, refresh: 0, four: 0, p2: 0, t2: 0, mods: 0 };
   for (const pc of PIECE_IDS) {
     const e = gear && gear.eq[pc]; if (!e) continue;
@@ -945,7 +963,7 @@ function gearStats(gear) {
         case 1: s.crit += f; break;          case 2: s.pdmg += f; break;            case 3: s.perTower += f; break;
         case 4: s.proj++; s.pdmg += f; break; case 5: s.perNear += f; break;         case 6: s.debuff += f; break;
         case 7: s.rate += f; break;          case 8: s.ext += f; break;             case 9: s.perMod += f; break;
-        case 10: s.absorb += v[0]; s.counter += f[1]; s.counterN += v[2]; break;
+        case 10: s.red += f[0]; s.counter += f[1]; s.counterN += v[2]; break;   // riduzione per colpo (1.14.2, prima un pool di danni ignorati)
         case 11: s.hp += f[0]; s.red += f[1]; break;
         case 12: s.pdmg += f[0]; s.perCard += f[1]; break;
         case 13: s.nearB += f; break;        case 14: s.lowImm += v; break;          case 15: s.abCd += f; break;
@@ -962,9 +980,9 @@ function gearStats(gear) {
 }
 let GEAR = gearStats(null);                       // statistiche della partita in corso (startRun)
 // stato della partita legato all’equipaggiamento (startRun)
-let gearAbsorb = 0, counterLeft = 0, lowImmUsed = false, domeImmT = 0, healLeft = 0, refreshLeft = 0, runPicks = 0, turretsLv2 = false;
+let counterLeft = 0, lowImmUsed = false, domeImmT = 0, healLeft = 0, refreshLeft = 0, runPicks = 0, turretsLv2 = false;
 function gearRun() {
-  gearAbsorb = GEAR.absorb; counterLeft = GEAR.counterN; lowImmUsed = false; domeImmT = 0; healLeft = 4; refreshLeft = GEAR.refresh; runPicks = 0;
+  counterLeft = GEAR.counterN; lowImmUsed = false; domeImmT = 0; healLeft = 4; refreshLeft = GEAR.refresh; runPicks = 0;
   turretsLv2 = GEAR.t2 > 0 && Math.random() < GEAR.t2;   // Modulo 30: un tiro a inizio battaglia per tutte le torrette (nessun tiro senza il Modulo)
 }
 // Moduli 29 e 30: l’entità parte dal livello 2; i potenziamenti restano 12 e i level up 3 (il primo la lascia al 2) [deciso, § 15]
@@ -1022,12 +1040,14 @@ function vuln(e, t, type) {
 }
 function knock(e, k) { if (k) e.y = Math.max(-e.def.r, e.y - k * (1 - (e.kbRes || 0))); }
 
-function popup(e, v, mult) {
+// src "counter": contrattacco del Modulo 10, numero ciano (colore dell’anello della barriera), più grande e più lungo (1.14.2)
+function popup(e, v, mult, src) {
   if (floaters.length >= 60) return;
+  const cnt = src === "counter";
   floaters.push({
-    x: e.x + rnd(-5, 5), y: e.y - e.def.r, life: 0.7,
+    x: e.x + rnd(-5, 5), y: e.y - e.def.r, life: cnt ? 1.2 : 0.7, max: cnt ? 1.2 : 0.7, size: cnt ? 16 : 12,
     txt: String(Math.max(1, Math.round(v))) + (mult > 1 ? "!" : ""),
-    color: mult > 1 ? "#ffd166" : mult < 1 ? "#7f8ba3" : "#e8eefc",
+    color: cnt ? "#7fe8ff" : mult > 1 ? "#ffd166" : mult < 1 ? "#7f8ba3" : "#e8eefc",
   });
 }
 // ignore = ignora le resistenze del nemico (Laser, Raggi penetranti)
@@ -1043,8 +1063,8 @@ function damage(e, base, type, quiet, src, ignore) {
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
     if (e.accT > 0) return;
-    e.accT = 0.45; popup(e, e.acc, mult); e.acc = 0;
-  } else popup(e, d, mult);
+    e.accT = 0.45; popup(e, e.acc, mult, src); e.acc = 0;
+  } else popup(e, d, mult, src);
 }
 
 // effetti alla morte di un nemico (tutte le morti passano da damage)
@@ -1114,12 +1134,16 @@ const hitSegs = (e, segs, w) => segs.some((s) => segDist(e.x, e.y, s) <= e.def.r
 
 // ---- bersagli ----
 // Il targeting sta tutto qui: aggiungere una modalità = aggiungere un caso.
+// portata delle torrette (1.14.2, [deciso] Marco): si misura sempre dal punto di partenza del guardiano (centro, in basso), anche per le torrette laterali;
+// i colpi partono comunque dalla torretta e “più vicino” resta la distanza dalla torretta
+const RANGE_FROM = { x: W / 2, y: GROUND_Y - 30 };
+const inReach = (e, range) => (e.x - RANGE_FROM.x) ** 2 + (e.y - RANGE_FROM.y) ** 2 <= (range + e.def.r) ** 2;
 function pickTargets(pos, range, n) {
   const c = [];
   for (const e of enemies) {
     if (e.dead || e.y < 0) continue;
+    if (!inReach(e, range)) continue;
     const d2 = (e.x - pos.x) ** 2 + (e.y - pos.y) ** 2;
-    if (d2 > (range + e.def.r) ** 2) continue;
     c.push({ e, s: settings.targeting === "highest" ? -e.hp : d2 });
   }
   c.sort((a, b) => a.s - b.s);
@@ -1141,7 +1165,7 @@ function skyStats(s) {
            rad: 30 * (1 + stdB(s, "rad", 0.3) * N(s, "rad")) };
 }
 function skyFire(s) {
-  const list = living().filter((e) => dist(e.x, e.y, s.x, s.y) <= rangeOf(s) + e.def.r);
+  const list = living().filter((e) => inReach(e, rangeOf(s)));
   if (!list.length) return false;
   const cnt = skyCount(s);
   for (let k = 0; k < cnt; k++) missile(s, s.x + (k - (cnt - 1) / 2) * 6, s.y - 10, false, list[Math.floor(Math.random() * list.length)]);
@@ -1571,7 +1595,7 @@ function wheelDrone(s, x, y, a, o) {
 
 // ---------- 8. HIVE (force) ----------
 function hiveFire(s) {
-  if (!living().some((e) => dist(e.x, e.y, s.x, s.y) <= rangeOf(s) + e.def.r)) return false;
+  if (!living().some((e) => inReach(e, rangeOf(s)))) return false;
   const cnt = 3 + N(s, "drone");
   for (let k = 0; k < cnt; k++) hiveDrone(s, s.x + (k - (cnt - 1) / 2) * 12, s.y - 12, 1, 0);
   return true;
@@ -1779,7 +1803,7 @@ function teslaBoom(s, x, y, bounces, hitSet) {
 // ---------- 11. GRAVITY VORTEX GUN (force) ----------
 function vortexFire(s) {
   // corto raggio in partenza: la portata cresce insieme al percorso del buco nero
-  const pos = { x: s.x, y: s.y - 10 }, list = pickTargets(pos, Math.max(rangeOf(s), VORTEX_LEN0 * (1 + stdB(s, "len", 0.3) * N(s, "len"))), 2);
+  const pos = { x: s.x, y: s.y - 10 }, list = pickTargets(pos, vortexReach(s), 2);
   if (!list.length) return false;
   const cnt = has(s, "twin") ? 2 : 1;
   for (let k = 0; k < cnt; k++) {
@@ -1788,11 +1812,14 @@ function vortexFire(s) {
   }
   return true;
 }
-// percorso: con le 3 pile "percorso più lungo" (+30% ciascuna) copre il 75% dell’altezza dello schermo
-const VORTEX_LEN0 = 0.75 * H / (1 + 0.3 * 3);          // ≈ 253 px di partenza (480 px al massimo)
+// percorso (revisione 3, 1.14.2): 253 px di partenza, +20% per pila di “Percorso più lungo” (3 pile = 405 px); il nodo dell’albero non lo allunga
+const VORTEX_LEN0 = 253;
+const vortexLen = (s) => VORTEX_LEN0 * (1 + 0.2 * N(s, "len"));
+// portata di partenza: nemici entro max(portata, percorso); la stessa del raggio mostrato al tocco (0 pile 260 px · 1 304 · 2 354 · 3 405)
+const vortexReach = (s) => Math.max(rangeOf(s), vortexLen(s));
 function vortex(s, pos, a) {
-  const len = VORTEX_LEN0 * (1 + stdB(s, "len", 0.3) * N(s, "len")), R = 32 * (1 + stdB(s, "rad", 0.25) * N(s, "rad"));
-  const pull = 80 * (has(s, "pull") ? 1.6 : 1), dps = 12 * dmgM(s) * (has(s, "power") ? 1.5 : 1), speed = has(s, "lazy") ? 80 : 130;
+  const len = vortexLen(s), R = 32 * (1 + stdB(s, "rad", 0.25) * N(s, "rad"));
+  const pull = 80 * (has(s, "pull") ? 1.6 : 1), dps = 12 * dmgM(s) * (has(s, "power") ? 1.5 : 1) * (1 + VLEN_DMG * SB(s, "len") * N(s, "len")), speed = has(s, "lazy") ? 80 : 130;
   const stat = has(s, "stat1"), statT = has(s, "stat2") ? 3 : 2, statDps = dps * (has(s, "stat3") ? 1.6 : 1);
   spawnEnt({ x: pos.x, y: pos.y, trav: 0, still: -1, A: null, dead: false, spin: 0,
     update(dt) {
@@ -2069,7 +2096,9 @@ function rollOptions(n) {
   while (out.length < n && cands.length) {
     let r = Math.random() * cands.reduce((a, c) => a + c.w, 0), i = 0;
     while (i < cands.length - 1 && (r -= cands[i].w) > 0) i++;
-    out.push(cands.splice(i, 1)[0].opt);
+    const o = cands.splice(i, 1)[0].opt; out.push(o);
+    // un solo level up per entità in ogni offerta (1.14.2, torrette e guardiano)
+    if (o.kind === "up" && o.up.cat === "lu") for (let j = cands.length - 1; j >= 0; j--) { const c = cands[j].opt; if (c.kind === "up" && c.who === o.who && c.up.cat === "lu") cands.splice(j, 1); }
   }
   return out;
 }
@@ -2138,8 +2167,8 @@ const RUN_KEY = "fortress-run-v1";               // la chiave non cambia con i r
 let suspended = null;                            // la partita salvata (null se non c’è); letta all’avvio (loadRun)
 let runCards = [], runP2 = false, finalMajor = false, runArm = null;   // runArm: modalità in attesa del secondo tocco “sostituirla?”
 const runPending = () => !!suspended;
-const RUN_C = ["gearAbsorb", "counterLeft", "lowImmUsed", "domeImmT", "healLeft", "refreshLeft", "runPicks", "miniMajor", "finalMajor", "majorGain"];
-function runCounters() { return { gearAbsorb, counterLeft, lowImmUsed, domeImmT, healLeft, refreshLeft, runPicks, miniMajor, finalMajor, majorGain }; }
+const RUN_C = ["counterLeft", "lowImmUsed", "domeImmT", "healLeft", "refreshLeft", "runPicks", "miniMajor", "finalMajor", "majorGain"];
+function runCounters() { return { counterLeft, lowImmUsed, domeImmT, healLeft, refreshLeft, runPicks, miniMajor, finalMajor, majorGain }; }
 function writeRun() { try { localStorage.setItem(RUN_KEY, JSON.stringify(suspended)); } catch (e) {} }
 function saveRun() {
   suspended = { v: 1, app: APP_VERSION, lv: campLevel, mode, wave, cards: runCards.slice(), t2: turretsLv2, p2: runP2, dome: domeHp,
@@ -2153,7 +2182,7 @@ function loadRun() {
   let r = null;
   try { r = JSON.parse(localStorage.getItem(RUN_KEY) || "null"); } catch (e) {}
   const ok = r && r.v === 1 && r.app === APP_VERSION && (r.mode === "standard" || r.mode === "epic" && epicUnlocked()) && Number.isInteger(r.lv)
-    && r.lv >= 1 && r.lv <= maxSelectable() && Number.isInteger(r.wave) && r.wave >= 1 && r.wave <= N_WAVES && Array.isArray(r.cards) && Number.isFinite(r.dome) && r.dome > 0;
+    && r.lv >= 1 && r.lv <= maxSelectable(r.mode) && Number.isInteger(r.wave) && r.wave >= 1 && r.wave <= N_WAVES && Array.isArray(r.cards) && Number.isFinite(r.dome) && r.dome > 0;
   if (!ok) { if (r) clearRun(); return null; }
   return r;
 }
@@ -2168,13 +2197,13 @@ function resumeRun(r) {                          // dopo startRun: rigioca le ca
   domeHp = clamp(r.dome, 1, domeMax);
   if (r.frz) { player.st.charge = +r.frz.charge || 0; player.st.frenzyT = +r.frz.frenzyT || 0; }
   const c = r.c || {};
-  gearAbsorb = +c.gearAbsorb || 0; counterLeft = +c.counterLeft || 0; lowImmUsed = !!c.lowImmUsed; domeImmT = +c.domeImmT || 0; healLeft = +c.healLeft || 0;
+  counterLeft = +c.counterLeft || 0; lowImmUsed = !!c.lowImmUsed; domeImmT = +c.domeImmT || 0; healLeft = +c.healLeft || 0;
   refreshLeft = +c.refreshLeft || 0; runPicks = +c.runPicks || 0; miniMajor = !!c.miniMajor; finalMajor = !!c.finalMajor; majorGain = +c.majorGain || 0;
   if (r.ab && Array.isArray(r.ab.list) && r.ab.list.every((a) => a && ABILITIES[a.id])) AB = r.ab;
   domeShield = +r.shield || 0; powerBonus = +r.power || 0;
   startWave(r.wave); pauseGame();
 }
-function continueRun() { const r = suspended; if (!r) return; runArm = null; selLevel = r.lv; startRun(r.mode, r); }
+function continueRun() { const r = suspended; if (!r) return; runArm = null; menuMode = r.mode; setSel(r.mode, r.lv); startRun(r.mode, r); }
 // avvio di un’altra partita con una in sospeso: il primo tocco chiede “sostituirla?”, il secondo la sostituisce
 function startOrArm(m) {
   if (suspended && runArm !== m) { runArm = m; return; }
@@ -2183,7 +2212,8 @@ function startOrArm(m) {
 function startRun(m, resume) {
   alerts = []; unlockNotes = []; runCards = []; finalMajor = false;
   pressing = false;
-  mode = m; campLevel = selLevel; bossBonus = 0; bonusLeft = 0; bonusMode = false;
+  rangeShow = null; tapPend = null;
+  mode = m; campLevel = selOf(m); bossBonus = 0; bonusLeft = 0; bonusMode = false;
   enemies = []; ents = []; floaters = [];
   GEAR = gearStats(progress.gear); gearRun(); if (resume) turretsLv2 = !!resume.t2;
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
@@ -2256,7 +2286,7 @@ function startAbilities() {
     AB.list.push(a);
   }
 }
-const abEvery = (v) => Math.max(20, v.every * abCdM());                             // Impenetrabile: minimo 20 s
+const abEvery = (v, m) => Math.max(20, v.every * (m === undefined ? abCdM() : m));   // Impenetrabile: minimo 20 s
 const hasAb = (id) => AB.list.find((a) => a.id === id);
 // valore della bruciatura: la torretta di fuoco più forte in campo, altrimenti fisso
 function fireBurnDps() {
@@ -2315,18 +2345,19 @@ function domeWave(side) {
   spawnEnt({ t: 0.6, side, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; }, draw() { FX.domeWave(this); } });
 }
 
-// riduzione del danno alla cupola: META (equipaggiamento, a mano) + albero, con tetto sul totale; cooldown delle abilità idem
+// riduzione del danno alla cupola: META + albero + equipaggiamento (Moduli 10 e 11), con tetto del 50% sul totale; cooldown delle abilità idem
 const domeRed = () => Math.min(TREE_CAP.red, clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red") + GEAR.red);
 const abCdM = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd") + GEAR.abCd);
+// per i testi (albero, anche fuori partita): l’equipaggiamento attuale, non quello della partita precedente (GEAR)
+const abCdShow = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd") + gearStats(progress.gear).abCd);
 function domeHit(e) {
-  if (counterLeft > 0) { counterLeft--; if (player) damage(e, GEAR.counter * guardDmg(player), "physical", false, "player"); }   // Modulo 10: contrattacco ai primi colpi
+  if (counterLeft > 0) { counterLeft--; if (player) damage(e, GEAR.counter * guardDmg(player), "physical", false, "counter"); }   // Modulo 10: contrattacco ai primi colpi (numeri ciano)
   let dmg = Math.max(1, e.dmg * (e.weakT > 0 ? 1 - (e.weakK || 0.35) * (1 - (e.statRes || 0)) : 1) * (1 - 0.1 * e.destrN * (1 - (e.statRes || 0))) * (1 - domeRed()));
   if (AB.burnT > 0) burn(e, 3, AB.burnDps);                                     // Barriera ustionante: brucia chi colpisce
   if (domeShield > 0) { domeShield--; ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // immunità (Impenetrabile, in futuro equipaggiamento)
   if (Math.random() < TREE_VAL.ignore * treeLv("barrier:ignore")) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#c9a2ff", 0.3); return; }   // colpo ignorato (albero)
   if (AB.reflectT > 0) damage(e, dmg * AB.reflectK, "force", false, "dome");    // Barriera riflettente
   if (domeImmT > 0) { ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // Modulo 14: immunità sotto il 20%
-  if (gearAbsorb > 0) { const a = Math.min(gearAbsorb, dmg); gearAbsorb -= a; dmg -= a; if (dmg <= 0) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#e8eefc", 0.3); return; } }   // Modulo 10: primi danni ignorati
   domeHp -= dmg; domeFlash = 0.25; domeSince = 0;
   if (GEAR.lowImm && !lowImmUsed && domeHp > 0 && domeHp < 0.2 * domeMax) { lowImmUsed = true; domeImmT = GEAR.lowImm; ring(DOME.cx, DOME.cy, DOME.ry, "#e8eefc", 0.8); }
   ring(e.x, Math.min(e.y, GROUND_Y), 22, "#7fe8ff", 0.3);
@@ -2390,11 +2421,12 @@ function winLevel() {
   state = "won"; clearRun();
   const before = progress.cleared;
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
+  if (mode === "epic" && campLevel > progress.clearedEpic) progress.clearedEpic = campLevel;   // Epica: avanzamento proprio (1.14.2)
   unlockNotes = UNLOCKS.filter((u) => before < u.lv && progress.cleared >= u.lv);
   sealGain = sealReward(mode, campLevel, domeHp >= domeMax && !AB.backupUsed);   // con il Backup attivato il premio della cupola non si prende
   gearGain = gearOpen() && curDiff() >= CAMPAIGN.equipUnlock ? rollDrops(curDiff(), mode === "epic") : null;   // equipaggiamento: a ogni vittoria dal 30
   saveProgress();
-  selLevel = clamp(campLevel + 1, 1, maxSelectable());
+  setSel(mode, campLevel + 1);
 }
 function endWave() {
   if (wave >= N_WAVES) { winLevel(); return; }
@@ -2403,11 +2435,11 @@ function endWave() {
   options = rollOptions();
   if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else { state = "upgrade"; cardsShown(); }
 }
-function retry() { selLevel = campLevel; startRun(mode); }
-function nextOrRetry() {
-  if (mode === "standard" && campLevel < CAMPAIGN.maxLevel) { selLevel = campLevel + 1; startRun("standard"); } else retry();
+function retry() { setSel(mode, campLevel); startRun(mode); }
+function nextOrRetry() {                          // anche in Epica, con il suo contatore (1.14.2)
+  if (campLevel < CAMPAIGN.maxLevel) { setSel(mode, campLevel + 1); startRun(mode); } else retry();
 }
-function toMenu() { clearRun(); state = "menu"; selLevel = clamp(selLevel, 1, maxSelectable()); }
+function toMenu() { clearRun(); state = "menu"; menuMode = mode === "epic" && epicUnlocked() ? "epic" : "standard"; setSel("standard", selLevel); setSel("epic", selEpic); }
 // schermata dell’albero: sezione (player | turrets | barrier), torretta scelta, nodo in attesa del secondo tocco
 let treeTab = "turrets", treeSel = "sky", treeArm = null, barrierTab = "nodes";   // treeSel: id della torretta o "types" (sezione condivisa)
 function openTree() { if (!treeOpen()) return; state = "tree"; treeArm = null; }
@@ -2492,7 +2524,10 @@ function tapLockSlot(i) { gearArm = null; gearMsg = ""; lockSlot(gearSel, i); }
 let pauseTab = "enemies", pauseQuit = false;
 // griglia dei livelli (1.12.3): modalità mostrata, pagina da 50, filtro “solo con Sigilli da prendere”, livello scelto
 let lvMode = "standard", lvPage = 0, lvFilter = false, lvSel = 1;
-function openLevels() { state = "levels"; lvMode = mode === "epic" && epicUnlocked() ? "epic" : "standard"; lvSel = selLevel; lvPage = Math.floor((selLevel - 1) / 50); }
+// menuMode: modalità attiva del selettore del menu (frecce, griglia); cambia con il suo interruttore, la griglia e l’ultima partita (1.14.2)
+let menuMode = "standard";
+function openLevels() { state = "levels"; lvTab(menuMode === "epic" && epicUnlocked() ? "epic" : "standard"); }
+function lvTab(m) { lvMode = m; lvSel = selOf(m); lvPage = Math.floor((lvSel - 1) / 50); }   // scheda della griglia: livello e pagina della modalità
 function closeLevels() { state = "menu"; }
 // Sigilli di un livello: first/full = premio del primo completamento e premio della cupola al 100%: "no" (non previsto), "got" (preso), "open" (da prendere)
 function sealStatus(m, lv) {
@@ -2501,9 +2536,10 @@ function sealStatus(m, lv) {
   return { first: progress.claims.includes(key) ? "got" : "open", full: progress.claims.includes(key + "p") ? "got" : "open" };
 }
 const sealsOpen = (m, lv) => { const st = sealStatus(m, lv); return st.first === "open" || st.full === "open"; };
-function pickLevel(lv) { if (lv > maxSelectable()) return; if (lvSel === lv) { playLevel(); return; } lvSel = lv; }   // secondo tocco sullo stesso livello: gioca
+function pickLevel(lv) { if (lv > maxSelectable(lvMode)) return; if (lvSel === lv) { playLevel(); return; } lvSel = lv; }   // secondo tocco sullo stesso livello: gioca
 function playLevel() {
-  selLevel = lvSel; if (lvMode === "epic" && !epicUnlocked()) return;
+  if (lvMode === "epic" && !epicUnlocked()) return;
+  setSel(lvMode, lvSel); menuMode = lvMode;
   if (suspended) { state = "menu"; runArm = lvMode; return; }      // partita in sospeso: si conferma nel menu (“sostituirla?”)
   startRun(lvMode);
 }
@@ -2533,6 +2569,27 @@ function toLogical(e) {
   const r = cv.getBoundingClientRect(), w = r.width || W, h = r.height || H;
   return { x: (e.clientX - r.left) * W / w, y: (e.clientY - r.top) * H / h };
 }
+/* ---------- RAGGIO D’AZIONE AL TOCCO (DESIGN.md § 2, 1.14.2) ----------
+   Un tocco rapido (rilascio entro 0,3 s, meno di 10 px di movimento) su una torretta mostra il suo raggio per 2 s, durante l’ondata e in pausa.
+   Finché non è chiaro se è un tocco il guardiano non reagisce; oltre 0,3 s o 10 px vale il comportamento di sempre (guardiano e mirino).
+   Tempo reale (rtime, ms): in pausa il raggio scompare comunque. Un solo raggio alla volta. */
+const RANGE_TAP = { ms: 300, move: 10, near: 28, show: 2000, veil: 500 };
+let rtime = 0, tapPend = null, rangeShow = null;   // rangeShow: { i (slot), t0 (ms) }
+function turretAt(p) {
+  for (let i = 0; i < 4; i++) if (slots[i] && Math.abs(p.x - SLOT_X[i]) <= RANGE_TAP.near && Math.abs(p.y - (GROUND_Y - 14)) <= RANGE_TAP.near) return i;
+  return -1;
+}
+const rangeReach = (s) => s.id === "vortex" ? vortexReach(s) : rangeOf(s);   // Vortex: raggio reale di partenza
+function beginDrag(p) {                         // pressione sul campo: il guardiano segue il dito, il mirino aggancia
+  dragging = true; pressing = true; player.targetX = p.x; setPress(p);
+}
+function tapTick() {                            // pressione oltre 0,3 s su una torretta: diventa una pressione normale
+  if (state === "upgrade") rangeShow = null;
+  if (rangeShow && rtime - rangeShow.t0 >= RANGE_TAP.show) rangeShow = null;
+  if (!tapPend || rtime - tapPend.t < RANGE_TAP.ms) return;
+  const q = tapPend; tapPend = null;
+  if (state === "play") beginDrag(q.last);
+}
 cv.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   const p = toLogical(e);
@@ -2544,13 +2601,25 @@ cv.addEventListener("pointerdown", (e) => {
   if (state === "gear") gearArm = null;
   if (state === "menu") runArm = null;           // tocco fuori dai pulsanti: annulla “sostituirla?”
   if (state === "guide") guideDrag = { y: p.y, s: guideScroll };   // trascinare scorre l’elenco delle carte
+  const ti = state === "play" || state === "pause" ? turretAt(p) : -1;
+  if (ti >= 0) {                                 // forse un tocco sulla torretta: si decide al rilascio, al movimento o dopo 0,3 s
+    tapPend = { i: ti, x: p.x, y: p.y, t: rtime, last: p };
+    if (state === "play") try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    return;
+  }
   if (state === "play") {
-    dragging = true; pressing = true; player.targetX = p.x; setPress(p);   // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
+    beginDrag(p);                                // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
 cv.addEventListener("pointermove", (e) => {
   if (state === "guide" && guideDrag) { guideScroll = Math.max(0, guideDrag.s - (toLogical(e).y - guideDrag.y)); return; }
+  if (tapPend) {
+    const p = toLogical(e); tapPend.last = p;
+    if (Math.hypot(p.x - tapPend.x, p.y - tapPend.y) < RANGE_TAP.move) return;
+    tapPend = null; if (state === "play") beginDrag(p);
+    return;
+  }
   if (!dragging || state !== "play") return;
   const p = toLogical(e); player.targetX = p.x; setPress(p);
 });
@@ -2559,6 +2628,8 @@ const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b
 const stopDrag = () => { dragging = false; pressing = false; };
 cv.addEventListener("pointerup", (e) => {
   stopDrag(); guideDrag = null;
+  const q = tapPend; tapPend = null;
+  if (q && rtime - q.t < RANGE_TAP.ms && (state === "play" || state === "pause") && slots[q.i]) rangeShow = { i: q.i, t0: rtime };   // un solo raggio: sostituisce il precedente
   const c = cardPress; cardPress = null;
   if (!c || state !== "upgrade") return;
   const p = toLogical(e);                        // vale solo se il dito finisce sulla stessa carta su cui era partito
@@ -2566,7 +2637,7 @@ cv.addEventListener("pointerup", (e) => {
   if (b && inBtn(p, b)) b.onTap();
 });
 cv.addEventListener("wheel", (e) => { if (state === "guide") { e.preventDefault(); guideScroll = Math.max(0, guideScroll + e.deltaY * 0.5); } }, { passive: false });
-cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; });
+cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; tapPend = null; });
 window.addEventListener("keydown", (e) => {
   if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
   const k = e.key.toLowerCase();
@@ -2578,7 +2649,7 @@ window.addEventListener("keydown", (e) => {
   if (state === "upgrade" && (k === "b" || k === "tab")) { e.preventDefault(); upBuild = !upBuild; return; }
   if (state === "upgrade" && upBuild) { if (k === "escape" || k === "enter") upBuild = false; return; }
   if (state === "menu" && (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d"))
-    selLevel = clamp(selLevel + (k === "arrowright" || k === "d" ? 1 : -1), 1, maxSelectable());
+    setSel(menuMode, selOf(menuMode) + (k === "arrowright" || k === "d" ? 1 : -1));
   if (k === "arrowleft" || k === "a") keys.left = 1;
   else if (k === "arrowright" || k === "d") keys.right = 1;
   else if ((k === "p" || k === "escape") && state === "play") pauseGame();
@@ -2618,13 +2689,14 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.14.1";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 5, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+const APP_VERSION = "1.14.2";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 6, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
+// · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, seen: [...progress.seen], seals: progress.seals, majors: progress.majors, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)) },
+    progress: { cleared: progress.cleared, clearedEpic: progress.clearedEpic, seen: [...progress.seen], seals: progress.seals, majors: progress.majors, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)) },
     settings: { targeting: settings.targeting } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -2644,6 +2716,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
   if (!Number.isFinite(p.cleared)) throw new Error("Il salvataggio non contiene i livelli completati.");
   return {
     cleared: clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel),
+    clearedEpic: cleanEpic(p),                   // versioni 1-5: dalle chiavi “e<N>” dei premi riscossi
     seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 50) : [],
     ...cleanSeals(p),                            // versione 1: niente Sigilli, si parte da zero
     gear: cleanGear(p),                          // versioni 1 e 2: niente equipaggiamento, inventario vuoto
@@ -2652,10 +2725,10 @@ function parseSave(text) {                      // controlla tutto prima di tocc
   };
 }
 function applySave(d) {
-  progress.cleared = d.cleared; progress.seen = d.seen;
+  progress.cleared = d.cleared; progress.clearedEpic = d.clearedEpic; progress.seen = d.seen;
   progress.seals = d.seals; progress.majors = d.majors; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear;
   settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
-  saveProgress(); saveSettings(); selLevel = maxSelectable();
+  saveProgress(); saveSettings(); selLevel = maxSelectable(); selEpic = maxSelectable("epic");
   clearRun();                                    // con un salvataggio importato la partita in sospeso non vale più
 }
 let pendingSave = null;
@@ -2729,7 +2802,7 @@ const LAUNCH = (() => {
 let last = 0;
 function frame(t) {
   const dt = Math.min(0.05, (t - last) / 1000 || 0);
-  last = t;
+  last = t; rtime = t; tapTick();
   // velocità 1,5x e 2x: la logica avanza in passi da al massimo 0,05 s (come a 1x), così danni, collisioni e bilanciamento non cambiano;
   // anche clock è tempo di gioco (lo usano la rampa dell’Amplificatore e le animazioni). Ci si ferma appena la partita cambia stato.
   if (state === "play") {

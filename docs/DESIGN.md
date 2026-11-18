@@ -28,6 +28,16 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; nel punto premuto c’è un **mirino**: se un nemico è entro 45 px dal mirino i colpi lo inseguono (è il bersaglio, quindi valgono anche le combo legate al bersaglio, come la Mira amplificata), altrimenti vanno **dritti in alto**. Al rilascio torna la mira automatica. **[deciso]** (mirino che assegna un bersaglio, rev. 4) · 45 px e comportamento “insegue se vicino” **[deciso]** (scelto da Marco tra le proposte di Claude)
 - **Mira**: nel menu non c’è più la scelta; senza premere è automatica, premendo vale il mirino (punto sopra). Il mirino è tornato anche perché il cambio di modalità sia evidente. Le torrette sparano sempre da sole. **[deciso]**
 - **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”; il guardiano lo usa quando non si preme. **[deciso]**
+- **Portata delle torrette** **[deciso]** (Marco, 1.14.2): si misura sempre dal **centro in basso**, dove parte il guardiano (x 180, y = suolo − 30), anche per le torrette
+  laterali; prima era un cerchio intorno a ogni torretta. I colpi partono comunque dalla torretta e “più vicino” resta la distanza dalla torretta **[Claude]**.
+- **Raggio d’azione al tocco** **[deciso]** (Marco): un tocco su una torretta mostra per 2 s il suo raggio come una curva rossa semitrasparente, come il profilo della barriera
+  (alla base trasparente, in cima più visibile). Un solo raggio alla volta (un nuovo tocco sostituisce il precedente). Un tocco rapido (sotto 0,3 s, meno di 10 px di movimento)
+  su una torretta non muove il guardiano; la pressione lunga resta come oggi. Vale durante l’ondata e in pausa, non durante la scelta delle carte.
+  Portata oltre lo schermo (Sky Guard, Thunderbolt, Laser): niente curva, solo la sfumatura (velo rosso su tutto lo schermo). Gravity Vortex Gun: il raggio mostrato è quello reale
+  di partenza, max(portata 260 px, percorso), che cresce con le pile di “Percorso più lungo”. **[deciso]** (Marco)
+  Dettagli **[Claude]**: “oltre lo schermo” = raggio effettivo oltre 500 px (con i bonus di portata); sfumatura trasparente in basso e più visibile in alto;
+  dissolvenza breve in entrata e in uscita; timer in tempo reale. Costruito nella 1.14.2: tocco valido entro 28 px dal riquadro della torretta; arco con alfa da 0 a 0,6
+  (riempimento fino a 0,14), velo fino a 0,32; l’arco è centrato dove parte il guardiano, come la portata; in pausa il raggio si disegna sopra la schermata della pausa.
 - **Frenesia** (chain del guardiano): la barra si carica nel tempo e parte da sola; va in pausa se non ci sono nemici a schermo e nessun dito premuto, cioè scorre anche mentre si preme. Una frenesia attiva a fine ondata continua in quella dopo. **[deciso]** (lettura della pressione **[Claude]**)
 - **Pausa**: pulsante in alto (o Esc/P), si attiva da sola se si cambia app. Due schede: “Nemici del livello” e “Torri e potenziamenti”.
   “Abbandona” chiede un secondo tocco. **[deciso]**
@@ -58,6 +68,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Ogni torre e il guardiano partono al **livello 1**: 3 potenziamenti (standard, chain o combo), poi serve un **level up** per salire.
   **Livello massimo 3 = 12 potenziamenti** (3 + level up, per 3 livelli). **[deciso]**
 - Un level up di livello inferiore resta disponibile ai livelli successivi. **[deciso]**
+- **Un level up per entità in ogni offerta**: nella stessa scelta di carte non compaiono due level up della stessa torretta (o del guardiano); level up di entità diverse possono uscire insieme. **[deciso]** (Marco) · estesa al guardiano **[Claude]**
 - **Standard**: massimo 3 pile per voce (per torre, non per partita). **[deciso]**
 - **Chain**: la voce di livello N richiede una voce di livello N−1 della stessa catena **e la torre al livello N**. **[deciso]**
 - Obiettivo di contenuto per ogni torre e per il guardiano: **2 chain**, una da **1 voce lv1, 2 lv2, 1 lv3** e una da **1 lv1, 1 lv2, 1 lv3**;
@@ -79,7 +90,11 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ## 4. Campagna e progressione
 
-- La campagna arriva **almeno al livello 200** (Marco; oggi `CAMPAIGN.maxLevel` = 200, si può allungare); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello; in **Epica D = livello + 30** (formula da riverificare oltre il 50). **[deciso]**
+- La campagna arriva **almeno al livello 200** (Marco; oggi `CAMPAIGN.maxLevel` = 200, si può allungare); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello in Standard. **Epica**: numerazione e avanzamento propri, indipendenti da Standard. Si apre dopo il 50 di Standard;
+  il **livello 1 di Epica ha difficoltà 31** (D = livello di Epica + 30) e si selezionano i livelli di Epica fino a “Epica completati + 1”. **[deciso]** (Marco)
+  Salvataggio: nuovo campo `clearedEpic`, `SAVE_VERSION` +1; in migrazione, i livelli di Epica già fatti si ricavano dalle chiavi `e…` dei premi riscossi. **[Claude]**
+  Menu (1.14.2) **[Claude]**: il selettore (−/+, frecce, griglia) vale per la **modalità attiva**, che si cambia con la striscia “Standard ⇄ Epica” in fondo al riquadro del livello
+  (dal 50), con la scheda della griglia o giocando; i pulsanti “Standard · livello N” ed “Epica · livello M (diff. D)” avviano ciascuno il proprio livello; dopo una vittoria in Epica c’è “Livello M+1”.
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero, con la scheda Abilità bloccata da un overlay fino a quel livello),
@@ -106,7 +121,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
     dal 31 sale di **1,2 per livello con uno scalino di 3** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.12.1; al 200 effD = 230; 1.11.0: 0,8 e 2, effD 161; prima 0,2 senza scalino, effD 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
-  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro (`FINAL_BOSS_K`, dalla 1.12.1: 40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,75, 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
+  - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro (`FINAL_BOSS_K`, dalla 1.12.1: 40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,65 (dalla 1.14.2; era ×0,75), 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
     al livello 10 anche i nemici normali hanno il 93% della vita (`WALL_ENEMY_HP`); al 50, dalla 1.14.0, l’85% e il boss finale ×0,6 (`FINAL_BOSS_K`, § 16) **[deciso]** (Marco). Tarati sul pool libero (vedi sotto). **[Claude]** (obiettivo del 30% **[deciso]**)
 - Metodo: bot che giocano partite intere (`tests/tools/calib2.js`, `l30.js`), con scelte casuali o con una strategia semplice.
   Con meno di 60 partite per livello il rumore è di circa ±7 punti: usare campioni grandi prima di cambiare i numeri.
@@ -289,7 +304,7 @@ Electric · Sfera elettrica che esplode al contatto. Portata 380 px, ricarica 2,
 ### Gravity Vortex Gun (`vortex`)
 
 Force · Buco nero che attrae e danneggia. Portata 260 px, ricarica 5,5 s.
-- **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Percorso più lungo (Lunghezza percorsa +30%); Raggio maggiore (Raggio del buco nero +25%).
+- **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Percorso più lungo (Lunghezza percorsa +20%); Raggio maggiore (Raggio del buco nero +25%).
 - **Chain · Wormhole** — lv1 Wormhole: Due varchi: si riemerge dal secondo · lv2 Varco ampio: L’ingresso del wormhole è più grande · lv2 Varchi stabili: I wormhole durano 6 s invece di 4 · lv3 Uscita rallentante: Chi esce dal 2° varco è rallentato
 - **Chain · Buco nero statico** — lv1 Buco nero statico: A fine percorso resta fermo e attrae · lv2 Statico prolungato: Il buco nero statico dura 3 s invece di 2 · lv3 Statico potente: Il buco nero statico fa più danno
 - **Level up** — lv1 Attrazione forte: Forza attrattiva molto maggiore · lv1 Buco nero iperdenso: Danno dei buchi neri +50% · lv2 Secondo buco nero: Genera un secondo buco nero · lv2 Buco nero lento: Avanza più piano: resta più sui nemici · lv3 Collasso crescente: Danno e attrazione crescono col percorso
@@ -376,6 +391,9 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Gravity Vortex Gun: wormhole 4 s (6 s con Varchi stabili)  **[Claude]**
 - Gravity Vortex Gun (revisione 2): Buco nero iperdenso = danno +50%; Buco nero lento = avanza a 80 px/s invece di 130 (stesso percorso, più tempo sui nemici);
   Collasso crescente = danno e attrazione crescono con la strada fatta, fino a ×2 a fine percorso (e da fermo)  **[Claude]**
+- Gravity Vortex Gun (revisione 3): Percorso più lungo = +20% per pila (prima +30%), base 253 px invariata (3 pile = 405 px, prima 480).
+  Il potenziamento di questa carta dall’albero (§ 16) non allunga più il percorso: dà +2% di danno dei buchi neri per pila e per livello del nodo (max +30%).
+  Il Vortex parte con nemici entro max(portata 260 px, percorso): comportamento invariato. **[deciso]** (Marco) · valori **[Claude] [da rivedere]** (da misurare con i bot)
 - Laser (revisione 2): Raggi penetranti = a ogni attivazione, ogni nemico toccato ha il 30% di subire tutto il danno del laser senza resistenze
   (anche dalla spazzata); senza resistenza non cambia nulla  **[Claude]**
 - Beam (revisione 2): Ramificazione estesa = 3 ramificazioni invece di 2  **[Claude]**
@@ -490,7 +508,7 @@ audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
   Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
   leggendario rosso `#ff4d6a`, ancestrale iridescente.
 - **Obiettivo di bilanciamento** **[deciso]**: l’equipaggiamento deve essere **premiante** e aiutare a superare i muri: con l’equipaggiamento atteso
-  i muri dal 40 in poi passano dal **30% circa al 50-70%** di vittorie dei bot (fascia accettata da Marco nella taratura 1.11.0, per non alzare troppo la difficoltà). La curva dal 31 (§ 5) quindi non va rialzata fino a riassorbire tutto l’equipaggiamento.
+  i muri dal 40 in poi passano dal **30% circa al 50-70%** di vittorie dei bot (fascia accettata da Marco nella taratura 1.11.0, per non alzare troppo la difficoltà). Dalla 1.14.2 **[deciso]** conta solo la **soglia minima del 50%**: sopra il 70% va bene (Marco: “non deve essere un sistema punitivo”; chi fa farming e ha equipaggiamento alto prima del tempo deve sentirlo). Le misure con i bot controllano solo che i muri non scendano sotto il 50%, con campioni leggeri. La curva dal 31 (§ 5) quindi non va rialzata fino a riassorbire tutto l’equipaggiamento.
 - **Inventario** **[deciso]**: **nessun limite** a pezzi e Moduli (servono per le fusioni); un oggetto si può scartare a mano, senza compenso.
 - **Blocco** **[deciso]** (Marco): ogni pezzo e Modulo si blocca **per esemplare** con un lucchetto, per non scartarlo né fonderlo per sbaglio. Gli esemplari uguali restano raggruppati:
   bloccando uno di 5 guanti rari la riga si divide in 1 bloccato + 4; il lucchetto della riga da 4 ne blocca un altro (2 + 3). Il lucchetto di una riga bloccata sblocca un esemplare
@@ -527,7 +545,7 @@ così per renderlo certo servono due Moduli ancestrali. **[deciso]**
 | 7 | Cadenza di fuoco −X% (intervallo più breve tra una salva e l’altra) | 2 |
 | 8 | Le salve del guardiano allungano del X% la durata dei debuff (una sola volta per nemico con uno stato) | 2 |
 | 9 | +X% danni per ogni Modulo installato | 2 |
-| 10 | Immunità ai primi X danni e contrattacco pari al X% del danno del guardiano per i primi X colpi nemici | 1 |
+| 10 | Riduzione del X% del danno subito dalla barriera a ogni colpo e contrattacco pari al X% del danno del guardiano per i primi X colpi nemici | 1 |
 | 11 | Barriera +X vita e danno subito dalla barriera −X | 3 |
 | 12 | Danni −/+X% e +X% danni per ogni carta scelta in battaglia | 2 |
 | 13 | +X% danni ai nemici vicini alla barriera | 3 |
@@ -566,7 +584,7 @@ Ogni pezzo ha un pool di **9 effetti**: **1 esclusivo** e 8 condivisi con altri 
 | Guanti | 20 (% vita massima) | 1, 6, 7, 8, 17, 19, 25, 26 |
 | Testa | 22 (4 carte tra cui scegliere) | 2, 3, 9, 12, 18, 21, 27, 29 |
 | Nucleo | 30 (torrette dal lv2) | 3, 9, 21, 23, 25, 27, 28, 29 |
-| Armatura | 10 (immunità e contrattacco) | 5, 11, 12, 13, 15, 16, 24, 28 |
+| Armatura | 10 (riduzione danni e contrattacco) | 5, 11, 12, 13, 15, 16, 24, 28 |
 | Stivali | 14 (immunità sotto il 20%) | 5, 6, 8, 11, 13, 15, 16, 26 |
 
 Criterio: arma e guanti per l’attacco del guardiano, armatura e stivali per barriera e difesa, testa per le carte, nucleo per le torrette.
@@ -591,7 +609,7 @@ dare direttamente rarità alte).
 | 7 | Cadenza del guardiano | −3% | −5% | −8% | −11% | −15% |
 | 8 | Durata dei debuff | +10% | +18% | +27% | +38% | +50% |
 | 9 | Danni per Modulo installato | +0,3% | +0,5% | +0,7% | +0,9% | +1,2% |
-| 10 | Immunità ai primi danni / contrattacco / colpi | 5 / 50% / 3 | 8 / 100% / 4 | 12 / 150% / 5 | 16 / 200% / 6 | 20 / 300% / 8 |
+| 10 | Riduzione danno per colpo / contrattacco / colpi | 5% / 50% / 3 | 8% / 100% / 4 | 12% / 150% / 5 | 16% / 200% / 6 | 20% / 300% / 8 |
 | 11 | Vita barriera (% della base) / danno subito | +8% / −3% | +15% / −5% | +25% / −8% | +35% / −11% | +50% / −15% |
 | 12 | Danni / per carta scelta | −10% / +0,4% | −6% / +0,6% | −3% / +0,8% | +2% / +1% | +5% / +1,2% |
 | 13 | Danni ai nemici vicini alla barriera | +5% | +9% | +14% | +20% | +28% |
@@ -616,7 +634,9 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - Vicino alla fortezza (5) e alla barriera (13): entro 80 px dalla barriera. Il 5 conta al massimo 10 nemici.
 - Cadenza (7): riduce l’intervallo tra le salve (0,15 s → 0,1275 s con un ancestrale). Sta su arma e guanti: al massimo −30% con due ancestrali.
 - Durata dei debuff (8): un solo allungamento per nemico e per stato, alla prima salva che lo colpisce mentre ha lo stato.
-- Immunità ai primi danni (10): la barriera ignora i primi X danni della battaglia; i primi colpi nemici ricevono il contrattacco, una volta per battaglia.
+- Riduzione per colpo (10): ogni colpo nemico alla barriera fa X% di danno in meno (si somma alla riduzione di albero, META e Modulo 11, con un **tetto del 50% sul totale**);
+  i primi N colpi nemici ricevono il contrattacco, una volta per battaglia. I numeri del contrattacco sono ciano.
+  **[deciso]** (Marco: riduzione permanente a ogni colpo, non un pool; tetto 50%) · percentuale al posto del valore fisso, stessi X, tetto condiviso, numeri ciano **[Claude]** (da misurare)
 - Barriera (11): vita e riduzione in **percentuale**, così restano utili anche quando i nemici fanno più danno. Sta su armatura e stivali: con
   due ancestrali la vita raddoppia (100 → 200 oggi) e il danno subito scende del 30%. Prima proposta (+5…+30 di vita, −0,1…−0,5 per colpo)
   scartata: al livello 50 un asteroide all’ondata 20 fa circa 15 di danno e −0,5 era quasi nulla.
@@ -656,7 +676,9 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - 1 critico: per ogni proiettile del guardiano che colpisce (anche ventaglio e clone), danno ×1,5. 3: torrette in campo in quel momento (max 4).
     5 e 13: nemici entro 80 px dal bordo della cupola (5: al massimo 10). 12: “carte scelte” = **tutte** le carte prese nella partita, anche quelle dei mini-boss **[deciso]** (Marco, 1.10.1).
   - 7: intervallo tra le salve × (1 − X). 8: alla prima salva che colpisce un nemico con uno stato (rallentamento, indebolimento, vulnerabilità, bruciatura, paralisi), una volta per stato.
-  - 10: i primi X danni della partita alla cupola sono ignorati; i primi N colpi nemici ricevono un contrattacco physical pari a X% del danno del guardiano (con i suoi bonus).
+  - 10: ogni colpo alla cupola è ridotto del X%; i primi N colpi nemici ricevono un contrattacco physical pari a X% del danno del guardiano (con i suoi bonus).
+    Testo del Modulo (1.14.2) “Barriera: danno −X%, contrattacco Y% ×N” **[Claude]** (la forma del brief, “Danno alla barriera −X% · …”, supera i 46 caratteri dei testi dei Moduli).
+    Numeri del contrattacco: ciano #7fe8ff, 16 px invece di 12, durata 1,2 s invece di 0,7 (stesso limite di 60 numeri).
   - 14: una volta per partita, quando la vita scende sotto il 20%. 16: anche il boss finale, al massimo 4 volte.
   - 19: esplosioni dei Colpi esplosivi del guardiano. 20: il primo proiettile di ogni salva, sul primo nemico che colpisce (senza probabilità), al massimo 2× il danno del colpo.
   - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero. 22: a ogni ondata, 4 carte più basse; tasto 4.
@@ -688,6 +710,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Struttura** **[deciso]**: una schermata con tre sezioni: **Barriera**, **Guardiano**, **Torrette** (con una sezione condivisa per tipo). Regola dei livelli (proposta di Marco): un nodo non supera il livello del nodo da cui dipende.
 - **Tetti** **[deciso]** il principio, valori **[Claude] [da rivedere]**: hanno un tetto sul totale (equip + albero) solo la **riduzione del cooldown delle abilità** e la **riduzione del danno subito**.
   Il tetto sta sopra il massimo dell’equipaggiamento (cooldown −50%, danno −30%), così i nodi dell’albero servono anche a chi ha l’equip massimo. Nessuna abilità dura quanto il suo cooldown minimo. Gli altri bonus (danni di tipo, ecc.) non hanno tetto.
+  Tetto sul totale della riduzione del danno subito: **50%** **[deciso]** (Marco; prima 40%, `TREE_CAP.red`). Il tetto del cooldown delle abilità resta com’è.
 
 ### Barriera
 - **Spina** **[deciso]** (schema): Vita % → Riduzione danno. Da lì due rami.
@@ -772,7 +795,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   5 per un nodo da 5 livelli, 50 per uno da 20 (1.7.0; prima L Sigilli per il livello L). Regola dei livelli applicata: un nodo non supera
   il livello dei nodi da cui dipende (es. Riduzione danno al 2 solo con Vita % almeno al 2).
 - **Carte standard delle torrette** (3 nodi per torretta: **Danno maggiorato fino al 20**, le altre fino al 5): con il nodo al livello L, per ogni pila della carta:
-  bonus in % (danno, raggio, durata, altezza, percorso) ×(1 + 0,4·L), fino a ×3 al 5 e ×9 al 20 (Danno maggiorato da +25% a +75% per pila al 5, +225% al 20);
+  bonus in % (danno, raggio, durata, altezza; per la Gravity Vortex Gun “Percorso più lungo” non è moltiplicato: il nodo dà +2% di danno dei buchi neri per pila e livello) ×(1 + 0,4·L), fino a ×3 al 5 e ×9 al 20 (Danno maggiorato da +25% a +75% per pila al 5, +225% al 20);
   ricarica (Ricarica ridotta, la parte “ricarica” di Più rapido) ×(1 + 0,2·L) (−12% → −24% per pila);
   bonus a numero (+1 perforazione della Railgun, Più colpi dell’Hive) ×(1 + 0,4·L) arrotondato (Railgun 1 → 3, Hive 2 → 6);
   malus (+1 missile, sfera, drone, proiettile, rimbalzo) −1/3 per livello: zero al 3, poi diventa bonus (−15% → +10% al 5; Laser −20% → +13,3%).
@@ -811,7 +834,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   **Finale** (1,2, scalino 3, `FINAL_BOSS_K` del § 5; 200 partite per muro): 40 69,5 · 50 45,0 · 60 45,5 · 70 73,0 · 80 57,0 · 90 41,5 · 100 48,5 · 110 53,5 · 120 74,5 · 130 72,5 ·
   140 45,0 · 150 55,0 · 160 61,5 · 170 73,0 · 180 71,0 · 190 50,5 · 200 71,0: **media 59,3%**. Con le mine nuove (doppie, al massimo 25).
 - **Taratura 1.11.0, con l’equipaggiamento atteso** (`EQUIP=1.5 node tests/tools/curva.js …`; equipaggiamento da `tests/tools/equip-atteso.js`: drop veri per 1,5 vittorie
-  per livello dal 30, poi fusioni, pezzo più raro e Moduli migliori; al 40 guardiano +29%, al 100 +97%, al 200 +152%). Obiettivo **[deciso]**: muri dal 40 tra il 50 e il 70%.
+  per livello dal 30, poi fusioni, pezzo più raro e Moduli migliori; al 40 guardiano +29%, al 100 +97%, al 200 +152%). Obiettivo **[deciso]**: muri dal 40 almeno al 50% (fino alla 1.14.1 era “tra il 50 e il 70%”; il tetto è stato tolto, vedi § 15).
   Con la curva della 1.8.0 i muri dal 40 al 200 erano al **93%** (40 82% · 100 99% · 170-200 98-100%). Prove (100 partite per muro, 40/70/100/140/200): pendenza 0,5 →
   71/67/87/45/82 · 0,8 → 73/59/76/16/45 · 1,2 → 60/33/51/4/4; pendenza 0,65 su tutti i muri: media 64%; 0,7 con tre boss corretti: 70,8%.
   **Finale** (pendenza 0,8, scalino 2, `FINAL_BOSS_K`; 200 partite per muro, 400 al 140 e al 150): 40 67,5 · 50 64,0 · 60 71,0 · 70 59,0 · 80 63,0 · 90 55,0 · 100 65,5 ·
@@ -828,6 +851,13 @@ Regole di calcolo **[Claude] [da rivedere]**:
   Il 50 scendeva sotto la fascia del 50-70% (§ 15). Prove (200 partite ciascuna, muro 50): Riduzione danno senza maggiore 24,0% (40: 75,5%); maggiore dal livello 2 di ogni nodo
   24,5% (40: 71,5%); solo nemici ×0,85 / ×0,75 32,0 / 35,0%; solo boss finale ×0,7 / ×0,55 29,5 / 38,5%; nemici ×0,8 + boss ×0,55 66,5%; **nemici ×0,85 + boss ×0,6 60,0%**.
   **Correzione [deciso]** (Marco, proposta di Claude): costi della barriera invariati, al muro 50 `WALL_ENEMY_HP` 0,85 e `FINAL_BOSS_K` 0,6 → **50 60,0%**, 40 invariato (65,5%).
+  **Misura 1.14.2** (portata dal centro in basso, Vortex revisione 3, Modulo 10 in riduzione %, tetto 50%; `EQUIP=1.5 node tests/tools/curva.js L 100`, 100 partite per bot, random / smart, 1.14.1 → 1.14.2):
+  40 **64 / 67 → 56 / 62** · 50 **52 / 68 → 55 / 55** · 100 **53 / 60 → 58 / 48**. Il 100 (smart) scendeva sotto la soglia minima del 50%:
+  **correzione [deciso]** (Marco: “ritara il 100”), `FINAL_BOSS_K[100]` 0,75 → **0,65** → **58,3 / 53,3%** (60 partite per bot). Equipaggiamento con il Modulo 10 Epico (+12% riduzione, contrattacco 150% ×5):
+  50 63 / 64 · 100 61 / 46; senza Modulo 10 e con il tetto al 40% gli stessi numeri del codice nuovo (il bot non ha il Modulo 10 e non arriva al tetto).
+  Modulo 10 (60 partite, bot con il Modulo): al 50 riduzione totale media 17,0%, danno risparmiato 12,6%, 6,4 contrattacchi per partita; al 100 43,0%, 17,4%, 8,1.
+  Muri 10/20/30 (`calib2.js`, 400 partite per bot, random / smart, 1.14.1 → 1.14.2): 10 **123 / 157 → 133 / 153** · 20 **105 / 158 → 117 / 144** · 30 **126 / 163 → 118 / 164**: intorno al 30-40%, invariati.
+  Senza la regola “un level up per entità” stessi numeri, partita per partita: un’entità offre level up solo dopo 3 carte e di solito ne ha uno solo idoneo, quindi la regola scatta di rado.
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.
@@ -857,5 +887,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
     Repulsiva spinta 50 → 130 px (solo i nemici vicini alla barriera, metà schermo) · Congelante −25 → −45%, gas 8 s alto 60 → 140 px · Riflettente 30 → 70% del danno per 4 → 8 s
     (danno force) · Ustionante 5 → 9 s, bruciatura di 3 s a 6 al secondo o al valore della torretta di fuoco più forte (Sky Guard: Missili incendiari; Firewheel: scia) ·
     Minata 4 → 8 mine sul bordo · Potenziante +15 → +40% per 6 → 10 s. Il nodo Riduzione cooldown e il suo tetto valgono per tutte; Impenetrabile non scende sotto i 20 s.
+  - **Testi degli effetti** **[deciso]** (Marco): ogni descrizione che ha un valore, una durata o un cooldown lo riporta. Per le abilità della barriera il testo mostra il **cooldown effettivo**,
+    cioè quello base (40 s) con le riduzioni di albero ed equipaggiamento già applicate (“ogni 34 s”). Le descrizioni possono occupare due righe in tutto l’albero e nella guida.
+    L’attesa della Rigenerazione (2 × durata) non è ridotta dal nodo cooldown, e il testo mostra il valore reale. **[deciso]** (Marco). Testi delle abilità **[Claude]**:
+    “sotto il 40%: 2%/s per 5 s, ×1 · attesa 10 s” · “una volta: la vita torna al 20%” · “scudo ogni 40 s” · “spinta 50 px · ogni 40 s” · “nemici −25% danno, 60 px, 8 s · ogni 40 s” ·
+    “30% per 4 s · ogni 40 s” · “brucia 5 s · ogni 40 s” · “4 mine · ogni 40 s” · “+15% per 6 s · ogni 40 s” (livello 1, senza riduzioni). Fuori partita il cooldown si calcola
+    dall’equipaggiamento attuale. Nell’albero la descrizione va su due righe solo se non sta in una (a capo prima di “→ livello successivo”). Le descrizioni delle carte senza numero
+    sono elencate in `docs/proposte-testi.md`, **da approvare** (non applicate).
   - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
   - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).

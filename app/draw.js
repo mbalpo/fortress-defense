@@ -487,12 +487,20 @@ function overlay(title, lines, color, y0) {
 function menuTitle() { dim(0.8); txt("PLANET DEFENSE", W / 2, 70, 28, "#e8eefc", "center", "800"); }   // velo e titolo (aggancio HD-2D)
 function menuScreen() {
   menuTitle();
-  txt("Livelli completati: " + progress.cleared + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
-  button(36, 130, 56, 56, "−", () => { selLevel = Math.max(1, selLevel - 1); }, { size: 26 });
-  button(268, 130, 56, 56, "+", () => { selLevel = Math.min(maxSelectable(), selLevel + 1); }, { size: 26 });
-  button(100, 128, 160, 60, "", openLevels, { fill: "rgba(18,30,58,0.6)", stroke: "#2c4272" });   // tocco: griglia dei livelli (1.12.3)
-  txt("Livello " + selLevel + " ▦", W / 2, 150, 22, "#e8eefc", "center", "800");
-  txt("difficoltà " + diffOf(selLevel, false) + (epicUnlocked() ? " · Epica " + diffOf(selLevel, true) : ""), W / 2, 176, 11, "#6f82ad", "center", "500");
+  const eu = epicUnlocked(), mm = eu ? menuMode : "standard", ml = selOf(mm);   // selettore della modalità attiva (Epica: numerazione propria, 1.14.2)
+  txt("Livelli completati: " + progress.cleared + (eu ? " · Epica " + progress.clearedEpic : "") + " · torri fino al lv " + towerCap(), W / 2, 104, 12, "#9fb4d9", "center", "500");
+  button(36, 130, 56, 56, "−", () => setSel(mm, ml - 1), { size: 26 });
+  button(268, 130, 56, 56, "+", () => setSel(mm, ml + 1), { size: 26 });
+  if (eu) {                                      // striscia in basso: Standard ⇄ Epica (prima del riquadro, così vince il tocco)
+    button(100, 166, 160, 22, "", () => { menuMode = mm === "epic" ? "standard" : "epic"; }, { fill: "rgba(0,0,0,0)", stroke: "rgba(0,0,0,0)" });
+    button(100, 128, 160, 60, "", openLevels, { fill: "rgba(18,30,58,0.6)", stroke: mm === "epic" ? "#ff7a3d" : "#2c4272" });
+    txt("Livello " + ml + " ▦", W / 2, 148, 22, "#e8eefc", "center", "800");
+    txt((mm === "epic" ? "Epica" : "Standard") + " · difficoltà " + diffOf(ml, mm === "epic") + "  ⇄", W / 2, 177, 11, mm === "epic" ? "#ff9a66" : "#9fb4d9", "center", "600");
+  } else {
+    button(100, 128, 160, 60, "", openLevels, { fill: "rgba(18,30,58,0.6)", stroke: "#2c4272" });   // tocco: griglia dei livelli (1.12.3)
+    txt("Livello " + ml + " ▦", W / 2, 150, 22, "#e8eefc", "center", "800");
+    txt("difficoltà " + diffOf(ml, false), W / 2, 176, 11, "#6f82ad", "center", "500");
+  }
   const r = suspended;
   if (r) {                                       // partita in sospeso (1.14.0): Continua sopra “Standard”, al posto delle istruzioni
     button(60, 196, 240, 50, "", continueRun, { stroke: "#ffd166", fill: "rgba(255,209,102,0.12)" });
@@ -503,10 +511,9 @@ function menuScreen() {
     txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
   }
   const ask = (m) => r && runArm === m;          // secondo tocco: sostituisce la partita in sospeso
-  button(60, 254, 240, 46, ask("standard") ? "Sostituire la partita in sospeso?" : "Standard", () => startOrArm("standard"),
+  button(60, 254, 240, 46, ask("standard") ? "Sostituire la partita in sospeso?" : eu ? "Standard · livello " + selLevel : "Standard", () => startOrArm("standard"),
     { size: ask("standard") ? 13 : 16, stroke: ask("standard") ? "#ffd166" : "#3fe0a0", color: ask("standard") ? "#ffd166" : "#e8eefc" });
-  const eu = epicUnlocked();
-  button(60, 306, 240, 46, ask("epic") ? "Sostituire la partita in sospeso?" : eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
+  button(60, 306, 240, 46, ask("epic") ? "Sostituire la partita in sospeso?" : eu ? "Epica · livello " + selEpic + " (diff. " + diffOf(selEpic, true) + ")" : "Epica · si sblocca al livello " + CAMPAIGN.epicUnlock,
     () => { if (eu) startOrArm("epic"); }, { size: ask("epic") ? 13 : eu ? 16 : 12, stroke: ask("epic") ? "#ffd166" : eu ? "#ff7a3d" : "#2c3a5f", color: ask("epic") ? "#ffd166" : eu ? "#e8eefc" : "#6f82ad" });
   const to = treeOpen(), go = gearOpen();
   button(60, 358, 116, 36, to ? "Albero " + progress.seals + "◆" + (progress.majors ? " " + progress.majors + "✦" : "") : "Albero · liv " + CAMPAIGN.sealsFrom, openTree,
@@ -547,7 +554,7 @@ function wonScreen() {
   sl.forEach((l, i) => txt(l, W / 2, 282 + i * 18, i ? 11 : 13, i ? "#9fb4d9" : "#c9a2ff", "center", i ? "500" : "700"));
   const gy = 282 + sl.length * 18 - (sl.length ? 6 : 12);                // equipaggiamento preso, sotto i Sigilli
   const dy = (sl.length ? 18 * sl.length + 8 : 0) + gearChips(gy);       // i pulsanti scendono sotto Sigilli e oggetti
-  const more = mode === "standard" && campLevel < CAMPAIGN.maxLevel;
+  const more = campLevel < CAMPAIGN.maxLevel;     // anche in Epica, con il suo contatore (1.14.2)
   button(60, 300 + dy, 240, 48, more ? "Livello " + (campLevel + 1) : "Rigioca", nextOrRetry, { size: 16, stroke: "#3fe0a0" });
   if (more) button(60, 360 + dy, 240, 48, "Rigioca il livello " + campLevel, retry, { size: 14 });
   button(60, (more ? 420 : 360) + dy, 240, 48, "Menu", toMenu, { size: 14 });
@@ -611,13 +618,19 @@ function treeNodeRow(n, y, x0, w0) {
   const st = nodeState(n), L = nodeLv(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
   const full = st === "max", stroke = full ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
   button(X, y, Wd, 40, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
-  txt(n.name, X + 10, y + 13, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
+  const name = (ny) => txt(n.name, X + 10, ny, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
   let sub = n.sub, subC = "#6f82ad";
   if (n.kind === "level" || n.kind === "ability") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
   if (armed) { sub = "Tocca di nuovo per spendere " + costLabel(n); subC = "#ffd166"; }
   else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" || n.kind === "ability" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
   else if (full && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
-  fitTxt(sub, X + 10, y + 29, Wd - 20 - tw(costLabel(n), 12, "700") - 8, 10, subC, "left", "500");
+  // descrizione su una riga o, se non ci sta, su due (1.14.2): a capo prima di “→ livello successivo”, altrimenti tra le parole
+  const sw = Wd - 20 - tw(costLabel(n), 12, "700") - 8;
+  if (tw(sub, 10, "500") <= sw) { name(y + 13); txt(sub, X + 10, y + 29, 10, subC, "left", "500"); }
+  else {
+    const k = sub.indexOf(" → "), two = k > 0 ? [sub.slice(0, k), sub.slice(k + 1)] : wrap(sub, sw, 9.5);
+    name(y + 10); fitTxt(two[0], X + 10, y + 23, sw, 9.5, subC, "left", "500"); fitTxt(two.slice(1).join(" "), X + 10, y + 33, sw, 9.5, subC, "left", "500");
+  }
   if (n.max > 1) txt(L + "/" + n.max, R - 44, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
   if (full) txt("✓", R - 12, y + 20, 15, "#3fe0a0", "right", "800");
   else txt(costLabel(n), R - 10, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : nodeMCost(n) ? "#ffd166" : "#c9a2ff", "right", "700");
@@ -920,12 +933,12 @@ function levelsScreen() {
   const eu = epicUnlocked();
   [["standard", "Standard", "#3fe0a0"], ["epic", eu ? "Epica (difficoltà +" + CAMPAIGN.epicOffset + ")" : "Epica · dal livello " + CAMPAIGN.epicUnlock, "#ff7a3d"]].forEach(([id, label, c], i) => {
     const on = lvMode === id, off = id === "epic" && !eu;
-    button(16 + i * 168, 46, 160, 30, label, () => { if (!off) lvMode = id; },
+    button(16 + i * 168, 46, 160, 30, label, () => { if (!off && lvMode !== id) lvTab(id); },
       { size: 12, fill: on ? "rgba(63,224,160,0.12)" : "rgba(18,30,58,0.92)", stroke: on ? c : "#2c4272", color: off ? "#5f7299" : on ? "#e8eefc" : "#9fb4d9" });
   });
   const pages = Math.ceil(CAMPAIGN.maxLevel / 50);
   for (let i = 0; i < pages; i++) {
-    const on = lvPage === i, open = i * 50 + 1 <= maxSelectable();
+    const on = lvPage === i, open = i * 50 + 1 <= maxSelectable(lvMode);
     button(16 + i * 84, 82, 80, 26, (i * 50 + 1) + "-" + Math.min(CAMPAIGN.maxLevel, i * 50 + 50), () => { lvPage = i; },
       { size: 11, fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#7fa0e0" : "#2c4272", color: open ? (on ? "#e8eefc" : "#9fb4d9") : "#5f7299" });
   }
@@ -934,7 +947,7 @@ function levelsScreen() {
   for (let i = 0; i < 50; i++) {
     const lv = lvPage * 50 + i + 1; if (lv > CAMPAIGN.maxLevel) break;
     const x = 12 + (i % 5) * 68, y = 144 + Math.floor(i / 5) * 43;
-    const open = lv <= maxSelectable(), done = lvMode === "epic" ? progress.claims.includes("e" + lv) : lv <= progress.cleared;
+    const open = lv <= maxSelectable(lvMode), done = lv <= (lvMode === "epic" ? progress.clearedEpic : progress.cleared);
     const st = sealStatus(lvMode, lv), dimmed = !open || (lvFilter && !sealsOpen(lvMode, lv)), sel = lv === lvSel;
     button(x, y, 64, 40, "", () => pickLevel(lv), { stroke: sel ? "#ffd166" : !open ? "#1c2a4a" : done ? "#3fe0a0" : "#7fa0e0",
       fill: sel ? "rgba(255,209,102,0.16)" : dimmed ? "rgba(10,16,32,0.6)" : "rgba(18,30,58,0.92)" });
@@ -944,7 +957,7 @@ function levelsScreen() {
     else if (done) txt("✓", x + 32, y + 29, 11, "#3fe0a0", "center", "800");
   }
   fitTxt("◆ preso · ◇ da prendere (1° completamento, cupola al 100%) · giallo: muro", W / 2, 579, 336, 10, "#8a9ac0", "center", "500");
-  const can = lvSel <= maxSelectable() && (lvMode === "standard" || eu);
+  const can = lvSel <= maxSelectable(lvMode) && (lvMode === "standard" || eu);
   button(16, 590, 328, 40, "Gioca il livello " + lvSel + " · " + (lvMode === "epic" ? "Epica" : "Standard"), playLevel,
     { size: 14, stroke: can ? (lvMode === "epic" ? "#ff7a3d" : "#3fe0a0") : "#2c3a5f", color: can ? "#e8eefc" : "#6f82ad" });
 }
@@ -1054,7 +1067,7 @@ function unlockScreen() {                       // avviso di sblocco sopra la sc
   button(90, y0 + h - 60, 180, 44, "Ho capito", closeUnlocks, { size: 15, stroke: "#ffd166" });
 }
 function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
-  ctx.globalAlpha = clamp(f.life / 0.7, 0, 1); txt(f.txt, f.x, f.y, 12, f.color, "center", "700");
+  ctx.globalAlpha = clamp(f.life / (f.max || 0.7), 0, 1); txt(f.txt, f.x, f.y, f.size || 12, f.color, "center", "700");   // contrattacco: più grande (1.14.2)
 }
 // punti di aggancio della grafica HD-2D (app/draw-hd2d.js li sostituisce): cielo, mondo della battaglia, fondo dei menu
 function drawSky() {
@@ -1105,6 +1118,23 @@ function draw() {
   else if (state === "gear") gearScreen();
   else if (state === "levels") levelsScreen();
   else if (state === "guide") guideScreen();
+  if (rangeShow && (state === "play" || state === "pause")) drawRange();   // raggio d’azione al tocco: sopra tutto, anche in pausa
+}
+// raggio d’azione di una torretta toccata (1.14.2): arco centrato dove parte il guardiano (come la portata nella logica), rosso come il profilo della barriera, trasparente alla base e più visibile in cima;
+// oltre 500 px niente arco, solo un velo rosso su tutto lo schermo con la stessa sfumatura. Entra in 0,15 s ed esce in 0,3 s.
+function drawRange() {
+  const q = rangeShow, s = slots[q.i]; if (!s) return;
+  const age = rtime - q.t0, a = clamp(Math.min(age / 150, (RANGE_TAP.show - age) / 300), 0, 1); if (a <= 0) return;
+  const x = RANGE_FROM.x, y = RANGE_FROM.y, r = rangeReach(s), top = Math.max(0, y - r);   // portata misurata dal punto di partenza del guardiano
+  const grad = (k) => { const g = ctx.createLinearGradient(0, y, 0, top); g.addColorStop(0, "rgba(255,72,72,0)"); g.addColorStop(1, "rgba(255,72,72," + k + ")"); return g; };
+  ctx.save(); ctx.globalAlpha = a;
+  if (r > RANGE_TAP.veil) { ctx.fillStyle = grad(0.32); ctx.fillRect(0, 0, W, y); }
+  else {
+    ctx.beginPath(); ctx.rect(0, 0, W, y); ctx.clip();                    // solo sopra la torretta, tagliato ai bordi dello schermo
+    ctx.beginPath(); ctx.arc(x, y, r, Math.PI, Math.PI * 2); ctx.closePath(); ctx.fillStyle = grad(0.14); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, r, Math.PI, Math.PI * 2); ctx.lineWidth = 2.5; ctx.strokeStyle = grad(0.6); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 /* ---------- TORRETTE CON DISEGNO PROPRIO, PROIETTILI ED EFFETTI ---------- */

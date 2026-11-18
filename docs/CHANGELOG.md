@@ -3,6 +3,35 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.14.2 — Epica separata, portata dal centro, raggio al tocco, Vortex rev. 3, Modulo 10 in %, testi delle abilità
+
+- **Epica con avanzamento separato** (Marco): nuovo campo `clearedEpic`; il livello 1 di Epica ha difficoltà 31. Selettore e griglia dei livelli separati da Standard
+  (striscia “Standard ⇄ Epica” nel menu dal livello 50, schede nella griglia); “Livello successivo” anche dopo una vittoria in Epica; frecce da tastiera sulla modalità del menu.
+  `SAVE_VERSION` 6: `clearedEpic` migrato dal livello più alto tra le chiavi `e<N>` dei premi riscossi.
+- **Un solo level up per entità in ogni offerta** (`rollOptions`, anche per il guardiano). Con i bot scatta di rado: un’entità offre level up solo dopo 3 carte.
+- **Gravity Vortex Gun, revisione 3**: “Percorso più lungo” +20% per pila, base 253 px (`vortexLen`, `vortexReach`); il nodo dell’albero dà danno +2% per pila e per livello
+  del nodo invece di allungare il percorso. § 8 rigenerato con `npm run design-lists`.
+- **Modulo 10**: riduzione del danno per colpo in % invece del pool di danni ignorati (5/8/12/16/20%, contrattacco 50-300% ×3-8); `TREE_CAP.red` 0,4 → 0,5; tolto `gearAbsorb`.
+  Numeri del contrattacco in ciano `#7fe8ff`, più grandi (16) e più lunghi (1,2 s). Testo accorciato in “Barriera: danno −X%, contrattacco Y% ×N” per stare nei 46 caratteri [Claude].
+- **Testi delle abilità**: cooldown effettivo (equipaggiamento e albero) nei testi per livello; descrizioni su due righe nell’albero e nella guida.
+  Scansione delle descrizioni senza numero: 74 proposte in `docs/proposte-testi.md`, **da approvare** (non applicate).
+- **Portata misurata dal centro in basso** **[deciso]** (Marco): tutte le torrette misurano la portata da (180, `GROUND_Y`−30), dove parte il guardiano, anche quelle laterali
+  (`RANGE_FROM`, `inReach` in `pickTargets`, Sky Guard e Hive). Tra i nemici in portata ognuna sceglie il più vicino a sé [Claude].
+- **Raggio d’azione al tocco**: tocco rapido su una torretta (meno di 0,3 s, meno di 10 px) → arco rosso semitrasparente per 2 s, centrato sul punto di partenza della portata;
+  oltre 500 px velo rosso su tutto lo schermo; il Vortex mostra `vortexReach`. Durante l’ondata e in pausa, non nella scelta delle carte; la pressione lunga resta il trascinamento.
+- **Muro 100 ritarato** (Marco): con la portata dal centro il bot smart scendeva al 48%; `FINAL_BOSS_K[100]` 0,75 → 0,65 → 58 / 53% (random / smart, 60 partite per bot).
+- **Obiettivo di bilanciamento** **[deciso]** (Marco): per i muri dal 40 conta solo la soglia minima del 50%; sopra il 70% va bene (il gioco non deve essere punitivo). Misure più leggere.
+- DESIGN.md: § 2 (portata dal centro, raggio al tocco), § 3, § 4 (Epica), § 5 (misure 1.14.2, `FINAL_BOSS_K`), § 8, § 10 (Vortex), § 15 (Modulo 10, soglia minima), § 16 (tetto 50%).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/v1142.js` (Vortex, cooldown effettivo, raggio al tocco, portata dal centro); `schermate.js` (Epica, un level up per entità),
+`equip.js`, `seals.js`, `v114.js` aggiornati ai nuovi valori e alla versione 6 del salvataggio. `npm run screenshots`: nuove 61-71, testi nei bordi.
+**Misure** (§ 5): muri 40/50/100 con l’equipaggiamento atteso, 100 partite per bot: 40 56 / 62 · 50 55 / 55 · 100 58 / 48 → 58 / 53 dopo la correzione;
+Modulo 10: al 50 danno risparmiato 12,6% e 6,4 contrattacchi per partita, al 100 17,4% e 8,1; muri 10/20/30 (400 partite per bot) invariati rispetto alla 1.14.1.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; scene nuove: raggio al tocco, velo, contrattacco, menu Epica).
+
+Checklist: aggiornata (versione 24): aggiunte le prove della 1.14.2 (Epica, raggio al tocco, portata dal centro, Vortex rev. 3, Modulo 10, un level up per entità, testi delle abilità, muro 100), le decisioni da prendere (proposte di testo, migrazione dell’Epica, bersaglio con la portata dal centro) e i riferimenti nuovi; tolte le voci sul percorso del Vortex a 480 px; aggiornati Epica, Modulo 10, tetto al 50% e obiettivo dei muri.
+
 ## Checklist di revisione aggiornata da Claude Code (solo documenti, gioco invariato: resta 1.14.1)
 
 - La checklist su claude.ai era ferma alla 1.2.5. Aggiornata (versione 22 dell’artefatto) con le voci “Checklist” dalla 1.2.0 alla 1.14.1: due sezioni nuove

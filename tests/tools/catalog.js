@@ -168,6 +168,19 @@ function scenes(turretIds) {
       setup: START(45) + " queue = []; enemies.length = 0; " + [[60, 470], [110, 440], [250, 450], [300, 480], [180, 400], [140, 330]].map(([x, y]) => FOE("shell", x, y, {})).join(" ") +
         " fireAbility({ id: 'freeze', v: abVal('freeze', 3) }); fireAbility({ id: 'mines', v: abVal('mines', 3) }); fireAbility({ id: 'reflect', v: abVal('reflect', 1) }); domeShield = 3; __cat.step(40); fireAbility({ id: 'repulse', v: abVal('repulse', 3) });",
       each: "if (Math.random() < 0.01) fireAbility({ id: 'repulse', v: abVal('repulse', 3) });", frames: 12 }, ["FX.domeGas", "FX.domeWave", "FX.domeAura", "FX.shieldCount", "FX.aeroMine"]);
+  // 1.14.2: raggio d’azione al tocco (arco e velo oltre i 500 px), numeri del contrattacco (Modulo 10), menu con l’Epica separata
+  const RANGE = (i) => ` rangeShow = { i: ${i}, t0: rtime - 500 };`, RANGE_EACH = "if (rangeShow) rangeShow.t0 = rtime - 500;";
+  add(1, "raggio-tocco", "Raggio d’azione al tocco", "Tocco rapido su una torretta: arco rosso per 2 s, trasparente alla base. Gravity Vortex Gun con 2 pile di “Percorso più lungo”: raggio di partenza 354 px.",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([null, ["vortex", 2, { len: 2 }]]) + RANGE(1), each: RANGE_EACH, frames: 2 }, ["drawRange"]);
+  add(1, "raggio-tocco-aero", "Raggio d’azione · Aeroblast", "Portata 260 px: arco intero dentro lo schermo.",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([["aero", 1, {}]]) + RANGE(0), each: RANGE_EACH, frames: 2 }, ["drawRange"]);
+  add(1, "raggio-velo", "Raggio d’azione · oltre lo schermo", "Portata oltre 500 px (Sky Guard, Thunderbolt, Laser): niente arco, velo rosso più visibile in alto.",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([null, null, ["sky", 1, {}]]) + RANGE(2), each: RANGE_EACH, frames: 2 }, ["drawRange"]);
+  add(1, "contrattacco", "Contrattacco del Modulo 10", "I primi colpi nemici alla barriera ricevono il contrattacco: numeri ciano, più grandi e più lunghi.",
+    { progress: Object.assign({}, P1, { cleared: 42, gear: { pcs: {}, mods: {}, eq: { armatura: { r: 4, m: [[10, 4]] } } } }), setup: START(42) + " " + CLEAR + " " +
+      [[90, 480], [180, 470], [270, 485]].map(([x, y]) => FOE("brute", x, y, {})).join(" ") + " for (const e of enemies) { domeHit(e); damage(e, 40, 'physical'); }", frames: 6 }, ["drawFloater", "popup"]);
+  add(1, "menu-epica", "Menu con l’Epica", "Dal 50: selettore della modalità attiva (striscia “Standard ⇄ Epica”), Epica con numerazione propria (livello 1 = difficoltà 31).",
+    { progress: { cleared: 50, clearedEpic: 3, seen: ALL_SEEN }, setup: "menuMode = 'epic';", frames: 1 }, ["menuScreen"]);
   add(1, "albero-tipi", "Albero dei Sigilli · Tipi", "Sezione condivisa delle torrette: danno per tipo, di tutte le torrette, durata degli stati.", { progress: PS, setup: "openTree(); treeSel = 'types';", frames: 1 }, ["treeScreen", "treeNodeRow"]);
   // equipaggiamento (DESIGN.md § 15)
   const PG = Object.assign({}, PS, { cleared: 42, gear: { pcs: { "arma:0": 6, "arma:1": 2, "arma:3": 1, "guanti:2": 1 }, mods: { "arma:0:1": 3, "arma:0:2": 1, "arma:0:23": 2, "arma:4:19": 1 },

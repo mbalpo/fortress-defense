@@ -131,7 +131,7 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("unlockNotes = UNLOCKS.slice(0, 1)"); g.frame(); g.save("36-avviso-sblocco-10.png"); }
   { const g = game({ progress: prog, src }); g.w.__ev("selLevel = 37; startRun('standard')"); g.frame(200); g.w.__ev("winLevel()"); g.frame(); g.save("25-vittoria-sigilli.png"); }
   { const g = game({ progress: prog, src }), ev = g.w.__ev;          // 1.14.1: primo completamento con la cupola al 100% (Epica: 3 + 3) e tasto della velocità a 1,5x
-    ev("selLevel = 38; startRun('epic')"); g.frame(200); ev("cycleSpeed()"); g.frame(); g.save("59-velocita-1-5x.png"); ev("cycleSpeed(); cycleSpeed()");
+    ev("selEpic = 38; startRun('epic')"); g.frame(200); ev("cycleSpeed()"); g.frame(); g.save("59-velocita-1-5x.png"); ev("cycleSpeed(); cycleSpeed()");
     ev("domeHp = domeMax; winLevel()"); g.frame(); g.save("60-vittoria-due-sigilli.png"); }
   { // 1.12.2: area in fiamme della Sky Guard, scia di fuoco della Firewheel, colpi dell’Hive per livello (fermati a metà volo)
     const g = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), ev = g.w.__ev;
@@ -182,4 +182,24 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ev("closeGear(); openTree(); treeTab = 'player'; tapReset()"); g.frame(); g.save("57-albero-azzera.png");
     const a = game({ progress: { cleared: 36, seen: ALL_SEEN, seals: 4, majors: 0 }, src });
     a.w.__ev("openTree(); treeTab = 'barrier'; barrierTab = 'abilities'"); a.frame(); a.save("58-albero-abilita-bloccate.png"); }
+  { // 1.14.2: menu con l’Epica separata, abilità con il cooldown effettivo (due righe), raggio d’azione al tocco, contrattacco del Modulo 10
+    const m = game({ progress: { cleared: 50, clearedEpic: 3, seen: ALL_SEEN }, src }), em = m.w.__ev;
+    m.save("61-menu-epica-standard.png"); em("menuMode = 'epic'"); m.frame(); m.save("62-menu-epica.png");
+    em("openLevels()"); m.frame(); m.save("63-livelli-epica.png");
+    const t = game({ progress: { cleared: 45, seen: ALL_SEEN, seals: 40, majors: 2, tree: { "ab:regen": 2, "ab:backup": 1, "ab:impen": 1, "ab:repulse": 3, "ab:freeze": 1, "ab:reflect": 1, "ab:burn": 1, "ab:mines": 5, "ab:power": 1, "barrier:hp": 5, "barrier:red": 2, "barrier:cd": 3 },
+      gear: { pcs: {}, mods: {}, eq: { testa: { r: 4, m: [[15, 4]] } } } }, src });
+    t.w.__ev("openTree(); treeTab = 'barrier'; barrierTab = 'abilities'"); t.frame(); t.save("64-albero-abilita-cooldown.png");
+    t.w.__ev("barrierTab = 'nodes'"); t.frame(); t.save("65-albero-barriera.png");
+    t.w.__ev("barrierTab = 'nodes'; treeTab = 'turrets'; treeSel = 'vortex'"); t.frame(); t.save("66-albero-vortex.png");
+    const r = game({ progress: { cleared: 45, seen: ALL_SEEN }, src }), er = r.w.__ev;
+    er("selLevel = 45; startRun('standard'); queue = []; enemies.length = 0; const v = makeShooter(TURRETS.vortex, SLOT_X[1], GROUND_Y - 14); v.up.len = 2; slots[1] = v; slots[0] = makeShooter(TURRETS.aero, SLOT_X[0], GROUND_Y - 14); slots[2] = makeShooter(TURRETS.sky, SLOT_X[2], GROUND_Y - 14); spawn({ enemy: 'shell', x: 300 }); Object.assign(enemies[0], { x: 300, y: 120, speed: 0, hp: 1e12, maxHp: 1e12 }); for (const s of slots) if (s) s.cd = 1e9;");
+    r.frame(60);
+    const tapAt = (x, y) => { const cv = r.w.document.getElementById("c"); for (const ty of ["pointerdown", "pointerup"]) { const e = new r.w.Event(ty, { bubbles: true, cancelable: true }); e.clientX = x; e.clientY = y; cv.dispatchEvent(e); } };
+    tapAt(144, 570); r.frame(20); r.save("67-raggio-vortex.png");
+    tapAt(72, 570); r.frame(20); r.save("68-raggio-aeroblast.png");
+    tapAt(216, 570); r.frame(20); r.save("69-raggio-velo.png");
+    er("pauseGame()"); tapAt(72, 566); r.frame(20); r.save("70-raggio-in-pausa.png");
+    const c = game({ progress: { cleared: 42, seen: ALL_SEEN, gear: { pcs: {}, mods: {}, eq: { armatura: { r: 4, m: [[10, 4]] } } } }, src }), ec = c.w.__ev;
+    ec("selLevel = 42; startRun('standard'); queue = []; enemies.length = 0; for (const [x, y] of [[90, 470], [180, 460], [270, 475]]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); } for (const e of enemies) { domeHit(e); damage(e, 40, 'physical'); }");
+    c.frame(8); c.save("71-contrattacco.png"); }
 }

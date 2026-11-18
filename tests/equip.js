@@ -33,7 +33,7 @@ console.log("— Inventario e salvataggio versione 3 —");
     ok(JSON.stringify(g.pcs) === '{"arma:2":3}' && JSON.stringify(g.mods) === '{"arma:1:17":2,"nucleo:4:30":1}' && JSON.stringify(g.eq.arma) === '{"r":1,"m":[[17,0],[2,1]]}'
       && !g.eq.testa && JSON.stringify(g.eq.stivali) === '{"r":0,"m":[]}'));
   const save = J(ev, "makeSave()");
-  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 5 && save.progress.gear.pcs["arma:2"] === 3));
+  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 6 && save.progress.gear.pcs["arma:2"] === 3));
   const code = ev("makeCode()"); ev("progress.gear = emptyGear()"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice andata e ritorno: arma", JSON.stringify(J(ev, "progress.gear.eq.arma")), "| salvato:", !!stored().gear.eq.arma, ok(J(ev, "progress.gear.eq.arma").m.length === 2 && stored().gear.pcs["arma:2"] === 3));
   const v2 = JSON.stringify({ game: "fortress-defense", version: 2, progress: { cleared: 40, seen: [], seals: 3, claims: [], tree: {}, loadout: [] }, settings: {} });
@@ -101,15 +101,18 @@ console.log("— Statistiche —");
   console.log("guardiano:", r2(s.pdmg), "| barriera vita", r2(s.hp), "danno subito −" + r2(s.red), "| torrette", r2(s.tdmg), "Force +" + r2(s.type.force),
     "| critico", r2(s.crit), "| proiettili", s.proj, "perforazione", s.pierce, "| 4 carte", s.four, "torrette lv2", s.t2, "| Moduli", s.mods);
   // pdmg: arma 28 + guanti 7 + testa 4 + Modulo 2 (28) + Modulo 4 (−20) + Modulo 17 (+8) + 15 Moduli × 1,2 (Modulo 9) = 73%
-  console.log("conti attesi", ok(r2(s.pdmg) === 0.73 && r2(s.hp) === 0.79 && r2(s.red) === 0.18 && r2(s.tdmg) === 0.26 && r2(s.type.force) === 0.11
-    && s.crit === 0.3 && s.proj === 1 && s.pierce === 1 && s.four === 1 && s.t2 === 1 && s.mods === 15 && s.absorb === 5 && s.counterN === 3 && r2(s.maxHp) === 0.008));
+  console.log("conti attesi", ok(r2(s.pdmg) === 0.73 && r2(s.hp) === 0.79 && r2(s.red) === 0.23 && r2(s.tdmg) === 0.26 && r2(s.type.force) === 0.11
+    && s.crit === 0.3 && s.proj === 1 && s.pierce === 1 && s.four === 1 && s.t2 === 1 && s.mods === 15 && s.counterN === 3 && r2(s.maxHp) === 0.008));
   ev("selLevel = 40; startRun('standard')");
   console.log("in partita: cupola", ev("domeMax"), "(100 × 1,79) | danno subito −" + ev("domeRed()"), "| Sky Guard tb", r2(ev("newTurret('sky', 0).tb")), "(1 + 0,26 + 0 Fire)",
     "| Hive tb", r2(ev("newTurret('hive', 1).tb")), "(+ Force 0,11) | torrette dal lv2:", ev("newTurret('sky', 0).level"),
-    ok(ev("domeMax") === 179 && r2(ev("domeRed()")) === 0.18 && r2(ev("newTurret('sky', 0).tb")) === 1.26 && r2(ev("newTurret('hive', 1).tb")) === 1.37 && ev("newTurret('sky', 0).level") === 2));
-  const capped = fresh(40, { gear: { pcs: {}, mods: {}, eq: { armatura: { r: 4, m: [[11, 4]] }, stivali: { r: 4, m: [[11, 4]] } } }, tree: { "barrier:hp": 1, "barrier:red": 5 } });
+    ok(ev("domeMax") === 179 && r2(ev("domeRed()")) === 0.23 && r2(ev("newTurret('sky', 0).tb")) === 1.26 && r2(ev("newTurret('hive', 1).tb")) === 1.37 && ev("newTurret('sky', 0).level") === 2));
+  const capped = fresh(40, { gear: { pcs: {}, mods: {}, eq: { armatura: { r: 4, m: [[11, 4], [10, 4]] }, stivali: { r: 4, m: [[11, 4]] } } }, tree: { "barrier:hp": 1, "barrier:red": 5 } });
   capped.ev("startRun('standard')");
-  console.log("tetto della riduzione del danno: albero 15% + Moduli 30% →", capped.ev("domeRed()"), ok(capped.ev("domeRed()") === 0.4));
+  const under = fresh(40, { gear: { pcs: {}, mods: {}, eq: { armatura: { r: 4, m: [[11, 4]] }, stivali: { r: 4, m: [[11, 4]] } } }, tree: { "barrier:hp": 1, "barrier:red": 5 } });
+  under.ev("startRun('standard')");
+  console.log("tetto della riduzione del danno: albero 15% + Moduli 11 30% →", r2(under.ev("domeRed()")), "| + Modulo 10 ancestrale 20% →", capped.ev("domeRed()"), "(tetto 50%)",
+    ok(r2(under.ev("domeRed()")) === 0.45 && capped.ev("domeRed()") === 0.5));
 }
 
 console.log("— Effetti in battaglia —");
@@ -147,11 +150,12 @@ console.log("— Effetti in battaglia —");
     return { start: out[0], levels: out.slice(1), lu, ups, done: p.done }; })()`);
   console.log("guardiano dal livello 2: parte", seq.start, "| livello dopo ogni level up", seq.levels.join(" → "), "| level up", seq.lu, "potenziamenti", seq.ups,
     ok(seq.start === 2 && seq.levels.join() === "2,3,3" && seq.lu === 3 && seq.ups === 12 && seq.done));
-  // barriera: Modulo 10 (primi 20 danni ignorati), 14 (immunità sotto il 20%), 16 (cura per boss)
+  // barriera: Modulo 10 (−20% a ogni colpo e contrattacco ai primi 8, numeri ciano), 14 (immunità sotto il 20%), 16 (cura per boss)
   const dome = eqOf({ armatura: { r: 0, m: [[10, 4]] }, stivali: { r: 1, m: [[14, 4], [16, 4]] } }).ev;
   dome("startRun('standard'); enemies = []; queue = []; spawn({ enemy: 'brute', x: 180 }); window.__e = enemies[0]; __e.dmg = 15; __e.hp = 1e9;");
-  const h0 = dome("domeHp"); dome("domeHit(__e)"); const h1 = dome("domeHp"); dome("domeHit(__e)"); const h2 = dome("domeHp");
-  console.log("Modulo 10: vita", h0, "→", h1, "→", h2, "(primi 20 danni ignorati) | contrattacchi rimasti", dome("counterLeft"), ok(h1 === h0 && h2 === h0 - 10 && dome("counterLeft") === 6));
+  const h0 = dome("domeHp"); dome("floaters = []; domeHit(__e)"); const h1 = dome("domeHp"); const fl = J(dome, "floaters[0]"); dome("domeHit(__e)"); const h2 = dome("domeHp");
+  console.log("Modulo 10: vita", h0, "→", h1, "→", h2, "(colpo da 15 → 12) | contrattacchi rimasti", dome("counterLeft"), "| numero", fl.color, "grande", fl.size, "dura", fl.life, "s",
+    ok(Math.abs(h0 - h1 - 12) < 1e-9 && Math.abs(h1 - h2 - 12) < 1e-9 && dome("counterLeft") === 6 && fl.color === "#7fe8ff" && fl.size === 16 && fl.life === 1.2));
   dome("domeHp = domeMax * 0.25; domeHit(__e)"); const imm = dome("domeImmT"), hImm = dome("domeHp"); dome("domeHit(__e)");
   console.log("Modulo 14: sotto il 20% → immune per", imm, "s | colpo durante l’immunità: vita", hImm, "→", dome("domeHp"), ok(imm === 5 && dome("domeHp") === hImm));
   dome("domeImmT = 0; domeHp = 50; spawn({ enemy: 'boss', def: bossDef(40, 5), x: 180 }); const b = enemies[enemies.length - 1]; b.dead = true; update(0.001);");

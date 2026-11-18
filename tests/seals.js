@@ -99,7 +99,7 @@ console.log("— Salvataggio versione 2 —");
   console.log("caricato: Sigilli", ev("progress.seals"), "| premi", ev("progress.claims.join()"), "| nodi", ev("Object.keys(progress.tree).join()"),
     ok(ev("progress.seals") === 5 && ev("progress.claims.join()") === "s31,s31p" && ev("Object.keys(progress.tree).join()") === "sky:burn1"));
   const save = JSON.parse(ev("JSON.stringify(makeSave())"));
-  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 5 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
+  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 6 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
   const v1 = JSON.stringify({ game: "fortress-defense", version: 1, progress: { cleared: 12, seen: [] }, settings: {} });
   const d1 = JSON.parse(ev(`JSON.stringify(parseSave(${JSON.stringify(v1)}))`));
   console.log("versione 1 importata: livelli", d1.cleared, "| Sigilli", d1.seals, "| nodi", Object.keys(d1.tree).length, ok(d1.cleared === 12 && d1.seals === 0 && !Object.keys(d1.tree).length));
@@ -153,7 +153,8 @@ console.log("— Fase 2: nodi a livelli —");
   const ev = fresh(40, { tree: { "barrier:hp": 2, "barrier:red": 2, "barrier:flat": 1, "barrier:ignore": 5, "types:status": 5, "player:fan": 3, "player:std:proj": 3 } }).ev;
   ev("startRun('standard'); queue = []; enemies.length = 0; spawn({ enemy: 'drone', x: 180 })");
   console.log("cupola: vita", ev("domeMax"), "(attesa 100 × 1,2 + 10 = 130) | riduzione", ev("domeRed()"), ok(ev("domeMax") === 130 && Math.abs(ev("domeRed()") - 0.06) < 1e-9));
-  console.log("con META.domeReduction 0,35: riduzione", ev("META.domeReduction = 0.35; domeRed()"), "(tetto 0,4)", ok(ev("domeRed()") === 0.4));
+  console.log("con META.domeReduction 0,35: riduzione", ev("META.domeReduction = 0.35; domeRed()"), "| con 0,5:", ev("META.domeReduction = 0.5; domeRed()"), "(tetto 0,5)",
+    ok(ev("META.domeReduction = 0.35; domeRed()") === 0.41 && ev("META.domeReduction = 0.5; domeRed()") === 0.5));
   const ign = ev("(() => { META.domeReduction = 0; const e = enemies[0]; e.dmg = 1; let n = 0; for (let i = 0; i < 4000; i++) { const h = domeHp; domeHit(e); if (domeHp === h) n++; domeHp = 1e6; } return n / 4000; })()");
   console.log("Ignorare un colpo al 5: colpi ignorati", (ign * 100).toFixed(1) + "% (atteso 10)", ok(Math.abs(ign - 0.1) < 0.02));
   console.log("Durata degli stati al 5: rallentamento di 1 s →", ev("(() => { const e = enemies[0]; e.slowT = 0; slow(e, 1); return e.slowT; })()"), "s", ok(Math.abs(ev("(() => { const e = enemies[0]; e.slowT = 0; slow(e, 1); return e.slowT; })()") - 1.3) < 1e-9));

@@ -792,8 +792,8 @@ drawFortress = function drawFortress() {
   if (domeShield > 0) FX.shieldCount(W - 30, y + 13, domeShield);                // immunità accumulate (Impenetrabile)
 };
 drawFloater = function drawFloater(f) {                       // numero del danno che sale e svanisce (il colore lo sceglie popup() nella logica)
-  ctx.globalAlpha = clamp(f.life / 0.7, 0, 1);                                  // HD-2D: cifre col contorno scuro, come nei giochi di ruolo
-  ctx.font = "800 12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.globalAlpha = clamp(f.life / (f.max || 0.7), 0, 1);                       // HD-2D: cifre col contorno scuro, come nei giochi di ruolo
+  ctx.font = "800 " + (f.size || 12) + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = OUTLINE; ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = f.color; ctx.fillText(f.txt, f.x, f.y);
 };
 drawCrosshair = function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato

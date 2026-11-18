@@ -119,7 +119,7 @@ console.log("— Salvataggio versione 5 —");
   console.log("bloccati oltre i posseduti e righe inesistenti: lock", JSON.stringify(J("progress.gear.lock")), "| equipaggiato", JSON.stringify(J("progress.gear.eq.guanti")),
     ok(JSON.stringify(J("progress.gear.lock")) === '{"arma:0":2,"arma:0:1":1}' && JSON.stringify(J("progress.gear.eq.guanti")) === '{"r":0,"m":[[1,0,1]],"lk":1}'));
   const code = ev("makeCode()"), v = J(`makeSave().version`), back = J(`parseSave(${JSON.stringify(code)}).gear`);
-  console.log("versione", v, "| codice andata e ritorno: lock", JSON.stringify(back.lock), ok(v === 5 && JSON.stringify(back.lock) === '{"arma:0":2,"arma:0:1":1}' && back.eq.guanti.lk === 1));
+  console.log("versione", v, "| codice andata e ritorno: lock", JSON.stringify(back.lock), ok(v >= 5 && JSON.stringify(back.lock) === '{"arma:0":2,"arma:0:1":1}' && back.eq.guanti.lk === 1));
   const old = J(`parseSave(JSON.stringify({ game: "fortress-defense", version: 4, progress: { cleared: 40, gear: { pcs: { "arma:0": 2 }, mods: {}, eq: {} } } })).gear`);
   console.log("versione 4 importata: nessun blocco", JSON.stringify(old.lock), ok(JSON.stringify(old.lock) === "{}" && old.pcs["arma:0"] === 2));
 }
@@ -171,7 +171,7 @@ console.log("— Partita in sospeso e Continua —");
   ev2("resumeGame()"); ev2("pauseGame(); toMenu()");
   console.log("“Abbandona” → partita cancellata", b.win.localStorage.getItem(RUN) === null, "| Continua nel menu", /Continua/.test(screen(b)), ok(b.win.localStorage.getItem(RUN) === null && !/Continua/.test(screen(b))));
   // Sigillo maggiore del boss finale preso a metà ondata: rigiocando l’ondata non si riprende
-  const e = fresh(50, {}, {}); e.ev("selLevel = 40; startRun('epic'); wave = 20; startWave(20); majorDrop({ final: true, x: 100, y: 100 })");
+  const e = fresh(50, { clearedEpic: 45 }, {}); e.ev("selEpic = 40; startRun('epic'); wave = 20; startWave(20); majorDrop({ final: true, x: 100, y: 100 })");
   const maj1 = e.ev("progress.majors"), st = { [PROG]: e.g.win.localStorage.getItem(PROG), [RUN]: e.g.win.localStorage.getItem(RUN) };
   const e2 = makeGame({ patch, cleared: 50, storage: st }); e2.frame(); e2.win.__ev("continueRun(); majorDrop({ final: true, x: 100, y: 100 })");
   console.log("boss finale: maggiori", maj1, "→ dopo Continua e un’altra vittoria sul boss", e2.win.__ev("progress.majors"), ok(maj1 === 1 && e2.win.__ev("progress.majors") === 1));

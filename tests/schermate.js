@@ -22,13 +22,56 @@ console.log("— Griglia dei livelli —");
   console.log("con Sigilli da prendere (31, 32, 33, 20):", open, ok(open === "false,true,true,false"));
   ev("lvPage = 1"); T(); ev("pickLevel(57)"); const sel = ev("lvSel"); ev("pickLevel(52)"); const sel2 = ev("lvSel");
   console.log("livello oltre il massimo (57) → non scelto:", sel !== 57, "| 52 scelto:", sel2, ok(sel !== 57 && sel2 === 52 && ev("state") === "levels"));
-  ev("lvMode = 'epic'"); ev("pickLevel(52)");
-  console.log("secondo tocco sul 52 in Epica → parte:", ev("state"), ev("mode"), ev("campLevel"), ok(ev("state") === "play" && ev("mode") === "epic" && ev("campLevel") === 52));
+  ev("lvTab('epic')"); const es = ev("lvSel"); ev("pickLevel(52)"); const e52 = ev("lvSel"); ev("pickLevel(3)"); ev("pickLevel(4)"); ev("pickLevel(4)");
+  console.log("Epica (3 completati): scelto all’apertura", es, "| 52 non selezionabile:", e52 !== 52, "| secondo tocco sul 4 → parte:", ev("state"), ev("mode"), ev("campLevel"), "difficoltà", ev("curDiff()"),
+    ok(es === 4 && e52 !== 52 && ev("state") === "play" && ev("mode") === "epic" && ev("campLevel") === 4 && ev("curDiff()") === 34));
   const low = fresh(20); low.ev("openLevels(); lvMode = 'standard'"); const lt = low.T();
   low.g.click(260, 61); low.g.up(260, 61);              // il pulsante Epica non risponde prima del 50
   console.log("prima del 50: tocco su Epica → modalità", low.ev("lvMode"), "| testo", /Epica · dal livello 50/.test(lt), ok(low.ev("lvMode") === "standard" && /Epica · dal livello 50/.test(lt)));
   ev("state = 'menu'; openLevels(); lvFilter = true"); T(); g.key("Escape");
   console.log("filtro e Esc → stato", ev("state"), "| errori JS:", g.errors.length ? g.errors[0] : "nessuno", ok(ev("state") === "menu" && !g.errors.length));
+}
+
+console.log("— Epica: numerazione e avanzamento propri (1.14.2) —");
+{
+  const { g, ev, T } = fresh(50, { clearedEpic: 0 });
+  const t = T();
+  console.log("menu:", /Epica · livello 1 \(diff\. 31\)/.test(t), "| Standard al 50:", /Standard · livello 51/.test(t), ok(/Epica · livello 1 \(diff\. 31\)/.test(t)));
+  g.click(180, 329); g.frame();                  // pulsante Epica
+  console.log("Epica dal menu con 50 completati: livello", ev("campLevel"), "| curDiff", ev("curDiff()"), "| effD", ev("Math.round(effD(curDiff()) * 10) / 10"),
+    ok(ev("mode") === "epic" && ev("campLevel") === 1 && ev("curDiff()") === 31 && Math.abs(ev("effD(curDiff())") - 27.2) < 1e-9));
+  ev("toMenu(); setSel('epic', 2)"); const before = ev("selEpic");
+  ev("lvTab('epic'); pickLevel(2)"); const pick2 = ev("lvSel");
+  ev("selEpic = 1; startRun('epic'); domeMax = 100; domeHp = 100; winLevel()");
+  const after = ev("progress.clearedEpic"), sel = ev("selEpic"), cl = ev("progress.cleared");
+  console.log("livello 2 di Epica: prima della vittoria scelto", before, "| 2 selezionabile", pick2 === 2, "| dopo la vittoria del 1: Epica completati", after, "scelto", sel, "| Standard resta", cl,
+    ok(before === 1 && pick2 !== 2 && after === 1 && sel === 2 && cl === 50));
+  const tw = T();
+  const nx = /Livello 2/.test(tw);
+  ev("nextOrRetry()");
+  console.log("Livello successivo in Epica: pulsante", nx, "| parte", ev("mode"), ev("campLevel"), ok(nx && ev("mode") === "epic" && ev("campLevel") === 2));
+  ev("state = 'menu'; menuMode = 'epic'"); g.key("ArrowRight"); const ar = ev("selEpic"); g.key("ArrowLeft"); const al = ev("selEpic"); const ls = ev("selLevel");
+  ev("menuMode = 'standard'"); g.key("ArrowLeft"); const ls2 = ev("selLevel");
+  console.log("frecce sulla modalità attiva: Epica", ar, al, "| Standard", ls, "→", ls2, ok(ar === 2 && al === 1 && ls2 === ls - 1));
+  const s1 = JSON.parse(ev("JSON.stringify(parseSave(JSON.stringify({ game: 'fortress-defense', version: 5, progress: { cleared: 50, claims: ['s40', 'e51', 'e3p', 'e12'] } })))"));
+  const s0 = JSON.parse(ev("JSON.stringify(parseSave(JSON.stringify({ game: 'fortress-defense', version: 5, progress: { cleared: 50, claims: ['s40'] } })))"));
+  console.log("migrazione: Epica completati da e51/e3p/e12 →", s1.clearedEpic, "| senza chiavi e →", s0.clearedEpic, ok(s1.clearedEpic === 51 && s0.clearedEpic === 0));
+  ev("progress.clearedEpic = 7"); const code = ev("makeCode()"); const v = ev("makeSave().version");
+  ev("progress.clearedEpic = 0"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
+  console.log("esporta e importa: versione", v, "| Epica completati", ev("progress.clearedEpic"), "| scelto", ev("selEpic"), "| errori JS:", g.errors.length ? g.errors[0] : "nessuno",
+    ok(v === 6 && ev("progress.clearedEpic") === 7 && ev("selEpic") === 8 && !g.errors.length));
+}
+{
+  const { ev } = fresh(30);
+  ev("selLevel = 25; startRun('standard'); const s = makeShooter(TURRETS.laser, SLOT_X[1], GROUND_Y - 14); s.used = 3; s.level = 2; slots[1] = s; player.used = 3; player.level = 2;");
+  const lus = ev("eligible(slots[1]).filter((u) => u.cat === 'lu').length"), lup = ev("eligible(player).filter((u) => u.cat === 'lu').length");
+  let both = 0, same = 0, n = 0;
+  for (let i = 0; i < 1500; i++) {
+    const o = JSON.parse(ev("JSON.stringify(rollOptions(4).filter((o) => o.kind === 'up' && o.up.cat === 'lu').map((o) => o.who === player ? 'p' : o.who.id))"));
+    if (o.length > 1) both++; if (new Set(o).size < o.length) same++; n += o.length;
+  }
+  console.log("un level up per entità: level up disponibili torretta", lus, "guardiano", lup, "| offerte con 2 level up di entità diverse", both, "| della stessa entità", same,
+    ok(lus >= 2 && lup >= 2 && same === 0 && both > 0));
 }
 
 console.log("— Guida —");
