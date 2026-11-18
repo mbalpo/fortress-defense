@@ -4,8 +4,7 @@ const P = (h, ...pairs) => pairs.reduce((a, [x, y]) => { if (!a.includes(x)) thr
 const patch = (h) => P(h,
   ["domeHp: 100,", "domeHp: 1000000,"], ["options = rollOptions();", "options = [];"],
   ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],               // il guardiano non spara: si misura solo la torre
-  ["  busy(s, 1);\n  spawnEnt({ t: dur, dead: false,\n    update(dt) {\n      this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }\n      for (const r of rays)",
-   "  window.__rays = rays; busy(s, 1);\n  spawnEnt({ t: dur, dead: false,\n    update(dt) {\n      this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }\n      for (const r of rays)"],
+  ["  busy(s, 1);\n  // combo: Raggi incendiari", "  window.__rays = rays; busy(s, 1);\n  // combo: Raggi incendiari"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { damage, spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, GROUND_Y, rangeOf, aeroStats, hiveWave,
   skyBurn, skyImpact, burn, laserFire, disrFire, thunderBolt, beamFire, hold: () => { queue = []; enemies.length = 0; } };

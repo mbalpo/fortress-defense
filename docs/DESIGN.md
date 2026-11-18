@@ -80,8 +80,17 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   è in campo e la condizione è soddisfatta: **torretta al livello 2** oppure **chain della torretta scelta** (la voce lv1) **con il guardiano al livello 2**.
   “Colpo” = una salva del guardiano (un tiro di probabilità per salva, così “+1 proiettile” e Ventaglio non moltiplicano l’effetto);
   “proiettile” = ogni singolo proiettile. Elenco in § 8. **[deciso]** (valori **[da rivedere]**, § 10)
-- **Combo tra due torrette**: nessuna definita. **(aperto, § 11)**
-- **Combo e carte bloccate**: le combo del guardiano che richiedono la voce lv1 di una chain (Thunderbolt, Beam, Firewheel Drone, Teslacoil) possono uscire solo dopo che quella chain è stata sbloccata con i Sigilli (§ 16). Disruption Drone e Aeroblast usano una chain che resta libera. **[deciso]**
+- **Combo tra due torrette** (33): coppie, effetti e condizioni **[deciso]** (Marco; coppie proposte da Claude e accettate). Ogni torretta è “principale” in 3 combo
+  e compare 6 volte in tutto (3 da principale e 3 da secondaria); nessuna coppia dello stesso tipo, nessuna coppia invertita. Elenco e valori in § 10 (e in § 8, generato). Regole:
+  - **Condizione**: la principale deve essere almeno al livello 2; la secondaria deve essere in campo e avere la voce lv1 della chain indicata. Le voci successive di quella
+    chain valgono per la combo se la secondaria le ha prese. **[deciso]**
+  - **Danno**: dove non specificato, quello della torretta secondaria. **[deciso]** (il tipo di danno segue la secondaria **[Claude] [da rivedere]**)
+  - **Frequenza** delle armi continue (Laser, Beam, Firewheel, campo del Disruption Drone): un solo tiro di probabilità per bersaglio, per raggio, per passaggio del drone o per campo. **[deciso]**
+  - **Tetti**: al massimo 5 a schermo per buchi neri, droni dell’Hive, mini-droni, wormhole e laser rotanti. **[deciso]** (ogni tetto vale per la sua combo, senza condividerlo con
+    la torretta o con altre combo **[Claude] [da rivedere]**)
+  - **Scelta**: la combo conta come scelta della torretta principale. **[deciso]** (Marco)
+- **Combo e carte bloccate**: le combo del guardiano che richiedono la voce lv1 di una chain (Thunderbolt, Beam, Firewheel Drone, Teslacoil) possono uscire solo dopo che quella chain è stata sbloccata con i Sigilli (§ 16). Disruption Drone e Aeroblast usano una chain che resta libera. **[deciso]** La stessa regola vale per le combo tra due torrette: la carta esce solo se la chain della secondaria è sbloccata. 18 combo su 33 usano una chain bloccata, quindi fino al livello 30
+  (pool libero) sono raggiungibili solo le altre 15. **[deciso]** (Marco)
 - **Segno delle carte chain e level up** (1.12.5) **[deciso]** (Marco): sopra il pallino col numero (o la spunta della ricompensa), nel colore del tipo:
   chain = una catena verticale per livello della chain (due affiancate al lv2, tre al lv3); level up = una freccia ^ per livello, una sotto l’altra.
   Standard, combo e nuova torretta senza segno. Disegno **[Claude]**.
@@ -219,6 +228,7 @@ Fire · Missili a ricerca casuale, lungo raggio. Portata 520 px, ricarica 3,0 s.
 - **Chain · Missili incendiari** — lv1 Missili incendiari: I missili bruciano i colpiti per 3 s · lv2 Bruciatura intensa: Danno da bruciatura +60% · lv3 Combustione: Chi muore bruciato esplode al 60%
 - **Level up** — lv1 Area infuocata: L’impatto brucia l’area per 5 s · lv1 Impatto devastante: Danno da impatto +80% · lv2 Scia incendiaria: I missili bruciano per 3 s chi attraversano · lv2 Doppio impatto: Dopo 0,5 s seconda esplosione al 60% · lv3 Salva potenziata: +2 missili per lancio
 - id nel codice: dmg, msl, rad, split1, split2, splitB, split3, burn1, burn2, burn3, fire, impact, pass, again, plus2
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Disruption Drone (chain Teletrasporto) → Missili teletrasportanti: I missili possono teletrasportare i colpiti · + Aeroblast (chain Salva di schegge) → Missili a schegge: All’impatto: 5 mini-missili a schegge · + Teslacoil (chain Sovraccarico) → Missili sovraccarichi: Missili caricati: raggio e danno maggiori
 
 ### Laser (`laser`)
 
@@ -228,51 +238,57 @@ Energy · Raggi fissi che trapassano tutto. Portata 900 px, ricarica 5,0 s.
 - **Chain · Raggio spazzante** — lv1 Raggio spazzante: Un raggio spazza lo schermo in 3 s · lv2 Spazzata rallentante: La spazzata rallenta del 50% per 1,5 s · lv3 Doppia spazzata: Seconda spazzata in senso opposto
 - **Level up** — lv1 Raggio largo: Larghezza dei raggi +100% · lv1 Raggio persistente: Durata dei raggi +70% · lv2 Sfruttare i debuff: +50% di danno a chi ha un debuff · lv2 Raggi penetranti: 30%: ignora le resistenze del nemico · lv3 Debuff prolungati: I debuff dei raggi durano +50%
 - id nel codice: dmg, bounce, dur, multi1, multiW, multiD, multi3, sweep1, sweep2, sweep3, wide, longer, exploit, ignore, debuffdur
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Sky Guard (chain Missili incendiari) → Raggi incendiari: Il raggio principale brucia i colpiti · + Hive (chain Sciame) → Raggi a sciame: 10%: il colpito genera un drone dell’Hive · + Railgun (chain Proiettile esplosivo) → Raggi esplosivi: I colpiti dal laser esplodono al 50%
 
 ### Disruption Drone (`disr`)
 
-Force · Due droni creano un campo di forza a tutta larghezza. Portata 380 px, ricarica 8,0 s.
+Force · Due droni e un campo di forza largo. Portata 380 px, ricarica 8,0 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Campo più alto (Altezza del campo +30%); Campo più duraturo (Durata del campo +30%).
 - **Chain · Teletrasporto** — lv1 Teletrasporto: 5%: il colpito torna indietro di 90 px · lv2 Salto al bordo: 2,5%: teletrasporto al bordo superiore · lv3 Teletrasporto letale: Teletrasportato: −20% della vita attuale
 - **Chain · Distruzione** — lv1 Distruzione: Stack: i nemici infliggono −10% danno · lv2 Scarica distruttiva: A stack massimo: scarica ×3 del danno · lv2 Distruzione estesa: Stack massimo da 3 a 5 · lv3 Doppia scarica: Una seconda scarica a stack massimo
 - **Level up** — lv1 Ricarica rapida: Ricarica −15% · lv1 Esplosione finale: A fine durata esplode: danno ×3 · lv2 Campo destabilizzante: Nel campo: +25% danni dalle altre torri · lv2 Pulsazione rapida: Il campo colpisce ogni 0,6 s invece di 1 · lv3 Campo attrattivo: Danno +40%, attira verso il centro
 - id nel codice: dmg, height, dur, tp1, tp2, tp3, dst1, dstB, dst5, dst3, reload, blast, amp, tick, grip
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Laser (chain Raggio spazzante) → Campo laser: I droni sono uniti da un laser orizzontale · + Beam (chain Raggio amplificato) → Campo amplificato: Il danno del campo sale fino al 200% · + Aeroblast (chain Salva di schegge) → Campo a schegge: I droni sparano schegge verso l’interno
 
 ### Aeroblast (`aero`)
 
-Physical · Colpi esplosivi con knockback, corto raggio. Portata 260 px, ricarica 2,6 s.
+Physical · Esplosioni con knockback, corto raggio. Portata 260 px, ricarica 2,6 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%); Più rapido (Danno +10%, ricarica −10%).
 - **Chain · Salva di schegge** — lv1 Salva di schegge: Dopo il colpo: 5 proiettili minori · lv2 Schegge d’urto: Le schegge spingono indietro di 10 px · lv3 Doppia salva: Le schegge partono due volte
 - **Chain · Mine** — lv1 Mine: Ogni colpo rilascia una mina · lv2 Più mine: 2 mine per colpo · lv2 Mine d’urto: Le mine spingono indietro di 14 px · lv3 Mine potenziate: Le mine fanno +60% di danno
 - **Level up** — lv1 Spinta maggiore: Knockback da 14 a 30 px · lv1 Esplosioni ampie: Raggio d’esplosione dei colpi +40% · lv2 Gittata estesa: Raggio d’azione +30% · lv2 Doppia esplosione: I colpi esplodono ancora dopo 1 s · lv3 Gittata massima: Raggio d’azione: altro +30%
 - id nel codice: dmg, proj, fast, salvo1, salvoK, salvo2, mine1, mine2, mineK, mineD, knock, blast, reach, echo, reach2
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Laser (chain Raggi multipli) → Esplosioni a raggi: 10%: il colpo genera un laser rotante · + Gravity Vortex Gun (chain Buco nero statico) → Colpi singolari: 10%: il colpo lascia un buco nero statico · + Thunderbolt (chain Fulmini ramificati) → Colpi fulminanti: I colpiti attirano un fulmine ramificato
 
 ### Thunderbolt (`thunder`)
 
-Electric · Sfere sulla barriera, fulmini a tutto schermo. Portata 700 px, ricarica 1,6 s.
+Electric · Sfere sulla barriera, fulmini ovunque. Portata 700 px, ricarica 1,6 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); +1 sfera (+1 sfera, danno −15%); Più rapido (Danno +10%, ricarica −10%).
 - **Chain · Fulmini ramificati** — lv1 Fulmini ramificati: I fulmini si ramificano 4 volte · lv2 Ramificazione II: Fino a 6 ramificazioni · lv3 Ramificazioni debilitanti: Ramificazioni al 75%, indeboliscono 3 s
 - **Chain · Fulmini paralizzanti** — lv1 Fulmini paralizzanti: 30%: il fulmine paralizza i colpiti · lv2 Paralisi prolungata: La paralisi dura 1,5 s invece di 1 · lv2 Scossa continua: Paralizzati: 25% del danno ogni 0,3 s · lv3 Paralisi totale: Ramificazioni paralizzanti, danno +30%
 - **Level up** — lv1 Fulmini larghi: Larghezza dei fulmini +80% · lv1 Sfera sul campo: 30%: il fulmine crea una sfera per 4 s · lv2 Doppio fulmine: 50%: il fulmine colpisce ancora · lv2 Fulmini corrosivi: Fulmini: +25% danni subiti per 2,5 s · lv3 Sfere pungenti: Danni ogni 0,6 s entro 60 px dalle sfere
 - id nel codice: dmg, sph, fast, fork1, fork2, forkW, para1, paraT, paraD, para3, wide, orb, twice, vuln, aura
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Firewheel Drone (chain Scia di fuoco) → Fulmini di fuoco: I fulmini lasciano una scia di fuoco · + Hive (chain Onda iniziale) → Fulmini d’urto: I fulmini respingono i nemici vicini · + Railgun (chain Proiettile esplosivo) → Fulmini esplosivi: I colpiti dai fulmini esplodono al 50%
 
 ### Beam (`beam`)
 
-Energy · Raggio che colpisce il bersaglio per tutta la durata. Portata 380 px, ricarica 3,4 s.
+Energy · Raggio continuo su un bersaglio. Portata 380 px, ricarica 3,4 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Durata estesa (Durata del raggio +30%); Ricarica ridotta (Ricarica −12%).
 - **Chain · Raggio ramificato** — lv1 Raggio ramificato: Colpisce 2 bersagli in più · lv2 Attrazione: Ramificati attratti verso il primo · lv2 Ramificazione estesa: Colpisce un bersaglio in più · lv3 Base esplosiva: Ogni 0,5 s esplosione sul primo bersaglio
 - **Chain · Raggio amplificato** — lv1 Raggio amplificato: Il danno sul bersaglio sale fino al 200% · lv2 Amplificazione continua: Cambiando bersaglio non si azzera · lv3 Amplificazione massima: Il danno sale fino al 400%
 - **Level up** — lv1 Vulnerabilità: Bersagli: +25% danni subiti per 2 s · lv1 Ritmo accelerato: Danno del raggio +40% · lv2 Raggio vorace: Ogni uccisione lo allunga (fino a ×2) · lv2 Cacciatore di boss: +50% di danno a mini-boss e boss · lv3 Secondo laser: Genera un secondo laser
 - id nel codice: dmg, dur, cd, fork1, pull, forkN, forkX, amp1, amp2, amp3, vuln, pace, feed, boss, second
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Sky Guard (chain Frammentazione) → Raggio frammentante: Ogni colpito dal raggio lancia mini-missili · + Railgun (chain Proiettile diviso) → Raggio diviso: Il raggio si ramifica ancora · + Thunderbolt (chain Fulmini ramificati) → Raggio fulminante: Ogni colpito attira un fulmine ramificato
 
 ### Firewheel Drone (`wheel`)
 
-Fire · Drone lanciafiamme che rimbalza sullo schermo. Portata 380 px, ricarica 6,5 s.
+Fire · Drone lanciafiamme che rimbalza. Portata 380 px, ricarica 6,5 s.
 - **Standard** (max 3 pile): Danno maggiorato (Danno +25%); Durata estesa (Durata +30%); Fiamme più ampie (Raggio del lanciafiamme +30%).
 - **Chain · Mini-droni** — lv1 Mini-droni: Genera 2 mini-droni rimbalzanti · lv2 Mini-droni incendiari: I mini-droni bruciano i nemici per 2 s · lv3 Mini-droni potenziati: Mini-droni: danno +60%
 - **Chain · Scia di fuoco** — lv1 Scia di fuoco: Lascia una scia di 2 s che brucia · lv2 Scia combustibile: Nella scia: +30% danni da fuoco subiti · lv2 Fiamme intense: Bruciatura di questa torre +60% · lv3 Scia persistente: La scia dura 4 s invece di 2
 - **Level up** — lv1 Scatto: Velocità ×1,8 quando non colpisce · lv1 Fiamme roventi: Danno del lanciafiamme +60% · lv2 Presidio: Resta fermo 2,5 s a fine durata · lv2 Fiamma crescente: Ogni colpito: danno +10% (fino a ×2) · lv3 Raffreddamento: Ogni colpito: ricarica −5% (fino a −50%)
 - id nel codice: dmg, dur, rad, mini1, miniB, miniD, trail1, trailR, trailB, trail3, dash, heat, stay, stoke, cool
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Disruption Drone (chain Distruzione) → Droni distruttivi: Drone e mini-droni danno distruzione · + Gravity Vortex Gun (chain Buco nero statico) → Drone collassante: A fine durata lascia un buco nero statico · + Teslacoil (chain Sfera statica) → Drone elettrostatico: Colpendo genera sfere statiche (max 5)
 
 ### Hive (`hive`)
 
@@ -282,6 +298,7 @@ Force · Sciame di droni a ricerca. Portata 380 px, ricarica 7,0 s.
 - **Chain · Sciame** — lv1 Sciame: 35%: a fine vita lancia un nuovo drone · lv2 Sciame II: Il nuovo drone può essere di lv 2 · lv3 Sciame III: Il nuovo drone può essere di lv 3
 - **Level up** — lv1 Evoluzione I: Dopo 3 colpi: +1 proiettile · lv1 Colpi di forza: I colpi spingono indietro di 8 px · lv2 Evoluzione II: Dopo altri 3 colpi: +2 proiettili · lv2 Droni kamikaze: Finiti i colpi, si lancia: esplosione ×2 · lv3 Resistenza: 30%: finiti i colpi, il drone ricarica
 - id nel codice: dmg, drone, hits, wave1, waveR, wave2, wave3, seed1, seed2, seed3, evo1, push, evo2, kami, stay
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Firewheel Drone (chain Scia di fuoco) → Droni incendiari: I droni lasciano una scia di fuoco · + Beam (chain Raggio amplificato) → Droni a raggio: I droni sparano un raggio che si amplifica · + Teslacoil (chain Sfera statica) → Droni statici: Chi tocca i droni subisce la sfera statica
 
 ### Railgun (`rail`)
 
@@ -291,6 +308,7 @@ Physical · Colpi perforanti a cadenza media. Portata 380 px, ricarica 1,5 s.
 - **Chain · Proiettile esplosivo** — lv1 Proiettile esplosivo: Il primo impatto esplode al 50% del danno · lv2 Carica esplosiva: Esplosione +15% per perforazione rimasta · lv2 Deflagrazione: Raggio +10% per perforazione rimasta · lv3 Esplosioni a catena: Esplodono anche i successivi: 80%, 60%…
 - **Level up** — lv1 Impatto: Danno +50%, knockback 14 px · lv1 Penetrazione: +2 perforazioni, knockback 28 px · lv2 Vulnerabilità fisica: Colpiti: +25% danni fisici per 3 s · lv2 Impatto stordente: Paralizza i colpiti per 0,8 s · lv3 Colpo critico: 30%: danno +50%
 - id nel codice: dmg, cd, pierce, split1, split2, mass, boom1, boomD, boomR, boom3, punch, pen, vulnP, stun, crit
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Firewheel Drone (chain Mini-droni) → Proiettili a mini-droni: 10%: ogni colpito genera un mini-drone · + Hive (chain Sciame) → Proiettili a sciame: 10%: il colpito genera un drone dell’Hive · + Gravity Vortex Gun (chain Wormhole) → Proiettili a wormhole: 10%: wormhole dal 1° all’ultimo colpito
 
 ### Teslacoil (`tesla`)
 
@@ -300,6 +318,7 @@ Electric · Sfera elettrica che esplode al contatto. Portata 380 px, ricarica 2,
 - **Chain · Sovraccarico** — lv1 Sovraccarico: Carica +0,5 s, raggio esplosione +30% · lv2 Carica potenziata: Carica +0,5 s: danno e raggio +60% · lv3 Carica massima: Carica +1 s: danno e raggio +120%
 - **Level up** — lv1 Esplosione a catena: Colpisce 5 nemici vicini al 40% del danno · lv1 Esplosione ampia: Raggio dell’esplosione +40% · lv2 Ricarica rapida: Ricarica −20% · lv2 Esplosioni paralizzanti: 30%: l’esplosione paralizza i colpiti · lv3 Campo di carica: Mentre carica: 15 danni/s a chi è sopra
 - id nel codice: dmg, cd, bounce, orb, orbSlow, orbD, orbDur, over1, over2, over3, chain, big, quick, stun, charge
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Laser (chain Raggi multipli) → Sfere a raggi: 10%: l’esplosione genera un laser rotante · + Disruption Drone (chain Teletrasporto) → Sfere teletrasportanti: L’esplosione può teletrasportare i colpiti · + Aeroblast (chain Mine) → Sfere minate: Ogni esplosione rilascia una mina
 
 ### Gravity Vortex Gun (`vortex`)
 
@@ -309,6 +328,7 @@ Force · Buco nero che attrae e danneggia. Portata 260 px, ricarica 5,5 s.
 - **Chain · Buco nero statico** — lv1 Buco nero statico: A fine percorso resta fermo 2 s e attrae · lv2 Statico prolungato: Il buco nero statico dura 3 s invece di 2 · lv3 Statico potente: Danno del buco nero statico +60%
 - **Level up** — lv1 Attrazione forte: Attrazione +60% (da 80 a 128 px/s) · lv1 Buco nero iperdenso: Danno dei buchi neri +50% · lv2 Secondo buco nero: Genera un secondo buco nero · lv2 Buco nero lento: Velocità da 130 a 80 px/s: resta di più · lv3 Collasso crescente: Danno e attrazione fino a ×2 col percorso
 - id nel codice: dmg, len, rad, wh1, wh2, whT, wh3, stat1, stat2, stat3, pull, power, twin, lazy, grow
+- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): + Sky Guard (chain Missili incendiari) → Buco nero incendiario: Il buco nero brucia i nemici · + Beam (chain Raggio ramificato) → Buco nero ramificato: Il buco nero insegue altri 2 bersagli · + Thunderbolt (chain Fulmini paralizzanti) → Buco nero paralizzante: 30%: il buco nero paralizza i colpiti
 
 ## 9. Nemici e resistenze *(generato)*
 
@@ -429,6 +449,73 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   Colpi ramificati, Mira amplificata, Mini-drone di scorta, Clone speculare, Proiettili frammentati, Colpo caricato, Proiettili gravitazionali  **[da rivedere]**
 - Combo del guardiano, letture di Claude: “torretta di lv2” = basta la torretta al livello 2, il guardiano può essere al livello 1;
   “scelta chain X” = la torretta ha la voce lv1 di quella chain  **[da rivedere]**
+- **Combo tra due torrette** (principale + secondaria, chain richiesta). Effetti **[deciso]** (Marco); nomi delle carte **[Claude] [da rivedere]**.
+  Dove non c’è un numero valgono quelli della chain della secondaria.
+  1. Sky Guard + Disruption Drone (Teletrasporto) · *Missili teletrasportanti*: i missili possono teletrasportare i bersagli.
+  2. Sky Guard + Aeroblast (Salva di schegge) · *Missili a schegge*: partono anche mini-missili che seguono la chain.
+  3. Sky Guard + Teslacoil (Sovraccarico) · *Missili sovraccarichi*: missili caricati e potenziati; la carica allunga il ciclo di sparo (voluto).
+  4. Firewheel Drone + Disruption Drone (Distruzione) · *Droni distruttivi*: drone e mini-droni causano distruzione.
+  5. Firewheel Drone + Gravity Vortex Gun (Buco nero statico) · *Drone collassante*: a fine durata lascia un buco nero statico nella posizione finale; con mini-droni, probabilità che ne lascino uno anche loro.
+  6. Firewheel Drone + Teslacoil (Sfera statica) · *Drone elettrostatico*: genera sfere statiche quando colpisce i nemici (max 5).
+  7. Laser + Sky Guard (Missili incendiari) · *Raggi incendiari*: il laser principale e i suoi rimbalzi bruciano i colpiti.
+  8. Laser + Hive (Sciame) · *Raggi a sciame*: i bersagli colpiti dal laser possono generare un drone.
+  9. Laser + Railgun (Proiettile esplosivo) · *Raggi esplosivi*: tutti i bersagli colpiti dal laser esplodono al 50% del danno; Carica esplosiva 65%; Deflagrazione +10% di raggio; Esplosioni a catena 80% (percentuali del danno della Railgun, la secondaria).
+  10. Beam + Sky Guard (Frammentazione) · *Raggio frammentante*: il raggio genera mini-missili che seguono la chain.
+  11. Beam + Railgun (Proiettile diviso) · *Raggio diviso*: il raggio si ramifica ulteriormente (con più raggi, tutti); Slancio: più danno per ogni bersaglio già colpito dal raggio.
+  12. Beam + Thunderbolt (Fulmini ramificati) · *Raggio fulminante*: ogni bersaglio colpito dal raggio attira un fulmine ramificato che parte dalla sfera più vicina (anche obliquo); colpisce 1 volta, 2 con Ramificazione II; Ramificazioni debilitanti indeboliscono.
+  13. Disruption Drone + Laser (Raggio spazzante) · *Campo laser*: i droni a bordo schermo emettono un laser orizzontale che li collega; Spazzata rallentante rallenta ulteriormente; Doppia spazzata: danno doppio.
+  14. Disruption Drone + Beam (Raggio amplificato) · *Campo amplificato*: il danno del campo cresce nel tempo fino al 200%; Amplificazione continua: tetto 300%; Amplificazione massima: 400%.
+  15. Disruption Drone + Aeroblast (Salva di schegge) · *Campo a schegge*: i droni a bordo schermo sparano una salva di schegge verso l’interno.
+  16. Hive + Firewheel Drone (Scia di fuoco) · *Droni incendiari*: i droni lasciano una scia di fuoco che segue la chain.
+  17. Hive + Beam (Raggio amplificato) · *Droni a raggio*: i droni emettono un raggio che segue la chain, danno Force; danno di partenza = un colpo del drone (× numero di proiettili); i colpi del drone diventano i colpi del raggio (drone da 6 colpi = il raggio colpisce 6 volte); disegnato come raggio nel colore del livello del drone.
+  18. Hive + Teslacoil (Sfera statica) · *Droni statici*: i nemici a contatto con i droni subiscono il danno di una sfera statica (scintille dai droni); danno nel tempo, maggiore con Sfera carica e ancora con Sfera persistente; Sfera rallentante rallenta chi è a contatto.
+  19. Gravity Vortex Gun + Sky Guard (Missili incendiari) · *Buco nero incendiario*: il buco nero brucia, come la chain.
+  20. Gravity Vortex Gun + Beam (Raggio ramificato) · *Buco nero ramificato*: dopo il suo bersaglio il buco nero ne colpisce altri, anche fuori traiettoria ma solo verso l'alto o ravvicinati, mai verso il basso; Attrazione: più potere attrattivo; Ramificazione estesa: un bersaglio in più; Base esplosiva: esplosioni sui colpiti.
+  21. Gravity Vortex Gun + Thunderbolt (Fulmini paralizzanti) · *Buco nero paralizzante*: i nemici colpiti possono restare paralizzati; Paralisi prolungata e Scossa continua come la chain; Paralisi totale dà solo danno +30%.
+  22. Aeroblast + Laser (Raggi multipli) · *Esplosioni a raggi*: i proiettili possono generare un laser rotante (come quello del guardiano) con 2 raggi che ereditano il danno dalla chain; Raggi debilitanti indeboliscono; Mini-raggi rimbalzanti aggiunge un raggio.
+  23. Aeroblast + Gravity Vortex Gun (Buco nero statico) · *Colpi singolari*: genera buchi neri statici quando colpisce i nemici.
+  24. Aeroblast + Thunderbolt (Fulmini ramificati) · *Colpi fulminanti*: come la 12, per i bersagli colpiti dai proiettili.
+  25. Railgun + Firewheel Drone (Mini-droni) · *Proiettili a mini-droni*: i bersagli colpiti possono generare 1 mini-drone rimbalzante per nemico colpito.
+  26. Railgun + Hive (Sciame) · *Proiettili a sciame*: i bersagli colpiti possono generare un drone.
+  27. Railgun + Gravity Vortex Gun (Wormhole) · *Proiettili a wormhole*: possono aprire un wormhole sul primo nemico colpito e uno in uscita sull’ultimo.
+  28. Thunderbolt + Firewheel Drone (Scia di fuoco) · *Fulmini di fuoco*: i fulmini lasciano una scia di fuoco.
+  29. Thunderbolt + Hive (Onda iniziale) · *Fulmini d’urto*: i fulmini causano knockback; Onda ampia e Onda finale lo aumentano; Onda rallentante rallenta.
+  30. Thunderbolt + Railgun (Proiettile esplosivo) · *Fulmini esplosivi*: tutti i nemici colpiti dai fulmini esplodono, valori come la 9.
+  31. Teslacoil + Laser (Raggi multipli) · *Sfere a raggi*: come la 22, con i proiettili elettrici.
+  32. Teslacoil + Disruption Drone (Teletrasporto) · *Sfere teletrasportanti*: i proiettili elettrici possono teletrasportare.
+  33. Teslacoil + Aeroblast (Mine) · *Sfere minate*: i proiettili elettrici generano una mina (scala con la chain; vale il tetto di 25 mine).
+- **Combo tra due torrette, numeri provvisori** **[Claude] [provvisorio]** (da misurare con i bot): probabilità del 10% per bersaglio colpito nei n. 8 e 26, per colpo nei n. 22, 23 e 31, per proiettile nel n. 27 (serve almeno 2 nemici colpiti), 10% anche nel n. 25;
+  25% per i mini-droni del n. 5. Rampa del n. 14: +70% al secondo, come il Beam. Nel n. 20: 2 bersagli in più (3 con Ramificazione estesa), “ravvicinati” = entro 130 px. Knockback del n. 29: raggio dell'onda dell’Hive
+  (130 px, 182 con Onda ampia), Onda finale +30%. Le scie dei n. 16 e 28: al massimo 5 a schermo per combo.
+- **Combo tra due torrette, letture di Claude nel codice** (1.15.0) **[Claude] [da rivedere]**:
+  danno e tipo della secondaria per tutto ciò che la combo genera (esplosioni, bruciature, fulmini, schegge, mine, sfere, buchi neri, droni, scie); il proiettile della principale
+  tiene il suo (n. 20 e 21: danno del buco nero). Tetto di 5 a schermo anche per le sfere statiche del n. 6. Nel codice: carte `K` nella lista `ups` della principale
+  (livello 2, condizione = voce chain della secondaria), effetti con `kOn(s, id)`, che restituisce la secondaria.
+  1 e 32: un tiro di teletrasporto per colpito dall’impatto del missile principale (non mini-missili né Doppio impatto) o dall’esplosione della sfera (anche dopo un rimbalzo).
+  2: 5 mini-missili per impatto, danno delle schegge (30% dell’Aeroblast, fisico), Schegge d’urto 10 px, Doppia salva dopo 0,5 s.
+  3: per ogni 0,5 s di carica in più della Teslacoil raggio +30% (×1,3 · ×1,6 · ×2,2) e, con Carica potenziata, danno +30%; la carica si aggiunge alla ricarica (3 s → 3,5 · 4 · 5 s); missili con alone elettrico.
+  4 e 6: a ogni passaggio (quando il drone torna a toccare un nemico) 1 stack o 1 sfera statica (raggio dell’esplosione della Teslacoil); solo i droni lanciati dalla torretta,
+  non i mini-droni del guardiano o del n. 25. 5: buco nero fermo con durata e danno della chain, raggio e attrazione della Vortex. 7 e 19: bruciatura della Sky Guard (3 s, 6/s, Bruciatura intensa, Combustione).
+  8 e 26: drone di livello a caso fino a quello permesso da Sciame II / III, che non lancia altri droni.
+  9 e 30: esplosione di 30 px (+10% con Deflagrazione, fisso perché non ci sono perforazioni); nel n. 9 per ogni raggio (principale e mini-raggi), una volta per bersaglio e per attivazione;
+  nel n. 30 su chi è colpito dal fulmine e dalle ramificazioni.
+  10: alla prima volta che il raggio tocca un bersaglio (per attivazione) partono da lui 3 / 6 / 9 mini-missili della Sky Guard (35%, Mini-missili esplosivi).
+  11: una ramificazione in più da ogni bersaglio principale (anche senza Raggio ramificato); con Doppia divisione si divide ancora ogni primo ramificato; Slancio +15% per passo (×1,15 · ×1,3).
+  12 e 24: il fulmine è una ramificazione del Thunderbolt (50%, 75% e indebolimento con Ramificazioni debilitanti, paralisi con Paralisi totale), uno per bersaglio a ogni attivazione (12)
+  o a ogni colpo (24); il secondo colpo dopo 0,15 s; senza sfere parte dall’alto.
+  13: laser largo come quello del Laser (8 px, 16 con Raggio largo), 18 danni al secondo come la spazzata (×2 con Doppia spazzata); “rallenta ulteriormente” letto come rallentamento
+  di 1,5 s che resta anche fuori dal campo (il rallentamento non si somma). 14: la rampa parte quando i droni arrivano ai lati.
+  15: una salva di 5 schegge per lato quando i droni arrivano ai lati (di nuovo dopo 0,5 s con Doppia salva), verso i nemici da quella parte.
+  16: un punto di scia ogni 22 px di strada del drone. 17: amplificazione per drone (+70% al secondo tra un colpo e l’altro, tetto 200%, 400% con Amplificazione massima;
+  Amplificazione continua: non si azzera cambiando bersaglio); le onde di Onda iniziale e Onda finale restano onde.
+  18: contatto = entro 45 px dal drone (la distanza a cui si ferma) più il raggio del nemico; 12 danni al secondo, ×1,6 con Sfera carica, ×1,75 con Sfera persistente (rapporto 3,5 / 2 delle durate).
+  20: il buco nero va verso il suo bersaglio; raggiunto, passa al più vicino entro 130 px non più in basso, altrimenti al più vicino più in alto; il percorso si allunga quanto serve;
+  Attrazione = attrazione ×1,5; Base esplosiva = esplosione di 40 px al 50% del danno al secondo del Beam su ogni bersaglio raggiunto. 21: un tiro di paralisi per nemico e per buco nero.
+  22 e 31: laser rotante di 110 px che segue il primo colpito, 2 raggi a croce (3 a 60° con Mini-raggi rimbalzanti) al danno dei mini-raggi; solo se il colpo prende qualcuno. 23: idem.
+  25: mini-drone della Firewheel (durata, danno, Mini-droni incendiari e potenziati), che non ferma la torretta. 27: si decide a fine corsa del proiettile; varchi con durata, ingresso e uscita della chain.
+  28: scia lungo tutto il fulmine verticale (un punto ogni 22 px), non sulle ramificazioni.
+  29: “raggio dell’onda” letto come area: chi è entro 130 px (182 con Onda ampia) da un colpito è spinto indietro di 16 px come dall’onda dell’Hive (20,8 con Onda finale), una volta per fulmine. **Da confermare.**
+  33: mine dell’Aeroblast a ogni esplosione della sfera (2 con Più mine), anche senza colpiti.
 - Stati: vulnerabilità +25% danno subito, indebolimento −35% danno inflitto, rallentamento −50%, paralisi = stop, bruciatura nel tempo  **[Claude]**
 - Boss: resistenze scelte da Claude, variabili per boss (mini-boss spinte 40-80% e stati 25-55%; finale 85% e 60%); boss finale vita base 400 al livello 10, 2250 al 20, 1450 al 30, dal 40 con la formula del § 5, danno alla cupola 8; mini-boss vita 480, danno 9  **[da rivedere]**
 - Cupola larga (revisione 3): il profilo di collisione ha raggio orizzontale 215 px (prima 172), altezza invariata. Vale per il contatto dei nemici (ai bordi ora si fermano a circa y 517 invece di 550), per il bordo contro cui si fermano i rimbalzi del laser e per il punto in cui nascono le mine. **[Claude]** (da rivedere dopo la misura) Le sfere orbitanti del Thunderbolt seguono il profilo nuovo, ma solo nella parte visibile (da x≈12 a x≈348): l’arco su cui si muovono si accorcia, così non escono dallo schermo. **[deciso]** (seguire il profilo nuovo) · limite all’arco visibile **[Claude]**
@@ -441,9 +528,11 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 
 ## 11. Decisioni aperte
 
-- **Combo tra due torrette**: non ancora definite. Esempio di Marco: Beam + Gravity Vortex Gun (i laser finiscono con un buco nero attrattivo
-  con danno ad area). Da decidere anche se contano come scelta di una delle due torri e di quale.
-- **Sblocco delle combo**: per quelle del guardiano condizioni di livello e di chain (§ 3); per quelle tra torrette da decidere. Nota: con 4 slot su 11 torrette una coppia precisa capita insieme circa l’11% delle volte se non la si sceglie apposta.
+- **Combo tra due torrette**: definite in § 3 e § 10. Aperti: nomi delle carte, numeri provvisori (§ 10) e tipo di danno (proposta: della secondaria).
+  Da misurare con i bot (carte offerte e prese per partita): con la condizione sulla chain della secondaria è probabile che escano meno di una volta a partita. **[da misurare]**
+  Prima misura leggera (1.15.0, 10 partite per bot, random / smart; carte offerte dopo le ondate, prese anche dai mini-boss): livello 15 pool libero 0,3 / 0,1 offerte a partita
+  (prese 0,2 / 0,1); livello 25 pool libero 0 / 0; livello 25 pool completo 0,1 / 0,3 (prese 0 / 0,1). Per confronto, combo del guardiano offerte 0,1-0,5 a partita.
+  Conferma: escono molto meno di una volta a partita. Nessun valore cambiato; se vanno rese più frequenti, le leve sono il peso delle carte combo (0,4) e le condizioni. **(aperto)**
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
@@ -468,7 +557,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 **Complete tutte le torri e il guardiano** (revisioni 1 e 2; controllato da `tests/rev2.js`). Nessuna voce provvisoria rimasta.
 
 - **Combo del guardiano**: tutte e 11 definite (`tests/combo.js`).
-- **Combo tra due torrette**: nessuna definita (esempio in § 11).
+- **Combo tra due torrette**: tutte e 33 definite (§ 10). Costruite nella 1.15.0 con i test in `tests/combo.js`; numeri da misurare con i bot (§ 11).
 
 ## 13. Da costruire
 

@@ -60,6 +60,15 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
       X.spawn({ enemy: i % 2 ? "shell" : "brute", x }); const e = X.enemies().slice(-1)[0]; Object.assign(e, { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); });
     g.frame(90); const e = X.living()[2]; if (e) X.guardProc(p, { laser: true }, e); X.guardWheel(p); X.guardWheel(p); g.frame(50); g.save("11-combo-battaglia.png");
     g.key("p"); g.frame(); g.key("Tab"); g.frame(); g.save("12-pausa-combo.png"); }
+  // combo tra due torrette (1.15.0): carte (Laser + Hive, Hive + Firewheel, Firewheel + Vortex) e i loro effetti in battaglia
+  { const { g, X } = setup(); const [hive, laser, wheel, vortex] = X.slots(); Object.assign(hive.up, { seed1: 1 }); Object.assign(wheel.up, { trail1: 1 }); Object.assign(vortex.up, { stat1: 1 });
+    const K = (s, id) => ({ kind: "up", who: s, up: s.def.ups.find((u) => u.id === id) });
+    X.setOpts([K(laser, "kHive"), K(hive, "kWheel"), K(wheel, "kVortex")]); g.frame(); g.save("10b-carte-combo-torrette.png"); }
+  { const { g, X } = setup(); const [hive, laser, wheel, vortex] = X.slots();
+    Object.assign(hive.up, { seed1: 1, kWheel: 1 }); Object.assign(wheel.up, { trail1: 1, kVortex: 1 }); Object.assign(vortex.up, { stat1: 1 }); Object.assign(laser.up, { kHive: 1 }); X.player().cd = Infinity;
+    X.clear(); [[90, 260], [250, 230], [150, 330], [290, 380], [60, 400], [200, 160]].forEach(([x, y], i) => {
+      X.spawn({ enemy: i % 2 ? "shell" : "brute", x }); const e = X.enemies().slice(-1)[0]; Object.assign(e, { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); });
+    g.frame(400); g.save("11b-combo-torrette-battaglia.png"); }
 }
 { // scene aggiunte per il catalogo grafico: 4 torrette e molti nemici, mini-boss, boss finale, carte Standard/Chain/Level up, annuncio, vittoria, sconfitta
   const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");

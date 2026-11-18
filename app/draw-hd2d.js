@@ -895,7 +895,7 @@ Object.assign(TURRET_ART, {
   vortex(x, g, c) { hdTurret("vortex", x, g, c); },   // HD-2D: sprite in TURRET_GRID
 });
 
-// FX: voci della grafica HD-2D (29)
+// FX: voci della grafica HD-2D (32)
 Object.assign(FX, {
   ring(o, x, y, r1, color, life) {               // anello che si stringe e svanisce (esplosioni, impatti); HD-2D: lampo e schegge a pixel
     const k = clamp(o.t / life, 0, 1), rr = r1 * (1 - k * 0.9);
@@ -971,8 +971,9 @@ Object.assign(FX, {
     pxEllipse(o.x, o.y, o.r, o.r, color, 0.7 * a, clock, clock + 6.2832, 4);
     ctx.globalAlpha = 1; light(o.x, o.y, o.r * 1.3, color, 0.35 * a);
   },
-  missile(o, mini) {                             // Sky Guard · missile; HD-2D: sprite a pixel, scia di fumo, fiamma in coda che illumina
+  missile(o, mini) {                             // Sky Guard · missile; HD-2D: sprite a pixel, scia di fumo, fiamma in coda che illumina (Missili sovraccarichi: luce elettrica)
     const ca = Math.cos(o.a), sa = Math.sin(o.a), L = mini ? 5 : 8;
+    if (o.charged) { light(o.x, o.y, 20, TYPES.electric.color, 0.7 + 0.3 * Math.sin(o.age * 40)); pxEllipse(o.x, o.y, 8, 8, TYPES.electric.color, 0.6, o.age * 9, o.age * 9 + 4); ctx.globalAlpha = 1; }
     if (typeof clock === "number" && o.update) {   // scia: posizioni passate tenute nell’entità (solo per il disegno)
       const tr = o.__tr || (o.__tr = []), last = tr[tr.length - 1];
       if (!last || Math.hypot(last.x - o.x, last.y - o.y) > 4) { tr.push({ x: o.x - ca * L, y: o.y - sa * L, t: clock }); if (tr.length > 12) tr.shift(); }
@@ -1045,13 +1046,17 @@ Object.assign(FX, {
   beamLinks(o, pos) {                            // Beam · raggio continuo e ramificazioni; HD-2D: fascio con alone e scintille
     for (const [a, b] of o.links) hdBeam(a.x, a.y, b.x, b.y, TYPES.energy.color, 2.2, 1);
   },
-  wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia; HD-2D: scia di lingue a pixel, ruota a raggi, luce calda
-    for (const p of o.trail) {
+  fireTrail(pts, trailT) {                       // Firewheel Drone · scia di fuoco (anche delle combo); HD-2D: lingue a pixel e luce calda
+    for (const p of pts) {
       const q = clamp(p.t / trailT, 0, 1), f = 0.5 + 0.5 * Math.sin(clock * 10 + p.x * 0.37 + p.y * 0.21), s = Math.floor(p.x * 7 + p.y * 3);
       pixelFlame(p.x - 5, p.y + 4, (7 + 5 * f) * q + 2, 3, q, s);
       pixelFlame(p.x + 4, p.y + 5, (10 + 5 * (1 - f)) * q + 2, 3.5, q, s + 1);
       light(p.x, p.y, 20 * q + 4, "#ff7a3d", 0.45 * q);
     }
+    ctx.globalAlpha = 1;
+  },
+  wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia; HD-2D: scia di lingue a pixel, ruota a raggi, luce calda
+    FX.fireTrail(o.trail, trailT);
     disc(o.x, o.y, opt.rad, TYPES.fire.color, 0.1);
     pxEllipse(o.x, o.y, opt.rad, opt.rad, "#ff8a3d", 0.6, o.rot, o.rot + 6.2832, 3);
     for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; pxLine(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, k ? "#ffb347" : "#fff3b0", 1); }
@@ -1076,6 +1081,18 @@ Object.assign(FX, {
     if (Math.floor(clock * 20) % 2) { pxDot(o.x - n * PX - PX, o.y - PX, "#e8e0ff", 0.8); pxDot(o.x + n * PX + PX, o.y - PX, "#e8e0ff", 0.8); ctx.globalAlpha = 1; }
     blit(sp, o.x, o.y, n + 1, n + 1);
     light(o.x, o.y, 12 + o.lvl * 3, c, 0.55);
+  },
+  hiveBeam(o, e) {                               // combo Droni a raggio · raggio nel colore del livello del drone; HD-2D: fascio con alone
+    const c = ["#b07cff", "#d9a4ff", "#ff9be6"][o.lvl - 1], k = clamp(o.ray.t / 0.3, 0, 1);
+    hdBeam(o.x, o.y, e.x, e.y, c, 1.4 + o.lvl * 0.5, k); light(e.x, e.y, 14 + o.lvl * 3, c, 0.6 * k);
+  },
+  hiveSparks(o) {                                // combo Droni statici · scintille elettriche; HD-2D: pixel gialli che saltano attorno al drone
+    const t = clock, r = 8 + o.lvl;
+    for (let j = 0; j < 5; j++) {
+      const a = t * (j % 2 ? 7 : -6) + j * 1.26, d = r + 4 * Math.abs(Math.sin(t * 29 + j * 2));
+      pxDot(o.x + Math.cos(a) * d, o.y + Math.sin(a) * d, j % 2 ? "#fff6b0" : TYPES.electric.color, 0.5 + 0.5 * Math.abs(Math.sin(t * 23 + j)));
+    }
+    ctx.globalAlpha = 1; light(o.x, o.y, r * 2, TYPES.electric.color, 0.35);
   },
   railShot(o, a) {                               // Railgun · proiettile a punta con una scia corta; HD-2D: sprite ruotato, scia a pixel, luce fredda
     const ca = Math.cos(a), sa = Math.sin(a), x = o.x, y = o.y;

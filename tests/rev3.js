@@ -5,7 +5,7 @@ const P = (h, ...pairs) => pairs.reduce((a, [x, y]) => { if (!a.includes(x)) thr
 const patch = (h) => P(h,
   ["domeHp: 100,", "domeHp: 1000000,"], ["options = rollOptions();", "options = [];"],
   ["function playerTick(p, dt) {", "function playerTick(p, dt) { return;"],
-  ["  busy(s, 1);\n  spawnEnt({ t: dur, dead: false,", "  window.__rays = rays; busy(s, 1);\n  spawnEnt({ t: dur, dead: false,"],
+  ["  busy(s, 1);\n  // combo: Raggi incendiari", "  window.__rays = rays; busy(s, 1);\n  // combo: Raggi incendiari"],
   ["requestAnimationFrame(frame);\n})();", `requestAnimationFrame(frame);
 window.__x = { spawn, enemies: () => enemies, ents: () => ents, makeShooter, TURRETS, ENEMY_DEFS, GROUND_Y, DOME, W, SLOT_X, trace, laserFire, wheelFire, playerBullet, player: () => player, slots: () => slots,
   thunderTick: BEHAV.thunder.tick, fireAbility, ABILITIES, abVal, hold: () => { queue = []; enemies.length = 0; } };

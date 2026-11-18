@@ -3,6 +3,39 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.15.0 — Combo tra due torrette (33)
+
+- **Combo tra due torrette** (Marco: coppie, effetti e condizioni; patch per DESIGN.md preparata su claude.ai): 33 carte di categoria Combo, 3 per torretta da “principale”;
+  ogni torretta compare 6 volte (3 da principale, 3 da secondaria). La carta esce se la principale è almeno al livello 2 e la secondaria è in campo con la voce lv1 della chain
+  indicata; conta come scelta della principale. Le voci successive della chain della secondaria valgono per la combo. 18 combo usano una chain bloccata dall’albero dei Sigilli
+  (`TREE_LOCKS`): fino al livello 30 (pool libero) ne escono solo 15.
+- **Codice**: carte `K(id, secondaria, voce chain, 2, nome, descrizione)` nella lista `ups` della principale (stesso motore delle combo del guardiano: `eligible`, `comboReady`);
+  `kOn(s, id)` restituisce la secondaria in campo (sostituisce `COMBO_OF`; `comboOn` resta per il guardiano). Aiuti comuni: `kBoom`, `kBolt`, `kDrone`, `kMini`, `kHole`, `kOrb`,
+  `kPortals`, `kSpin`, `kTrail`, `kShards`, con il tetto di 5 a schermo per combo (`K_CAP`) e la probabilità provvisoria del 10% (`K_PROB`). Rifatti in funzioni riusabili:
+  `spinLaser` (laser rotante del guardiano e delle combo), `teslaOrb`, `teslaRad`, `teslaExtra`, `vortexStats`, `railDmg`; `portals` e `hiveDrone` restituiscono l’entità;
+  `salvo` accetta una direzione; `missile` accetta un impatto diverso; il buco nero accetta il suo bersaglio (Buco nero ramificato).
+- **Disegno** (classica e HD-2D): nuovi `FX.fireTrail` (la scia della Firewheel, ora usata anche dalle combo), `FX.hiveBeam` (raggio dei droni nel colore del livello),
+  `FX.hiveSparks` (scintille dei droni statici); missili sovraccarichi con l’alone elettrico; il laser del Campo laser usa `FX.laserRays`, i buchi neri statici `FX.vortex`.
+- **Letture di Claude** dove la patch non dava un numero (DESIGN.md § 10, **[da rivedere]**), le principali: n. 13 “rallenta ulteriormente” = rallentamento di 1,5 s che resta fuori dal campo;
+  n. 18 contatto = entro 45 px dal drone; n. 20 inseguimento con un percorso che si allunga; n. 29 “raggio dell’onda” letto come area di 130 px attorno a ogni colpito,
+  spinta di 16 px (**da confermare**: letto come distanza sarebbero 130 px di knockback a ogni fulmine).
+- **Misura leggera con i bot** (10 partite per bot, random / smart): combo tra torrette offerte 0,3 / 0,1 a partita al livello 15, 0 / 0 al 25 (pool libero), 0,1 / 0,3 al 25
+  con il pool completo; prese al massimo 0,2. Conferma che escono meno di una volta a partita; nessun valore cambiato (DESIGN.md § 11).
+- DESIGN.md: § 3 (regole delle combo tra torrette, carte bloccate), § 10 (le 33 combo, numeri provvisori, letture di Claude), § 11 (aperti e misura), § 12;
+  § 8 e § 9 rigenerati con `npm run design-lists`, che ora stampa anche le combo tra torrette di ogni torretta (allinea anche 5 descrizioni brevi delle torrette già cambiate nel codice).
+
+**Test**: `npm test`: tutti verdi. `tests/combo.js`: sblocco delle 33 combo (principale lv1/lv2/lv3, senza secondaria, senza la voce chain, chain bloccata da `TREE_LOCKS`,
+level up in attesa), conteggi (3 da principale, 6 in tutto, nessuna coppia dello stesso tipo o invertita, 18 bloccate), carta e scelta della principale, un controllo per ognuno dei
+33 effetti (danni, probabilità con 4 deviazioni standard, voci della chain della secondaria) e i tetti a schermo (buchi neri, droni, mini-droni, wormhole, laser rotanti, scie, sfere).
+`tests/testi.js`: anche le note delle carte tra torrette; `tests/rev1.js` e `tests/rev3.js`: aggiornato il frammento del Laser che sostituiscono (controlli invariati).
+`npm run screenshots`: nuove `10b-carte-combo-torrette.png` e `11b-combo-torrette-battaglia.png`, testi dentro le carte.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; nuove scene “Combo tra torrette”: Hive, Disruption Drone, Sky Guard e Thunderbolt).
+
+Checklist: aggiornata (versione 27): nuovo gruppo “Combo tra due torrette (1.15)” da provare sul telefono; da decidere frequenza, nomi e numeri, Fulmini d’urto
+e letture di Claude; tra i valori di Claude i numeri provvisori e i nomi delle carte; nei riferimenti le combo di ogni torretta e la regola nel Sistema di progressione;
+tolte la sezione “Chain e level up mancanti per torre” (ultima voce: definire le combo tra torrette) e la domanda “Sblocco delle combo: condizioni oppure chip?”.
+
 ## 1.14.4 — Rimbalzo del guardiano sui bordi, testi delle carte con i numeri
 
 - **Rimbalzo del guardiano** (Marco): ora funziona come il raggio del Laser. Un proiettile che tocca un bordo dello schermo (lati e alto) rimbalza indietro con la

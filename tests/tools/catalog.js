@@ -232,6 +232,20 @@ function scenes(turretIds) {
       " player.level = 2; Object.assign(player.up, { kHive: 1, kLaser: 1, kWheel: 1, kVortex: 1, proj: 1 }); player.x = player.targetX = 120; " +
       [[90, 260], [250, 230], [150, 330], [290, 380], [60, 400], [200, 160]].map(([x, y], i) => FOE(i % 2 ? "shell" : "brute", x, y)).join(" ") +
       " __cat.step(90); const e = living()[2]; if (e) guardProc(player, { laser: true }, e); guardWheel(player); guardWheel(player);", each: KEEP, frames: 50 }, ["drawPlayer", "FX.laserSpin", "FX.wheelDrone"]);
+  // combo tra due torrette (1.15.0): disegni nuovi (raggio e scintille dei droni dell’Hive, scie di fuoco, laser del campo, missili caricati)
+  const FOES6 = [[90, 260], [250, 230], [150, 330], [290, 380], [60, 400], [200, 160]].map(([x, y], i) => FOE(i % 2 ? "shell" : "brute", x, y)).join(" ");
+  add(4, "effetti-combo-hive", "Combo tra torrette · Hive", "Droni a raggio (Beam: raggio nel colore del livello del drone), Droni statici (Teslacoil: scintille), Droni incendiari (Firewheel: scia di fuoco).",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([["hive", 3, { kBeam: 1, kTesla: 1, kWheel: 1, evo1: 1 }], ["beam", 2, { amp1: 1 }], ["tesla", 2, { orb: 1 }], ["wheel", 2, { trail1: 1 }]]) +
+      " slots[1].cd = slots[2].cd = slots[3].cd = Infinity; " + FOES6 + " player.cd = Infinity;", each: KEEP + " player.cd = Infinity; slots[1].cd = slots[2].cd = slots[3].cd = Infinity;", frames: 80 },
+    ["FX.hiveBeam", "FX.hiveSparks", "FX.fireTrail", "FX.hiveDrone"]);
+  add(4, "effetti-combo-campo", "Combo tra torrette · Disruption Drone", "Campo laser (Laser: laser orizzontale tra i due droni) e Campo a schegge (Aeroblast: salve verso l’interno).",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([["disr", 2, { kLaser: 1, kAero: 1 }], ["laser", 2, { sweep1: 1 }], ["aero", 2, { salvo1: 1 }]]) +
+      " slots[0].cd = 0; slots[1].cd = slots[2].cd = Infinity; " + FOES6 + " player.cd = Infinity;", each: KEEP + " player.cd = Infinity; slots[1].cd = slots[2].cd = Infinity;", frames: 50 },
+    ["FX.disrField", "FX.laserRays", "FX.aeroShard"]);
+  add(4, "effetti-combo-fulmini", "Combo tra torrette · Sky Guard e Thunderbolt", "Missili sovraccarichi (Teslacoil: alone elettrico) e Fulmini di fuoco (Firewheel: scia di fuoco lungo il fulmine).",
+    { progress: P1, setup: START(23) + " " + CLEAR + " " + TOWERS([["sky", 2, { kTesla: 1 }], ["tesla", 2, { over1: 1 }], ["thunder", 2, { kWheel: 1, sph: 1 }], ["wheel", 2, { trail1: 1 }]]) +
+      " slots[1].cd = slots[3].cd = Infinity; " + FOES6 + " player.cd = Infinity;", each: KEEP + " player.cd = Infinity; slots[1].cd = slots[3].cd = Infinity;", frames: 40 },
+    ["FX.missile", "FX.fireTrail", "FX.bolt"]);
   // § 5 carte
   const CARDS = (opts) => START(23) + " __cat.step(5); " + opts + " state = 'upgrade';";
   add(5, "carte-std-chain-lu", "Carte · Standard, Chain, Level up", "Il bordo e il pallino hanno il colore del tipo di danno.",

@@ -18,6 +18,6 @@ check("carte, descrizioni", [...ev("Object.values(TURRETS).map((d) => d.blurb)")
 check("carte standard potenziate dall’albero (tutti i livelli dei nodi)", ev(`[PLAYER_DEF, ...Object.values(TURRETS)].flatMap((d) => d.ups.filter((u) => u.cat === "std").flatMap((u) =>
   Array.from({ length: (TREE_NODE[d.id + ":std:" + u.id] || { max: 0 }).max }, (_, i) => i + 1).map((L) => { const s = makeShooter(d, 0, 0); s.sb = { [u.id]: L }; return stdDesc(s, u); })))`), 12, 500, 260);
 check("carte, note", ev(`[...Object.values(TURRETS).map((d) => describe({ kind: "new", id: d.id }).note),
-  ...PLAYER_DEF.ups.filter((u) => u.cat === "combo").map((u) => describe({ kind: "up", who: Object.assign(makeShooter(PLAYER_DEF, 0, 0), { level: 3, used: 2 }), up: u }).note)]`), 10, 500, 260);
+  ...[PLAYER_DEF, ...Object.values(TURRETS)].flatMap((d) => d.ups.filter((u) => u.cat === "combo").map((u) => describe({ kind: "up", who: Object.assign(makeShooter(d, 0, 0), { level: 3, used: 2 }), up: u }).note))]`), 10, 500, 260);
 check("Moduli, righe dell’equipaggiamento", ev("Object.keys(MOD).flatMap((fx) => [0, 1, 2, 3, 4].map((r) => modText(+fx, r)))"), 11, 600, 290);
 dom.window.close();

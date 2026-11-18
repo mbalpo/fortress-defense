@@ -1226,8 +1226,9 @@ const FX = {
     ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832); ctx.fill();
     ctx.globalAlpha = 0.6 * Math.min(1, o.t / 0.5); ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
   },
-  missile(o, mini) {                             // Sky Guard · missile: corpo, punta e fiamma in coda
+  missile(o, mini) {                             // Sky Guard · missile: corpo, punta e fiamma in coda (combo Missili sovraccarichi: alone elettrico che crepita)
     const ca = Math.cos(o.a), sa = Math.sin(o.a), L = mini ? 5 : 8, wd = mini ? 1.6 : 2.5, x = o.x, y = o.y;
+    if (o.charged) { disc(x, y, 9, TYPES.electric.color, 0.25 + 0.15 * Math.sin(o.age * 40)); disc(x, y, 5, "#fff6b0", 0.35); }
     disc(x - ca * (L + 2), y - sa * (L + 2), wd + 0.8, "#ffd18a", 0.85);
     poly([[x + ca * L, y + sa * L], [x - ca * L - sa * wd, y - sa * L + ca * wd], [x - ca * L + sa * wd, y - sa * L - ca * wd]], "#e8eefc", TYPES.fire.color, 1.2);
   },
@@ -1278,7 +1279,13 @@ const FX = {
     for (const [a, b] of o.links) glow(a.x, a.y - (a === pos ? 0 : 0), b.x, b.y, TYPES.energy.color, 2.6, 1);
   },
   wheelDrone(o, opt, trailT) {                   // Firewheel Drone · ruota di fuoco con la scia
-    for (const p of o.trail) {                   // scia di fuoco (1.12.2): brace e due lingue che tremolano e si spengono
+    FX.fireTrail(o.trail, trailT);
+    ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(o.x, o.y, opt.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
+    for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; glow(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, "#ffb347", 2, 0.8); }
+    disc(o.x, o.y, opt.mini ? 3 : 5, "#ffe0b0");
+  },
+  fireTrail(pts, trailT) {                       // Firewheel Drone · scia di fuoco (anche delle combo Droni incendiari e Fulmini di fuoco)
+    for (const p of pts) {                       // scia di fuoco (1.12.2): brace e due lingue che tremolano e si spengono
       const q = clamp(p.t / trailT, 0, 1), f = 0.5 + 0.5 * Math.sin(clock * 10 + p.x * 0.37 + p.y * 0.21);
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 14);
       g.addColorStop(0, "rgba(255,170,60," + (0.5 * q) + ")"); g.addColorStop(1, "rgba(255,80,30,0)");
@@ -1287,9 +1294,7 @@ const FX = {
       flame(p.x + 1, p.y + 6, (13 + 6 * (1 - f)) * q + 3, 4.5, q);
       flame(p.x + 7, p.y + 4, (8 + 5 * f) * q + 3, 3.5, q);
     }
-    ctx.globalAlpha = 0.18; ctx.fillStyle = TYPES.fire.color; ctx.beginPath(); ctx.arc(o.x, o.y, opt.rad, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
-    for (let k = 0; k < 3; k++) { const aa = o.rot + k * 2.0944; glow(o.x, o.y, o.x + Math.cos(aa) * opt.rad, o.y + Math.sin(aa) * opt.rad, "#ffb347", 2, 0.8); }
-    disc(o.x, o.y, opt.mini ? 3 : 5, "#ffe0b0");
+    ctx.globalAlpha = 1;
   },
   hiveWave(o, x, y, ang, len) {                  // Hive · onda d’urto a ventaglio
     const k = 1 - clamp(o.t / 0.35, 0, 1);
@@ -1304,6 +1309,21 @@ const FX = {
     const r = 4.5 + o.lvl * 1.5, pts = [];
     for (let i = 0; i < 6; i++) pts.push([o.x + Math.cos(i * 1.0472 + 0.5236) * r, o.y + Math.sin(i * 1.0472 + 0.5236) * r]);
     poly(pts, o.kami > 0 ? "#ff7a3d" : TYPES.force.color, "#ffffff", 1); disc(o.x, o.y, r * 0.35, "#070b16");
+  },
+  hiveBeam(o, e) {                               // combo Droni a raggio (Hive + Beam) · raggio dal drone al bersaglio, nel colore del livello del drone
+    const c = ["#b07cff", "#d9a4ff", "#ff9be6"][o.lvl - 1], k = clamp(o.ray.t / 0.3, 0, 1);
+    glow(o.x, o.y, e.x, e.y, c, 1.6 + o.lvl * 0.6, k); disc(e.x, e.y, 4 + o.lvl, c, 0.5 * k);
+  },
+  hiveSparks(o) {                                // combo Droni statici (Hive + Teslacoil) · scintille elettriche attorno al drone
+    const t = typeof clock === "number" ? clock : 0;
+    ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.1; ctx.lineCap = "round";
+    for (let j = 0; j < 4; j++) {
+      const a = t * (j % 2 ? 7 : -6) + j * 1.57, r1 = 7 + o.lvl, r2 = r1 + 6 + 3 * Math.sin(t * 31 + j * 2);
+      ctx.globalAlpha = 0.4 + 0.5 * Math.abs(Math.sin(t * 23 + j));
+      ctx.beginPath(); ctx.moveTo(o.x + Math.cos(a) * r1, o.y + Math.sin(a) * r1);
+      ctx.lineTo(o.x + Math.cos(a + 0.35) * (r1 + r2) / 2, o.y + Math.sin(a + 0.35) * (r1 + r2) / 2); ctx.lineTo(o.x + Math.cos(a - 0.1) * r2, o.y + Math.sin(a - 0.1) * r2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
   },
   railShot(o, a) {                               // Railgun · proiettile a punta con una scia corta (non una linea)
     const ca = Math.cos(a), sa = Math.sin(a), x = o.x, y = o.y;

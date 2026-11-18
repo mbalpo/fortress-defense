@@ -20,11 +20,18 @@ ups(parseUps(block("const PLAYER_DEF")));
 // combo del guardiano: K(id, torretta, condizione, livello del guardiano, nome, descrizione)
 const TNAME = Object.fromEntries([...src.matchAll(/^  (\w+): \{ name: "([^"]+)"/gm)].map((x) => [x[1], x[2]]));
 const chainName = (tid, id) => { const u = parseUps(block("  " + tid + ": { name:")).find((v) => v.id === id); return u ? u.name : id; };
-const combos = [...block("const PLAYER_DEF").matchAll(/^\s+K\("(\w+)", "(\w+)", (\d+|"\w+"), (\d), "([^"]+)", "([^"]+)"\)/gm)].map((x) =>
+const parseK = (b) => [...b.matchAll(/^\s+K\("(\w+)", "(\w+)", (\d+|"\w+"), (\d), "([^"]+)", "([^"]+)"\)/gm)];
+const combos = parseK(block("const PLAYER_DEF")).map((x) =>
   `${TNAME[x[2]]} (${x[3].startsWith('"') ? "chain " + chainName(x[2], x[3].slice(1, -1)) : "torretta lv" + x[3]}${x[4] > 1 ? ", guardiano lv" + x[4] : ""}) → ${x[5]}: ${x[6]}`);
 out.push("- **Combo** (contano come scelte del guardiano): " + (combos.length ? combos.join(" · ") : "nessuna."), "");
 const tre = /^  (\w+): \{ name: "([^"]+)", type: "(\w+)", range: (\d+), reload: ([\d.]+), blurb: "([^"]+)", ups: \[/gm; let m;
-while ((m = tre.exec(src))) { out.push(`### ${m[2]} (\`${m[1]}\`)`, "", `${TN[m[3]]} · ${m[6]}. Portata ${m[4]} px, ricarica ${m[5].replace(".", ",")} s.`); ups(parseUps(block("  " + m[1] + ": { name:"))); out.push(""); }
+// combo tra due torrette (DESIGN.md § 3): K(id, secondaria, voce chain della secondaria, livello della principale, nome, descrizione)
+const pairCombos = (tid) => parseK(block("  " + tid + ": { name:")).map((x) =>
+  `+ ${TNAME[x[2]]} (chain ${chainName(x[2], x[3].slice(1, -1))}) → ${x[5]}: ${x[6]}`);
+while ((m = tre.exec(src))) {
+  out.push(`### ${m[2]} (\`${m[1]}\`)`, "", `${TN[m[3]]} · ${m[6]}. Portata ${m[4]} px, ricarica ${m[5].replace(".", ",")} s.`); ups(parseUps(block("  " + m[1] + ": { name:")));
+  const pc = pairCombos(m[1]); out.push(`- **Combo tra due torrette** (da principale al lv 2, contano come scelte di questa torretta): ${pc.length ? pc.join(" · ") : "nessuna."}`, "");
+}
 out.push("### Nemici", "");
 for (const x of src.matchAll(/^  (\w+):\s+\{ type: "(\w+)",\s+hp: (\d+),\s+speed: (\d+), r: (\d+),\s+dmg: ([\d.]+),\s+look: "(\w+)"\s+\},\s+\/\/ (.+)$/gm)) out.push(`- \`${x[1]}\` — ${x[8]}, ${TN[x[2]]}: vita ${x[3]}, velocità ${x[4]}, raggio ${x[5]}, danno alla cupola ${x[6].replace(".", ",")}`);
 const RES = eval("(" + src.match(/const RESIST = (\{[\s\S]*?\n\});/)[1] + ")");
