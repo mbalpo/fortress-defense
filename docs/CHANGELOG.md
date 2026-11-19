@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: risposte di Marco sul § 17 (solo DESIGN.md, gioco invariato)
+
+- § 17, **[deciso]** (Marco), in risposta alle verifiche di fattibilità:
+  - partita sospesa: autosalvataggio quando tutti i nemici di un’ondata sono sconfitti, “Continua” riprende dall’ondata successiva;
+  - nemici nuovi con resistenza al proprio tipo sopra o sotto quella della campagna (50%), sempre tra il 25% e il 60%;
+  - ranger vicino al bordo: si sposta davanti al guardiano (in alternativa accanto al ranger del lato opposto); fattibile, perché la posizione dei ranger si calcola a ogni passo da quella del guardiano;
+  - il prisma energy si disegna sotto la barra della vita, come gli altri boss giganti;
+  - quote dei boss (metà schermo a fine ondata 20, rilasci della nave force) sempre dal bordo inferiore del boss;
+  - il boss conta sempre come ondata 20 anche se compare alla 18: le scelte delle ondate 18 e 19 arrivano normalmente;
+  - invisibili: si aggiunge il Firewheel Drone a chi li colpisce, non Thunderbolt e Hive; una bruciatura già applicata continua;
+  - un colpo bloccato dal guscio esplode lì (Sky Guard, Aeroblast);
+  - i boss nuovi sono più grandi degli attuali, devono incutere timore e si mostrano a poco a poco scendendo dall’alto.
+- Nota **[Claude]** nel § 17: con le quote dal bordo inferiore, al 25% la punta della nave force è a y 480, circa 9 px sopra la cima della cupola (y 489).
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 31): nel riferimento del § 17 riscritte le voci sugli invisibili, sul guscio e sui boss, aggiunte quelle su autosalvataggio, boss come ondata 20,
+resistenze tra 25% e 60% e ranger al bordo.
+
 ## Decisioni di design: Ranger e Protezione planetaria (solo DESIGN.md, gioco invariato)
 
 - **DESIGN.md**: nuovo **§ 17 “Ranger e Protezione planetaria (da costruire)”** con il testo di Marco preparato su claude.ai (ranger, frammenti e costi, modalità a 5 continenti,
