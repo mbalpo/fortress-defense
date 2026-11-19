@@ -225,3 +225,19 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   m.save("75-planetaria-battaglia.png");
   em("wave = 12; pw.mb = 2; domeHp = 0"); m.frame(2); m.save("76-planetaria-sconfitta.png");
 }
+{ // 1.17.0: ranger (DESIGN.md § 17, fase 2): schermata e supporti in campo
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const frags = { alfa: 650, prometeo: 400, omega: 220, mnemosine: 0, sigma: 1100, ceo: 260, gamma: 300, iperione: 90, epsilon: 500, atlante: 200 };
+  const prog = { cleared: 64, seen: ALL_SEEN, planet: { lv: {}, frags, day: { d: "", n: 0 }, eq: ["sigma", "prometeo"] } };
+  const m = game({ progress: prog, src }), em = m.w.__ev;
+  m.save("77-menu-ranger.png");
+  em("openRangers('menu'); rangerSel = 'alfa'"); m.frame(); m.save("78-ranger.png");
+  em("tapRanger('omega'); tapRanger('omega')"); m.frame(); m.save("79-ranger-messaggio.png");
+  let n = 80;
+  for (const [id, other] of [["alfa", "prometeo"], ["omega", "atlante"], ["sigma", "ceo"], ["gamma", "iperione"], ["epsilon", "mnemosine"]]) {
+    const b = game({ progress: Object.assign({}, prog, { planet: { lv: {}, frags: { [id]: 1100, [other]: 1100 }, day: { d: "", n: 0 }, eq: [id, other] } }), src }), eb = b.w.__ev;
+    eb("selLevel = 42; startRun('standard'); queue = []; enemies.length = 0; for (const x of [130, 180, 230]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { y: 360, speed: 0, hp: 1e9, maxHp: 1e9 }); } RG.list[0].t = 0; player.cd = 1e9;");
+    for (let i = 0; i < 12; i++) { eb("player.cd = 1e9; domeHp = domeMax"); b.frame(); }
+    b.save((n++) + "-ranger-" + id + ".png");
+  }
+}

@@ -761,14 +761,16 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // abilities = abilità della barriera equipaggiate { resist, control, offense }; null = quelle d’ingresso (mai cambiate)
 // gear = equipaggiamento: inventario, pezzi equipaggiati e Moduli installati (cleanGear)
 // majors = Sigilli maggiori da spendere (dalla 1.12.0: boss in Epica)
-// planet = Protezione planetaria (1.16.0): lv livelli completati per tipo, frags frammenti dei ranger, day partite del giorno { d: "AAAA-MM-GG", n }
+// planet = Protezione planetaria (1.16.0): lv livelli completati per tipo, frags frammenti dei ranger, day partite del giorno { d: "AAAA-MM-GG", n }, eq ranger equipaggiati (1.17.0)
 const progress = { cleared: 0, clearedEpic: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} }, planet: null };
 function cleanPlanet(p) {                          // da dati qualsiasi; i salvataggi precedenti alla versione 7 partono da zero
   const q = p && p.planet && typeof p.planet === "object" ? p.planet : {}, lv = {}, frags = {};
   for (const t of PLANET.order) lv[t] = q.lv && Number.isFinite(q.lv[t]) ? clamp(Math.floor(q.lv[t]), 0, 9999) : 0;
   for (const id in RANGER_NAME) frags[id] = q.frags && Number.isFinite(q.frags[id]) ? clamp(Math.floor(q.frags[id]), 0, 1e7) : 0;
   const day = q.day && typeof q.day.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(q.day.d) && Number.isFinite(q.day.n) ? { d: q.day.d, n: clamp(Math.floor(q.day.n), 0, PLANET.perDay) } : { d: "", n: 0 };
-  return { lv, frags, day };
+  const conv = Object.values(RANGERS).map((r) => r[1]), eq = [];   // ranger equipaggiati (1.16.1): validi, diversi, al massimo 2 e un solo ranger di conversione
+  if (Array.isArray(q.eq)) for (const id of q.eq) if (RANGER_NAME[id] && !eq.includes(id) && eq.length < 2 && !(conv.includes(id) && eq.some((x) => conv.includes(x)))) eq.push(id);
+  return { lv, frags, day, eq };
 }
 progress.planet = cleanPlanet(null);
 // Sigilli e albero da dati qualsiasi (localStorage o file importato): tiene solo i valori validi
@@ -845,10 +847,74 @@ function planetReward() {
   if (!pw || pw.paid) return null;
   pw.paid = true;
   const x2 = dayType() === planetType, f = PLANET.F * (0.7 * Math.min(wave, N_WAVES) / N_WAVES + 0.3 * Math.min(pw.mb, 3) / 3) * (x2 ? PLANET.dayBonus : 1);
-  const n = Math.round(f), [a, b] = RANGERS[planetType], na = Math.round(n * Math.random()), fr = progress.planet.frags;
+  const n = Math.round(f), [a, b] = RANGERS[planetType], fr = progress.planet.frags;
+  const ma = rangerLv(a) >= RANGER.maxLv, mb = rangerLv(b) >= RANGER.maxLv;   // uno al livello massimo: tutti all’altro [deciso]
+  const na = ma && !mb ? 0 : mb && !ma ? n : Math.round(n * Math.random());
   fr[a] += na; fr[b] += n - na; saveProgress();
   return { n, x2, parts: [[a, na], [b, n - na]] };
 }
+
+/* ---------- RANGER (DESIGN.md § 17, fase 2) ----------
+   Due per tipo: supporto (cubo con la lettera greca) e conversione (sfera). Si sbloccano con i frammenti (soglia T) e salgono di livello fino al 10:
+   il livello L richiede in tutto T × (1 + 0,5 × (L − 1)) frammenti [deciso]; T = 20 F = 200 [Claude, provvisorio].
+   Al massimo 2 equipaggiati, un solo ranger di conversione [deciso]; valgono in tutte le modalità [Claude, da confermare]. */
+const RANGER = {
+  T: 200, maxLv: 10,
+  range: 260,                                                  // corto raggio = portata dell’Aeroblast senza potenziamenti, misurato dal ranger [deciso]
+  side: 34, front: 46,                                         // distanza dal guardiano ai lati; davanti quando il lato esce dallo schermo [deciso]
+  first: 5,                                                    // il primo effetto dei supporti dopo 5 s [Claude]
+};
+// supporti: valori del § 17 [Claude, provvisorio] (tabella dei 10 livelli); i ranger di conversione non hanno valori propri oltre al livello
+const RANGER_DEF = {
+  alfa:      { type: "fire",     role: "sup",  letter: "α", fx: "Fiammata" },
+  prometeo:  { type: "fire",     role: "conv" },
+  omega:     { type: "force",    role: "sup",  letter: "ω", fx: "Onda" },
+  mnemosine: { type: "force",    role: "conv" },
+  sigma:     { type: "electric", role: "sup",  letter: "σ", fx: "Fulmine" },
+  ceo:       { type: "electric", role: "conv" },
+  gamma:     { type: "energy",   role: "sup",  letter: "γ", fx: "Bolle" },
+  iperione:  { type: "energy",   role: "conv" },
+  epsilon:   { type: "physical", role: "sup",  letter: "ε", fx: "Missili" },
+  atlante:   { type: "physical", role: "conv" },
+};
+const lin = (a, b, L) => a + (b - a) * (L - 1) / 9;            // interpolazione lineare tra livello 1 e 10
+const RV = {
+  cd: (L) => Math.round(lin(40, 20, L) * 10) / 10,             // ciclo dei supporti (s)
+  dmg: (L) => 1 + 0.15 * (L - 1),                              // danno: +15% del valore base per livello
+  alfaY: (L) => Math.round(lin(4, 10, L) * 10) / 10, alfaZ: (L) => 0.1 * L, alfaDps: 4, alfaBurn: 4,
+  omegaDeg: (L) => Math.round(lin(20, 120, L)), omegaDmg: 20, omegaT: 3,
+  sigmaN: (L) => Math.ceil(L / 2), sigmaP: (L) => 0.05 * L, sigmaDmg: 14, sigmaPara: 1,
+  gammaN: (L) => Math.round(lin(2, 12, L)), gammaDmg: 20, gammaMul: (L) => 1 + 0.07 * (L - 1), gammaRad: 40, gammaLife: 15,
+  epsN: [2, 2, 3, 3, 3, 4, 4, 4, 5, 6], epsMul: [1, 1.3, 1.3, 1.3, 1.6, 1.6, 1.6, 1.9, 1.9, 1.9], epsRange: [260, 260, 260, 299, 299, 299, 338, 338, 338, 377], epsDmg: 20,
+};
+const rangerTotal = (L) => RANGER.T * (1 + 0.5 * (L - 1));      // frammenti in tutto per avere il livello L
+function rangerLv(id) { const f = progress.planet.frags[id] || 0; let L = 0; while (L < RANGER.maxLv && f >= rangerTotal(L + 1)) L++; return L; }
+const rangersOpen = () => planetOpen();
+// equipaggia o toglie (al massimo 2, un solo ranger di conversione): restituisce il messaggio per la schermata
+function toggleRanger(id) {
+  const eq = progress.planet.eq, i = eq.indexOf(id);
+  if (i >= 0) { eq.splice(i, 1); saveProgress(); return RANGER_NAME[id] + " tolto"; }
+  if (!rangerLv(id)) return "Servono " + RANGER.T + " frammenti per sbloccarlo";
+  if (eq.length >= 2) return "Al massimo 2 ranger: togline uno";
+  if (RANGER_DEF[id].role === "conv" && eq.some((x) => RANGER_DEF[x].role === "conv")) return "Un solo ranger di conversione alla volta";
+  eq.push(id); saveProgress(); return RANGER_NAME[id] + " equipaggiato";
+}
+// effetto al livello L, per la schermata dei ranger (danni prima dei bonus di albero e Moduli)
+function rangerDesc(id, L) {
+  const d = RANGER_DEF[id], t = TYPES[d.type].name, every = " ogni " + fmt(RV.cd(L)) + " s", m = RV.dmg(L);
+  if (id === "atlante") return ["Il guardiano ignora il " + 10 * L + "% della resistenza", "dei nemici (le debolezze non cambiano)"];
+  if (d.role === "conv") return ["Il " + 10 * L + "% del danno di ogni colpo del guardiano", "diventa " + t];
+  if (id === "alfa") return ["Fiammata" + every + " per " + fmt(RV.alfaY(L)) + " s, " + fmt(RV.alfaDps * m) + " al secondo", "bruciatura " + Math.round(RV.alfaZ(L) * 100) + "% (" + fmt(RV.alfaBurn * m) + " al secondo)"];
+  if (id === "omega") return ["Onda di " + RV.omegaDeg(L) + "°" + every + ", danno " + fmt(RV.omegaDmg * m), "vulnerabilità, rallentamento o indebolimento"];
+  if (id === "sigma") return ["Fulmine" + every + " su " + RV.sigmaN(L) + (RV.sigmaN(L) === 1 ? " bersaglio" : " bersagli") + ", danno " + fmt(RV.sigmaDmg * m), "paralisi " + Math.round(RV.sigmaP(L) * 100) + "%"];
+  if (id === "gamma") return [RV.gammaN(L) + " bolle" + every + ", durano " + RV.gammaLife + " s", "esplodono al contatto: danno " + fmt(RV.gammaDmg * RV.gammaMul(L))];
+  return [RV.epsN[L - 1] + " missili a ricerca" + every, "danno " + fmt(RV.epsDmg * RV.epsMul[L - 1]) + ", portata " + RV.epsRange[L - 1] + " px"];
+}
+// schermata dei ranger (dalla Protezione planetaria e dal menu): ranger scelto, messaggio, schermata a cui tornare
+let rangerSel = "alfa", rangerMsg = "", rangerBack = "menu";
+function openRangers(from) { if (!rangersOpen()) return; rangerBack = from || state; state = "rangers"; rangerMsg = ""; runArm = null; }
+function closeRangers() { state = rangerBack === "planet" ? "planet" : "menu"; }
+function tapRanger(id) { if (rangerSel === id) rangerMsg = toggleRanger(id); else { rangerSel = id; rangerMsg = ""; } }   // secondo tocco: equipaggia o toglie
 const treeOpen = () => progress.cleared >= CAMPAIGN.sealsFrom || progress.claims.length > 0;   // l’albero si apre completando il livello 31
 
 /* ---------- ALBERO DEI SIGILLI: acquisto dei nodi e torrette equipaggiate ---------- */
@@ -1150,10 +1216,10 @@ function popup(e, v, mult, src) {
     color: cnt ? "#7fe8ff" : mult > 1 ? "#ffd166" : mult < 1 ? "#7f8ba3" : "#e8eefc",
   });
 }
-// ignore = ignora le resistenze del nemico (Laser, Raggi penetranti)
+// ignore = ignora le resistenze del nemico (Laser, Raggi penetranti); un numero da 0 a 1 = ne ignora quella quota (ranger Atlante, le debolezze non cambiano)
 function damage(e, base, type, quiet, src, ignore) {
   let mult = RESIST[e.def.type][type];
-  if (ignore && mult < 1) mult = 1;
+  if (ignore && mult < 1) mult = ignore === true ? 1 : mult + (1 - mult) * ignore;
   if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia combustibile (Firewheel)
   if (e.vulnT > 0 && (e.vulnType === "all" || e.vulnType === type)) mult *= 1 + 0.25 * (1 - (e.statRes || 0));
   if (e.fieldT > 0 && src !== "disr") mult *= e.fieldAmp;
@@ -2294,6 +2360,117 @@ function fanOffsets(p) { return [-0.6, -0.3, 0.3, 0.6]; }
 // t = bersaglio da inseguire (oppure null: il colpo va dritto lungo ang); o = tipo di proiettile:
 // fan = secondario del ventaglio; clone = del Clone speculare (chain e level up del guardiano sì, combo no);
 // frag = frammento della combo Railgun (skip: nemici già colpiti dal proiettile da cui nasce); charged = Colpo caricato (Teslacoil: numero di rimbalzi ereditati); proc = combo da attivare al primo impatto
+/* ---------- RANGER IN CAMPO (DESIGN.md § 17, fase 2) ---------- */
+// RG: ranger della partita (dai ranger equipaggiati e sbloccati); conv = conversione del guardiano { type, k }; ign = quota di resistenza ignorata (Atlante)
+let RG = { list: [], conv: null, ign: 0 };
+function startRangers() {
+  RG = { list: [], conv: null, ign: 0 };
+  progress.planet.eq.forEach((id, i) => {
+    const L = rangerLv(id), d = RANGER_DEF[id]; if (!L) return;
+    const r = { id, L, d, type: d.type, x: player.x, y: player.y, t: RANGER.first, bob: i * 1.7 };
+    RG.list.push(r);
+    if (d.role === "conv") { if (d.type === "physical") RG.ign = 0.1 * L; else RG.conv = { type: d.type, k: 0.1 * L }; }
+  });
+  RG.list.forEach((r, i) => { r.side = RG.list.length === 1 ? -1 : i ? 1 : -1; });
+}
+// colpo del guardiano: con un ranger di conversione una quota (10% per livello) va nel tipo del ranger [deciso]; Atlante ignora parte della resistenza
+function guardHit(e, dmg, quiet) {
+  const c = RG.conv, k = c ? c.k : 0;
+  if (k < 1) damage(e, dmg * (1 - k), "physical", quiet, "player", RG.ign);
+  if (k > 0 && !e.dead) damage(e, dmg * k, c.type, quiet || k < 0.5, "player");
+}
+// bonus dei supporti: Moduli del loro tipo e, nell’albero, i nodi Tipi del loro tipo (la durata degli stati vale già in slow, burn…) [deciso]
+const rangerBonus = (t) => 1 + TREE_VAL.typeDmg * treeLv("types:dmg:" + t) + (GEAR.type[t] || 0);
+function rangerTick(dt) {
+  for (const r of RG.list) {                        // posizione: ai lati del guardiano; se il lato esce dallo schermo, davanti a lui
+    let tx = player.x + r.side * RANGER.side, ty = player.y - 10;
+    if (tx < 14 || tx > W - 14) { tx = player.x; ty = player.y - RANGER.front; }
+    r.x += (tx - r.x) * Math.min(1, dt * 10); r.y += (ty - r.y) * Math.min(1, dt * 10); r.bob += dt;
+    if (r.d.role !== "sup") continue;
+    r.t -= dt; if (r.t > 0) continue;
+    const reach = r.id === "epsilon" ? RV.epsRange[r.L - 1] : RANGER.range;
+    const tg = nearestTo(r.x, r.y, reach + 30); if (!tg || dist(tg.x, tg.y, r.x, r.y) > reach + tg.def.r) continue;   // aspetta un nemico a portata
+    r.t = RV.cd(r.L); SUPPORT[r.id](r, tg);
+  }
+}
+const SUPPORT = {
+  alfa(r, tg) {                                     // fiammata a corto raggio per Y s verso il nemico più vicino; Z% di bruciatura (riapplicabile quando è finita)
+    const m = RV.dmg(r.L) * rangerBonus("fire"), Y = RV.alfaY(r.L), Z = RV.alfaZ(r.L);
+    spawnEnt({ t: Y, life: Y, r, tg, ang: Math.atan2(tg.y - r.y, tg.x - r.x), len: 0, dead: false,
+      update(dt) {
+        this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
+        if (!this.tg || this.tg.dead || dist(this.tg.x, this.tg.y, r.x, r.y) > RANGER.range + this.tg.def.r) this.tg = nearestTo(r.x, r.y, RANGER.range);
+        if (this.tg) this.ang = Math.atan2(this.tg.y - r.y, this.tg.x - r.x);
+        this.len = this.tg ? Math.min(RANGER.range, dist(this.tg.x, this.tg.y, r.x, r.y) + 24) : Math.max(40, this.len - 200 * dt);
+        for (const e of living()) {
+          const dx = e.x - r.x, dy = e.y - r.y, d = Math.hypot(dx, dy); if (d > this.len + e.def.r) continue;
+          let da = Math.atan2(dy, dx) - this.ang; da = Math.atan2(Math.sin(da), Math.cos(da));
+          if (Math.abs(da) > 0.2 + e.def.r / Math.max(d, 1)) continue;
+          damage(e, RV.alfaDps * m * dt, "fire", true, "ranger");
+          if (e.burnT <= 0 && (e.alfaT || 0) <= clock) { e.alfaT = clock + 1; if (Math.random() < Z) burn(e, 3, RV.alfaBurn * m); }   // un tiro al secondo per nemico
+        }
+      },
+      draw() { FX.rangerFlame(this, r); } });
+  },
+  omega(r, tg) {                                    // onda a corto raggio, ampiezza da 20° a 120°: danno e uno stato a caso (vulnerabilità, rallentamento, indebolimento)
+    const m = RV.dmg(r.L) * rangerBonus("force"), ang = Math.atan2(tg.y - r.y, tg.x - r.x), half = RV.omegaDeg(r.L) * Math.PI / 360;
+    for (const e of living()) {
+      const dx = e.x - r.x, dy = e.y - r.y, d = Math.hypot(dx, dy); if (d > RANGER.range + e.def.r) continue;
+      let da = Math.atan2(dy, dx) - ang; da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) > half + e.def.r / Math.max(d, 1)) continue;
+      damage(e, RV.omegaDmg * m, "force", false, "ranger"); if (e.dead) continue;
+      const k = Math.floor(Math.random() * 3);
+      if (k === 0) vuln(e, RV.omegaT, "all"); else if (k === 1) slow(e, RV.omegaT); else weaken(e, RV.omegaT);
+    }
+    spawnEnt({ t: 0.35, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
+      draw() { FX.hiveWave(this, r.x, r.y, ang, RANGER.range, half, TYPES.force.color); } });
+  },
+  sigma(r, tg) {                                    // fulmine a ricerca: da 1 a 5 bersagli (anche lo stesso più volte), paralisi dal 5% al 50%
+    const m = RV.dmg(r.L) * rangerBonus("electric"), n = RV.sigmaN(r.L), p = RV.sigmaP(r.L), hit = new Set();
+    let x = r.x, y = r.y, e = tg;
+    for (let i = 0; i < n && e; i++) {
+      bolt(zigzag(x, y, e.x, e.y, 7), TYPES.electric.color, 0.25, 2);
+      damage(e, RV.sigmaDmg * m, "electric", false, "ranger"); if (!e.dead && Math.random() < p) para(e, RV.sigmaPara);
+      hit.add(e); x = e.x; y = e.y;
+      e = nearestTo(x, y, 200, hit) || [...hit].filter((h) => !h.dead)[0] || null;   // il prossimo più vicino; se non ce ne sono, di nuovo uno già colpito
+    }
+  },
+  gamma(r) {                                        // Y bolle di energia a corto raggio che esplodono al contatto (raggio fisso), restano 15 s
+    const m = RV.gammaMul(r.L) * rangerBonus("energy"), n = RV.gammaN(r.L);
+    for (let i = 0; i < n; i++) {
+      let bx = 0, by = 0;
+      for (let k = 0; k < 8; k++) {                   // un punto a portata, sopra la cupola e dentro lo schermo
+        const a = -Math.PI * (0.1 + 0.8 * Math.random()), d = 60 + Math.random() * (RANGER.range - 60);
+        bx = clamp(r.x + Math.cos(a) * d, 16, W - 16); by = clamp(r.y + Math.sin(a) * d, 60, GROUND_Y - 120);
+        if (domeK(bx, by, 20) > 1) break;
+      }
+      spawnEnt({ x: bx, y: by, age: 0, dead: false, bubble: true, seed: Math.random() * 6,
+        update(dt) {
+          this.age += dt; if (this.age > RV.gammaLife) { this.dead = true; return; }
+          if (!living().some((e) => dist(e.x, e.y, this.x, this.y) <= e.def.r + 9)) return;
+          this.dead = true;
+          for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= RV.gammaRad + e.def.r) damage(e, RV.gammaDmg * m, "energy", false, "ranger");
+          ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35);
+        },
+        draw() { FX.bubble(this); } });
+    }
+  },
+  epsilon(r) {                                      // raffica di missili a ricerca (da 2 a 6), danno e portata a livelli alterni
+    const m = RV.epsMul[r.L - 1] * rangerBonus("physical"), n = RV.epsN[r.L - 1], list = pickTargets({ x: r.x, y: r.y }, 9999, 99).filter((e) => dist(e.x, e.y, r.x, r.y) <= RV.epsRange[r.L - 1] + e.def.r);
+    for (let k = 0; k < n && list.length; k++) {
+      spawnEnt({ x: r.x, y: r.y - 6, a: -Math.PI / 2 + (k - (n - 1) / 2) * 0.35, t: list[k % list.length], age: 0, dead: false, tint: TYPES.physical.color,
+        update(dt) {
+          this.age += dt;
+          if (!this.t || this.t.dead) { this.t = nearestTo(this.x, this.y, 400); if (!this.t) { this.dead = true; return; } }
+          let d = Math.atan2(this.t.y - this.y, this.t.x - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+          this.a += clamp(d, -6 * dt, 6 * dt); this.x += Math.cos(this.a) * 300 * dt; this.y += Math.sin(this.a) * 300 * dt;
+          if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; damage(this.t, RV.epsDmg * m, "physical", false, "ranger"); ring(this.x, this.y, 14, TYPES.physical.color, 0.25); }
+          else if (this.age > 6) this.dead = true;
+        },
+        draw() { FX.missile(this, true); } });
+    }
+  },
+};
 function playerBullet(p, x, y, t, dmg, ang, o) {
   o = o || {};
   const fan = !!o.fan, clone = !!o.clone, frag = !!o.frag, charged = o.charged != null;
@@ -2327,9 +2504,9 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
         if (GEAR.ext) gearExtend(e);
         const dmg1 = dmg;                          // Moduli 6, 13, 18 (bonus sul nemico colpito) e critico (1); senza equipaggiamento dmg non cambia
         { const gm = p.gm || 1, gh = gearHit(e), cr = GEAR.crit && Math.random() < GEAR.crit; if (gh || cr) dmg = dmg1 * (gm + gh) / gm * (cr ? 1.5 : 1); }
-        this.hit.add(e); damage(e, dmg, "physical", false, "player"); knock(e, kb);
+        this.hit.add(e); guardHit(e, dmg, false); knock(e, kb);
         dmg = dmg1;
-        if (maxHp && !e.dead) { maxHp = false; damage(e, Math.min(GEAR.maxHp * e.maxHp, 2 * dmg), "physical", true, "player"); }
+        if (maxHp && !e.dead) { maxHp = false; guardHit(e, Math.min(GEAR.maxHp * e.maxHp, 2 * dmg), true); }
         if (fire) damage(e, dmg * 0.2, "fire", true, "player");
         if (force) damage(e, dmg * 0.2, "force", true, "player");
         if (proc) { guardProc(p, proc, e); proc = null; }
@@ -2618,7 +2795,7 @@ function startRun(m, resume) {
   runP2 = resume ? !!resume.p2 : !!GEAR.p2 && Math.random() < GEAR.p2;
   if (runP2) fromLv2(player);                                                                 // Modulo 29: guardiano dal livello 2
   statDur = 1 + TREE_VAL.statDur * treeLv("types:status"); cardsBonus = 1 + TREE_VAL.cards * treeLv("barrier:cards");
-  startAbilities();
+  startAbilities(); startRangers();
   slots = [null, null, null, null];
   META.startTurrets.slice(0, 4).forEach((id, i) => { slots[i] = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); });
   if (turretsLv2) slots.forEach((s) => { if (s) fromLv2(s); });
@@ -2822,6 +2999,7 @@ function update(dt) {
   const dx = player.targetX - player.x, step = PLAYER_SPEED * dt;
   player.x += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
   playerTick(player, dt);
+  rangerTick(dt);
   for (const s of slots) if (s) runTurret(s, dt);
 
   for (const o of ents) o.update(dt);
@@ -3115,6 +3293,7 @@ window.addEventListener("keydown", (e) => {
   if (state === "gear") { if (k === "escape") closeGear(); return; }
   if (state === "levels") { if (k === "escape") closeLevels(); else if (k === "enter") playLevel(); return; }
   if (state === "guide") { if (k === "escape") closeGuide(); return; }
+  if (state === "rangers") { if (k === "escape") closeRangers(); return; }
   if (state === "planet") { if (k === "escape") closePlanet(); else if (k >= "1" && k <= "5" && k.length === 1) startPlanet(PLANET.order[+k - 1]); return; }
   if (state === "upgrade" && (k === "b" || k === "tab")) { e.preventDefault(); upBuild = !upBuild; return; }
   if (state === "upgrade" && upBuild) { if (k === "escape" || k === "enter") upBuild = false; return; }
@@ -3159,11 +3338,12 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.16.0";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 7, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+const APP_VERSION = "1.17.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
 // · 7: planet (Protezione planetaria: livelli per tipo, frammenti dei ranger, partite del giorno); dalle versioni precedenti si parte da zero
+// · 8: planet.eq (ranger equipaggiati); dalla versione 7 nessun ranger equipaggiato
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),

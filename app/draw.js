@@ -532,7 +532,9 @@ function menuScreen() {
     button(60, 404, 240, 44, "", openPlanet, { stroke: "#3fe0ff", fill: "rgba(63,224,255,0.08)" });
     txt("Protezione planetaria", W / 2, 420, 15, "#e8eefc", "center", "800");
     txt("Oggi: " + TYPES[dayType()].name + " ×" + PLANET.dayBonus + " · partite rimaste " + gamesLeft() + "/" + PLANET.perDay, W / 2, 438, 10, "#9fb4d9", "center", "600");
-    txt("✓ Tutti gli sblocchi presi (livelli 10-" + PLANET.unlock + ")", 36, 470, 12, "#3fe0a0", "left", "500");
+    const eqd = progress.planet.eq.filter((id) => rangerLv(id)).map((id) => RANGER_NAME[id]);
+    button(60, 456, 240, 32, "Ranger" + (eqd.length ? " · " + eqd.join(", ") : " · nessuno in campo"), () => openRangers("menu"), { size: 12, stroke: "#c9a2ff" });
+    txt("✓ Tutti gli sblocchi presi (livelli 10-" + PLANET.unlock + ")", 36, 506, 11, "#3fe0a0", "left", "500");
   } else {
     txt("Sblocchi (a fine livello)", 36, 412, 12, "#9fb4d9", "left", "700");
     rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 428 + i * 15, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
@@ -582,8 +584,34 @@ function planetScreen() {
   });
   if (planetMsg) txt(planetMsg, W / 2, 540, 12, "#ff9a66", "center", "700");
   txt("Frammenti dei ranger anche perdendo · ondate senza pausa", W / 2, 558, 10, "#6f82ad", "center", "500");
-  button(60, 572, 240, 44, "Menu", closePlanet, { size: 14 });
+  button(24, 572, 150, 44, "Ranger", () => openRangers("planet"), { size: 14, stroke: "#c9a2ff" });
+  button(186, 572, 150, 44, "Menu", closePlanet, { size: 14 });
   txt("1-5 = continente · Esc = menu", W / 2, 632, 10, "#5f7299", "center", "500");
+}
+/* ---------- RANGER (1.17.0): schermata per sbloccarli (frammenti), vedere l’effetto ed equipaggiarli ---------- */
+function rangersScreen() {
+  dim(0.84);
+  txt("RANGER", W / 2, 44, 22, "#e8eefc", "center", "800");
+  txt("In campo " + progress.planet.eq.length + "/2 · un solo ranger di conversione", W / 2, 68, 11, "#9fb4d9", "center", "600");
+  const fr = progress.planet.frags;
+  PLANET.order.forEach((t, i) => RANGERS[t].forEach((id, j) => {
+    const x = 14 + j * 170, y = 82 + i * 82, w = 162, h = 76, c = TYPES[t].color, L = rangerLv(id), on = progress.planet.eq.includes(id), sel = rangerSel === id;
+    button(x, y, w, h, "", () => tapRanger(id), { stroke: sel ? "#e8eefc" : on ? "#ffd166" : L ? c : "#2c3a5f", fill: sel ? "rgba(40,56,96,0.8)" : "rgba(18,30,58,0.6)" });
+    FX.ranger({ x: x + 24, y: y + 30, bob: i + j, type: t, d: RANGER_DEF[id] });
+    txt(RANGER_NAME[id], x + 46, y + 18, 13, L ? "#e8eefc" : "#8a9ac0", "left", "800");
+    fitTxt(RANGER_DEF[id].role === "conv" ? "Conversione" : "Supporto · " + RANGER_DEF[id].fx, x + 46, y + 34, w - 52, 10, c, "left", "600");
+    if (on) txt("IN CAMPO", x + w - 6, y + 9, 8, "#ffd166", "right", "800");
+    const next = L >= RANGER.maxLv ? null : rangerTotal(L + 1), prev = L ? rangerTotal(L) : 0;
+    txt(L ? "Liv " + L + "/" + RANGER.maxLv : "Bloccato", x + 46, y + 50, 11, L ? "#e8eefc" : "#6f82ad", "left", "700");
+    txt(next ? fr[id] + "/" + next : "max", x + w - 8, y + 50, 10, "#9fb4d9", "right", "500");
+    ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x + 46, y + 58, w - 54, 5);
+    ctx.fillStyle = c; ctx.fillRect(x + 46, y + 58, (w - 54) * (next ? clamp((fr[id] - prev) / (next - prev), 0, 1) : 1), 5);
+  }));
+  const id = rangerSel, L = rangerLv(id), show = Math.max(1, L);
+  txt(RANGER_NAME[id] + (L ? " · livello " + L : " · al livello 1") + (L && L < RANGER.maxLv ? " (prossimo: livello " + (L + 1) + ")" : ""), 16, 504, 12, TYPES[RANGER_DEF[id].type].color, "left", "700");
+  rangerDesc(id, show).forEach((l, k) => fitTxt(l, 16, 522 + k * 15, 328, 11, "#e8eefc", "left", "500"));
+  txt(rangerMsg || (L ? "Tocca di nuovo per " + (progress.planet.eq.includes(id) ? "toglierlo" : "equipaggiarlo") : "Sblocco con " + RANGER.T + " frammenti (Protezione planetaria)"), W / 2, 566, 11, rangerMsg ? "#ffd166" : "#8a9ac0", "center", "600");
+  button(60, 580, 240, 44, "Indietro", closeRangers, { size: 14 });
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
 function sealLines() {
@@ -1149,6 +1177,7 @@ function drawWorld() {
   drawDomeFill(); drawGround();
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
+  for (const r of RG.list) FX.ranger(r);           // ranger ai lati del guardiano (DESIGN.md § 17)
   if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
   for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
   enemies.forEach(drawEnemy);
@@ -1156,7 +1185,7 @@ function drawWorld() {
   drawDomeEdge(); drawFortress();
 }
 function drawMenuBack() {}
-const MENU_STATES = ["menu", "save", "tree", "gear", "levels", "guide", "planet"];
+const MENU_STATES = ["menu", "save", "tree", "gear", "levels", "guide", "planet", "rangers"];
 function draw() {
   buttons = [];
   drawSky();
@@ -1194,6 +1223,7 @@ function draw() {
   else if (state === "levels") levelsScreen();
   else if (state === "guide") guideScreen();
   else if (state === "planet") planetScreen();
+  else if (state === "rangers") rangersScreen();
   if (rangeShow && (state === "play" || state === "pause")) drawRange();   // raggio d’azione al tocco: sopra tutto, anche in pausa
 }
 // raggio d’azione di una torretta toccata (1.14.2): arco centrato dove parte il guardiano (come la portata nella logica), rosso come il profilo della barriera, trasparente alla base e più visibile in cima;
@@ -1306,7 +1336,37 @@ const FX = {
     const ca = Math.cos(o.a), sa = Math.sin(o.a), L = mini ? 5 : 8, wd = mini ? 1.6 : 2.5, x = o.x, y = o.y;
     if (o.charged) { disc(x, y, 9, TYPES.electric.color, 0.25 + 0.15 * Math.sin(o.age * 40)); disc(x, y, 5, "#fff6b0", 0.35); }
     disc(x - ca * (L + 2), y - sa * (L + 2), wd + 0.8, "#ffd18a", 0.85);
-    poly([[x + ca * L, y + sa * L], [x - ca * L - sa * wd, y - sa * L + ca * wd], [x - ca * L + sa * wd, y - sa * L - ca * wd]], "#e8eefc", TYPES.fire.color, 1.2);
+    poly([[x + ca * L, y + sa * L], [x - ca * L - sa * wd, y - sa * L + ca * wd], [x - ca * L + sa * wd, y - sa * L - ca * wd]], "#e8eefc", o.tint || TYPES.fire.color, 1.2);   // tint: missili del ranger Epsilon
+  },
+  ranger(r) {                                    // ranger: sfera metallica del colore del tipo (conversione) o cubo metallico con la lettera greca (supporto) [deciso]
+    const c = TYPES[r.type].color, x = r.x, y = r.y + Math.sin(r.bob * 2.4) * 2.5;
+    ctx.globalAlpha = 0.25; ctx.fillStyle = "#000"; ctx.beginPath(); ctx.ellipse(x, r.y + 15, 8, 2.5, 0, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;   // ombra
+    if (r.d.role === "conv") {
+      const g = ctx.createRadialGradient(x - 3, y - 4, 1, x, y, 10);
+      g.addColorStop(0, "#ffffff"); g.addColorStop(0.35, c); g.addColorStop(1, "#1a2140");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = "rgba(232,238,252,0.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.stroke();
+    } else {
+      const h = 8;                               // cubo in assonometria: faccia davanti, sopra e lato (metallo), lettera sulla faccia davanti
+      poly([[x - h, y - h + 3], [x - h + 4, y - h - 1], [x + h + 4, y - h - 1], [x + h, y - h + 3]], "#c9d2e6", "#4a5680", 1);
+      poly([[x + h, y - h + 3], [x + h + 4, y - h - 1], [x + h + 4, y + h - 1], [x + h, y + h + 3]], "#6f7ba3", "#4a5680", 1);
+      poly([[x - h, y - h + 3], [x + h, y - h + 3], [x + h, y + h + 3], [x - h, y + h + 3]], "#9aa6c8", "#4a5680", 1);
+      txt(r.d.letter, x, y + 4, 13, c, "center", "800");
+    }
+  },
+  rangerFlame(o, r) {                            // ranger Alfa · fiammata: le fiamme della scia del Firewheel lungo il getto
+    const n = Math.max(2, Math.round(o.len / 22)), ca = Math.cos(o.ang), sa = Math.sin(o.ang), q = clamp(o.t / 0.4, 0, 1), pts = [];
+    for (let i = 1; i <= n; i++) pts.push({ x: r.x + ca * o.len * i / n, y: r.y + sa * o.len * i / n, t: q * (1 - 0.35 * i / n) });
+    FX.fireTrail(pts, 1);
+  },
+  bubble(o) {                                    // ranger Gamma · bolla di energia, come una bolla di sapone: velo trasparente, riflesso e iridescenza
+    const k = Math.min(1, o.age / 0.3, (RV.gammaLife - o.age) / 0.6), r = 9 + Math.sin(o.age * 3 + o.seed) * 0.8, x = o.x, y = o.y + Math.sin(o.age * 1.7 + o.seed) * 2;
+    disc(x, y, r, TYPES.energy.color, 0.1 * k);
+    ctx.globalAlpha = 0.75 * k; ctx.lineWidth = 1.2;
+    for (const [c, a0] of [["#7ff6ff", 0], ["#ff9be6", 2.1], ["#ffe14d", 4.2]]) {
+      ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(x, y, r, a0 + o.age, a0 + o.age + 2.1); ctx.stroke();
+    }
+    disc(x - r * 0.4, y - r * 0.45, r * 0.22, "#ffffff", 0.8 * k); ctx.globalAlpha = 1;
   },
   laserRays(rays) {                              // Laser · raggio principale e mini-raggi (con i rimbalzi sui bordi)
     for (const r of rays) for (const g of r.segs) glow(g.x1, g.y1, g.x2, g.y2, TYPES.energy.color, r.w * 0.45, 1);
@@ -1372,12 +1432,12 @@ const FX = {
     }
     ctx.globalAlpha = 1;
   },
-  hiveWave(o, x, y, ang, len) {                  // Hive · onda d’urto a ventaglio
-    const k = 1 - clamp(o.t / 0.35, 0, 1);
+  hiveWave(o, x, y, ang, len, half) {            // Hive · onda d’urto a ventaglio (anche il ranger Omega, con la sua ampiezza)
+    const k = 1 - clamp(o.t / 0.35, 0, 1); half = half || HIVE_HALF;
     for (let i = 0; i < 3; i++) {
       const r = len * clamp(k * 1.2 - i * 0.12, 0, 1); if (r <= 0) continue;
       ctx.globalAlpha = (1 - k) * 0.9; ctx.strokeStyle = TYPES.force.color; ctx.lineWidth = 2.6 - i * 0.7;
-      ctx.beginPath(); ctx.arc(x, y, r, ang - HIVE_HALF, ang + HIVE_HALF); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, r, ang - half, ang + half); ctx.stroke();
     }
     ctx.globalAlpha = 1;
   },

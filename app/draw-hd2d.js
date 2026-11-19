@@ -984,7 +984,7 @@ Object.assign(FX, {
         ctx.fillRect(Math.round(p.x / PX) * PX - z / 2, Math.round(p.y / PX) * PX - z / 2, z, z);
       }
     }
-    const sp = gridSprite("missile", [".kk.......", "kdckkkkkk.", "kddeeeee4k", "kdckkkkkk.", ".kk......."], turretPal(TYPES.fire.color));
+    const tc = o.tint || TYPES.fire.color, sp = gridSprite("missile:" + tc, [".kk.......", "kdckkkkkk.", "kddeeeee4k", "kdckkkkkk.", ".kk......."], turretPal(tc));   // tint: missili del ranger Epsilon
     ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.imageSmoothingEnabled = false;
     const z = mini ? 1.3 : PX; ctx.drawImage(sp, -6 * z, -2.5 * z, sp.width * z, sp.height * z); ctx.imageSmoothingEnabled = true; ctx.restore();
     const f = 0.8 + 0.2 * Math.sin((typeof clock === "number" ? clock : 0) * 40 + o.x);
@@ -1063,13 +1063,39 @@ Object.assign(FX, {
     ctx.globalAlpha = 1; pixelOrb(o.x, o.y, opt.mini ? 1 : 2, "#ffb347", clock);
     light(o.x, o.y, opt.rad * 1.8, "#ff8a3d", 0.8);
   },
-  hiveWave(o, x, y, ang, len) {                  // Hive · onda d’urto a ventaglio; HD-2D: archi di pixel che si allargano
-    const k = 1 - clamp(o.t / 0.35, 0, 1);
+  hiveWave(o, x, y, ang, len, half) {            // Hive · onda d’urto a ventaglio (anche il ranger Omega); HD-2D: archi di pixel che si allargano
+    const k = 1 - clamp(o.t / 0.35, 0, 1); half = half || HIVE_HALF;
     for (let i = 0; i < 3; i++) {
       const r = len * clamp(k * 1.2 - i * 0.12, 0, 1); if (r <= 0) continue;
-      pxEllipse(x, y, r, r, i ? TYPES.force.color : "#ffe0ff", (1 - k) * (1 - i * 0.25), ang - HIVE_HALF, ang + HIVE_HALF);
+      pxEllipse(x, y, r, r, i ? TYPES.force.color : "#ffe0ff", (1 - k) * (1 - i * 0.25), ang - half, ang + half);
     }
     ctx.globalAlpha = 1; light(x + Math.cos(ang) * len * k, y + Math.sin(ang) * len * k, len * 0.6, TYPES.force.color, (1 - k) * 0.6);
+  },
+  ranger(r) {                                    // ranger: sfera metallica (conversione) o cubo metallico con la lettera greca (supporto); HD-2D: a pixel, con luce del tipo
+    const c = TYPES[r.type].color, x = r.x, y = r.y + Math.round(Math.sin(r.bob * 2.4) * 2.5 / PX) * PX;
+    groundShadow(x, r.y + 15, 8, 0.35);
+    if (r.d.role === "conv") {
+      light(x, y, 22, c, 0.5);
+      for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {          // sfera a pixel: riflesso in alto a sinistra, ombra in basso a destra
+        if (i * i + j * j > 11) continue;
+        const z = (i + j) / 6; ctx.fillStyle = i === -1 && j === -2 ? "#ffffff" : z < -0.3 ? mix(c, "#ffffff", 0.45) : z < 0.3 ? c : mix(c, "#141030", 0.5);
+        ctx.fillRect(Math.round(x / PX) * PX + i * PX - PX / 2, Math.round(y / PX) * PX + j * PX - PX / 2, PX, PX);
+      }
+    } else {
+      const bx = Math.round(x / PX) * PX, by = Math.round(y / PX) * PX, n = 4;   // cubo: faccia davanti 8 × 8 pixel, sopra e lato più scuri
+      for (let j = -n; j < n; j++) for (let i = -n; i < n; i++) { ctx.fillStyle = j === -n || i === -n ? "#c9d2e6" : "#8d99bf"; ctx.fillRect(bx + i * PX, by + j * PX, PX, PX); }
+      ctx.fillStyle = "#dfe6f6"; for (let i = -n + 1; i <= n; i++) ctx.fillRect(bx + i * PX, by - (n + 1) * PX, PX, PX);
+      ctx.fillStyle = "#5d6890"; for (let j = -n; j < n; j++) ctx.fillRect(bx + n * PX, by + j * PX, PX, PX);
+      light(x, y, 16, c, 0.35);
+      txt(r.d.letter, x, y + 4, 13, c, "center", "800");
+    }
+  },
+  bubble(o) {                                    // ranger Gamma · bolla di sapone; HD-2D: cerchio a pixel iridescente, riflesso e luce energy
+    const k = Math.min(1, o.age / 0.3, (RV.gammaLife - o.age) / 0.6), r = 9 + Math.sin(o.age * 3 + o.seed) * 0.8, y = o.y + Math.sin(o.age * 1.7 + o.seed) * 2;
+    light(o.x, y, 18, TYPES.energy.color, 0.35 * k);
+    const cols = ["#7ff6ff", "#ff9be6", "#ffe14d"];
+    for (let i = 0; i < 3; i++) pxEllipse(o.x, y, r, r, cols[i], 0.8 * k, o.age + i * 2.1, o.age + i * 2.1 + 2.1);
+    pxDot(o.x - r * 0.4, y - r * 0.45, "#ffffff", 0.9 * k); ctx.globalAlpha = 1;
   },
   hiveDrone(o) {                                 // Hive · drone esagonale (arancione quando è kamikaze); HD-2D: sprite che cresce col livello, ali che sbattono
     const c = o.kami > 0 ? "#ff7a3d" : TYPES.force.color, P = ramp(c), n = 3 + o.lvl;

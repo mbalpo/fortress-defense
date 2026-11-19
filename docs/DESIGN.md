@@ -202,6 +202,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   un salvataggio precedente si importa senza blocchi, e un numero di bloccati superiore a quelli posseduti viene ridotto. **[Claude]**
   Versione 7 (1.16.0): in più `progress.planet` = `{ lv: { fire: n, … }, frags: { alfa: n, … }, day: { d: "AAAA-MM-GG", n } }` (Protezione planetaria, § 17: livelli completati per tipo,
   frammenti dei ranger, partite del giorno); le versioni 1-6 si importano con la Protezione planetaria da zero; tipi, ranger e date non validi vengono scartati. **[Claude]**
+  Versione 8 (1.17.0): in più `progress.planet.eq` (ranger equipaggiati, al massimo 2 e un solo ranger di conversione); la versione 7 si importa senza ranger equipaggiati. **[Claude]**
   Le versioni 1 e 2 si importano con l’inventario vuoto; pezzi, Moduli e installazioni non validi (tipi o effetti sconosciuti, doppioni, più Moduli degli slot) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non esporta la partita in sospeso (§ 2). L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
 - `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero, equipaggiamento; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
@@ -1140,3 +1141,37 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   la differenza viene dai nemici, non dalla sovrapposizione. Nessun valore ritarato **[da decidere]** (Marco): la difficoltà per tipo dipende dai nemici nuovi (fase 3) e dai ranger
   (Atlante per il physical, fase 2).
 - **Mancano** (fasi 2-4): ranger (frammenti solo accumulati: soglie, livelli e schermata nella fase 2), nemici nuovi e speciali, boss nuovi.
+
+### Fase 2 costruita (1.17.0): ranger
+- **Costruito**: livelli dai frammenti (soglia T, totale T × (1 + 0,5 × (L − 1)), massimo 10); frammenti tutti all’altro ranger del tipo quando uno è al 10; schermata **Ranger**
+  (dal menu, sotto “Protezione planetaria”, e dalla griglia dei continenti): 10 schede con livello, frammenti verso il prossimo, “in campo”; tocco = scelta (sotto l’effetto al livello attuale),
+  secondo tocco = equipaggia o toglie, con i messaggi “Servono 200 frammenti…”, “Al massimo 2 ranger…”, “Un solo ranger di conversione…”. In campo ai lati del guardiano (34 px),
+  davanti a lui (46 px sopra) quando il lato esce dallo schermo; sfere e cubi con la lettera greca in classica e HD-2D. Conversione (quota del colpo del guardiano, anche esplosioni del colpo e
+  Modulo 20), Atlante (quota di resistenza ignorata, debolezze invariate), i 5 supporti con la tabella dei livelli e i bonus decisi (Moduli e nodi Tipi del loro tipo, durata degli stati).
+  Salvataggio versione 8 (§ 7).
+- **Letture e valori di Claude** **[Claude] [da confermare]**:
+  - i ranger equipaggiati valgono **in tutte le modalità** (campagna, Epica, Protezione planetaria);
+  - **T = 200** frammenti (20 F); il primo effetto dei supporti arriva dopo 5 s, poi ogni X s, solo con un nemico a portata;
+  - **Alfa**: getto dal ranger al nemico più vicino a portata (lo segue per Y s, largo circa 11°); la probabilità di bruciatura si tira una volta al secondo per nemico, bruciatura di 3 s;
+  - **Omega**: onda lunga quanto la portata (260 px) verso il nemico più vicino; stato di 3 s;
+  - **Sigma**: dal nemico più vicino salta al più vicino non ancora colpito entro 200 px; paralisi di 1 s (come il Thunderbolt);
+  - **Gamma**: bolle in punti a caso a portata, sopra la cupola; esplodono quando un nemico le tocca;
+  - **Epsilon**: un missile per bersaglio a portata (a turno se sono meno), colpo singolo;
+  - nella conversione il numero a schermo è quello della quota più grande.
+- **Misura con i bot 1.17.0** (`EQUIP=1.5 RANGERS=… node tests/tools/curva.js L 100`, 200 partite per muro, stessi semi della 1.15.1; senza ranger stessi numeri della 1.15.1, partita per partita):
+
+  | Muro | senza ranger | Atlante 5 + Epsilon 5 | Mnemosine 5 + Sigma 5 | Atlante 10 + Epsilon 10 |
+  |---|---|---|---|---|
+  | 60 | 36,0 | 45,0 | 43,0 | 49,5 |
+  | 80 | 25,5 | 30,0 | 19,5 | 31,5 |
+  | 90 | 47,0 | 62,0 | 55,0 | 68,5 |
+  | 140 | 24,0 | 40,0 | 38,5 | 53,5 |
+  | 150 | 45,0 | 57,0 | 48,0 | 59,0 |
+  | 190 | 48,0 | 67,0 | 57,5 | 67,0 |
+
+  Atlante aiuta di più contro i boss physical (90, 140, 190). Con Atlante ed Epsilon al 5 restano sotto il 50% il 60, l’80 e il 140; al 10 il 60 e l’80. Nessun valore ritarato **[da decidere]** (Marco).
+- **Tempi di sblocco** (`node tests/tools/ranger-tempi.js`: giocatore di riferimento, 5 giorni su 7, 2 partite al giorno sul tipo del giorno, F = 10, T = 200):
+  con il 70% di ricompensa media per tutti i tipi **4,5 mesi** per sbloccarli tutti e 20 per portarli al 10 (in linea con la stima del § 17); con le quote misurate dai bot al livello 1
+  (fire 0,69 · force 0,87 · electric 0,90 · energy 0,57 · physical 0,19) fire, force, electric ed energy si sbloccano in 2,9-4,3 mesi, ma i ranger physical in **10,9 mesi**
+  (58 per il livello 10): il continente physical con i nemici segnaposto (§ 17, fase 1) allunga tutto **[da decidere]**.
+- **Mancano**: nemici nuovi e speciali (fase 3), boss nuovi (fase 4); gli invisibili (solo la parte energy) e i gusci (attraversamento di Atlante) arrivano con i nemici della fase 3.

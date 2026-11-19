@@ -3,6 +3,34 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.17.0 — Ranger (Protezione planetaria, fase 2)
+
+- **Ranger** (DESIGN.md § 17, regole e valori decisi da Marco; tabella dei livelli dei supporti **[Claude] [provvisorio]**): livelli dai frammenti (soglia 200, totale T × (1 + 0,5 × (L − 1)),
+  massimo 10), frammenti tutti all’altro ranger del tipo quando uno è al 10; schermata **Ranger** (dal menu e dalla griglia dei continenti) con livello, frammenti, effetto, equipaggiamento
+  a due tocchi (al massimo 2, un solo ranger di conversione). In campo ai lati del guardiano, davanti a lui vicino al bordo; sfere (conversione) e cubi con la lettera greca (supporto).
+- **Effetti**: conversione del 10% per livello del colpo del guardiano nel tipo del ranger (Prometeo, Mnemosine, Ceo, Iperione); Atlante ignora il 10% per livello della resistenza
+  (debolezze invariate); Alfa fiammata con bruciatura, Omega onda con uno stato a caso (ampiezza 20°-120°), Sigma fulmine a ricerca con paralisi (1-5 bersagli), Gamma bolle che esplodono
+  al contatto (2-12, 15 s), Epsilon raffica di missili a ricerca (2-6, danno e portata ai livelli alterni). Ciclo da 40 a 20 s; bonus da Moduli e nodi Tipi del loro tipo e durata degli stati.
+- **Letture di Claude** (DESIGN.md § 17, “Fase 2 costruita”): ranger in tutte le modalità, T = 200, primo effetto dopo 5 s, forme della fiammata, dell’onda, dei salti del fulmine,
+  delle posizioni delle bolle e dei bersagli dei missili.
+- **Codice**: `RANGER`, `RANGER_DEF`, `RV` (valori per livello), `rangerLv`, `toggleRanger`, `rangerDesc`, `startRangers`, `guardHit` (colpo del guardiano con conversione e Atlante),
+  `rangerTick`, `SUPPORT`; `damage` accetta una quota di resistenza ignorata; salvataggio **versione 8** (`progress.planet.eq`). Disegno: `FX.ranger`, `FX.rangerFlame` (fiamme della scia
+  del Firewheel), `FX.bubble`, `FX.hiveWave` con l’ampiezza, `FX.missile` con il colore (classica e HD-2D); `rangersScreen`; pulsanti “Ranger” nel menu e nella griglia.
+- **Misure con i bot**: muri sotto il 50% con i ranger (`EQUIP=1.5 RANGERS=… node tests/tools/curva.js`, 200 partite per muro): con Atlante ed Epsilon al 5 da +5 a +19 punti
+  (60 45,0 · 80 30,0 · 90 62,0 · 140 40,0 · 150 57,0 · 190 67,0), al 10 restano sotto il 50% solo il 60 (49,5) e l’80 (31,5); senza ranger numeri identici alla 1.15.1.
+  Tempi di sblocco (`tests/tools/ranger-tempi.js`, nuovo): 4,5 mesi con il 70% di ricompensa media; con le quote dei bot i ranger physical arrivano a 10,9 mesi. Nessun valore ritarato.
+- DESIGN.md: § 7 (versione 8), § 17 (“Fase 2 costruita”, letture, misure).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/rangers.js` (12 controlli): livelli dai frammenti, regole di equipaggiamento e messaggi, frammenti al ranger non al massimo, posizione ai lati e
+davanti al bordo, conversione di Prometeo (135 su una navicella), Atlante al 5 e al 10 con la debolezza invariata, i cinque supporti ai livelli 1 e 10 (ciclo, danno solo del ranger, stati, bolle,
+missili), bonus dell’albero, salvataggio versione 8 e importazione della 7, schermata, partita in HD-2D. `tests/tools/curva.js`: `RANGERS=…`. `npm run screenshots`: nuove 77-84 (menu, ranger,
+messaggio, i cinque supporti in campo), testi dentro i bordi dopo una correzione (“IN CAMPO”, “max”).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; nuove scene “Ranger” e i cinque supporti in campo).
+
+Checklist: aggiornata (versione 38): nuovo gruppo da provare “Ranger (1.17)”; tra i valori di Claude la tabella e le letture dei supporti, ranger in tutte le modalità; tra le cose da decidere
+i muri ancora sotto il 50% con i ranger e i tempi dei ranger physical; riferimento del § 17 aggiornato.
+
 ## 1.16.0 — Protezione planetaria, fase 1
 
 - **Modalità nuova** (DESIGN.md § 17, regole **[deciso]** da Marco): si apre completando il 60 (avviso di sblocco); nel menu il pulsante “Protezione planetaria” con tipo del giorno

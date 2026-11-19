@@ -212,6 +212,16 @@ function scenes(turretIds) {
     { progress: PP, setup: "openPlanet(); startPlanet('fire');", each: KEEP + " if (state === 'upgrade') pick(0);", frames: 900 }, ["drawHud", "planetWave"]);
   add(1, "planetaria-fine", "Protezione planetaria · fine partita", "Frammenti presi (anche perdendo), divisi tra i due ranger del tipo; ritorno ai continenti.",
     { progress: PP, setup: "openPlanet(); startPlanet('electric'); __cat.step(60); wave = 12; pw.mb = 2; domeHp = 0; __cat.step(1);", frames: 1 }, ["planetEndScreen", "planetLines"]);
+  // 1.17.0: ranger (DESIGN.md § 17, fase 2)
+  const RF = { alfa: 650, prometeo: 400, omega: 220, mnemosine: 0, sigma: 1100, ceo: 260, gamma: 300, iperione: 90, epsilon: 500, atlante: 200 };
+  const PR = Object.assign({}, PP, { planet: Object.assign({}, PP.planet, { frags: RF, eq: ["sigma", "prometeo"] }) });
+  add(1, "ranger", "Ranger", "Dieci ranger (sfere = conversione, cubi con la lettera = supporto): livello, frammenti verso il prossimo, “in campo”; sotto l’effetto del ranger scelto.",
+    { progress: PR, setup: "openRangers('planet'); rangerSel = 'alfa';", frames: 1 }, ["rangersScreen", "rangerDesc"]);
+  for (const [id, other] of [["alfa", "prometeo"], ["omega", "atlante"], ["sigma", "ceo"], ["gamma", "iperione"], ["epsilon", "mnemosine"]])
+    add(1, "ranger-" + id, "Ranger in campo · " + id[0].toUpperCase() + id.slice(1), "Ai lati del guardiano; l’effetto del supporto contro tre asteroidi fermi.",
+      { progress: Object.assign({}, PR, { planet: Object.assign({}, PR.planet, { frags: { [id]: 1100, [other]: 1100 }, eq: [id, other] }) }),
+        setup: START(42) + " queue = []; enemies.length = 0; for (const x of [130, 180, 230]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { y: 360, speed: 0, hp: 1e9, maxHp: 1e9 }); } RG.list[0].t = 0; player.cd = 1e9;",
+        each: KEEP + " player.cd = 1e9; for (const e of enemies) e.hp = 1e9;", frames: 20 }, ["FX.ranger", "SUPPORT." + id]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);

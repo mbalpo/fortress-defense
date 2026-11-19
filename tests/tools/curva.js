@@ -3,6 +3,7 @@
 // spesi da una strategia semplice (prima i nodi condivisi, poi danno e barriera, poi il resto); dal 40 i bot usano le tre abilità d’ingresso.
 // Uso: node tests/tools/curva.js <livelli> [partite per bot, default 20] [primo seme, default 1] [Sigilli per livello, default 1.5] [sostituzioni JSON]
 // Con EQUIP=<vittorie per livello> (es. EQUIP=1.5) i bot hanno anche l’equipaggiamento atteso (tests/tools/equip-atteso.js), uguale per tutte le partite del livello.
+// Con RANGERS=<id:livello,…> (es. RANGERS=atlante:5,epsilon:5) i bot hanno quei ranger equipaggiati (DESIGN.md § 17, 1.17.0).
 const { play, makeGame } = require("../bot.js");
 const { gearFor } = require("./equip-atteso.js");
 const EQUIP = +(process.env.EQUIP || 0);
@@ -40,7 +41,11 @@ function treeFor(L) {
   return JSON.parse(g.win.__ev(SPEND));
 }
 for (const L of LVS) {
-  const tree = treeFor(L), gear = EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined, storage = { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], tree, gear }) };
+  const tree = treeFor(L), gear = EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined;
+  const rg = (process.env.RANGERS || "").split(",").filter(Boolean).map((x) => x.split(":")), frags = {};
+  for (const [id, lv] of rg) frags[id] = 200 * (1 + 0.5 * (+lv - 1));
+  const planet = rg.length ? { lv: {}, frags, day: { d: "", n: 0 }, eq: rg.map((x) => x[0]) } : undefined;
+  const storage = { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], tree, gear, planet }) };
   const row = [];
   for (const pol of ["random", "smart"]) {
     let w = 0, s = 0;

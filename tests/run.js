@@ -79,7 +79,10 @@ const T = [
     [/prima del 60: .* ✓/, /griglia: continenti .* ✓/, /tipo del giorno lun-ven: .* ✓/, /partite: prima true .* ✓/, /il giorno dopo: rimaste 2 ✓/, /partita: modalità planet .* ✓/,
     /ondata 2 partita a .* ✓/, /ondate 1 e 2 ripulite insieme: .* ✓/, /prima scelta → .* ✓/, /salvata a ondata ripulita: .* ✓/, /mini-boss \(tipo energy\) .* ✓/, /Continua → in battaglia: play ✓/,
     /boss all’ondata 18 .* ✓/, /ondata 18 ripulita con il boss vivo: .* ✓/, /vittoria al livello 1: .* ✓/, /schermata: true true ✓/, /partita successiva: .* ✓/, /sconfitta all’ondata 10 .* ✓/,
-    /abbandonata all’ondata 4: .* ✓/, /esportato: versione 7 .* ✓/, /versione 6 importata: .* ✓/, /partite di oggi dal salvataggio: .* ✓/, /ripresa: menu .* ✓/, /errori JS: nessuno ✓/]],
+    /abbandonata all’ondata 4: .* ✓/, /esportato: versione 8 .* ✓/, /versione 6 importata: .* ✓/, /partite di oggi dal salvataggio: .* ✓/, /ripresa: menu .* ✓/, /errori JS: nessuno ✓/]],
+  ["rangers.js", "ranger (fase 2): livelli dai frammenti, equipaggiamento, posizione, conversione, Atlante, supporti ai livelli 1 e 10, bonus, salvataggio v8, schermata, HD-2D",
+    [/livello con 199 .* ✓/, /bloccato: .* ✓/, /Sigma al livello massimo: .* ✓/, /ai lati: .* ✓/, /Prometeo al 3 .* ✓/, /Atlante al 5 .* ✓/, /livello 1 \(ciclo 40 s.* ✓/,
+    /livello 10 \(ciclo 20 s.* ✓/, /bonus dei supporti: .* ✓/, /esportato: versione 8 .* ✓/, /schermata: “RANGER” .* ✓/, /HD-2D: grafica hd2d .* ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
 ];
