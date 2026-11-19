@@ -1215,3 +1215,21 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   senza speciali 53 / 58%. Physical resta il più duro (guardiano physical e pesanti al 60%). **[da decidere]** (Marco): valori degli invisibili (soglia, durata o chi li vede) e difficoltà per tipo.
   Tempi dei ranger con queste quote (`tests/tools/ranger-tempi.js`, fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti sbloccati in 14,5 mesi (force 10,2, physical 14,5).
 - **Mancano**: i boss nuovi (fase 4); nella fase 4 anche gli alati della nave madre force.
+
+### Fase 4 costruita (1.19.0): boss giganti
+- **Boss** (regole **[deciso]**, valori **[Claude] [provvisorio]**, nomi e aspetto **[Claude] [da rivedere]**), uno per continente, dall’ondata 18 (contano come ondata 20), più lenti e grandi,
+  entrano dall’alto con il bordo inferiore a 0 e sono **bersagli appena si vedono** (bordo inferiore a 4 px); il bordo inferiore arriva a metà schermo alla fine dell’ondata 20,
+  poi continuano a scendere fino alla cupola (il prisma si ferma). Disegnati sotto la barra in alto, che mostra il nome e la vita totale. Vita come il boss segnaposto della fase 1
+  (muro di pari difficoltà); danno alla cupola 8, immuni alle spinte, stati al 40%.
+
+  | Tipo | Boss | Sagoma (px) | Abilità e valori per livello L del continente |
+  |---|---|---|---|
+  | fire | Ammiraglia | 260 × 140 | ogni max(3, 8 − 0,5 (L − 1)) s, 2 + ⌊(L − 1)/4⌋ intercettori: inseguono il colpo di torretta più vicino (missili, bombe, sfere, proiettili del Railgun) e lo distruggono |
+  | force | Nave madre | 120 × 270 (ali squadrate di 66 px per lato dal 75%) | quando la punta arriva al 75%, 55%, 35% di altezza **[deciso]** rilascia 6 + ⌊(L − 1)/3⌋ alati (vita 30, veloci, resistenza force 30%) |
+  | electric | Disco volante | 300 × 110 | assorbe ogni colpo con probabilità 0,1 + 0,04 (L − 1), tetto 50% **[Claude]**; lampo bianco |
+  | energy | Prisma gigante | 180 × 384 (50% × 60% dello schermo) **[deciso]** | si ferma con il bordo inferiore al 25% dal basso **[deciso]**; ogni max(3, 9 − 0,5 (L − 1)) s un raggio verticale di 160 px **[deciso]** (avviso 0,7 s): se arriva alla cupola danno × 2 |
+  | physical | Meteorite | 360 (tutta la larghezza) | a metà vita si divide in due meteore di metà diametro con la vita rimasta; generazioni min(3, 1 + ⌊(L − 1)/5⌋) |
+
+- **Collisioni**: i giganti hanno una sagoma a rettangolo arrotondato (`def.box`, `edist`) per colpi, aree, laser (nove punti), portata e contatto con la cupola; il meteorite è un cerchio.
+- **Misura 1.19.0** (`node tests/tools/planet.js 1,5,10 30`, come le fasi 1 e 3): quasi uguale alla 1.18.1 (es. livello 10: fire 21 / 18, force 16 / 13, electric 26 / 23,
+  energy 18 / 12, physical 7 / 3): chi arriva all’ondata 18 di solito batte anche il boss. Physical sempre il più duro. Nessun valore ritarato.

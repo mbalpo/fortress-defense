@@ -171,6 +171,7 @@ const PLANET_FOE = {
   s: { hp: 72,  speed: 40, r: 14, dmg: 4,   selfRes: 0.5 },                  // speciale
 };
 const PLANET_SPECIAL = { fire: ["bomb", "kami"], force: ["wraith", "invis"], electric: ["spark", "dash"], energy: ["prism", "immune"], physical: ["crab", "husk"] };
+ENEMY_DEFS.force_w = { type: "force", planet: true, hp: 30, speed: 75, r: 10, dmg: 2, selfRes: 0.3, look: "wing" };   // alati della nave madre (fase 4) [Claude, provvisorio]
 for (const t of TYPE_KEYS) for (const v of ["l", "m", "p", "s"]) {
   const d = Object.assign({ type: t, planet: true }, PLANET_FOE[v]);
   if (v === "s") Object.assign(d, { look: PLANET_SPECIAL[t][0], special: PLANET_SPECIAL[t][1] });
@@ -779,6 +780,12 @@ const stars = Array.from({ length: 64 }, () => ({
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+// distanza di un punto da un nemico, da confrontare con e.def.r: per i boss giganti (def.box = semilarghezza e semialtezza) la sagoma è un rettangolo
+// arrotondato di raggio e.def.r; per tutti gli altri è la distanza dal centro (1.19.0)
+const edist = (e, x, y) => {
+  const b = e.def && e.def.box; if (!b) return dist(e.x, e.y, x, y);
+  return Math.hypot(Math.max(0, Math.abs(x - e.x) - (b[0] - e.def.r)), Math.max(0, Math.abs(y - e.y) - (b[1] - e.def.r)));
+};
 
 // avanzamento della campagna (salvato sul dispositivo)
 const PROGRESS_KEY = "fortress-progress-v1";
@@ -1182,7 +1189,8 @@ function gearRun() {
 function fromLv2(s) { s.level = 2; s.lv2 = true; return s; }
 function newTurret(id, i) { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); return turretsLv2 ? fromLv2(s) : s; }
 const curDiff = () => mode === "planet" ? PLANET.diff(campLevel) : diffOf(campLevel, mode === "epic");
-const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
+const onScreen = (e) => e.def.giant ? bottomOf(e) >= 4 : e.y >= 0;   // i boss giganti sono bersagli appena si vedono [deciso]
+const living = () => enemies.filter((e) => !e.dead && onScreen(e));
 // invisibili (speciale force, 1.18.0): restano colpibili dagli effetti ad area (living), ma non sono bersagli di chi non li vede (canSee)
 let seeInvis = false;                              // vero solo mentre spara una torretta di SEE_INVIS o il guardiano con la conversione energy
 const canSee = (e) => !e.invis || seeInvis;
@@ -1254,6 +1262,7 @@ function popup(e, v, mult, src) {
 // ignore = ignora le resistenze del nemico (Laser, Raggi penetranti); un numero da 0 a 1 = ne ignora quella quota (ranger Atlante, le debolezze non cambiano)
 function damage(e, base, type, quiet, src, ignore) {
   if (e.immT > 0) return;                          // speciale energy: immune ai danni, anche da stato (1.18.0)
+  if (e.def.absorb && Math.random() < e.def.absorb) { if (!quiet) absorbFx(e); return; }   // disco volante: assorbe il colpo (1.19.0)
   let mult = e.def.selfRes != null && type === e.def.type ? 1 - e.def.selfRes : RESIST[e.def.type][type];   // nemici della Protezione planetaria: resistenza propria al loro tipo
   if (ignore && mult < 1) mult = ignore === true ? 1 : mult + (1 - mult) * ignore;
   if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia combustibile (Firewheel)
@@ -1262,6 +1271,7 @@ function damage(e, base, type, quiet, src, ignore) {
   const d = base * mult;
   e.hp -= d; e.flash = 0.06;
   if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
+  else if (e.def.split > 0 && !e.dead && e.hp <= e.maxHp / 2) splitRock(e);   // meteorite: si divide a metà vita
   else if (e.def.special === "invis" && !e.invisUsed && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) e.invis = e.invisUsed = true;   // speciale force: diventa invisibile (una volta)
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
@@ -1271,6 +1281,10 @@ function damage(e, base, type, quiet, src, ignore) {
 }
 
 // effetti alla morte di un nemico (tutte le morti passano da damage)
+function absorbFx(e) {                          // lampo di assorbimento in un punto del disco (al massimo uno ogni 0,15 s)
+  if ((e.absT || 0) > clock) return; e.absT = clock + 0.15;
+  ring(e.x + rnd(-0.7, 0.7) * e.def.box[0], e.y + rnd(-0.3, 0.3) * e.def.box[1], 16, "#fffbea", 0.3);
+}
 function onDeath(e) {
   if (e.def.special === "husk") shells.push({ x: e.x, y: e.y, r: e.def.r + 3, t: SPECIAL.husk, max: SPECIAL.husk });   // speciale physical: guscio invincibile
   if (e.burnT > 0 && e.skyBurnT > 0 && e.skyBurnS && has(e.skyBurnS, "burn3")) { const s = e.skyBurnS, x = e.x, y = e.y; later(0.05, () => skyCombust(s, x, y)); }
@@ -1298,7 +1312,7 @@ function bolt(pts, color, life, w) {
 function zone(x, y, r, life, apply, color, look) {
   return spawnEnt({ x, y, r, t: life, age: 0, dead: false,
     update(dt) { this.t -= dt; this.age += dt; if (this.t <= 0) { this.dead = true; return; }
-      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= this.r + e.def.r) apply(e, dt); },
+      for (const e of living()) if (edist(e, this.x, this.y) <= this.r + e.def.r) apply(e, dt); },
     draw() { if (look) FX[look](this); else FX.zone(this, color); } });
 }
 
@@ -1334,18 +1348,22 @@ function segDist(px, py, s) {
   const t = l2 ? clamp(((px - s.x1) * dx + (py - s.y1) * dy) / l2, 0, 1) : 0;
   return Math.hypot(px - (s.x1 + t * dx), py - (s.y1 + t * dy));
 }
-const hitSegs = (e, segs, w) => segs.some((s) => segDist(e.x, e.y, s) <= e.def.r + w / 2);
+const hitSegs = (e, segs, w) => {
+  const b = e.def.box; if (!b) return segs.some((s) => segDist(e.x, e.y, s) <= e.def.r + w / 2);
+  const ix = b[0] - e.def.r, iy = b[1] - e.def.r;   // boss giganti: nove punti del rettangolo interno
+  return segs.some((s) => [-1, 0, 1].some((i) => [-1, 0, 1].some((j) => segDist(e.x + i * ix, e.y + j * iy, s) <= e.def.r + w / 2)));
+};
 
 // ---- bersagli ----
 // Il targeting sta tutto qui: aggiungere una modalità = aggiungere un caso.
 // portata delle torrette (1.14.2, [deciso] Marco): si misura sempre dal punto di partenza del guardiano (centro, in basso), anche per le torrette laterali;
 // i colpi partono comunque dalla torretta e “più vicino” resta la distanza dalla torretta
 const RANGE_FROM = { x: W / 2, y: GROUND_Y - 30 };
-const inReach = (e, range) => (e.x - RANGE_FROM.x) ** 2 + (e.y - RANGE_FROM.y) ** 2 <= (range + e.def.r) ** 2;
+const inReach = (e, range) => edist(e, RANGE_FROM.x, RANGE_FROM.y) <= range + e.def.r;
 function pickTargets(pos, range, n) {
   const c = [];
   for (const e of enemies) {
-    if (e.dead || e.y < 0 || !canSee(e)) continue;
+    if (e.dead || !onScreen(e) || !canSee(e)) continue;
     if (!inReach(e, range)) continue;
     const d2 = (e.x - pos.x) ** 2 + (e.y - pos.y) ** 2;
     c.push({ e, s: settings.targeting === "highest" ? -e.hp : d2 });
@@ -1355,7 +1373,7 @@ function pickTargets(pos, range, n) {
 }
 function nearestTo(x, y, maxD, exclude) {
   let best = null, bd = maxD;
-  for (const e of living()) { if ((exclude && exclude.has(e)) || !canSee(e)) continue; const d = dist(e.x, e.y, x, y); if (d < bd) { bd = d; best = e; } }
+  for (const e of living()) { if ((exclude && exclude.has(e)) || !canSee(e)) continue; const d = edist(e, x, y); if (d < bd) { bd = d; best = e; } }
   return best;
 }
 
@@ -1384,7 +1402,7 @@ const skyCount = (s) => 2 + N(s, "msl") + (has(s, "plus2") ? 2 : 0);    // missi
 // onHit(x, y, bersaglio): impatto diverso da quello della Sky Guard (mini-missili a schegge della combo con l’Aeroblast)
 function missile(s, x, y, mini, target, onHit) {
   const turn = mini ? 6 : 3.5, sp = mini ? 300 : 240;
-  return spawnEnt({ x, y, a: -Math.PI / 2 + rnd(-0.7, 0.7), t: target, age: 0, mini, dead: false,
+  return spawnEnt({ x, y, a: -Math.PI / 2 + rnd(-0.7, 0.7), t: target, age: 0, mini, dead: false, proj: true,
     update(dt) {
       this.age += dt;
       if (!this.t || this.t.dead) { this.t = randEnemy(); if (!this.t) { this.dead = true; return; } }
@@ -1393,8 +1411,8 @@ function missile(s, x, y, mini, target, onHit) {
       this.x += Math.cos(this.a) * sp * dt; this.y += Math.sin(this.a) * sp * dt;
       if (shells.length && shellAt(this.x, this.y)) { this.dead = true; if (onHit) onHit(this.x, this.y, null); else skyImpact(s, this.x, this.y, mini); return; }   // esplode sul guscio
       if (has(s, "pass") && !mini)
-        for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 10) skyBurn(s, e, 3, 5 * dmgM(s));
-      if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; if (onHit) onHit(this.x, this.y, this.t); else skyImpact(s, this.x, this.y, mini); }
+        for (const e of living()) if (edist(e, this.x, this.y) <= e.def.r + 10) skyBurn(s, e, 3, 5 * dmgM(s));
+      if (edist(this.t, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; if (onHit) onHit(this.x, this.y, this.t); else skyImpact(s, this.x, this.y, mini); }
       else if (this.age > 9) this.dead = true;
     },
     draw() { FX.missile(this, mini); } });
@@ -1404,7 +1422,7 @@ function skyImpact(s, x, y, mini, echo) {
   const st = skyStats(s), big = mini && has(s, "splitB") && Math.random() < 0.5;    // mini-missile esplosivo: area piena
   const dmg = mini ? st.dmg * 0.35 : echo ? st.dmg * 0.6 : st.dmg, rad = mini && !big ? 14 : st.rad;
   const tp = !mini && !echo && kOn(s, "kDisr");            // combo Missili teletrasportanti: un tiro per colpito, come il campo del Disruption Drone
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) {
+  for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) {
     damage(e, dmg, "fire", false, "sky");
     if (!mini && !echo && !e.dead && has(s, "burn1")) skyBurn(s, e, 3, 6 * dmgM(s));
     if (tp && !e.dead) teleportRoll(tp, e);
@@ -1425,7 +1443,7 @@ function skyBurn(s, e, t, dps) {
 }
 function skyCombust(s, x, y) {                 // Combustione: chi muore bruciato dalla Sky Guard esplode
   const rad = 40;
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, skyStats(s).dmg * 0.6, "fire", false, "sky");
+  for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, skyStats(s).dmg * 0.6, "fire", false, "sky");
   ring(x, y, rad, "#ffb347", 0.4);
 }
 
@@ -1566,9 +1584,9 @@ function aeroFire(s) {
   const list = pickTargets(pos, rangeOf(s), cnt);
   if (!list.length) return false;
   for (let k = 0; k < cnt; k++) {
-    const t = list[k % list.length], ft = dist(t.x, t.y, pos.x, pos.y) / 260;
+    const t = list[k % list.length], ft = edist(t, pos.x, pos.y) / 260;
     const tx = clamp(t.x, 0, W), ty = t.y + t.curSpeed * ft;
-    spawnEnt({ x: pos.x + (k - (cnt - 1) / 2) * 5, y: pos.y, dead: false,
+    spawnEnt({ x: pos.x + (k - (cnt - 1) / 2) * 5, y: pos.y, dead: false, proj: true,
       update(dt) {
         const d = dist(tx, ty, this.x, this.y), mv = 260 * dt;
         if (d <= mv) { this.dead = true; aeroBoom(s, tx, ty, false); } else { this.x += (tx - this.x) / d * mv; this.y += (ty - this.y) / d * mv; }
@@ -1580,7 +1598,7 @@ function aeroFire(s) {
 }
 function aeroBoom(s, x, y, echo) {
   const st = aeroStats(s), f = echo ? 0.6 : 1, hit = [];
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= st.rad + e.def.r) { hit.push(e); damage(e, st.dmg * f, "physical", false, "aero"); knock(e, st.knock * f); }
+  for (const e of living()) if (edist(e, x, y) <= st.rad + e.def.r) { hit.push(e); damage(e, st.dmg * f, "physical", false, "aero"); knock(e, st.knock * f); }
   ring(x, y, st.rad, TYPES.physical.color, 0.35);
   if (echo) return;
   // combo (solo se il colpo prende qualcuno): Esplosioni a raggi (laser rotante), Colpi singolari (buco nero statico), Colpi fulminanti
@@ -1607,7 +1625,7 @@ function salvo(s, x, y, cnt, dir) {
         this.life -= dt; if (this.life <= 0) { this.dead = true; return; }
         if (this.t && !this.t.dead) this.a = Math.atan2(this.t.y - this.y, this.t.x - this.x);
         this.x += Math.cos(this.a) * 340 * dt; this.y += Math.sin(this.a) * 340 * dt;
-        for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 3) {
+        for (const e of living()) if (edist(e, this.x, this.y) <= e.def.r + 3) {
           damage(e, st.dmg * 0.3, "physical", false, "aero"); if (has(s, "salvoK")) knock(e, 10); this.dead = true; break;
         }
       },
@@ -1623,9 +1641,9 @@ function mine(s, x, y) {
   return spawnEnt({ x, y, age: 0, dead: false, mine: true,
     update(dt) {
       this.age += dt; if (this.age > 25) { this.dead = true; return; }
-      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 16) {
+      for (const e of living()) if (edist(e, this.x, this.y) <= e.def.r + 16) {
         this.dead = true; ring(this.x, this.y, 34, TYPES.physical.color, 0.3);
-        for (const f of living()) if (dist(f.x, f.y, this.x, this.y) <= 34 + f.def.r) {
+        for (const f of living()) if (edist(f, this.x, this.y) <= 34 + f.def.r) {
           damage(f, st.dmg * 0.9 * mul, "physical", false, "aero"); if (has(s, "mineK")) knock(f, 14);
         }
         break;
@@ -1653,7 +1671,7 @@ function thunderTick(s, dt) {
     o.x = DOME.cx + DOME.rx * Math.cos(o.th); o.y = DOME.cy + DOME.ry * Math.sin(o.th);
     if (has(s, "aura")) {
       o.aura -= dt;
-      if (o.aura <= 0) { o.aura = 0.6; for (const e of living()) if (dist(e.x, e.y, o.x, o.y) <= 60 + e.def.r) damage(e, 6 * dmgM(s), "electric", false, "thunder"); }
+      if (o.aura <= 0) { o.aura = 0.6; for (const e of living()) if (edist(e, o.x, o.y) <= 60 + e.def.r) damage(e, 6 * dmgM(s), "electric", false, "thunder"); }
     }
   }
 }
@@ -1718,7 +1736,7 @@ function thunderShove(h, hit) {
   const R = 130 * (has(h, "waveR") ? 1.4 : 1), k = 16 * (has(h, "wave3") ? 1.3 : 1), done = new Set();
   let n = 0;
   for (const c of hit) {
-    for (const e of living()) if (!done.has(e) && dist(e.x, e.y, c.x, c.y) <= R + e.def.r) { done.add(e); knock(e, k); if (has(h, "wave2")) slow(e, 2); }
+    for (const e of living()) if (!done.has(e) && edist(e, c.x, c.y) <= R + e.def.r) { done.add(e); knock(e, k); if (has(h, "wave2")) slow(e, 2); }
     if (n++ < 3) ring(c.x, c.y, R * 0.5, TYPES.force.color, 0.3);
   }
 }
@@ -1795,7 +1813,7 @@ function beamFire(s) {
       if (boom && forks && (this.boomT -= dt) <= 0) {   // Base esplosiva: un’esplosione ogni 0,5 s sul bersaglio principale
         this.boomT = 0.5;
         for (const p of prim) if (p) {
-          for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 40 + e.def.r) damage(e, dps * 0.5, "energy", false, "beam");
+          for (const e of living()) if (edist(e, p.x, p.y) <= 40 + e.def.r) damage(e, dps * 0.5, "energy", false, "beam");
           ring(p.x, p.y, 40, TYPES.energy.color, 0.3);
         }
       }
@@ -1830,7 +1848,7 @@ function wheelDrone(s, x, y, a, o) {
       // Fiamma crescente: +10% di danno per ogni nemico diverso colpito da questo drone, fino a ×2
       const boost = has(s, "stoke") ? Math.min(2, 1 + 0.1 * this.hit.size) : 1;
       let touching = false; const now = new Set();
-      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= o.rad + e.def.r) {
+      for (const e of living()) if (edist(e, this.x, this.y) <= o.rad + e.def.r) {
         touching = true; this.hit.add(e); o.launch.hit.add(e); now.add(e);
         damage(e, o.dps * boost * dt, "fire", true, "wheel");
         if (o.mini && has(s, "miniB")) { burn(e, 2, 5 * bm); reveal(e); }
@@ -1871,7 +1889,7 @@ function wheelDrone(s, x, y, a, o) {
       }
       for (const p of this.trail) {
         p.t -= dt;
-        for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
+        for (const e of living()) if (edist(e, p.x, p.y) <= 14 + e.def.r) {
           burn(e, 2, 5 * dmgM(s) * bm); reveal(e);
           if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);     // Scia combustibile: +30% di danno da fuoco per 2 s
         }
@@ -1945,7 +1963,7 @@ function hiveDrone(s, x, y, lvl, gen) {
   const d0 = spawnEnt({ x, y, lvl, gen, shots: 0, cap: cap0, cd: 0.6, t: null, rt: 0, stayed: false, kami: 0, dead: false,
     amp: 1, ampE: null, ampT: 0, ray: null, trail: null, trailTry: 0, lx: x, ly: y, spark: false,
     fire() {
-      const tg = this.t && dist(this.t.x, this.t.y, this.x, this.y) <= HIVE_RANGE ? this.t : nearestTo(this.x, this.y, HIVE_RANGE);
+      const tg = this.t && edist(this.t, this.x, this.y) <= HIVE_RANGE ? this.t : nearestTo(this.x, this.y, HIVE_RANGE);
       if (!tg) return;                                    // nessun nemico a portata: non spara
       const first = this.shots === 0, last = this.shots + 1 >= this.cap;
       if ((first && has(s, "wave1")) || (last && has(s, "wave3"))) hiveWave(s, this, dmg, Math.atan2(tg.y - this.y, tg.x - this.x));
@@ -1980,14 +1998,14 @@ function hiveDrone(s, x, y, lvl, gen) {
         hiveDrone(s, this.x, this.y, Math.min(this.lvl, has(s, "seed3") ? 3 : has(s, "seed2") ? 2 : 1), 1);
     },
     boom() {                                              // Droni kamikaze: esplosione ad area al doppio del danno di un colpo
-      for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= 40 + e.def.r) damage(e, dmg * 2, "force", false, "hive");
+      for (const e of living()) if (edist(e, this.x, this.y) <= 40 + e.def.r) damage(e, dmg * 2, "force", false, "hive");
       ring(this.x, this.y, 40, TYPES.force.color, 0.35); this.die();
     },
     update(dt) {
       if (this.ray && (this.ray.t -= dt) <= 0) this.ray = null;
       if (kT) {                                           // Droni statici: danno continuo della sfera statica a chi tocca il drone (e Sfera rallentante)
         this.spark = false;
-        for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= HIVE_STOP + e.def.r) {
+        for (const e of living()) if (edist(e, this.x, this.y) <= HIVE_STOP + e.def.r) {
           this.spark = true; damage(e, tDps * dt, "electric", true, "tesla"); if (has(kT, "orbSlow") && !e.dead) slow(e, 0.4);
         }
       }
@@ -1999,7 +2017,7 @@ function hiveDrone(s, x, y, lvl, gen) {
         this.kami -= dt;
         if (!this.t || this.t.dead) this.t = nearestTo(this.x, this.y, 900);
         if (!this.t) return this.die();
-        const d = dist(this.t.x, this.t.y, this.x, this.y), mv = 260 * dt;
+        const d = edist(this.t, this.x, this.y), mv = 260 * dt;
         if (d <= this.t.def.r + 6 + mv || this.kami <= 0) return this.boom();
         this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
         return;
@@ -2007,7 +2025,7 @@ function hiveDrone(s, x, y, lvl, gen) {
       this.cd -= dt; this.rt -= dt;
       if (!this.t || this.t.dead || (settings.targeting === "highest" && this.rt <= 0)) { this.t = hiveTarget(s, this); this.rt = 1; }
       if (this.t) {                                       // si avvicina finché è a portata, poi si ferma
-        const d = dist(this.t.x, this.t.y, this.x, this.y);
+        const d = edist(this.t, this.x, this.y);
         if (d > HIVE_STOP) { const mv = Math.min(d - HIVE_STOP, 150 * dt); this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv; }
       }
       if (this.cd <= 0) this.fire();
@@ -2036,7 +2054,7 @@ function railShot(s, x, y, a, st) {
   const hit = new Set();
   // combo: Proiettili a mini-droni e a sciame (un tiro per colpito), a wormhole (un tiro per proiettile, a fine corsa, con almeno 2 colpiti)
   const kW = kOn(s, "kWheel"), kH = kOn(s, "kHive"), kV = kOn(s, "kVortex");
-  spawnEnt({ x, y, dead: false, first: null, last: null,
+  spawnEnt({ x, y, dead: false, first: null, last: null, proj: true,
     end() {
       this.dead = true;
       if (kV && hit.size >= 2 && Math.random() < K_PROB) kPortals(s.id + ":kVortex", kV, this.first, this.last);
@@ -2045,7 +2063,7 @@ function railShot(s, x, y, a, st) {
       this.x += Math.cos(a) * 1000 * dt; this.y += Math.sin(a) * 1000 * dt;
       if (shells.length && shellAt(this.x, this.y)) { this.end(); return; }   // il guscio ferma il proiettile
       for (const e of living()) {
-        if (hit.has(e) || e.invis || dist(e.x, e.y, this.x, this.y) > e.def.r + 4) continue;
+        if (hit.has(e) || e.invis || edist(e, this.x, this.y) > e.def.r + 4) continue;
         const avail = st.pierce;                         // perforazioni disponibili al momento dell’impatto
         hit.add(e); st.hits++; st.pierce--;
         const crit = has(s, "crit") && Math.random() < 0.3 ? 1.5 : 1;            // Colpo critico
@@ -2069,7 +2087,7 @@ function railShot(s, x, y, a, st) {
 
 function railBoom(s, x, y, avail, dmg0) {
   const rad = 30 * (has(s, "boomR") ? 1 + 0.1 * avail : 1), d = dmg0 * 0.5 * (has(s, "boomD") ? 1 + 0.15 * avail : 1);
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
+  for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
   ring(x, y, rad, TYPES.physical.color, 0.3);
 }
 
@@ -2099,11 +2117,11 @@ function teslaTick(s, dt) {
   }
 }
 function teslaBall(s, x, y, target, bounces, hitSet) {
-  spawnEnt({ x, y, t: target, age: 0, dead: false,
+  spawnEnt({ x, y, t: target, age: 0, dead: false, proj: true,
     update(dt) {
       this.age += dt;
       if (!this.t || this.t.dead) { this.t = nearestTo(this.x, this.y, 400, hitSet); if (!this.t) { this.dead = true; return; } }
-      const d = dist(this.t.x, this.t.y, this.x, this.y), mv = 420 * dt;
+      const d = edist(this.t, this.x, this.y), mv = 420 * dt;
       if (d <= this.t.def.r + 8 + mv) { this.dead = true; teslaBoom(s, this.x, this.y, bounces, hitSet); return; }
       this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
       if (shells.length && shellAt(this.x, this.y)) { this.dead = true; teslaBoom(s, this.x, this.y, bounces, hitSet); return; }   // esplode sul guscio
@@ -2115,13 +2133,13 @@ function teslaBoom(s, x, y, bounces, hitSet) {
   const extra = teslaExtra(s);
   const dmg = 28 * dmgM(s) * Math.pow(stdM(s, "bounce", 0.85), N(s, "bounce")) * (has(s, "over2") ? 1 + 0.3 * extra : 1);
   const rad = teslaRad(s), first = [];
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) {
+  for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) {
     hitSet.add(e); first.push(e); damage(e, dmg, "electric", false, "tesla");
     if (has(s, "stun") && Math.random() < 0.3) para(e, 1);          // Esplosioni paralizzanti: come la paralisi del Thunderbolt
   }
   ring(x, y, rad, TYPES.electric.color, 0.3);
   if (has(s, "chain")) {
-    const near = living().filter((e) => !hitSet.has(e) && canSee(e) && dist(e.x, e.y, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
+    const near = living().filter((e) => !hitSet.has(e) && canSee(e) && edist(e, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
     for (const e of near) { hitSet.add(e); damage(e, dmg * 0.4, "electric", false, "tesla"); bolt(zigzag(x, y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5); }
   }
   if (has(s, "orb")) teslaOrb(s, x, y, rad);
@@ -2190,18 +2208,18 @@ function vortex(s, pos, a, tg) {
     // il più vicino entro 130 px non più in basso, altrimenti il più vicino più in alto; il percorso si allunga quanto serve
     steer() {
       const t = this.tg;
-      if (!t.dead && dist(t.x, t.y, this.x, this.y) > R + t.def.r) { this.a = Math.atan2(Math.min(0, t.y - this.y), t.x - this.x); return; }
+      if (!t.dead && edist(t, this.x, this.y) > R + t.def.r) { this.a = Math.atan2(Math.min(0, t.y - this.y), t.x - this.x); return; }
       if (!t.dead) {
         this.done.add(t);
         if (has(kB, "forkX")) { const bd = 24 * dmgM(kB) * (has(kB, "pace") ? 1.4 : 1) * 0.5;
-          for (const e of living()) if (dist(e.x, e.y, t.x, t.y) <= 40 + e.def.r) damage(e, bd, "energy", false, "beam");
+          for (const e of living()) if (edist(e, t.x, t.y) <= 40 + e.def.r) damage(e, bd, "energy", false, "beam");
           ring(t.x, t.y, 40, TYPES.energy.color, 0.3); }
       }
       this.tg = null;
       if (this.more <= 0) return;
       let best = null, bd = 130;
-      for (const e of living()) { if (this.done.has(e) || e.y > this.y) continue; const d = dist(e.x, e.y, this.x, this.y); if (d < bd) { bd = d; best = e; } }
-      if (!best) { bd = Infinity; for (const e of living()) { if (this.done.has(e) || e.y >= this.y) continue; const d = dist(e.x, e.y, this.x, this.y); if (d < bd) { bd = d; best = e; } } }
+      for (const e of living()) { if (this.done.has(e) || e.y > this.y) continue; const d = edist(e, this.x, this.y); if (d < bd) { bd = d; best = e; } }
+      if (!best) { bd = Infinity; for (const e of living()) { if (this.done.has(e) || e.y >= this.y) continue; const d = edist(e, this.x, this.y); if (d < bd) { bd = d; best = e; } } }
       if (!best) return;
       this.more--; this.tg = best; this.lim = Math.max(this.lim, this.trav + bd + R);
       this.a = Math.atan2(Math.min(0, best.y - this.y), best.x - this.x);
@@ -2236,7 +2254,7 @@ const kTag = (o, tag) => { if (o) o.kc = tag; return o; };
 // raggio 30 px, +10% con Deflagrazione
 function kBoom(r, x, y) {
   const rad = 30 * (has(r, "boomR") ? 1.1 : 1), d = railDmg(r) * (has(r, "boom3") ? 0.8 : has(r, "boomD") ? 0.65 : 0.5);
-  for (const e of living()) if (dist(e.x, e.y, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
+  for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
   ring(x, y, rad, TYPES.physical.color, 0.3);
 }
 // fulmine ramificato attirato da un bersaglio (Raggio fulminante, Colpi fulminanti): parte dalla sfera del Thunderbolt più vicina, anche obliquo;
@@ -2298,7 +2316,7 @@ function kTrail(tag, w) {
     update(dt) {
       for (const p of this.pts) {
         p.t -= dt;
-        for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
+        for (const e of living()) if (edist(e, p.x, p.y) <= 14 + e.def.r) {
           burn(e, 2, 5 * dmgM(w) * bm); reveal(e);
           if (has(w, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);
         }
@@ -2435,7 +2453,7 @@ function rangerTick(dt) {
     if (r.d.role !== "sup") continue;
     r.t -= dt; if (r.t > 0) continue;
     const reach = r.id === "epsilon" ? RV.epsRange[r.L - 1] : RANGER.range;
-    const tg = nearestTo(r.x, r.y, reach + 30); if (!tg || dist(tg.x, tg.y, r.x, r.y) > reach + tg.def.r) continue;   // aspetta un nemico a portata
+    const tg = nearestTo(r.x, r.y, reach + 30); if (!tg || edist(tg, r.x, r.y) > reach + tg.def.r) continue;   // aspetta un nemico a portata
     r.t = RV.cd(r.L); SUPPORT[r.id](r, tg);
   }
 }
@@ -2445,9 +2463,9 @@ const SUPPORT = {
     spawnEnt({ t: Y, life: Y, r, tg, ang: Math.atan2(tg.y - r.y, tg.x - r.x), len: 0, dead: false,
       update(dt) {
         this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
-        if (!this.tg || this.tg.dead || dist(this.tg.x, this.tg.y, r.x, r.y) > RANGER.range + this.tg.def.r) this.tg = nearestTo(r.x, r.y, RANGER.range);
+        if (!this.tg || this.tg.dead || edist(this.tg, r.x, r.y) > RANGER.range + this.tg.def.r) this.tg = nearestTo(r.x, r.y, RANGER.range);
         if (this.tg) this.ang = Math.atan2(this.tg.y - r.y, this.tg.x - r.x);
-        this.len = this.tg ? Math.min(RANGER.range, dist(this.tg.x, this.tg.y, r.x, r.y) + 24) : Math.max(40, this.len - 200 * dt);
+        this.len = this.tg ? Math.min(RANGER.range, edist(this.tg, r.x, r.y) + 24) : Math.max(40, this.len - 200 * dt);
         for (const e of living()) {
           const dx = e.x - r.x, dy = e.y - r.y, d = Math.hypot(dx, dy); if (d > this.len + e.def.r) continue;
           let da = Math.atan2(dy, dx) - this.ang; da = Math.atan2(Math.sin(da), Math.cos(da));
@@ -2493,16 +2511,16 @@ const SUPPORT = {
       spawnEnt({ x: bx, y: by, age: 0, dead: false, bubble: true, seed: Math.random() * 6,
         update(dt) {
           this.age += dt; if (this.age > RV.gammaLife) { this.dead = true; return; }
-          if (!living().some((e) => dist(e.x, e.y, this.x, this.y) <= e.def.r + 9)) return;
+          if (!living().some((e) => edist(e, this.x, this.y) <= e.def.r + 9)) return;
           this.dead = true;
-          for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= RV.gammaRad + e.def.r) damage(e, RV.gammaDmg * m, "energy", false, "ranger");
+          for (const e of living()) if (edist(e, this.x, this.y) <= RV.gammaRad + e.def.r) damage(e, RV.gammaDmg * m, "energy", false, "ranger");
           ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35);
         },
         draw() { FX.bubble(this); } });
     }
   },
   epsilon(r) {                                      // raffica di missili a ricerca (da 2 a 6), danno e portata a livelli alterni
-    const m = RV.epsMul[r.L - 1] * rangerBonus("physical"), n = RV.epsN[r.L - 1], list = pickTargets({ x: r.x, y: r.y }, 9999, 99).filter((e) => dist(e.x, e.y, r.x, r.y) <= RV.epsRange[r.L - 1] + e.def.r);
+    const m = RV.epsMul[r.L - 1] * rangerBonus("physical"), n = RV.epsN[r.L - 1], list = pickTargets({ x: r.x, y: r.y }, 9999, 99).filter((e) => edist(e, r.x, r.y) <= RV.epsRange[r.L - 1] + e.def.r);
     for (let k = 0; k < n && list.length; k++) {
       spawnEnt({ x: r.x, y: r.y - 6, a: -Math.PI / 2 + (k - (n - 1) / 2) * 0.35, t: list[k % list.length], age: 0, dead: false, tint: TYPES.physical.color,
         update(dt) {
@@ -2510,7 +2528,7 @@ const SUPPORT = {
           if (!this.t || this.t.dead) { this.t = nearestTo(this.x, this.y, 400); if (!this.t) { this.dead = true; return; } }
           let d = Math.atan2(this.t.y - this.y, this.t.x - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d));
           this.a += clamp(d, -6 * dt, 6 * dt); this.x += Math.cos(this.a) * 300 * dt; this.y += Math.sin(this.a) * 300 * dt;
-          if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; damage(this.t, RV.epsDmg * m, "physical", false, "ranger"); ring(this.x, this.y, 14, TYPES.physical.color, 0.25); }
+          if (edist(this.t, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; damage(this.t, RV.epsDmg * m, "physical", false, "ranger"); ring(this.x, this.y, 14, TYPES.physical.color, 0.25); }
           else if (this.age > 6) this.dead = true;
         },
         draw() { FX.missile(this, true); } });
@@ -2535,12 +2553,12 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
   // con Proiettili incendiari o Proiettili gravitazionali i colpi si alternano nei colori dei tipi attivi (fisico, fuoco, force): solo disegno
   const tints = ["physical"].concat(fire ? ["fire"] : [], force ? ["force"] : []);
   const tint = TYPES[tints.length > 1 ? tints[(p.st.tintN = (p.st.tintN || 0) + 1) % tints.length] : "physical"].color;
-  const l = t ? (dist(t.x, t.y, x, y) || 1) : 1;
+  const l = t ? (edist(t, x, y) || 1) : 1;
   spawnEnt({ x, y, vx: t ? (t.x - x) / l : Math.cos(ang), vy: t ? (t.y - y) / l : Math.sin(ang),
     t: t || null, life: fan || frag ? 0.7 : 6, hit: new Set(o.skip || []), reb: false, out: false, dead: false,
     update(dt) {
       this.life -= dt; if (this.life <= 0) { this.dead = true; return; }
-      if (this.t && !this.t.dead) { const d = dist(this.t.x, this.t.y, this.x, this.y) || 1; this.vx = (this.t.x - this.x) / d; this.vy = (this.t.y - this.y) / d; }
+      if (this.t && !this.t.dead) { const d = edist(this.t, this.x, this.y) || 1; this.vx = (this.t.x - this.x) / d; this.vy = (this.t.y - this.y) / d; }
       this.x += this.vx * 600 * dt; this.y += this.vy * 600 * dt;
       if (this.reb) {                            // dopo un rimbalzo il colpo non attraversa la cupola: se la rientra si ferma sul bordo
         if (domeK(this.x, this.y, 0) > 1) this.out = true; else if (this.out) { this.dead = true; return; }
@@ -2548,7 +2566,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
       const sh = shells.length && shellAt(this.x, this.y);   // guscio: blocca il colpo; con Atlante a volte lo attraversa (una prova per guscio)
       if (sh && !(this.pass && this.pass.has(sh))) { if (RG.ign && Math.random() < RG.ign) (this.pass = this.pass || new Set()).add(sh); else { this.dead = true; return; } }
       for (const e of living()) {
-        if (this.hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 3) continue;
+        if (this.hit.has(e) || edist(e, this.x, this.y) > e.def.r + 3) continue;
         if (e.invis && !(RG.conv && RG.conv.type === "energy")) continue;   // invisibile: il colpo passa attraverso
         if (GEAR.ext) gearExtend(e);
         const dmg1 = dmg;                          // Moduli 6, 13, 18 (bonus sul nemico colpito) e critico (1); senza equipaggiamento dmg non cambia
@@ -2561,7 +2579,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
         if (proc) { guardProc(p, proc, e); proc = null; }
         if (canFrag && Math.random() < 0.10) { canFrag = false; guardFrag(p, this, dmg); }
         if (prob && Math.random() < prob) {
-          for (const f of living()) if (f !== e && dist(f.x, f.y, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), "physical", false, "player");   // Modulo 19
+          for (const f of living()) if (f !== e && edist(f, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), "physical", false, "player");   // Modulo 19
           ring(e.x, e.y, rad, TYPES.physical.color, 0.3);
         }
         if (pierce > 0) { pierce--; this.t = null; }
@@ -2898,12 +2916,88 @@ function planetWave(n) {
   pw.next = n < N_WAVES ? t0 + planetWaveT(n, D) : Infinity;
   state = "play";
 }
-// boss segnaposto (il boss finale della campagna, del tipo del continente): vita come un muro di pari difficoltà, senza i fattori dei singoli muri;
-// velocità: il bordo inferiore arriva a metà schermo alla fine dell’ondata 20 [deciso], contando i tempi delle ondate 18-20 [Claude]
+/* ---------- BOSS DELLA PROTEZIONE PLANETARIA (DESIGN.md § 17, fase 4) ----------
+   Uno per tipo, giganti, entrano dall’alto a poco a poco (bersagli appena si vedono); il bordo inferiore arriva a metà schermo alla fine dell’ondata 20 [deciso].
+   box = semilarghezza e semialtezza della sagoma (rettangolo arrotondato, edist); il meteorite è un cerchio. Valori [Claude, provvisorio]. */
+const PLANET_BOSS = {
+  fire:     { name: "Ammiraglia", look: "flagship", box: [130, 70] },                  // lancia missili che intercettano i colpi delle torrette
+  force:    { name: "Nave madre", look: "carrier", box: [60, 135] },                   // lunga il 75% dello schermo con le ali (270 px di scafo); rilascia gli alati
+  electric: { name: "Disco volante", look: "disc", box: [150, 55] },                   // a volte assorbe il danno
+  energy:   { name: "Prisma gigante", look: "bigprism", box: [90, 192] },              // 50% di larghezza, 60% di altezza; raggio verticale; non scende sotto il 25%
+  physical: { name: "Meteorite", look: "bigrock", r: 180 },                             // a tutta larghezza; a metà vita si divide
+};
+// abilità per livello del continente [Claude, provvisorio]
+const BOSS_L = {
+  interceptEvery: (L) => Math.max(3, 8 - 0.5 * (L - 1)), interceptN: (L) => 2 + Math.floor((L - 1) / 4),   // fire: salve di intercettori
+  wings: (L) => 6 + Math.floor((L - 1) / 3), wingsAt: [0.75, 0.55, 0.35],                                  // force: alati a 75%, 55%, 35% di altezza [deciso]
+  absorb: (L) => Math.min(0.5, 0.1 + 0.04 * (L - 1)),                                                       // electric: probabilità di assorbire, tetto 50% [Claude]
+  rayEvery: (L) => Math.max(3, 9 - 0.5 * (L - 1)), rayLen: H * 0.25, rayDmg: 2, rayWarn: 0.7,               // energy: raggio di 160 px [deciso], danno ×2 alla cupola
+  splits: (L) => Math.min(3, 1 + Math.floor((L - 1) / 5)),                                                  // physical: generazioni di scissioni
+};
 function planetBossDef() {
-  const D = curDiff(), d = finalBossDef(10), T = [18, 19, 20].reduce((a, n) => a + planetWaveT(n, D), 0) - 2;
-  const v = (H / 2) / Math.max(10, T) / (levelSpeed(D) * waveSpeed(N_WAVES));
-  return Object.assign(d, { type: planetType, hp: FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, D / 10 - 4), 0.35)), speed: v });
+  const D = curDiff(), P = PLANET_BOSS[planetType], T = [18, 19, 20].reduce((a, n) => a + planetWaveT(n, D), 0) - 2, L = campLevel;
+  const v = (H / 2) / Math.max(10, T) / (levelSpeed(D) * waveSpeed(N_WAVES));   // bordo inferiore da 0 a metà schermo nelle ondate 18-20
+  return { type: planetType, hp: FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, D / 10 - 4), 0.35)), speed: v, dmg: 8, boss: true, final: true, giant: true, planet: true,
+    look: P.look, name: P.name, box: P.box, r: P.box ? Math.min(P.box[0], P.box[1]) : P.r, kbRes: 1, statRes: 0.6,
+    absorb: planetType === "electric" ? BOSS_L.absorb(L) : 0, stopAt: planetType === "energy" ? H * 0.75 : 0, split: planetType === "physical" ? BOSS_L.splits(L) : 0 };
+}
+// abilità dei boss giganti, a ogni passo
+function giantTick(e, dt) {
+  const L = campLevel, b = bottomOf(e);
+  if (b <= 0) return;
+  if (e.def.look === "flagship") {
+    e.icd = (e.icd === undefined ? 2 : e.icd) - dt;
+    if (e.icd <= 0) { e.icd = BOSS_L.interceptEvery(L); for (let i = 0; i < BOSS_L.interceptN(L); i++) interceptor(e.x + rnd(-0.7, 0.7) * e.def.box[0], b - 10); }
+  } else if (e.def.look === "carrier") {
+    e.rel = e.rel || []; e.wingsOut = b >= H * (1 - BOSS_L.wingsAt[0]);   // le ali compaiono al 75% di altezza [deciso]
+    BOSS_L.wingsAt.forEach((k, i) => {
+      if (e.rel[i] || b < H * (1 - k)) return;
+      e.rel[i] = true;
+      for (let j = 0, n = BOSS_L.wings(L); j < n; j++) {
+        spawn({ enemy: "force_w", w: N_WAVES, x: clamp(e.x + (j - (n - 1) / 2) * 34, 14, W - 14) });
+        const w = enemies[enemies.length - 1]; w.y = clamp(e.y + rnd(-0.4, 0.4) * e.def.box[1], 10, H);
+      }
+    });
+  } else if (e.def.look === "bigprism") {
+    e.rcd = (e.rcd === undefined ? 3 : e.rcd) - dt;
+    if (e.rcd <= 0) { e.rcd = BOSS_L.rayEvery(L); prismRay(e, e.x + rnd(-0.8, 0.8) * e.def.box[0]); }
+  }
+}
+// fire: missile che insegue il colpo di torretta più vicino e lo distrugge (missili, bombe, sfere, proiettili del Railgun)
+function interceptor(x, y) {
+  spawnEnt({ x, y, a: Math.PI / 2, age: 0, dead: false, tint: "#ff4d6a", intercept: true,
+    update(dt) {
+      this.age += dt; if (this.age > 6) { this.dead = true; return; }
+      let tg = null, bd = 1e9; for (const o of ents) if (o.proj && !o.dead) { const d = dist(o.x, o.y, this.x, this.y); if (d < bd) { bd = d; tg = o; } }
+      if (tg) { let d = Math.atan2(tg.y - this.y, tg.x - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d)); this.a += clamp(d, -5 * dt, 5 * dt); }
+      this.x += Math.cos(this.a) * 240 * dt; this.y += Math.sin(this.a) * 240 * dt;
+      if (tg && bd < 10) { tg.dead = true; this.dead = true; ring(this.x, this.y, 12, "#ff4d6a", 0.25); }
+      if (this.y > GROUND_Y || this.x < -20 || this.x > W + 20) this.dead = true;
+    },
+    draw() { FX.missile(this, true); } });
+}
+// energy: raggio verticale lungo il 25% dello schermo dal bordo inferiore del prisma; prima un avviso, poi colpisce la cupola se la raggiunge
+function prismRay(e, x) {
+  spawnEnt({ x, t: 0, dead: false, hit: false, boss: e,
+    update(dt) {
+      this.t += dt; const y0 = bottomOf(e), y1 = y0 + BOSS_L.rayLen; this.y0 = y0; this.y1 = y1;
+      if (e.dead || this.t > BOSS_L.rayWarn + 0.4) { this.dead = true; return; }
+      if (!this.hit && this.t >= BOSS_L.rayWarn) {
+        this.hit = true;
+        if (domeK(this.x, y1, 0) <= 1 || y1 >= GROUND_Y) { const d0 = e.dmg; e.dmg = d0 * BOSS_L.rayDmg; domeHit(e); e.dmg = d0; }
+      }
+    },
+    draw() { FX.prismRay(this); } });
+}
+// physical: a metà vita il meteorite si divide in due con la vita rimasta (anche i pezzi, finché restano scissioni)
+function splitRock(e) {
+  e.dead = true; e.rewarded = true;
+  for (const sg of [-1, 1]) {
+    const d = Object.assign({}, e.def, { r: e.def.r / 2, split: e.def.split - 1 });
+    enemies.push(Object.assign({}, e, { def: d, dead: false, rewarded: false, x: clamp(e.x + sg * e.def.r / 2, d.r * 0.6, W - d.r * 0.6), hp: e.hp / 2, maxHp: e.maxHp / 2,
+      shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34) }));
+  }
+  ring(e.x, e.y, e.def.r * 0.8, TYPES.physical.color, 0.5);
 }
 const planetResumeWave = () => { let k = 1; while (k < N_WAVES && pw.clr[k]) k++; return k; };   // prima ondata non ripulita
 function planetTick(dt) {
@@ -2929,10 +3023,12 @@ function nextChoice() {                            // la prima scelta in coda: c
 }
 
 function spawn(q) {
+  const dq = q.def || ENEMY_DEFS[q.enemy]; if (dq.giant && pw) pw.bossMax = 0;   // vita totale del boss gigante (barra in alto), anche dopo le scissioni
   const d = q.def || ENEMY_DEFS[q.enemy], b = q.as ? ENEMY_DEFS[q.as] : d, D = curDiff();
   const hp = b.hp * levelHp(D) * waveHp(q.w || wave) * (d.final || pw ? 1 : WALL_ENEMY_HP[campLevel] || 1);
+  if (d.giant && pw) pw.bossMax = hp;
   enemies.push({ w: q.w || wave,
-    def: d, boss: !!d.boss, final: !!d.final, kbRes: d.kbRes || 0, statRes: d.statRes || 0, x: q.x, y: -d.r, hp, maxHp: hp,
+    def: d, boss: !!d.boss, final: !!d.final, kbRes: d.kbRes || 0, statRes: d.statRes || 0, x: q.x, y: -(d.box ? d.box[1] : d.r), hp, maxHp: hp,
     speed: d.speed * levelSpeed(D) * waveSpeed(q.w || wave), curSpeed: 0, dmg: b.dmg * levelDmg(D) * waveDmg(q.w || wave),
     flash: 0, phase: rnd(0, 6.28), dead: false, acc: 0, accT: 0, atk: 0.3,
     shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34), rot: rnd(0, 6.28), spin: rnd(-0.8, 0.8),
@@ -2946,11 +3042,14 @@ function kamikaze(e) {
   e.dmg = d0 * k; domeHit(e); e.dmg = d0;
   e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5);
 }
+const bottomOf = (e) => e.y + (e.def.box ? e.def.box[1] : e.def.r);   // bordo inferiore (boss giganti: della sagoma)
 function touchesDome(e) {
+  if (e.def.box) return domeK(e.x, bottomOf(e), 0) <= 1 || bottomOf(e) >= GROUND_Y;
   const dx = (e.x - DOME.cx) / (DOME.rx + e.def.r), dy = (e.y - DOME.cy) / (DOME.ry + e.def.r);
   return dx * dx + dy * dy <= 1 || e.y + e.def.r >= GROUND_Y;
 }
 function domeNear(e) {
+  if (e.def.box) return domeK(e.x, bottomOf(e), 0) <= 1.5625;
   const dx = (e.x - DOME.cx) / (DOME.rx + e.def.r), dy = (e.y - DOME.cy) / (DOME.ry + e.def.r);
   return Math.sqrt(dx * dx + dy * dy) <= 1.25;
 }
@@ -2981,7 +3080,7 @@ function fireBurnDps() {
 function fireAbility(a) {
   const v = a.v;
   if (a.id === "repulse") {                                                         // onda su metà schermo, dal lato con più nemici
-    const L = living().filter((e) => e.y > 0), left = L.filter((e) => e.x < W / 2).length >= L.length - L.filter((e) => e.x < W / 2).length;
+    const L = living().filter((e) => e.y > 0 || e.def.giant), left = L.filter((e) => e.x < W / 2).length >= L.length - L.filter((e) => e.x < W / 2).length;
     for (const e of L) if ((e.x < W / 2) === left && domeNear(e)) knock(e, v.knock);
     domeWave(left ? -1 : 1);
   } else if (a.id === "freeze") { AB.gasT = v.dur; AB.gasH = v.height; AB.gasK = v.weak / 100; }
@@ -2998,7 +3097,7 @@ function fireAbility(a) {
   } else if (a.id === "power") { AB.powerT = v.dur; powerBonus = v.pct / 100; }
 }
 function abilityTick(dt) {
-  const anyone = enemies.some((e) => !e.dead && e.y > 0);
+  const anyone = enemies.some((e) => !e.dead && (e.y > 0 || (e.def.giant && onScreen(e))));
   for (const a of AB.list) {
     if (a.id === "impen") { a.t -= dt; if (a.t <= 0) { domeShield++; a.t = abEvery(a.v); } continue; }
     if (!ABILITIES[a.id].cd) continue;
@@ -3084,6 +3183,9 @@ function update(dt) {
       if (e.def.special === "kami") { kamikaze(e); continue; }   // speciale fire: esplode sulla cupola
       if (e.invis) reveal(e);                        // invisibile: toccando la barriera torna visibile [deciso]
       if (e.paraT <= 0) { e.atk -= dt; if (e.atk <= 0) { domeHit(e); e.atk = ATTACK_EVERY; } }
+    } else if (e.def.giant) {                       // boss giganti: scendono dritti (il prisma si ferma al 25% dal basso) e usano le abilità
+      if (!(e.def.stopAt && bottomOf(e) >= e.def.stopAt) && e.paraT <= 0) e.y += e.curSpeed * dt;
+      giantTick(e, dt);
     } else if (e.paraT <= 0) {
       e.y += e.curSpeed * dt;
       e.x = clamp(e.x + Math.sin(waveTime * 2 + e.phase) * 12 * dt, e.def.r, W - e.def.r);
@@ -3094,7 +3196,7 @@ function update(dt) {
   domeSince += dt; domeFlash = Math.max(0, domeFlash - dt); domeImmT = Math.max(0, domeImmT - dt);
   abilityTick(dt);
 
-  for (const e of enemies) if (!e.dead && e.y >= 0) markSeen(e);                 // entrato nella schermata
+  for (const e of enemies) if (!e.dead && onScreen(e)) markSeen(e);                 // entrato nella schermata
   if (alerts.length) { alerts[0].t -= dt; if (alerts[0].t <= 0) alerts.shift(); }
   for (const e of enemies) if (e.dead && e.boss && !e.rewarded) {
     e.rewarded = true; if (!e.final) { if (pw) { pw.mb++; pw.choices.unshift("boss"); } else bossBonus++; } ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
@@ -3403,7 +3505,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.18.1";
+const APP_VERSION = "1.19.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

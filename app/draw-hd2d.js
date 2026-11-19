@@ -867,7 +867,25 @@ function hdFoe(e, c, look) {
   foeDetails(e, c, look);
   light(e.x, e.y, r * 2.2, c, 0.45 * a);
 }
+// boss giganti (1.19.0): un solo sprite a pixel per sagoma e colore (meteorite con il rumore della roccia), dettagli e luci sopra
+function hdGiant(e, c, look) {
+  const P2 = ramp(c), box = e.def.box || [e.def.r, e.def.r], nx = Math.ceil(box[0] * 2 / PX), ny = Math.ceil(box[1] * 2 / PX);
+  const sp = procSprite("giant:" + look + ":" + c + ":" + box.join("x"), nx, ny, (i, j) => {
+    const u = (i + 0.5) / nx * 2 - 1, v = (j + 0.5) / ny * 2 - 1;
+    let inside;
+    if (look === "disc") inside = u * u + (v / 0.6) ** 2 <= 1;
+    else if (look === "bigrock") inside = u * u + v * v <= (0.9 + 0.08 * Math.sin(Math.atan2(v, u) * 5) + 0.04 * Math.sin(Math.atan2(v, u) * 11)) ** 2;
+    else inside = inPoly(GIANT_SHAPES[look], u, v);
+    if (!inside) return null;
+    const z = (u + v) * 0.5 + (look === "bigrock" ? (hash2(i, j) - 0.5) * 0.25 : 0);
+    return z < -0.5 ? P2[5] : z < -0.15 ? P2[4] : z < 0.25 ? P2[3] : z < 0.6 ? P2[2] : P2[1];
+  });
+  blit(sp, e.x, e.y, nx / 2 + 1, ny / 2 + 1);
+  giantDetails(e, c, look);
+  light(e.x, e.y, Math.max(box[0], box[1]) * 1.3, c, 0.35 * ctx.globalAlpha);
+}
 enemyBody = function enemyBody(e, c, look) {
+  if (e.def.giant) { hdGiant(e, c, look); return; }
   if (ROCK_LOOKS.includes(look)) hdEnemy(e, c, look); else if (SHIP_LOOKS.includes(look)) hdEnemy2(e, c, look);
   else if (FOE_SHAPES[look] || FOE_ROUND[look]) hdFoe(e, c, look); else baseEnemyBody(e, c, look);
 };
@@ -1089,6 +1107,11 @@ Object.assign(FX, {
       pxEllipse(x, y, r, r, i ? TYPES.force.color : "#ffe0ff", (1 - k) * (1 - i * 0.25), ang - half, ang + half);
     }
     ctx.globalAlpha = 1; light(x + Math.cos(ang) * len * k, y + Math.sin(ang) * len * k, len * 0.6, TYPES.force.color, (1 - k) * 0.6);
+  },
+  prismRay(o) {                                  // Prisma gigante · raggio verticale; HD-2D: avviso a pixel tratteggiato, poi fascio con alone e luce
+    if (o.y0 === undefined) return;
+    if (o.t < BOSS_L.rayWarn) { for (let y = o.y0; y < o.y1; y += PX * 4) pxDot(o.x, y, TYPES.energy.color, 0.4 + 0.4 * Math.sin(o.t * 30)); ctx.globalAlpha = 1; }
+    else { const k = clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1); hdBeam(o.x, o.y0, o.x, o.y1, TYPES.energy.color, 9, k); light(o.x, o.y1, 40, TYPES.energy.color, k); }
   },
   immune(e) {                                    // speciale energy · scudo dell’immunità; HD-2D: esagono a pixel che pulsa e luce
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12);

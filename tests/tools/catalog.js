@@ -222,6 +222,15 @@ function scenes(turretIds) {
       { progress: Object.assign({}, PR, { planet: Object.assign({}, PR.planet, { frags: { [id]: 1100, [other]: 1100 }, eq: [id, other] }) }),
         setup: START(42) + " queue = []; enemies.length = 0; for (const x of [130, 180, 230]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { y: 360, speed: 0, hp: 1e9, maxHp: 1e9 }); } RG.list[0].t = 0; player.cd = 1e9;",
         each: KEEP + " player.cd = 1e9; for (const e of enemies) e.hp = 1e9;", frames: 20 }, ["FX.ranger", "SUPPORT." + id]);
+  // 1.19.0: boss giganti della Protezione planetaria (DESIGN.md § 17, fase 4), a metà schermo con la loro abilità
+  for (const [t, extra] of [["fire", " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);"], ["force", ""], ["electric", ""], ["energy", " b.rcd = 0;"], ["physical", " damage(b, b.hp * 0.55, 'fire', true);"]])
+    add(1, "boss-" + t, "Boss gigante · " + { fire: "Ammiraglia", force: "Nave madre", electric: "Disco volante", energy: "Prisma gigante", physical: "Meteorite" }[t],
+      { fire: "Lancia intercettori contro i colpi delle torrette.", force: "Ali dal 75% di altezza, rilascia gli alati.", electric: "A volte assorbe il danno (lampi).",
+        energy: "Raggio verticale di 160 px; non scende sotto il 25%.", physical: "A tutta larghezza; a metà vita si divide in due." }[t],
+      { progress: Object.assign({}, PP, { planet: Object.assign({}, PP.planet, { lv: { [t]: 6 } }) }),
+        setup: "openPlanet(); startPlanet('" + t + "'); queue = []; enemies = []; for (let k = 1; k < 20; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); wave = 20; pw.next = Infinity; pw.choices = []; waveTime += 2.1; update(0.01);" +
+          " const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + extra,
+        each: KEEP + " for (const x of enemies) if (x.final) x.speed = 0; player.cd = 1e9;", frames: t === "energy" ? 50 : 20 }, ["giantDetails", "FX.prismRay"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);

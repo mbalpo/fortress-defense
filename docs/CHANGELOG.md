@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.19.0 — Boss giganti della Protezione planetaria (fase 4)
+
+- **Cinque boss** (DESIGN.md § 17; regole di Marco, valori, nomi e aspetto **[Claude] [provvisorio]**): Ammiraglia (fire, intercettori che distruggono i colpi delle torrette),
+  Nave madre (force, ali dal 75% e alati a 75/55/35% di altezza), Disco volante (electric, assorbe i colpi fino al 50%), Prisma gigante (energy, 50% × 60% dello schermo, si ferma al 25%
+  dal basso, raggio verticale di 160 px sulla cupola), Meteorite (physical, a tutta larghezza, si divide a metà vita). Entrano dall’alto e sono bersagli appena si vedono; barra in alto
+  con il nome e la vita totale; non lampeggiano tutti di bianco quando sono colpiti.
+- **Codice**: `PLANET_BOSS`, `BOSS_L`, `planetBossDef` per tipo, `giantTick`, `interceptor`, `prismRay`, `splitRock`, `absorbFx`, alato `force_w`; collisioni con la sagoma: `edist`
+  (al posto di `dist` dove il primo punto è un nemico), `hitSegs`, `inReach`, `touchesDome`, `domeNear`, `onScreen` (in `living` e `pickTargets`), `bottomOf`; i colpi delle torrette
+  intercettabili hanno `proj`. Disegno: `GIANT_SHAPES`, `giantDetails`, `FX.prismRay`, icone dei giganti in scala (classica e HD-2D, `hdGiant`).
+- **Misura con i bot**: quasi uguale alla 1.18.1 (tabella in DESIGN.md § 17). Nessun valore ritarato.
+- DESIGN.md: § 17 (“Fase 4 costruita”).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/planet4.js` (11 controlli): dimensioni (prisma 180 × 384, meteorite 360), ingresso con il bordo a 0 e bersaglio appena si vede,
+colpo dentro e fuori dalla sagoma dell’Ammiraglia, intercettori che distruggono un colpo, alati e ali alle tre altezze, assorbimento con il tetto, fermata del prisma a 480 px e danno del raggio,
+scissioni del meteorite (anche senza scissioni in più sui pezzi già divisi) e barra, vittoria dopo tutti i pezzi, i cinque boss in HD-2D. `tests/planet3.js`: l’alato contato a parte.
+`npm run screenshots`: nuove 87-96 (i cinque boss, classica e HD-2D), testi dell’avviso dentro il riquadro dopo una correzione (“(boss)”, icone in scala).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; scene “Boss gigante” e l’alato).
+
+Checklist: aggiornata (versione 41): nuovo gruppo da provare “Boss giganti (1.19)”; tra i valori di Claude i boss; riferimento del § 17: tutte e quattro le fasi costruite.
+
 ## 1.18.1 — Invisibili meno forti
 
 - **Regola nuova** **[deciso]** (Marco): lo Spettro invisibile (force) torna **visibile e bersaglio di tutti** quando tocca la barriera o subisce uno stato da una torretta che lo vede

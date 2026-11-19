@@ -251,3 +251,14 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     for (let k = 0; k < 6; k++) { g.w.__ev("domeHp = domeMax; player.cd = 1e9"); g.frame(); } g.save(name);
   }
 }
+{ // 1.19.0: boss giganti della Protezione planetaria (DESIGN.md § 17, fase 4), classica e HD-2D, a metà schermo (bordo inferiore a 320)
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  let n = 87;
+  for (const t of ["fire", "force", "electric", "energy", "physical"]) for (const settings of [null, { graphics: "hd2d" }]) {
+    const g = game({ progress: { cleared: 64, seen: ALL_SEEN, planet: { lv: { [t]: 6 }, frags: {}, day: { d: "", n: 0 }, eq: [] } }, settings, src }), e = g.w.__ev;
+    e(`openPlanet(); startPlanet("${t}"); queue = []; enemies = []; for (let k = 1; k < 18; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); waveTime += 2.1`);
+    e("update(0.01); const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + (t === "physical" ? " damage(b, b.hp * 0.55, 'fire');" : "") + (t === "energy" ? " b.rcd = 0;" : "") + (t === "fire" ? " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);" : ""));
+    for (let k = 0; k < (t === "energy" ? 50 : 20); k++) { e("domeHp = domeMax; if (state === 'upgrade') pick(0); for (const x of enemies) if (x.final) x.speed = 0"); g.frame(); }
+    g.save((n++) + "-boss-" + t + (settings ? "-hd2d" : "") + ".png");
+  }
+}

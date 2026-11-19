@@ -17,7 +17,7 @@ const put = (ev, key, x, y, hp) => ev(`spawn({ enemy: "${key}", x: ${x} }); (() 
 console.log("— Nemici e ondate —");
 {
   const { ev } = fresh();
-  const keys = J(ev, "Object.keys(ENEMY_DEFS).filter((k) => ENEMY_DEFS[k].planet)");
+  const keys = J(ev, "Object.keys(ENEMY_DEFS).filter((k) => ENEMY_DEFS[k].planet && /_[lmps]$/.test(k))");   // l’alato della nave madre (force_w, 1.19.0) è a parte
   const res = J(ev, "TYPE_KEYS.map((t) => ['l', 'm', 'p', 's'].map((v) => ENEMY_DEFS[t + '_' + v].selfRes))");
   console.log("nemici nuovi:", keys.length, "| resistenze al proprio tipo (leggero, medio, pesante, speciale):", res[0].join(" "), "| tutte tra 25% e 60%, diverse:",
     res.every((r) => new Set(r).size === 4 && r.every((x) => x >= 0.25 && x <= 0.6)), ok(keys.length === 20 && res.every((r) => new Set(r).size === 4 && r.every((x) => x >= 0.25 && x <= 0.6))));

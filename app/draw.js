@@ -231,14 +231,14 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(e.x - r * 0.75, e.y); ctx.lineTo(e.x, e.y - r * len); ctx.lineTo(e.x + r * 0.75, e.y); ctx.closePath(); ctx.fill();
 }
 function drawEnemy(e) {
-  const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";
+  const c = e.flash > 0 && !e.def.giant ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";   // i giganti non lampeggiano tutti di bianco
   const a0 = ctx.globalAlpha;
   if (e.invis) ctx.globalAlpha = a0 * (0.22 + 0.08 * Math.sin(clock * 6 + e.phase));   // speciale force invisibile: appena un riflesso
   enemyBody(e, c, look);
   if (e.immT > 0) FX.immune(e);                    // speciale energy: scudo durante l’immunità
   ctx.globalAlpha = a0;
-  if ((e.hp < e.maxHp || e.boss) && !e.invis) enemyBar(e, look);
-  if (!e.invis) drawStatus(e);
+  if ((e.hp < e.maxHp || e.boss) && !e.invis && !e.def.giant) enemyBar(e, look);   // i giganti hanno la barra in alto
+  if (!e.invis && !e.def.giant) drawStatus(e);
 }
 // nemici della Protezione planetaria (1.18.0): sagome in coordinate del raggio (y verso il basso, cioè verso la cupola) [Claude, da rivedere]
 const FOE_SHAPES = {
@@ -248,7 +248,44 @@ const FOE_SHAPES = {
   wraith: [[0, -1], [0.7, -0.5], [0.8, 0.4], [0.5, 1], [0.25, 0.6], [0, 1], [-0.25, 0.6], [-0.5, 1], [-0.8, 0.4], [-0.7, -0.5]],
   prism: [[0, 1], [0.9, -0.65], [-0.9, -0.65]],
   crab: [[-1, 0.2], [-0.85, -0.45], [-0.4, -0.85], [0.4, -0.85], [0.85, -0.45], [1, 0.2], [0.6, 0.45], [-0.6, 0.45]],
+  wing: [[0, 1], [0.4, 0.3], [1, 0.1], [0.7, -0.3], [0.3, -0.2], [0, -0.7], [-0.3, -0.2], [-0.7, -0.3], [-1, 0.1], [-0.4, 0.3]],   // alati della nave madre
 };
+// boss giganti (1.19.0): sagome in coordinate della box (u × semilarghezza, v × semialtezza); disco ellittico e meteorite tondo [Claude, da rivedere]
+const GIANT_SHAPES = {
+  flagship: [[-1, -0.3], [-0.7, -0.8], [0.7, -0.8], [1, -0.3], [0.8, 0.2], [0.35, 0.35], [0.15, 1], [-0.15, 1], [-0.35, 0.35], [-0.8, 0.2]],
+  carrier: [[-1, -1], [1, -1], [1, 0.75], [0.4, 1], [-0.4, 1], [-1, 0.75]],
+  bigprism: [[0, -1], [0.9, -0.55], [0.9, 0.55], [0, 1], [-0.9, 0.55], [-0.9, -0.55]],
+};
+const GB = (e, pts) => pts.map(([u, v]) => [e.x + u * e.def.box[0], e.y + v * e.def.box[1]]);
+function giantDetails(e, c, look) {              // dettagli dei giganti, sopra il corpo (uguali in classica e HD-2D)
+  const x = e.x, y = e.y, t = typeof clock === "number" ? clock : 0, dark = "rgba(7,11,22,0.5)";
+  if (look === "flagship") {                     // fiamme dei motori in alto, torri, ponte e oblò
+    const [hw, hh] = e.def.box;
+    for (const u of [-0.5, 0, 0.5]) flame(x + u * hw - 6, y - hh * 0.8, 18 + 6 * Math.sin(t * 13 + u * 5), 7, 1);
+    poly(GB(e, [[-0.45, -0.55], [0.45, -0.55], [0.3, 0.2], [-0.3, 0.2]]), dark, null);
+    for (const u of [-0.75, -0.4, 0.4, 0.75]) { disc(x + u * hw, y - hh * 0.15, 9, "#2a3048"); ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + u * hw, y - hh * 0.15); ctx.lineTo(x + u * hw * 1.02, y + hh * 0.25); ctx.stroke(); }
+    for (let i = -3; i <= 3; i++) disc(x + i * 12, y - hh * 0.35, 2.5, "#ffd166", 0.9);
+    disc(x, y + hh * 0.75, 7, "#fff6b0", 0.8 + 0.2 * Math.sin(t * 9));
+  } else if (look === "carrier") {               // scafo a pannelli, hangar e ali squadrate (dal 75% di altezza)
+    const [hw, hh] = e.def.box;
+    if (e.wingsOut) for (const sg of [-1, 1]) { poly([[x + sg * hw, y - hh * 0.55], [x + sg * hw * 2.1, y - hh * 0.55], [x + sg * hw * 2.1, y + hh * 0.15], [x + sg * hw, y + hh * 0.3]], c, "#ffd166", 2);
+      for (const k of [0.3, 0.6, 0.9]) disc(x + sg * hw * (1 + k), y - hh * 0.2, 3, "#fff6b0", 0.8); }
+    ctx.strokeStyle = dark; ctx.lineWidth = 2; for (const v of [-0.6, -0.2, 0.2, 0.55]) { ctx.beginPath(); ctx.moveTo(x - hw, y + v * hh); ctx.lineTo(x + hw, y + v * hh); ctx.stroke(); }
+    for (const v of [-0.4, 0, 0.38]) poly(GB(e, [[-0.45, v - 0.08], [0.45, v - 0.08], [0.45, v + 0.08], [-0.45, v + 0.08]]), "#1a1430", "#ffd166", 1);
+    disc(x, y + hh * 0.85, 8, "#fff6b0", 0.7 + 0.3 * Math.sin(t * 7));
+  } else if (look === "disc") {                  // cupola di vetro e luci che girano
+    const [hw, hh] = e.def.box;
+    ctx.beginPath(); ctx.ellipse(x, y - hh * 0.45, hw * 0.38, hh * 0.85, 0, Math.PI, 6.2832); ctx.fillStyle = "rgba(223,233,255,0.85)"; ctx.fill();
+    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.2832 + t * 1.5; disc(x + Math.cos(a) * hw * 0.82, y + Math.sin(a) * hh * 0.45, 4, Math.cos(a) > 0 ? "#fff6b0" : "#ffe14d", 0.5 + 0.5 * Math.max(0, Math.sin(a))); }
+  } else if (look === "bigprism") {              // spigoli chiari e nucleo che pulsa
+    const [hw, hh] = e.def.box; ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(x, y - hh); ctx.lineTo(x, y + hh); ctx.moveTo(x - 0.9 * hw, y - 0.55 * hh); ctx.lineTo(x, y); ctx.lineTo(x + 0.9 * hw, y - 0.55 * hh); ctx.stroke();
+    disc(x, y + hh * 0.2, hw * 0.28 * (0.9 + 0.1 * Math.sin(t * 5)), "#ffffff", 0.55);
+  } else if (look === "bigrock") {               // crateri e crepe
+    const r = e.def.r; for (const q of [[-0.35, -0.25, 0.2], [0.3, 0.2, 0.16], [0.05, 0.55, 0.12], [-0.5, 0.35, 0.1], [0.45, -0.45, 0.13]]) disc(x + q[0] * r, y + q[1] * r, q[2] * r, dark);
+    ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x - r * 0.1, y - r * 0.8); ctx.lineTo(x + r * 0.05, y - r * 0.2); ctx.lineTo(x - r * 0.15, y + r * 0.3); ctx.stroke();
+  }
+}
 const FOE_ROUND = { bomb: 0.85, spark: 0.7 };      // sagome tonde: raggio relativo
 const P = (e, pts) => pts.map(([u, v]) => [e.x + u * e.def.r, e.y + v * e.def.r]);
 function foeDetails(e, c, look) {                  // dettagli comuni a classica e HD-2D (sopra il corpo)
@@ -287,6 +324,11 @@ function enemyBody(e, c, look) {
     ctx.beginPath(); ctx.ellipse(x, y - r * 0.2, r * 0.6, r * 0.62, 0, Math.PI, 6.2832); ctx.fillStyle = "rgba(223,233,255,0.9)"; ctx.fill();
     ctx.beginPath(); ctx.ellipse(x, y, r * 1.15, r * 0.48, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
     for (const dx of [-0.6, 0, 0.6]) disc(x + dx * r, y + r * 0.1, r * 0.13, shade);
+  } else if (e.def.giant) {                    // boss giganti della Protezione planetaria
+    if (look === "disc") { ctx.beginPath(); ctx.ellipse(x, y, e.def.box[0], e.def.box[1] * 0.6, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#ffd166"; ctx.stroke(); }
+    else if (look === "bigrock") { rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke(); }
+    else poly(GB(e, GIANT_SHAPES[look]), c, "#ffd166", 3);
+    giantDetails(e, c, look);
   } else if (FOE_SHAPES[look] || FOE_ROUND[look]) {   // nemici della Protezione planetaria
     if (look === "bomb") tail(e, r, 2.2, "rgba(255,170,80,0.6)");
     if (FOE_ROUND[look]) disc(x, y, r * FOE_ROUND[look], c); else poly(P(e, FOE_SHAPES[look]), c, "rgba(7,11,22,0.6)", 1.3);
@@ -323,7 +365,10 @@ function drawHud() {
     if (wave < N_WAVES) txt("Ondata " + (wave + 1) + " tra " + Math.max(0, Math.ceil(pw.next - waveTime)) + " s", W - 10, 79, 10, "#9fb4d9", "right", "600");
   } else txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
   const fb = enemies.find((e) => e.final && !e.dead);
-  if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
+  if (fb && fb.def.giant && pw) {                    // boss gigante della Protezione planetaria: nome e vita totale (anche dopo le scissioni del meteorite)
+    txt(fb.def.name.toUpperCase(), W / 2, 94, 11, "#ffd166", "center", "800");
+    bossBar(enemies.filter((e) => e.final && !e.dead).reduce((a, e) => a + Math.max(0, e.hp), 0) / (pw.bossMax || fb.maxHp), TYPES[fb.def.type].color);
+  } else if (fb) {                                   // boss finale: barra della vita grande, sempre visibile
     txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
     bossBar(fb.hp / fb.maxHp, TYPES[fb.def.type].color);
   } else if (enemies.some((e) => e.boss && !e.dead)) txt("MINI-BOSS", W / 2, 62, 12, "#ffd166", "center", "800");
@@ -367,7 +412,8 @@ function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, 
 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
 const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre",
-  dart: "Dardo", gem: "Gemma", tank: "Corazzato", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace" };   // nomi della Protezione planetaria [Claude, da rivedere]
+  dart: "Dardo", gem: "Gemma", tank: "Corazzato", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace", wing: "Alato",
+  flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite" };   // nomi della Protezione planetaria [Claude, da rivedere]
 const MUTED = "#8a9ac0";
 function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
 function tw(str, size, weight) { setFont(size, weight); const m = ctx.measureText(str); return m && typeof m.width === "number" ? m.width : str.length * size * 0.56; }
@@ -385,7 +431,7 @@ const typeList = (ts) => ts.flatMap((t, i) => (i ? [[", ", MUTED], [TYPES[t].nam
 const ICON_SHAPE = [0.9, 1.0, 0.82, 0.98, 0.88, 1.02, 0.86, 0.95, 0.92];
 function enemyIcon(def, x, y, size) {           // disegna il nemico in piccolo, con la stessa grafica del campo
   const e = { def, x: 0, y: 0, hp: 1, maxHp: 1, flash: 0, shape: ICON_SHAPE, rot: 0.4, boss: false };
-  const k = size / (def.r * (def.look === "mothership" ? 1.6 : 1.3));
+  const k = def.box ? size / (Math.max(def.box[0], def.box[1]) * 1.1) : size / (def.r * (def.look === "mothership" ? 1.6 : 1.3));   // giganti: la dimensione più grande
   ctx.save(); ctx.translate(x, y); ctx.scale(k, k); drawEnemy(e); ctx.restore();
 }
 function levelEnemies() {                       // chi arriva davvero in questo livello: ricavato dalle ondate
@@ -454,7 +500,7 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
   const x = 16, y = 120, w = W - 32, h = 56, d = a.def, r = resOf(d.type), c = TYPES[d.type].color;
   rr(x, y, w, h, 10); ctx.fillStyle = "rgba(10,16,32,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
   enemyIcon(d, x + 26, y + h / 2, 16);
-  segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
+  segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.giant ? " (boss)" : d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
   segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
   segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · dettagli nella pausa", "#6f82ad"]], x + 52, y + 46, 10);
 }
@@ -1395,6 +1441,12 @@ const FX = {
       poly([[x - h, y - h + 3], [x + h, y - h + 3], [x + h, y + h + 3], [x - h, y + h + 3]], "#9aa6c8", "#4a5680", 1);
       txt(r.d.letter, x, y + 4, 13, c, "center", "800");
     }
+  },
+  prismRay(o) {                                  // Prisma gigante · raggio verticale: prima una linea sottile di avviso, poi il raggio
+    if (o.y0 === undefined) return;
+    if (o.t < BOSS_L.rayWarn) { ctx.globalAlpha = 0.4 + 0.4 * Math.sin(o.t * 30); ctx.strokeStyle = TYPES.energy.color; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(o.x, o.y0); ctx.lineTo(o.x, o.y1); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+    else glow(o.x, o.y0, o.x, o.y1, TYPES.energy.color, 9, clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1));
   },
   immune(e) {                                    // speciale energy · scudo dell’immunità: anello esagonale che pulsa
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12), pts = [];
