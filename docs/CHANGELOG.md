@@ -3,6 +3,16 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: Moduli e portata dei supporti dei ranger (solo DESIGN.md, gioco invariato)
+
+- § 17 **[deciso]** (Marco): ai supporti dei ranger valgono solo i Moduli per tipo di danno (non il nucleo né il Modulo 28); il corto raggio si misura dal ranger.
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 35): tolta la domanda su Moduli e corto raggio; nel riferimento dei supporti i Moduli per tipo e la portata dal ranger.
+
 ## Decisioni di design: valori dei supporti dei ranger (solo DESIGN.md, gioco invariato)
 
 - § 17 **[deciso]** (Marco): il ranger physical che ignora la resistenza e fa attraversare i gusci è Atlante (era una lettura di Claude); “corto raggio” dei supporti = portata

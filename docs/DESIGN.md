@@ -1015,8 +1015,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
 **[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,
 i danni sono **del tipo del ranger** e **crescono con il livello**. **Corto raggio** = portata dell’Aeroblast senza potenziamenti, **260 px** **[deciso]** (Marco).
 **Bonus** **[deciso]** (Marco): i supporti prendono i bonus dei Moduli e, nell’albero dei Sigilli, solo i nodi del ramo Tipi **specifici del loro tipo** e la **durata degli stati**;
-non “di tutte le torrette”, perché i ranger non sono torrette. Lettura **[Claude] [da confermare]**: per lo stesso motivo dei Moduli contano quelli per tipo di danno, non il nucleo
-né il Modulo 28 (danno delle torrette). Danni di base **leggermente sotto le torrette non potenziate** **[deciso]** (Marco); il livello 10 può arrivare oltre il 200 della campagna.
+non “di tutte le torrette”, perché i ranger non sono torrette. Dei Moduli contano **solo quelli per tipo di danno**, non il nucleo
+né il Modulo 28 (danno delle torrette) **[deciso]** (Marco, su lettura di Claude). Danni di base **leggermente sotto le torrette non potenziate** **[deciso]** (Marco); il livello 10 può arrivare oltre il 200 della campagna.
 
 | Tipo | Supporto | Conversione |
 |---|---|---|
@@ -1066,7 +1066,7 @@ quindi un ranger che sale con la campagna resta al passo, prima dei bonus di alb
 | Epsilon: danno | ×1 | ×1,3 | ×1,3 | ×1,3 | ×1,6 | ×1,6 | ×1,6 | ×1,9 | ×1,9 | ×1,9 |
 | Epsilon: portata (px) | 260 | 260 | 260 | 299 | 299 | 299 | 338 | 338 | 338 | 377 |
 
-Aperti: da quale punto si misura il corto raggio (il ranger o, come per le torrette dalla 1.14.2, il centro in basso).
+Il corto raggio si misura **dal ranger** (non dal centro in basso come per le torrette dalla 1.14.2) **[deciso]** (Marco).
 
 ### Protezione planetaria
 - Sezione del menu con **5 livelli**, che si apre completando il 60, **a griglia 2 + 2 + 1 centrato**: **Fire: Europa · Force: Africa · Electric: Asia · Energy: Americhe · Physical: Oceania** **[deciso]** (Marco). Ogni livello ha un’icona che ricorda il continente, il nome sotto e una riga descrittiva con **livello e tipo dei nemici** (es. “Livello 3 · nemici fire”). Ordine nella griglia (Europa, Africa / Asia, Americhe / Oceania), badge ×2 sul continente del giorno e partite rimaste del giorno **[deciso]** (approvati da Marco); icone da disegnare (classica e HD-2D).
