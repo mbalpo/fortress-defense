@@ -56,7 +56,11 @@ console.log("— Drop a fine livello —");
   const hist = (D) => J(ev, `(() => { const h = [0, 0, 0, 0, 0]; for (let i = 0; i < 4000; i++) h[rollRarity(${D})]++; return h.map((n) => Math.round(n / 40)); })()`);
   const h30 = hist(30), h100 = hist(100), h200 = hist(200);
   console.log("rarità (%) D 30:", h30.join("/"), "| D 100:", h100.join("/"), "| D 200:", h200.join("/"),
-    ok(h30[3] === 0 && h30[4] === 0 && Math.abs(h30[0] - 80) <= 4 && h100[4] <= 3 && h100[3] > 2 && Math.abs(h200[4] - 6) <= 3));
+    ok(h30[3] === 0 && h30[4] === 0 && Math.abs(h30[0] - 83) <= 4 && h100[4] <= 3 && h100[3] > 2 && Math.abs(h200[4] - 4) <= 3));
+  // 1.15.1: tabella ridotta (DESIGN.md § 15); ogni riga somma 100
+  const DR = J(ev, "DROP_RARITY"), DR_EXP = [[30, [83, 16, 1, 0, 0]], [60, [60, 30, 9, 1, 0]], [100, [42, 39, 14, 4, 1]], [140, [30, 38, 20, 9, 3]], [180, [22, 36, 24, 14, 4]]];
+  console.log("tabella delle rarità: righe", DR.map(([d, w]) => d + ":" + w.reduce((a, x) => a + x, 0)).join(" "),
+    ok(DR.every(([, w]) => w.length === 5 && w.reduce((a, x) => a + x, 0) === 100) && JSON.stringify(DR) === JSON.stringify(DR_EXP)));
   const fxs = J(ev, `(() => { const c = {}; for (let i = 0; i < 6000; i++) { const fx = rollModFx("arma"); c[fx] = (c[fx] || 0) + 1; } return c; })()`);
   const rareShare = (pc, r) => J(ev, `(() => { let n = 0; for (let i = 0; i < 8000; i++) if (MOD[rollModFx("${pc}", ${r})].w === 1) n++; return Math.round(n / 80); })()`);
   const rs = [0, 1, 2, 3, 4].map((r) => rareShare("nucleo", r));

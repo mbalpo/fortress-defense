@@ -12,11 +12,14 @@ const patch = (h) => reps.reduce((a, [x, y]) => { if (!a.includes(x)) throw new 
 const EV = (h) => patch(h).replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
 
 // Sigilli attesi prima di giocare il livello L (presi completando i livelli dal 31 a L − 1)
-// dalla 1.12.0, con EPICA (default 0,5): dal 50 il giocatore completa anche EPICA livelli di Epica per ogni livello di Standard; ogni livello di Epica dà 3 Sigilli
-// e i Sigilli maggiori dei boss (mini-boss: 1 − 0,9³ ≈ 0,27 per livello; boss finale: 1 ogni 10 livelli)
+// dalla 1.12.0, con EPICA (default 0,5): dal 50 il giocatore completa anche EPICA livelli di Epica per ogni livello di Standard
+// e prende i Sigilli maggiori dei boss (mini-boss: 1 − 0,9³ ≈ 0,27 per livello; boss finale: 1 ogni 10 livelli).
+// Dalla 1.15.1 ogni livello di Epica dà 2 Sigilli al primo completamento e 2 al premio della cupola al 100% (CAMPAIGN.sealsEpic):
+// EPICA100 = quota dei livelli di Epica chiusi al 100% (default 0,5 [Claude, provvisorio]) → 2 + 2 × EPICA100 per livello (3 con 0,5, come la taratura 1.12.1)
 const EPICA = process.env.EPICA === undefined ? 0.5 : +process.env.EPICA;
+const EPICA100 = process.env.EPICA100 === undefined ? 0.5 : +process.env.EPICA100;
 const epicAt = (L) => Math.floor(EPICA * Math.max(0, L - 51));
-const sealsAt = (L) => Math.floor(PER * Math.max(0, L - 31)) + 3 * epicAt(L);
+const sealsAt = (L) => Math.floor(PER * Math.max(0, L - 31) + (2 + 2 * EPICA100) * epicAt(L));
 const majorsAt = (L) => Math.floor(epicAt(L) * (1 - 0.9 ** 3) + Math.floor(epicAt(L) / 10));
 // strategia di spesa: costo del prossimo livello × peso; vince il più basso (pari: ordine dell'albero)
 const SPEND = `(() => {

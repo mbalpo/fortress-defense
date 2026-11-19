@@ -3,6 +3,29 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.15.1 — Sigilli in Epica 2 + 2, rarità dei drop ridotte
+
+- **Sigilli normali in Epica** **[deciso]** (Marco): **2** al primo completamento e **2** al premio della cupola al 100% (4 per livello; prima 3 + 3). Standard invariato (1 + 1),
+  regole dei premi invariate (anche i due premi insieme della 1.14.1), Sigilli maggiori invariati. Codice: `CAMPAIGN.sealsEpic` da 3 a 2; vittoria e griglia dei livelli leggono il valore.
+- **Rarità dei drop** **[deciso]** (Marco, su proposta di Claude: l’epico usciva circa una volta a vittoria da D 100), valori **[provvisorio]**: `DROP_RARITY`
+  30-59 83/16/1 · 60-99 60/30/9/1 · 100-139 42/39/14/4/1 · 140-179 30/38/20/9/3 · 180+ 22/36/24/14/4. Quantità per vittoria invariate.
+  Epici attesi per vittoria (40.000 estrazioni con `rollDrops`, D 60-99 / 100-139 / 140-179 / 180+): Standard 0,41 / 0,63 / 0,91 / 1,08; Epica 0,50 / 0,77 / 1,10 / 1,32 (come il calcolo di Claude).
+- Salvataggio: formato invariato, `claims` già riscossi validi; `SAVE_VERSION` non cambia.
+- **Bot**: `tests/tools/curva.js` ha `EPICA100` (quota dei livelli di Epica chiusi al 100%, default 0,5 **[Claude] [provvisorio]**): Sigilli per livello di Epica = 2 + 2 × quota (3 con 0,5, come la taratura 1.12.1).
+- **Misura dei muri 40-200** (`EQUIP=1.5 node tests/tools/curva.js L 100`, 200 partite per muro, semi 1-100; tabella completa in DESIGN.md § 16): media **55,7%** (1.15.0 rimisurata) →
+  **50,9%** con quota 0,5 (quota 0 48,9%, quota 1 51,8%). Sotto il 50% con quota 0,5: 60 36,0 · 80 25,5 · 90 47,0 · 140 24,0 (era 50,0) · 150 45,0 · 190 48,0; la 1.15.0 era già sotto al 60, 80, 90 e 110.
+  **[deciso]** (Marco): per ora i muri restano così, nessuna ritaratura: arrivano i ranger.
+- DESIGN.md: § 15 (rarità dei drop), § 16 (Flusso, massimi di Sigilli in Epica 200 e 800, nota sulla taratura 1.12.1, misura 1.15.1), § 5 (nota sui muri).
+
+**Test**: `npm test`: tutti verdi. `tests/seals.js`: premi in Epica 2 e 2, nuovo caso “Epica 2, primo già al 100%” = 4, totale 12; `tests/equip.js`: istogramma con la tabella nuova
+e controllo nuovo “tabella delle rarità”: ogni riga somma 100 e ha i valori decisi.
+
+Catalogo grafico: non cambiato (nessun cambio grafico; rigenerato solo il numero di versione dal `pretest`).
+
+Checklist: aggiornata (versione 29): nuove “Premi dei Sigilli in Epica 2 + 2: da provare, misura bot con quota 0, 50%, 100%” e “Drop per rarità ridotti: muri 40-200 da rimisurare
+con i bot (soglia 50%)”, nuova domanda sui muri sotto il 50% da rivedere con i ranger; riscritte la voce dei Sigilli in Epica (2 + 2), le righe della tabella delle rarità, la media dei muri
+nella Difficoltà e la voce dei valori di Claude sull’equipaggiamento (resta da confermare solo i colori).
+
 ## 1.15.0 — Combo tra due torrette (33)
 
 - **Combo tra due torrette** (Marco: coppie, effetti e condizioni; patch per DESIGN.md preparata su claude.ai): 33 carte di categoria Combo, 3 per torretta da “principale”;

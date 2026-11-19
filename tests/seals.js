@@ -22,13 +22,14 @@ console.log("— Premi di Sigilli a fine livello —");
     ["Standard 31, ancora al 100%", win("standard", 31, true), 0],
     ["Standard 32, primo già al 100%: tutti e due", win("standard", 32, true), 2],
     ["Standard 32, rigiocato al 100%", win("standard", 32, true), 0],
-    ["Epica 1, primo", win("epic", 1, false), 3],
-    ["Epica 1, rigiocato al 100%", win("epic", 1, true), 3],
+    ["Epica 1, primo", win("epic", 1, false), 2],
+    ["Epica 1, rigiocato al 100%", win("epic", 1, true), 2],
     ["Epica 1, ancora", win("epic", 1, true), 0],
+    ["Epica 2, primo già al 100%: tutti e due", win("epic", 2, true), 4],
   ];
   for (const [label, res, exp] of steps) { const r = JSON.parse(res); console.log(label.padEnd(46), "→ +" + r.got, "(" + r.why + ")", ok(r.got === exp)); }
   const p = stored();
-  console.log("totale", p.seals, "Sigilli | premi:", p.claims.join(" "), ok(p.seals === 10 && p.claims.join() === "s31,s31p,s32,s32p,e1,e1p"));
+  console.log("totale", p.seals, "Sigilli | premi:", p.claims.join(" "), ok(p.seals === 12 && p.claims.join() === "s31,s31p,s32,s32p,e1,e1p,e2,e2p"));
 }
 
 console.log("— Albero: acquisto dei nodi e carte sbloccate —");

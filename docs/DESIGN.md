@@ -538,7 +538,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
-  muri dal 40 al 200 in media al 59,3%, dentro la fascia 50-70% (§ 15, **[deciso]**). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
+  muri dal 40 al 200 in media al 59,3%, dentro la fascia 50-70% (§ 15, **[deciso]**). Nella 1.15.1 (rarità dei drop ridotte) media 50,9%, con 60, 80, 90, 140, 150 e 190 sotto il 50%: lasciati così in attesa dei ranger **[deciso]** (Marco; misura in § 16). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
   vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%): **va bene così** **[deciso]** (Marco, dopo la 1.11.0). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
@@ -587,16 +587,16 @@ audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
 - **Drop** **[deciso]**: a **ogni vittoria dal livello 30** in poi (il 30 compreso), anche rigiocando un livello già completato, in Standard ed Epica.
   Quantità per vittoria **[deciso]**: **2 pezzi e da 2 a 3 Moduli** (il terzo al 50% **[Claude]**); in Epica un Modulo in più **[Claude]**.
   Tipo del pezzo e del Modulo a caso, con la stessa probabilità per i 6 tipi **[Claude]**.
-- **Rarità dei drop** **[deciso]** (Marco: tabella “avara”, le rarità alte arrivano tardi e conta la fusione) · valori **[Claude] [provvisorio]**.
+- **Rarità dei drop** **[deciso]** (Marco: tabella “avara”, le rarità alte arrivano tardi e conta la fusione). Valori ridotti **[deciso]** (Marco, su proposta di Claude: l’epico usciva troppo spesso, circa uno a vittoria da D 100) · restano **[provvisorio]** fino alla misura con i bot sui muri. Le quantità per vittoria non cambiano.
   Stessa tabella per pezzi e Moduli; D è la difficoltà (in Epica D = livello + 30). Percentuali:
 
 | D | Comune | Raro | Epico | Leggendario | Ancestrale |
 |---|---|---|---|---|---|
-| 30-59 | 80 | 18 | 2 | – | – |
-| 60-99 | 55 | 30 | 13 | 2 | – |
-| 100-139 | 35 | 35 | 22 | 7 | 1 |
-| 140-179 | 20 | 35 | 30 | 12 | 3 |
-| 180 e oltre | 10 | 30 | 35 | 19 | 6 |
+| 30-59 | 83 | 16 | 1 | – | – |
+| 60-99 | 60 | 30 | 9 | 1 | – |
+| 100-139 | 42 | 39 | 14 | 4 | 1 |
+| 140-179 | 30 | 38 | 20 | 9 | 3 |
+| 180 e oltre | 22 | 36 | 24 | 14 | 4 |
 
 - **Colori della rarità** **[deciso]**: ogni rarità ha il suo colore, pieno per pezzi e Moduli, tranne l’**ancestrale, iridescente** (sfumatura che cambia colore).
   Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
@@ -797,7 +797,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
     nessun nodo sarebbe acquistabile prima del primo maggiore (Epica). Si pagano anche i Sigilli normali di sempre. Le abilità d’ingresso (Rigenerazione, Repulsiva, Ustionante)
     non sono gratis: **1 Sigillo**. Chi aveva già completato il 40 con un salvataggio precedente le tiene **[deciso]**.
   - Nodi già comprati con i costi vecchi restano. Totale di maggiori per l’albero intero: guardiano 13, ogni torretta 9, sezione per tipo 25, barriera 8 (145 in tutto).
-- **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **3** per livello, dal livello 1 di Epica.
+- **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **2** per livello (2 al primo completamento e 2 al premio della cupola al 100%, 4 in tutto), dal livello 1 di Epica. **[deciso]** (Marco; prima 3 e 3, **[da misurare]**)
   Si riscuotono al primo completamento. Non si riottengono completando di nuovo il livello, tranne **una sola volta per livello e modalità**, completandolo con la
   **barriera al 100% a fine livello** (la vita si misura alla fine: contano anche cure e Backup). Ogni livello e modalità paga quindi al massimo due volte.
   Dalla 1.14.1 **[deciso]** (Marco): se il **primo completamento è già con la cupola al 100%**, i due premi si prendono **subito insieme**, senza rigiocare. Un solo premio ciascuno, della stessa entità.
@@ -871,7 +871,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   **tutti gli altri nodi della torretta** (lettura di “nodo finale” **[Claude] [da rivedere]**); guardiano: 3 nodi di Colpi esplosivi in sequenza, Frenesia furiosa, Colpo pesante, Rimbalzo.
   Ogni nodo di sblocco ha un solo livello.
 - **Costi** (fino alla 1.11.0; dalla 1.12.0 vedi “Costi dalla 1.12.0” sopra): chain 1, 1, 2; altre carte 1; sblocco permanente 3. Una torretta completa costa 10 Sigilli, il guardiano 7, tutto l’albero di fase 1 117 (106 prima della 1.9.4).
-  In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 300.
+  In Standard dal 31 al 50 si prendono al massimo 40 Sigilli (20 livelli × 2 premi), in Epica fino a 200 (50 livelli × 4).
 - **Acquisto**: primo tocco sul nodo = selezione, secondo tocco = spesa (come “Abbandona”). 
   **Azzeramento per sezione** **[deciso]** (Marco): ogni sezione dell’albero (Guardiano, Torrette, Barriera) ha un pulsante che azzera i suoi nodi comprati e restituisce tutti i Sigilli
   e i maggiori spesi lì, per riassegnarli; due tocchi, come “Abbandona”. Letture **[Claude] [da confermare]**: Torrette comprende le 11 torrette e la sezione per tipo, e azzerandola
@@ -908,7 +908,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   +5/10/15/20/25% (5 livelli, dopo Riduzione danno). Letture **[Claude] [da rivedere]**: “carte” = pile di potenziamenti prese (anche quelle dei mini-boss);
   a parità hanno il bonus tutti quelli in testa; con zero carte nessuno; si ricalcola a ogni carta presa.
 - Costo dell’albero intero (1.7.0): sblocchi 117, carte standard 660 (torrette) + 56 (guardiano), Tipi 305, Barriera 75: **1213 Sigilli** (1.9.4: +11 per i level up lv1). In Standard fino al 200
-  se ne prendono al massimo 340 (circa 255 con metà dei premi della cupola), in Epica fino a 1200: l’albero dura ben oltre il 200.
+  se ne prendono al massimo 340 (circa 255 con metà dei premi della cupola), in Epica fino a 800 (200 livelli × 4): l’albero dura ben oltre il 200.
 - **Misura con i bot** (1.6.0, prima della taratura, curva piena dal 31): livello 40 / 50 senza albero 3,0% / 0,5%; solo sblocchi 9,0% / 2,0%;
   nodi a livelli al 3 63,5% / 42,5%; albero pieno 88,0% / 72,0%.
 - **Taratura 1.7.0** (`node tests/tools/curva.js`): i bot partono con l’**albero atteso**, cioè i Sigilli presi dal 31 al livello prima (1,5 per livello:
@@ -924,7 +924,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   110 35,5% · 120 41,5% · 130 33,0% · 140 17,0% · 150 34,5% · 160 42,5% · 170 47,0% · 180 36,5% · 190 18,0% · 200 25,5%); il 40 (senza abilità) 35,5%.
 - **Mancano** (fase 3): abilità della barriera e i loro numeri; nodo “più carte”.
 - **Taratura 1.12.1, con Sigilli maggiori e un po’ di Epica** (`EQUIP=1.5 node tests/tools/curva.js …`, `EPICA` = livelli di Epica per livello di Standard dal 50, default 0,5
-  **[Claude] [provvisorio]**, accettato da Marco come “un po’ di Epica”): ogni livello di Epica dà 3 Sigilli, i maggiori dei boss (≈ 0,27 dai mini-boss, 1 dal boss finale ogni 10)
+  **[Claude] [provvisorio]**, accettato da Marco come “un po’ di Epica”): ogni livello di Epica dà 3 Sigilli (dalla modifica sui premi in Epica: 2 al primo completamento più metà del premio della cupola, 2 + 2 × 0,5 = 3, quindi la calibrazione resta valida con il 50% dei livelli di Epica chiusi al 100% **[Claude]** **[da misurare]**), i maggiori dei boss (≈ 0,27 dai mini-boss, 1 dal boss finale ogni 10)
   e un drop di Epica. Al 100 i bot hanno 175 Sigilli e 8 maggiori, al 200 475 e 27; spendono un maggiore come 5 Sigilli e saltano lo Sblocco permanente.
   Con la curva della 1.11.0 (e i costi della 1.12.0): media **81%** (110-180 tra 90 e 98%). Prove: pendenza 1,0 e scalino 3 → media 68%; **1,2 e scalino 3** → 56,8% (da 27,5 a 78).
   **Finale** (1,2, scalino 3, `FINAL_BOSS_K` del § 5; 200 partite per muro): 40 69,5 · 50 45,0 · 60 45,5 · 70 73,0 · 80 57,0 · 90 41,5 · 100 48,5 · 110 53,5 · 120 74,5 · 130 72,5 ·
@@ -954,6 +954,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
   Modulo 10 (60 partite, bot con il Modulo): al 50 riduzione totale media 17,0%, danno risparmiato 12,6%, 6,4 contrattacchi per partita; al 100 43,0%, 17,4%, 8,1.
   Muri 10/20/30 (`calib2.js`, 400 partite per bot, random / smart, 1.14.1 → 1.14.2): 10 **123 / 157 → 133 / 153** · 20 **105 / 158 → 117 / 144** · 30 **126 / 163 → 118 / 164**: intorno al 30-40%, invariati.
   Senza la regola “un level up per entità” stessi numeri, partita per partita: un’entità offre level up solo dopo 3 carte e di solito ne ha uno solo idoneo, quindi la regola scatta di rado.
+  **Misura 1.15.1** (Sigilli in Epica 2 + 2 e tabella delle rarità ridotta; `EQUIP=1.5 node tests/tools/curva.js L 100`, 200 partite per muro, semi 1-100; `EPICA100` = quota dei livelli di Epica chiusi al 100%):
+  1.15.0 rimisurata con gli stessi semi → 1.15.1 con quota 0,5 (tra parentesi quota 0 / quota 1): 40 58,0 → 57,5 · 50 56,5 → 52,0 · 60 41,5 → 36,0 (29,5 / 35,0) · 70 53,5 → 60,5 ·
+  80 21,5 → 25,5 · 90 38,5 → 47,0 (36,5 / 48,0) · 100 57,0 → 53,0 (43,5 / 47,5) · 110 42,5 → 53,5 · 120 65,0 → 63,0 · 130 69,0 → 66,0 · 140 50,0 → 24,0 · 150 50,0 → 45,0 (36,0 / 45,0) ·
+  160 65,0 → 51,0 · 170 77,0 → 65,5 · 180 80,5 → 64,5 · 190 51,5 → 48,0 · 200 70,0 → 54,0: **media 55,7% → 50,9%** (quota 0 48,9%, quota 1 51,8%). Il calo viene dalla tabella delle rarità
+  (140, 150, 160-200); la quota pesa poco e dal 150 quota 0,5 e 1 danno gli stessi numeri (il limite sono i maggiori). Già la 1.15.0 era sotto il 50% al 60, 80, 90 e 110.
+  Muri sotto la soglia: 60, 80, 90, 140, 150, 190. **[deciso]** (Marco): **per ora restano così**, nessuna ritaratura; da rivedere con i ranger in arrivo.
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.

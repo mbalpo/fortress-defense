@@ -132,7 +132,7 @@ const CAMPAIGN = {
   smallUntil: 10,                          // fino a questa difficoltà solo nemici "piccoli"
   epicUnlock: 50, epicOffset: 30,          // Epica: difficoltà = livello + 30
   equipUnlock: 30, barrierUnlock: 40,      // equipaggiamento (DESIGN.md § 15) e abilità della barriera (§ 16)
-  sealsFrom: 31, sealsStandard: 1, sealsEpic: 3,   // Sigilli: dal livello 31 in Standard (1), da subito in Epica (3); DESIGN.md § 16
+  sealsFrom: 31, sealsStandard: 1, sealsEpic: 2,   // Sigilli: dal livello 31 in Standard (1), da subito in Epica (2, dalla 1.15.1; prima 3); DESIGN.md § 16
 };
 const UP_W = { std: 1, chain: 0.4, combo: 0.4, lu: 2 };   // chain e combo escono meno degli standard
 const diffOf = (lv, epic) => lv + (epic ? CAMPAIGN.epicOffset : 0);
@@ -645,7 +645,7 @@ const MOD = {
 const modText = (fx, r) => MOD[fx].t(MOD[fx].v[r]);
 // drop a fine livello [deciso: quantità; Claude, provvisori: terzo Modulo al 50%, +1 Modulo in Epica, tabella delle rarità per difficoltà]
 const DROP = { pieces: 2, mods: 2, modExtra: 0.5, epicMods: 1 };
-const DROP_RARITY = [[30, [80, 18, 2, 0, 0]], [60, [55, 30, 13, 2, 0]], [100, [35, 35, 22, 7, 1]], [140, [20, 35, 30, 12, 3]], [180, [10, 30, 35, 19, 6]]];
+const DROP_RARITY = [[30, [83, 16, 1, 0, 0]], [60, [60, 30, 9, 1, 0]], [100, [42, 39, 14, 4, 1]], [140, [30, 38, 20, 9, 3]], [180, [22, 36, 24, 14, 4]]];   // 1.15.1: ridotta [provvisorio]
 const GEAR_NEAR = 80;                            // “vicino alla barriera / alla fortezza”: entro 80 px dal bordo della cupola
 // chiavi e conteggi dell’inventario (servono già al caricamento dei progressi)
 const emptyGear = () => ({ pcs: {}, mods: {}, eq: {}, lock: {} });
@@ -3007,7 +3007,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.15.0";
+const APP_VERSION = "1.15.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 6, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
