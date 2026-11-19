@@ -1186,6 +1186,8 @@ const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
 // invisibili (speciale force, 1.18.0): restano colpibili dagli effetti ad area (living), ma non sono bersagli di chi non li vede (canSee)
 let seeInvis = false;                              // vero solo mentre spara una torretta di SEE_INVIS o il guardiano con la conversione energy
 const canSee = (e) => !e.invis || seeInvis;
+// torna visibile (e bersaglio di tutti) quando tocca la barriera o subisce uno stato da una torretta che lo vede [deciso] (Marco, 1.18.1); non ridiventa invisibile
+const reveal = (e) => { if (e.invis) { e.invis = false; ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.35); } };
 const randEnemy = () => { const l = living().filter(canSee); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
 // gusci (speciale physical): invincibili per qualche secondo, non sono nemici né bersagli; bloccano i colpi di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil
 let shells = [];
@@ -1260,7 +1262,7 @@ function damage(e, base, type, quiet, src, ignore) {
   const d = base * mult;
   e.hp -= d; e.flash = 0.06;
   if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
-  else if (e.def.special === "invis" && !e.invis && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) e.invis = true;   // speciale force: diventa invisibile
+  else if (e.def.special === "invis" && !e.invisUsed && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) e.invis = e.invisUsed = true;   // speciale force: diventa invisibile (una volta)
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
     if (e.accT > 0) return;
@@ -1435,7 +1437,7 @@ function laserHit(s, e, amount, dbMul, wk, ign) {
   // Raggi penetranti: a ogni attivazione, il 30% dei nemici toccati subisce il laser senza resistenze
   if (ign && !ign.has(e)) ign.set(e, has(s, "ignore") && Math.random() < 0.3);
   damage(e, d, "energy", true, "laser", ign && ign.get(e));
-  if (wk && has(s, "multiW")) weaken(e, 2.5 * dbMul);
+  if (wk && has(s, "multiW")) { weaken(e, 2.5 * dbMul); reveal(e); }
 }
 function laserFire(s) {
   const pos = { x: s.x, y: s.y - 8 }, t = pickTargets(pos, rangeOf(s), 1)[0];
@@ -1457,7 +1459,7 @@ function laserFire(s) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; busy(s, -1); return; }
       rays.forEach((r, i) => { for (const e of living()) if (hitSegs(e, r.segs, r.w)) {
         laserHit(s, e, r.dps * dt, dbMul, true, ign);
-        if (kSk && i === 0 && !e.dead) skyBurn(kSk, e, 3, 6 * dmgM(kSk));
+        if (kSk && i === 0 && !e.dead) { skyBurn(kSk, e, 3, 6 * dmgM(kSk)); reveal(e); }
         if ((kHv || kRl) && !seen[i].has(e)) {
           seen[i].add(e);
           if (kHv && Math.random() < K_PROB) kDrone(s.id + ":kHive", kHv, e.x, e.y);
@@ -1475,7 +1477,7 @@ function laserFire(s) {
           t += dt; if (t >= T) { this.dead = true; done(); return; }
           const k = t / T, ang = dir > 0 ? -Math.PI + k * Math.PI : -k * Math.PI;
           this.segs = trace(pos.x, pos.y, ang, 0);
-          for (const e of living()) if (hitSegs(e, this.segs, w)) { laserHit(s, e, 18 * dmgM(s) * dt, dbMul, false, ign); if (slowIt) slow(e, 1.5 * dbMul); }
+          for (const e of living()) if (hitSegs(e, this.segs, w)) { laserHit(s, e, 18 * dmgM(s) * dt, dbMul, false, ign); if (slowIt) { slow(e, 1.5 * dbMul); reveal(e); } }
         },
         draw() { FX.laserSweep(this, w); } });
     };
@@ -1512,13 +1514,13 @@ function disrFire(s) {
         this.lz = { segs: [{ x1: 14, y1: this.y, x2: W - 14, y2: this.y }], w: lw };
         for (const e of living()) if (Math.abs(e.y - this.y) <= e.def.r + lw / 2) {
           laserHit(kL, e, ldps * dt, ldb, false, ign);
-          if (has(kL, "sweep2") && !e.dead) slow(e, 1.5 * ldb);   // Spazzata rallentante: il rallentamento dura 1,5 s anche fuori dal campo
+          if (has(kL, "sweep2") && !e.dead) { slow(e, 1.5 * ldb); reveal(e); }   // Spazzata rallentante: il rallentamento dura 1,5 s anche fuori dal campo
         }
       }
       this.acc += dt; const doTick = this.acc >= tick; if (doTick) this.acc = 0;
       for (const e of living())
         if (Math.abs(e.y - this.y) <= hh + e.def.r) {
-          slow(e, 0.4);
+          slow(e, 0.4); reveal(e);
           if (has(s, "amp")) { e.fieldT = 0.3; e.fieldAmp = 1.25; }
           if (doTick) {
             damage(e, dmg * this.amp, "force", false, "disr");
@@ -1540,7 +1542,7 @@ function disrBlast(y, hh, d) {               // Esplosione finale: tutto il camp
 }
 function discharge(e, d) { damage(e, d, "force", false, "disr"); ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.3); }
 function destruction(s, e, dmg) {            // stack "distruzione": −10% danno inflitto, 5 s
-  const max = has(s, "dst5") ? 5 : 3;
+  const max = has(s, "dst5") ? 5 : 3; reveal(e);   // la distruzione è uno stato del Disruption Drone
   e.destrT = 5 * statDur; e.destrN = Math.min(max, e.destrN + 1);
   if (e.destrN >= max && has(s, "dstB")) {
     e.destrN = 0; discharge(e, dmg * 3);
@@ -1778,7 +1780,7 @@ function beamFire(s) {
       for (const e of hit) {
         const i = prim.indexOf(e);
         const d = dps * dt * (i >= 0 ? this.amp[i] : 1) * (e.boss && has(s, "boss") ? 1.5 : 1) * (mass ? 1 + 0.15 * ord.get(e) : 1);   // Slancio: +15% per bersaglio già colpito
-        damage(e, d, "energy", true, "beam"); if (has(s, "vuln") && !e.dead) vuln(e, 2, "all");
+        damage(e, d, "energy", true, "beam"); if (has(s, "vuln") && !e.dead) { vuln(e, 2, "all"); reveal(e); }
         if ((kS || kT) && !seen.has(e)) {
           seen.add(e);
           if (kS) { const n = has(kS, "split3") ? 9 : has(kS, "split2") ? 6 : 3; for (let k = 0; k < n; k++) missile(kS, e.x, e.y, true, randEnemy()); }
@@ -1831,7 +1833,7 @@ function wheelDrone(s, x, y, a, o) {
       for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= o.rad + e.def.r) {
         touching = true; this.hit.add(e); o.launch.hit.add(e); now.add(e);
         damage(e, o.dps * boost * dt, "fire", true, "wheel");
-        if (o.mini && has(s, "miniB")) burn(e, 2, 5 * bm);
+        if (o.mini && has(s, "miniB")) { burn(e, 2, 5 * bm); reveal(e); }
         if (!this.inside.has(e) && !e.dead) {                // nuovo passaggio su questo nemico
           if (kD) destruction(kD, e, disrDmg(kD));
           if (kT) kOrb(s.id + ":kTesla", kT, e.x, e.y);
@@ -1870,7 +1872,7 @@ function wheelDrone(s, x, y, a, o) {
       for (const p of this.trail) {
         p.t -= dt;
         for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
-          burn(e, 2, 5 * dmgM(s) * bm);
+          burn(e, 2, 5 * dmgM(s) * bm); reveal(e);
           if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);     // Scia combustibile: +30% di danno da fuoco per 2 s
         }
       }
@@ -2180,7 +2182,7 @@ function vortex(s, pos, a, tg) {
         if (!this.A && has(s, "wh1")) this.A = { x: e.x, y: e.y };
         const f = Math.min(dd, pull * g * dt); if (dd > 1 && !e.boss) { e.x += dx / dd * f; e.y += dy / dd * f; }
         damage(e, d, "force", true, "vortex");
-        if (kS && !e.dead) skyBurn(kS, e, 3, 6 * dmgM(kS));
+        if (kS && !e.dead) { skyBurn(kS, e, 3, 6 * dmgM(kS)); reveal(e); }
         if (kT && !this.zapped.has(e)) { this.zapped.add(e); thunderZap(kT, e, thunderDmg(kT)); }   // un tiro per nemico e per buco nero
       }
     },
@@ -2217,7 +2219,7 @@ function portals(s, A, B) {
       this.t -= dt; if (this.t <= 0) { this.dead = true; return; }
       for (const e of living()) if (e.tpCd <= 0 && !e.boss && ((e.x - A.x) / (rA + e.def.r)) ** 2 + ((e.y - A.y) / (rA * PORTAL_FLAT + e.def.r)) ** 2 <= 1) {
         e.x = clamp(B.x + rnd(-8, 8), 10, W - 10); e.y = Math.max(0, B.y); e.tpCd = 2;
-        if (has(s, "wh3")) slow(e, 2);
+        if (has(s, "wh3")) { slow(e, 2); reveal(e); }
       }
     },
     draw() { FX.portals(this, A, rA, B); } });
@@ -2297,7 +2299,7 @@ function kTrail(tag, w) {
       for (const p of this.pts) {
         p.t -= dt;
         for (const e of living()) if (dist(e.x, e.y, p.x, p.y) <= 14 + e.def.r) {
-          burn(e, 2, 5 * dmgM(w) * bm);
+          burn(e, 2, 5 * dmgM(w) * bm); reveal(e);
           if (has(w, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);
         }
       }
@@ -3080,6 +3082,7 @@ function update(dt) {
     e.curSpeed = e.speed * (e.slowT > 0 ? 1 - 0.5 * (1 - (e.statRes || 0)) : 1) * (e.paraT > 0 ? 0 : 1);
     if (touchesDome(e)) {
       if (e.def.special === "kami") { kamikaze(e); continue; }   // speciale fire: esplode sulla cupola
+      if (e.invis) reveal(e);                        // invisibile: toccando la barriera torna visibile [deciso]
       if (e.paraT <= 0) { e.atk -= dt; if (e.atk <= 0) { domeHit(e); e.atk = ATTACK_EVERY; } }
     } else if (e.paraT <= 0) {
       e.y += e.curSpeed * dt;
@@ -3400,7 +3403,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.18.0";
+const APP_VERSION = "1.18.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

@@ -79,6 +79,18 @@ console.log("— Invisibili —");
   console.log("Sky Guard: missili solo sul visibile:", tgs.join(","), ok(tgs.length > 0 && tgs.every((l) => l === "gem")));
 }
 
+{ // 1.18.1 (Marco): tornano visibili toccando la barriera o con uno stato di una torretta che li vede; non ridiventano invisibili
+  const { g, ev } = fresh();
+  put(ev, "force_s", 120, 300); put(ev, "force_s", 240, 300);
+  ev("enemies.forEach((e) => damage(e, e.maxHp * 0.35, 'physical', true))");
+  ev("slow(enemies[1], 2); para(enemies[1], 1)"); const other = ev("!!enemies[1].invis");   // stato senza una torretta che lo vede: resta invisibile
+  ev("destruction(makeShooter(TURRETS.disr, 90, GROUND_Y - 14), enemies[0], 5)"); const st = ev("!enemies[0].invis");
+  ev("damage(enemies[0], enemies[0].maxHp * 0.1, 'physical', true)"); const again = ev("!enemies[0].invis");
+  ev("enemies[1].y = GROUND_Y - DOME.ry - 4"); g.frame(); const dome = ev("!enemies[1].invis");
+  console.log("stato senza torretta che lo vede: resta invisibile", other, "| distruzione del Disruption Drone: visibile", st, "e non torna invisibile", again, "| tocca la barriera: visibile", dome,
+    "| ora è un bersaglio del guardiano:", ev("pickTargets({ x: 180, y: 554 }, 9999, 3).length"), ok(other && st && again && dome && ev("pickTargets({ x: 180, y: 554 }, 9999, 3).length") === 2));
+}
+
 console.log("— Gusci —");
 {
   const { g, ev } = fresh();

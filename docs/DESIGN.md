@@ -1194,7 +1194,9 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **fire, kamikaze**: alla cupola un solo colpo da danno × (1 + 4 × vita rimasta ÷ vita massima), poi muore (×5 a vita piena, ×1 quasi morto);
   - **force, invisibile** dopo aver perso il **30%** della vita: non è bersaglio di guardiano, missili e torrette che non lo vedono; i colpi gli passano attraverso. Lo colpiscono Laser, Beam,
     Disruption Drone, Gravity Vortex Gun, Firewheel Drone (bersagli scelti da loro) e gli effetti ad area (esplosioni, campi, bruciature già applicate); non l’onda dell’Hive. Con Iperione
-    il guardiano lo vede e conta solo la parte energy. A schermo resta un riflesso trasparente, senza barra né stati;
+    il guardiano lo vede e conta solo la parte energy. A schermo resta un riflesso trasparente, senza barra né stati.
+    Torna **visibile e bersaglio di tutti** quando **tocca la barriera** o **subisce uno stato da una torretta che lo vede** (rallentamento, indebolimento, vulnerabilità, bruciatura,
+    distruzione, anche dalle loro combo), e non ridiventa invisibile **[deciso]** (Marco, 1.18.1: gli invisibili erano troppo forti);
   - **electric, scatto**: dopo aver perso il **40%** della vita scende di **120 px in 0,3 s**, una volta (si ferma sulla cupola);
   - **energy, immunità**: ogni **6 s** è immune per **2 s** a tutti i danni, anche da stato (scudo esagonale); fase a caso all’uscita;
   - **physical, guscio** alla morte: **4 s**, invincibile, non è un nemico né un bersaglio, non conta per l’ondata; blocca i colpi di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil
@@ -1207,7 +1209,9 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   | 5 | 19 / 13 → 16 / 11 (16) | 24 / 24 → **0 / 0** (6) | 24 / 21 → 21 / 25 (19) | 8 / 4 → 8 / 11 (15) | 1 / 0 → 1 / 0 (5) |
   | 10 | 24 / 23 → 21 / 19 (18) | 29 / 24 → **0 / 0** (7) | 27 / 29 → 28 / 25 (20) | 24 / 14 → 21 / 15 (17) | 5 / 7 → 7 / 3 (9) |
 
-  Il **force** diventa impossibile per i bot: gli invisibili arrivano alla cupola e quasi nessuna torretta li vede. Prove al livello 1 / 5 (20 partite per bot): senza invisibilità 23 / 30%,
+  Il **force** diventa impossibile per i bot: gli invisibili arrivano alla cupola e quasi nessuna torretta li vede.
+  **Con la regola della 1.18.1** (visibili alla barriera o con uno stato): force 6 / 2 (10) al livello 1, 12 / 9 (15) al 5, 19 / 16 (17) al 10, cioè 13%, 35%, 58%;
+  tempi dei ranger con la quota force 0,42: tutti sbloccati sempre in 14,5 mesi per il physical (i due force in 6,5 mesi). Prove al livello 1 / 5 (20 partite per bot): senza invisibilità 23 / 30%,
   senza speciali 53 / 58%. Physical resta il più duro (guardiano physical e pesanti al 60%). **[da decidere]** (Marco): valori degli invisibili (soglia, durata o chi li vede) e difficoltà per tipo.
   Tempi dei ranger con queste quote (`tests/tools/ranger-tempi.js`, fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti sbloccati in 14,5 mesi (force 10,2, physical 14,5).
 - **Mancano**: i boss nuovi (fase 4); nella fase 4 anche gli alati della nave madre force.

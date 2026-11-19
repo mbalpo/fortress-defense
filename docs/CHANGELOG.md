@@ -3,6 +3,21 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.18.1 — Invisibili meno forti
+
+- **Regola nuova** **[deciso]** (Marco): lo Spettro invisibile (force) torna **visibile e bersaglio di tutti** quando tocca la barriera o subisce uno stato da una torretta che lo vede
+  (Laser, Beam, Disruption Drone, Gravity Vortex Gun, Firewheel Drone, anche con le loro combo: rallentamento, indebolimento, vulnerabilità, bruciatura, distruzione); non ridiventa invisibile.
+  Codice: `reveal(e)` nei punti in cui queste torrette danno uno stato e al contatto con la cupola; anello viola quando torna visibile; `invisUsed`.
+- **Misura con i bot** (`node tests/tools/planet.js 1,5,10 30 1 force`): force da 0 vittorie su 180 a 6 / 2, 12 / 9, 19 / 16 su 30 (livelli 1, 5, 10: 13%, 35%, 58%).
+  Tempi dei ranger force da 10,2 a 6,5 mesi; il più lento resta il physical (14,5 mesi). DESIGN.md § 17 aggiornato.
+
+**Test**: `npm test`: tutti verdi. `tests/planet3.js`: nuovo controllo (stato senza una torretta che lo vede → resta invisibile; distruzione del Disruption Drone → visibile e non torna
+invisibile; contatto con la barriera → visibile; poi bersaglio del guardiano).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D) solo per la versione: nessun disegno nuovo (quando torna visibile compare un anello già esistente).
+
+Checklist: aggiornata (versione 40): la voce sugli invisibili da provare dice anche quando tornano visibili; la domanda sul force impossibile diventa la nuova misura.
+
 ## 1.18.0 — Nemici nuovi della Protezione planetaria (fase 3)
 
 - **Nemici** (DESIGN.md § 17; proposta di Claude scelta da Marco, valori **[Claude] [provvisorio]**): quattro per tipo, 20 in tutto (`ENEMY_DEFS` da `fire_l` a `physical_s`):

@@ -85,7 +85,7 @@ const T = [
     /livello 10 \(ciclo 20 s.* ✓/, /bonus dei supporti: .* ✓/, /esportato: versione 8 .* ✓/, /schermata: “RANGER” .* ✓/, /HD-2D: grafica hd2d | ranger nel disegno del campo: true .* ✓/]],
   ["planet3.js", "Protezione planetaria (fase 3): nemici nuovi, resistenza propria, ondate, kamikaze, scatto, immunità, invisibili, gusci, scoperte",
     [/nemici nuovi: 20 .* ✓/, /ondata 8 di Asia: .* ✓/, /ondata 2: speciali 0 ✓/, /fuoco su medio fire .* ✓/, /kamikaze a metà vita .* ✓/, /scatto: .* ✓/, /immune: .* ✓/,
-    /invisibile dopo il 30%: .* ✓/, /con Iperione al 5 .* ✓/, /Sky Guard: missili solo sul visibile: .* ✓/, /carapace sconfitto: .* ✓/, /colpo del guardiano bloccato .* ✓/,
+    /invisibile dopo il 30%: .* ✓/, /con Iperione al 5 .* ✓/, /stato senza torretta che lo vede: .* ✓/, /Sky Guard: missili solo sul visibile: .* ✓/, /carapace sconfitto: .* ✓/, /colpo del guardiano bloccato .* ✓/,
     /bomba dell’Aeroblast lanciata: true .* ✓/, /dopo 4 s il guscio sparisce: 0 ✓/, /con Atlante al 10 .* ✓/, /scoperte per tipo: .* ✓/, /errori JS: nessuno ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
