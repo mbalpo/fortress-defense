@@ -75,6 +75,11 @@ const T = [
     /pressione lunga .* ✓/, /tocco che si sposta di 30 px: .* ✓/, /in pausa: tocco .* ✓/, /scelta delle carte: raggio tolto .* errori JS: nessuno ✓/]],
   ["v1143.js", "1.14.3: testo delle carte standard con il valore potenziato dall’albero, uguale all’effetto", [/Danno maggiorato con il nodo al 5: “Danno \+75%” .* ✓/,
     /\+1 proiettile con il nodo al 2: .* ✓/, /Railgun: perforazione al 3 .* ✓/, /Hive al 1 .* ✓/, /senza nodo resta il testo di base: .* ✓/, /danno del guardiano con 2 pile: ×2.500 .* ✓/, /errori JS: nessuno ✓/]],
+  ["planet.js", "Protezione planetaria (fase 1): continenti, tipo del giorno, limite, ondate sovrapposte, scelte in coda, boss, frammenti, salvataggio v7, ripresa",
+    [/prima del 60: .* ✓/, /griglia: continenti .* ✓/, /tipo del giorno lun-ven: .* ✓/, /partite: prima true .* ✓/, /il giorno dopo: rimaste 2 ✓/, /partita: modalità planet .* ✓/,
+    /ondata 2 partita a .* ✓/, /ondate 1 e 2 ripulite insieme: .* ✓/, /prima scelta → .* ✓/, /salvata a ondata ripulita: .* ✓/, /mini-boss \(tipo energy\) .* ✓/, /Continua → in battaglia: play ✓/,
+    /boss all’ondata 18 .* ✓/, /ondata 18 ripulita con il boss vivo: .* ✓/, /vittoria al livello 1: .* ✓/, /schermata: true true ✓/, /partita successiva: .* ✓/, /sconfitta all’ondata 10 .* ✓/,
+    /abbandonata all’ondata 4: .* ✓/, /esportato: versione 7 .* ✓/, /versione 6 importata: .* ✓/, /partite di oggi dal salvataggio: .* ✓/, /ripresa: menu .* ✓/, /errori JS: nessuno ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
     /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
 ];

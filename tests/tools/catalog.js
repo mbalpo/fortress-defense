@@ -203,6 +203,15 @@ function scenes(turretIds) {
     { progress: PL, setup: "openGuide(); guideTab = 'cards'; guideSel = 'sky';", frames: 1 }, ["guideScreen", "guideCards", "guideCardLines"]);
   add(1, "potenziamenti-presi", "Potenziamenti presi (dalla scelta delle carte)", "Pulsante sotto le carte: la stessa vista della pausa, poi “Torna alle carte”.",
     { progress: PL, setup: START(12) + " queue = []; enemies.length = 0; wave = 3; endWave(); upBuild = true;", frames: 1 }, ["upBuildScreen", "pauseBuild"]);
+  // 1.16.0: Protezione planetaria (DESIGN.md § 17, fase 1)
+  const PP = Object.assign({}, PL, { cleared: 64, planet: { lv: { fire: 2, force: 0, electric: 1, energy: 0, physical: 0 }, frags: { alfa: 14, prometeo: 9, sigma: 4, ceo: 7 }, day: { d: "", n: 0 } } });
+  add(1, "menu-planetaria", "Menu dal livello 60", "Pulsante “Protezione planetaria” con il tipo del giorno e le partite rimaste, al posto dell’elenco degli sblocchi.", { progress: PP }, ["menuScreen"]);
+  add(1, "planetaria", "Protezione planetaria · continenti", "Griglia 2 + 2 + 1: icona del continente, livello e tipo dei nemici, frammenti dei ranger, badge ×2 sul tipo del giorno.",
+    { progress: PP, setup: "openPlanet();", frames: 1 }, ["planetScreen", "landIcon"]);
+  add(1, "planetaria-battaglia", "Protezione planetaria · battaglia", "Ondate sovrapposte: livello e continente, tempo della prossima ondata; nemici solo del tipo del continente.",
+    { progress: PP, setup: "openPlanet(); startPlanet('fire');", each: KEEP + " if (state === 'upgrade') pick(0);", frames: 900 }, ["drawHud", "planetWave"]);
+  add(1, "planetaria-fine", "Protezione planetaria · fine partita", "Frammenti presi (anche perdendo), divisi tra i due ranger del tipo; ritorno ai continenti.",
+    { progress: PP, setup: "openPlanet(); startPlanet('electric'); __cat.step(60); wave = 12; pw.mb = 2; domeHp = 0; __cat.step(1);", frames: 1 }, ["planetEndScreen", "planetLines"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);

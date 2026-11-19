@@ -200,10 +200,13 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   Versione 3 (1.10.0): in più `progress.gear` = `{ pcs: { "arma:2": n }, mods: { "arma:2:17": n }, eq: { arma: { r, m: [[effetto, rarità], …] } } }` (inventario e pezzi equipaggiati).
   Versione 5: in più `progress.gear.lock` = `{ "arma:2": n, "arma:2:17": n }` (quanti esemplari di ogni riga sono bloccati) e il blocco dei pezzi equipaggiati e dei Moduli installati;
   un salvataggio precedente si importa senza blocchi, e un numero di bloccati superiore a quelli posseduti viene ridotto. **[Claude]**
+  Versione 7 (1.16.0): in più `progress.planet` = `{ lv: { fire: n, … }, frags: { alfa: n, … }, day: { d: "AAAA-MM-GG", n } }` (Protezione planetaria, § 17: livelli completati per tipo,
+  frammenti dei ranger, partite del giorno); le versioni 1-6 si importano con la Protezione planetaria da zero; tipi, ranger e date non validi vengono scartati. **[Claude]**
   Le versioni 1 e 2 si importano con l’inventario vuoto; pezzi, Moduli e installazioni non validi (tipi o effetti sconosciuti, doppioni, più Moduli degli slot) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non esporta la partita in sospeso (§ 2). L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
 - `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero, equipaggiamento; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
-  `fortress-run-v1`: partita in sospeso (§ 2); la chiave non cambia con i rinominamenti del gioco.
+  `fortress-run-v1`: partita in sospeso (§ 2); la chiave non cambia con i rinominamenti del gioco. Nella Protezione planetaria salva anche continente (`pt`), mini-boss sconfitti (`mb`)
+  e scelte in coda (`pq`), e `wave` è la prima ondata non ripulita.
 - PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
 - **Schermo sempre acceso**: finché il gioco è aperto in primo piano lo schermo non si spegne, anche in automatico senza tocchi (Screen Wake Lock, richiesto dopo il tocco su “Start”, rilasciato in secondo piano e richiesto di nuovo al ritorno; se il browser non lo supporta il gioco funziona lo stesso). **[deciso]** (il comportamento) · modalità **[Claude]**
@@ -1104,3 +1107,36 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - Nota **[Claude]** (schermo 360 × 640): la cima della cupola è a y 489 al centro; con le soglie nuove il rilascio più basso (35% dal basso, y 416) avviene circa 73 px sopra la cupola (prima, al 25%, circa 9 px).
 - **Bersaglio**: i boss giganti si possono colpire **appena si vedono** (una parte entrata nello schermo basta), non solo quando il centro è entrato come per i nemici di oggi. **[deciso]** (Marco)
 - Nemici e boss nuovi sono **riutilizzabili nelle campagne**.
+
+### Fase 1 costruita (1.16.0)
+- **Costruito**: modalità `planet` (§ 4: sblocco al completamento del 60, avviso di sblocco); nel menu, dal 60, il pulsante “Protezione planetaria” (tipo del giorno e partite rimaste)
+  al posto dell’elenco degli sblocchi; griglia dei continenti 2 + 2 + 1 con icona, nome, livello e tipo dei nemici, frammenti dei ranger del tipo e badge ×2; ogni tipo con la sua scala;
+  tipo del giorno e ×2; limite di 2 partite al giorno (contate alla partenza; “Continua” non conta); ondate sovrapposte con il tempo per ondata; scelte quando un’ondata è ripulita,
+  in coda e a gioco fermo; ricompensa del mini-boss subito; boss dall’ondata 18 che conta come ondata 20, con il bordo inferiore a metà schermo alla fine dell’ondata 20;
+  autosalvataggio a ondata ripulita; frammenti alla fine (vittoria, sconfitta, abbandono) divisi a caso tra i due ranger del tipo; salvataggio versione 7 (§ 7).
+- **Segnaposto e valori della fase 1** **[Claude] [provvisorio]**:
+  - **nemici**: le ondate della campagna (`waveSpec`) con al posto di ogni nemico quello della campagna del tipo del continente (fire meteora, force asteroide, electric navicella,
+    energy cristallo-cometa, physical frammento roccioso), con la vita e il danno del nemico che sostituisce; mini-boss e boss del tipo del continente (nave aliena e nave madre della campagna);
+  - **difficoltà**: livello L = difficoltà 55 + 5 × L (livello 1 = 60, come il muro che apre la modalità); vita del boss come un muro di pari difficoltà (formula del § 5 senza i fattori dei singoli muri);
+  - **tempi delle ondate** (s, ondate 1-19): 8 · 11 · 18 · 21 · 23 · 18 · 20 · 23 · 22 · 22 · 22 · 24 · 25 · 24 · 21 · 25 · 27 · 26 · 24 (ondata 20: 24, solo per la velocità del boss):
+    mediana del tempo di pulizia di ogni ondata, misurata con i bot con albero ed equipaggiamento attesi della campagna di pari difficoltà, ondate in sequenza
+    (`SEQ=1 node tests/tools/planet.js 1,5 30`, 600 partite: 5 tipi, 2 livelli, 2 bot). Il tempo è il “tempo stimato di completamento” del **[deciso]**: un’ondata più lenta della mediana
+    si sovrappone alla successiva;
+  - **F = 10** (frammenti di una partita piena), costante: la crescita con la scala è da misurare; **×2** nel giorno del tipo;
+  - in questa modalità **niente Sigilli, niente equipaggiamento e niente Sigilli maggiori** (non previsti dal § 17); i frammenti di una partita **abbandonata** valgono come una sconfitta
+    a quell’ondata; con una partita sospesa, toccare un continente chiede “Sostituire la partita sospesa?” (secondo tocco); il livello giocato è sempre il primo non completato del tipo;
+  - icone dei continenti: sagome semplici in `draw.js` (uguali in classica e HD-2D), da rifinire.
+- **Misura 1.16.0** (`node tests/tools/planet.js 1,5,10 30`, bot con albero ed equipaggiamento attesi della campagna di pari difficoltà, tempi delle ondate qui sopra;
+  60 partite per tipo e livello: vittorie su 30 random / smart e, tra parentesi, ondata media raggiunta):
+
+  | Livello (diff.) | Fire | Force | Electric | Energy | Physical |
+  |---|---|---|---|---|---|
+  | 1 (60) | 11 / 12 (14) | 23 / 21 (18) | 20 / 19 (18) | 4 / 7 (12) | 1 / 0 (5) |
+  | 5 (80) | 19 / 13 (17) | 24 / 24 (19) | 24 / 21 (19) | 8 / 4 (14) | 1 / 0 (6) |
+  | 10 (105) | 24 / 23 (19) | 29 / 24 (20) | 27 / 29 (20) | 24 / 14 (18) | 5 / 7 (12) |
+
+  Forte differenza tra i tipi con i nemici segnaposto: **physical** quasi impossibile (il guardiano spara physical e il frammento roccioso gli resiste al 50%; muore
+  all’ondata 5-6, circa 0,2 F di frammenti), energy duro (il cristallo-cometa è il nemico più veloce), force ed electric facili. Con le ondate in sequenza le vittorie sono simili:
+  la differenza viene dai nemici, non dalla sovrapposizione. Nessun valore ritarato **[da decidere]** (Marco): la difficoltà per tipo dipende dai nemici nuovi (fase 3) e dai ranger
+  (Atlante per il physical, fase 2).
+- **Mancano** (fasi 2-4): ranger (frammenti solo accumulati: soglie, livelli e schermata nella fase 2), nemici nuovi e speciali, boss nuovi.

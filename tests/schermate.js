@@ -59,7 +59,7 @@ console.log("— Epica: numerazione e avanzamento propri (1.14.2) —");
   ev("progress.clearedEpic = 7"); const code = ev("makeCode()"); const v = ev("makeSave().version");
   ev("progress.clearedEpic = 0"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("esporta e importa: versione", v, "| Epica completati", ev("progress.clearedEpic"), "| scelto", ev("selEpic"), "| errori JS:", g.errors.length ? g.errors[0] : "nessuno",
-    ok(v === 6 && ev("progress.clearedEpic") === 7 && ev("selEpic") === 8 && !g.errors.length));
+    ok(v === 7 && ev("progress.clearedEpic") === 7 && ev("selEpic") === 8 && !g.errors.length));
 }
 {
   const { ev } = fresh(30);

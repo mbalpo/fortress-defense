@@ -279,7 +279,10 @@ function drawHud() {
     ctx.restore();
   }
   txt("Nemici: " + (queue.length + enemies.length) + "", 52, 62, 12, "#9fb4d9", "left", "500");
-  txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
+  if (pw) {                                          // Protezione planetaria: continente e tempo della prossima ondata (ondate sovrapposte)
+    txt("Liv " + campLevel + " · " + PLANET.land[planetType] + " (diff " + curDiff() + ")", W - 10, 62, 12, TYPES[planetType].color, "right", "600");
+    if (wave < N_WAVES) txt("Ondata " + (wave + 1) + " tra " + Math.max(0, Math.ceil(pw.next - waveTime)) + " s", W - 10, 79, 10, "#9fb4d9", "right", "600");
+  } else txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
   const fb = enemies.find((e) => e.final && !e.dead);
   if (fb) {                                          // boss finale: barra della vita grande, sempre visibile
     txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
@@ -348,11 +351,13 @@ function enemyIcon(def, x, y, size) {           // disegna il nemico in piccolo,
 function levelEnemies() {                       // chi arriva davvero in questo livello: ricavato dalle ondate
   const D = curDiff(), kinds = new Map();
   for (let n = 1; n <= N_WAVES; n++)
-    for (const g of waveSpec(n, D).groups) if (g.count > 0) { const w = kinds.get(g.enemy) || []; if (!w.includes(n)) w.push(n); kinds.set(g.enemy, w); }
+    for (const g of waveSpec(n, D).groups) if (g.count > 0) {
+      const k = pw ? PLANET.enemy[planetType] : g.enemy, w = kinds.get(k) || []; if (!w.includes(n)) w.push(n); kinds.set(k, w);   // Protezione planetaria: solo il tipo del continente
+    }
   return {
     kinds: [...kinds.entries()].sort((a, b) => a[1][0] - b[1][0]),
-    bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: bossDef(campLevel, n) })) : [],
-    fin: hasFinalBoss() ? finalBossDef(campLevel) : null,
+    bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: pw ? Object.assign(bossDef(campLevel, n), { type: planetType }) : bossDef(campLevel, n) })) : [],
+    fin: pw ? planetBossDef() : hasFinalBoss() ? finalBossDef(campLevel) : null,
   };
 }
 function unknownRow(y, title, sub) {             // riga "incognita" per chi non hai ancora incontrato
@@ -505,7 +510,7 @@ function menuScreen() {
   if (r) {                                       // partita in sospeso (1.14.0): Continua sopra “Standard”, al posto delle istruzioni
     button(60, 196, 240, 50, "", continueRun, { stroke: "#ffd166", fill: "rgba(255,209,102,0.12)" });
     txt("Continua", W / 2, 212, 16, "#ffd166", "center", "800");
-    txt("Livello " + r.lv + " · " + (r.mode === "epic" ? "Epica" : "Standard") + " · ondata " + r.wave + "/" + N_WAVES, W / 2, 233, 11, "#e8eefc", "center", "600");
+    txt((r.mode === "planet" ? PLANET.land[r.pt] + " · livello " + r.lv : "Livello " + r.lv + " · " + (r.mode === "epic" ? "Epica" : "Standard")) + " · ondata " + r.wave + "/" + N_WAVES, W / 2, 233, 11, "#e8eefc", "center", "600");
   } else {
     txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
     txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
@@ -521,9 +526,17 @@ function menuScreen() {
   button(184, 358, 116, 36, go ? "Equipaggiamento" : "Equip. · liv " + CAMPAIGN.equipUnlock, openGear,
     { size: go ? 11 : 12, stroke: go ? "#7fa0e0" : "#2c3a5f", color: go ? "#e8eefc" : "#6f82ad" });
   const rows = [["Torri e guardiano al livello 2", 10], ["Torri e guardiano al livello 3", 20], ["Equipaggiamento del guardiano", CAMPAIGN.equipUnlock],
-    ["Sigilli e albero dei potenziamenti", CAMPAIGN.sealsFrom], ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock]];
-  txt("Sblocchi (a fine livello)", 36, 412, 12, "#9fb4d9", "left", "700");
-  rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 430 + i * 17, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
+    ["Sigilli e albero dei potenziamenti", CAMPAIGN.sealsFrom], ["Abilità della barriera", CAMPAIGN.barrierUnlock], ["Modalità Epica", CAMPAIGN.epicUnlock],
+    ["Protezione planetaria (e ranger)", PLANET.unlock]];
+  if (planetOpen()) {                            // dal 60: pulsante della Protezione planetaria al posto dell’elenco degli sblocchi (tutti presi)
+    button(60, 404, 240, 44, "", openPlanet, { stroke: "#3fe0ff", fill: "rgba(63,224,255,0.08)" });
+    txt("Protezione planetaria", W / 2, 420, 15, "#e8eefc", "center", "800");
+    txt("Oggi: " + TYPES[dayType()].name + " ×" + PLANET.dayBonus + " · partite rimaste " + gamesLeft() + "/" + PLANET.perDay, W / 2, 438, 10, "#9fb4d9", "center", "600");
+    txt("✓ Tutti gli sblocchi presi (livelli 10-" + PLANET.unlock + ")", 36, 470, 12, "#3fe0a0", "left", "500");
+  } else {
+    txt("Sblocchi (a fine livello)", 36, 412, 12, "#9fb4d9", "left", "700");
+    rows.forEach(([t, n], i) => txt((progress.cleared >= n ? "✓ " : "· ") + "Liv " + n + " — " + t, 36, 428 + i * 15, 12, progress.cleared >= n ? "#3fe0a0" : "#6f82ad", "left", "500"));
+  }
   txt("Mini-boss: ondate 5, 10, 15 dal livello 11 (Epica: sempre)", 36, 532, 10, "#ffd166", "left", "500");
   txt("Boss finale all’ondata 20 dei livelli 10, 20, 30…", 36, 546, 10, "#ffd166", "left", "500");
   button(60, 562, 154, 36, "Salvataggio", openSave, { size: 13, stroke: "#7fa0e0" });
@@ -533,6 +546,44 @@ function menuScreen() {
   txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 634, 10, "#5f7299", "center", "500");
   txt("v" + APP_VERSION + (LAUNCH ? " · " + LAUNCH : "") + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");   // LAUNCH: tipo di avvio
   buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
+}
+/* ---------- PROTEZIONE PLANETARIA (1.16.0): griglia dei continenti ---------- */
+// sagome dei continenti in coordinate da −1 a 1 (icone semplici della fase 1, da rifinire; classica e HD-2D uguali)
+const LANDS = {
+  fire: [[[-0.9, 0.2], [-0.6, -0.3], [-0.3, -0.2], [-0.1, -0.7], [0.3, -0.8], [0.5, -0.4], [0.9, -0.5], [0.8, 0.1], [0.4, 0.2], [0.3, 0.6], [0.1, 0.3], [-0.1, 0.7], [-0.3, 0.4], [-0.6, 0.5]]],
+  force: [[[-0.6, -0.8], [0.2, -0.85], [0.5, -0.5], [0.9, -0.35], [0.6, 0.1], [0.4, 0.5], [0.1, 0.9], [-0.1, 0.6], [-0.2, 0.1], [-0.8, -0.1], [-0.9, -0.5]]],
+  electric: [[[-0.95, -0.4], [-0.4, -0.75], [0.3, -0.7], [0.95, -0.5], [0.8, 0], [0.5, 0.1], [0.6, 0.5], [0.2, 0.3], [0, 0.7], [-0.2, 0.2], [-0.5, 0.4], [-0.8, 0]]],
+  energy: [[[-0.6, -0.9], [0.2, -0.9], [0.3, -0.5], [0, -0.2], [-0.1, 0], [-0.4, -0.3], [-0.7, -0.5]], [[-0.05, 0.05], [0.4, 0.15], [0.35, 0.5], [0.1, 0.95], [0, 0.5], [-0.1, 0.2]]],
+  physical: [[[-0.8, -0.2], [-0.3, -0.5], [0.1, -0.3], [0.3, -0.6], [0.7, -0.2], [0.8, 0.3], [0.4, 0.6], [-0.4, 0.5], [-0.8, 0.3]], [[0.75, 0.55], [0.9, 0.6], [0.8, 0.85]]],
+};
+function landIcon(t, x, y, r, dimmed) {          // pianeta con il continente nel colore del tipo
+  const c = TYPES[t].color;
+  disc(x, y, r, "#0d1630"); disc(x, y, r, c, dimmed ? 0.05 : 0.12);
+  ctx.strokeStyle = c; ctx.globalAlpha = dimmed ? 0.4 : 0.9; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.globalAlpha = dimmed ? 0.45 : 1;
+  for (const part of LANDS[t]) poly(part.map(([u, v]) => [x + u * r * 0.72, y + v * r * 0.72]), c, "#e8eefc", 1);
+  ctx.globalAlpha = 1;
+}
+function planetScreen() {
+  dim(0.8);
+  txt("PROTEZIONE PLANETARIA", W / 2, 50, 21, "#e8eefc", "center", "800");
+  const dt = dayType(), left = gamesLeft();
+  txt("Oggi " + TYPES[dt].name + " ×" + PLANET.dayBonus + " · partite rimaste " + left + "/" + PLANET.perDay, W / 2, 80, 12, left ? "#9fb4d9" : "#ff9a66", "center", "600");
+  const cells = [[18, 96], [186, 96], [18, 240], [186, 240], [102, 384]];
+  PLANET.order.forEach((t, i) => {
+    const [x, y] = cells[i], w = 156, h = 136, c = TYPES[t].color, arm = runArm === "planet:" + t, fr = progress.planet.frags;
+    button(x, y, w, h, "", () => startPlanet(t), { stroke: arm ? "#ffd166" : left ? c : "#2c3a5f", fill: "rgba(18,30,58,0.6)" });
+    landIcon(t, x + w / 2, y + 44, 32, !left);
+    if (t === dt) { disc(x + w - 20, y + 20, 14, "#ffd166"); txt("×" + PLANET.dayBonus, x + w - 20, y + 21, 11, "#070b16", "center", "800"); }
+    txt(PLANET.land[t], x + w / 2, y + 92, 15, "#e8eefc", "center", "800");
+    if (arm) txt("Sostituire la partita sospesa?", x + w / 2, y + 110, 10, "#ffd166", "center", "700");
+    else fitTxt("Livello " + planetLv(t) + " · nemici " + t, x + w / 2, y + 110, w - 12, 11, c, "center", "600");
+    fitTxt(RANGERS[t].map((id) => RANGER_NAME[id] + " " + fr[id]).join(" · "), x + w / 2, y + 126, w - 12, 10, "#8a9ac0", "center", "500");
+  });
+  if (planetMsg) txt(planetMsg, W / 2, 540, 12, "#ff9a66", "center", "700");
+  txt("Frammenti dei ranger anche perdendo · ondate senza pausa", W / 2, 558, 10, "#6f82ad", "center", "500");
+  button(60, 572, 240, 44, "Menu", closePlanet, { size: 14 });
+  txt("1-5 = continente · Esc = menu", W / 2, 632, 10, "#5f7299", "center", "500");
 }
 // riga dei Sigilli nella schermata di vittoria (sealGain lo calcola winLevel)
 function sealLines() {
@@ -548,7 +599,22 @@ function sealLines0() {
   if (g.why === "needFull") return ["Sigilli già riscossi: rigiocalo con la cupola al 100%"];
   return ["Sigilli di questo livello già riscossi"];
 }
+// frammenti presi nella Protezione planetaria (vittoria e sconfitta): righe e pulsanti
+function planetLines() {
+  const g = planetGain; if (!g) return [];
+  return ["+" + g.n + " frammenti" + (g.x2 ? " (×2, tipo del giorno)" : ""), g.parts.map(([id, n]) => RANGER_NAME[id] + " +" + n).join(" · ")];
+}
+function planetEndScreen(won) {
+  const L = PLANET.land[planetType], lines = planetLines();
+  overlay(won ? "LIVELLO SUPERATO" : "CUPOLA DISTRUTTA", [L + " · livello " + campLevel + (won ? " completato" : " · ondata " + wave + " di " + N_WAVES),
+    won ? "Cupola: " + Math.ceil(domeHp) + "/" + domeMax : "Mini-boss sconfitti: " + (pw ? pw.mb : 0) + " di 3"], won ? "#3fe0a0" : "#ff5a5a");
+  lines.forEach((l, i) => txt(l, W / 2, 282 + i * 18, i ? 11 : 13, i ? "#9fb4d9" : TYPES[planetType].color, "center", i ? "500" : "700"));
+  const dy = lines.length ? 18 * lines.length + 8 : 0;
+  button(60, 300 + dy, 240, 48, "Protezione planetaria", openPlanet, { size: 16, stroke: won ? "#3fe0a0" : "#ff7a3d" });
+  button(60, 360 + dy, 240, 48, "Menu", toMenu, { size: 14 });
+}
 function wonScreen() {
+  if (mode === "planet") { planetEndScreen(true); return; }
   const sl = sealLines();
   overlay("LIVELLO SUPERATO", ["Livello " + campLevel + " completato" + (mode === "epic" ? " (Epica)" : ""), "Cupola: " + Math.ceil(domeHp) + "/" + domeMax], "#3fe0a0");
   sl.forEach((l, i) => txt(l, W / 2, 282 + i * 18, i ? 11 : 13, i ? "#9fb4d9" : "#c9a2ff", "center", i ? "500" : "700"));
@@ -560,6 +626,7 @@ function wonScreen() {
   button(60, (more ? 420 : 360) + dy, 240, 48, "Menu", toMenu, { size: 14 });
 }
 function lostScreen() {
+  if (mode === "planet") { planetEndScreen(false); return; }
   overlay("CUPOLA DISTRUTTA", ["Livello " + campLevel + " · ondata " + wave + " di " + N_WAVES], "#ff5a5a");
   button(60, 300, 240, 48, "Riprova", retry, { size: 16, stroke: "#ff7a3d" });
   button(60, 360, 240, 48, "Menu", toMenu, { size: 14 });
@@ -1089,7 +1156,7 @@ function drawWorld() {
   drawDomeEdge(); drawFortress();
 }
 function drawMenuBack() {}
-const MENU_STATES = ["menu", "save", "tree", "gear", "levels", "guide"];
+const MENU_STATES = ["menu", "save", "tree", "gear", "levels", "guide", "planet"];
 function draw() {
   buttons = [];
   drawSky();
@@ -1100,10 +1167,18 @@ function draw() {
     drawHud();
     drawFps();
     if (state === "play") drawAlert();
+    if (state === "play" && pw && waveTime >= 0 && pw.banner > 0) {          // Protezione planetaria: scritta delle ondate successive, il gioco non si ferma
+      ctx.globalAlpha = clamp(pw.banner / 0.6, 0, 1);
+      txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
+      if (wave === PLANET.bossAt) txt("Boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
+      else if (CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
+      ctx.globalAlpha = 1;
+    }
     if (state === "play" && waveTime < 0) {
       ctx.globalAlpha = clamp(-waveTime / 0.6, 0, 1);
       txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
-      if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
+      if (pw && wave === PLANET.bossAt) txt("Boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
+      else if (wave === N_WAVES && hasFinalBoss()) txt("Boss finale in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       else if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(wave)) txt("Mini-boss in arrivo", W / 2, 262, 14, "#ffd166", "center", "700");
       ctx.globalAlpha = 1;
     }
@@ -1118,6 +1193,7 @@ function draw() {
   else if (state === "gear") gearScreen();
   else if (state === "levels") levelsScreen();
   else if (state === "guide") guideScreen();
+  else if (state === "planet") planetScreen();
   if (rangeShow && (state === "play" || state === "pause")) drawRange();   // raggio d’azione al tocco: sopra tutto, anche in pausa
 }
 // raggio d’azione di una torretta toccata (1.14.2): arco centrato dove parte il guardiano (come la portata nella logica), rosso come il profilo della barriera, trasparente alla base e più visibile in cima;

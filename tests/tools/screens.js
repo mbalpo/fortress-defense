@@ -212,3 +212,16 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     ec("selLevel = 42; startRun('standard'); queue = []; enemies.length = 0; for (const [x, y] of [[90, 470], [180, 460], [270, 475]]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { x, y, speed: 0, hp: 1e7, maxHp: 1e7 }); } for (const e of enemies) { domeHit(e); damage(e, 40, 'physical'); }");
     c.frame(8); c.save("71-contrattacco.png"); }
 }
+{ // 1.16.0: Protezione planetaria (DESIGN.md § 17, fase 1): menu dal 60, griglia dei continenti, battaglia con le ondate sovrapposte, fine partita
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const prog = { cleared: 64, seen: ALL_SEEN, planet: { lv: { fire: 2, force: 0, electric: 1, energy: 0, physical: 0 }, frags: { alfa: 14, prometeo: 9, sigma: 4, ceo: 7 }, day: { d: "", n: 0 } } };
+  const m = game({ progress: prog, src }), em = m.w.__ev;
+  m.save("72-menu-planetaria.png");
+  em("openPlanet()"); m.frame(); m.save("73-planetaria.png");
+  em("startPlanet('fire')"); m.frame(); em("openPlanet(); runArm = null; startPlanet('fire')"); m.frame();
+  em("toMenu(); openPlanet(); suspended = { mode: 'planet' }; runArm = 'planet:force'"); m.frame(); m.save("74-planetaria-sostituire.png");
+  em("suspended = null; runArm = null; progress.planet.day = { d: '', n: 0 }; startPlanet('fire')");
+  for (let i = 0; i < 900; i++) { em("domeHp = domeMax; if (state === 'upgrade') pick(0);"); m.frame(); }
+  m.save("75-planetaria-battaglia.png");
+  em("wave = 12; pw.mb = 2; domeHp = 0"); m.frame(2); m.save("76-planetaria-sconfitta.png");
+}

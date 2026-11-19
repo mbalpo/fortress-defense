@@ -33,7 +33,7 @@ console.log("— Inventario e salvataggio versione 3 —");
     ok(JSON.stringify(g.pcs) === '{"arma:2":3}' && JSON.stringify(g.mods) === '{"arma:1:17":2,"nucleo:4:30":1}' && JSON.stringify(g.eq.arma) === '{"r":1,"m":[[17,0],[2,1]]}'
       && !g.eq.testa && JSON.stringify(g.eq.stivali) === '{"r":0,"m":[]}'));
   const save = J(ev, "makeSave()");
-  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 6 && save.progress.gear.pcs["arma:2"] === 3));
+  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 7 && save.progress.gear.pcs["arma:2"] === 3));
   const code = ev("makeCode()"); ev("progress.gear = emptyGear()"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice andata e ritorno: arma", JSON.stringify(J(ev, "progress.gear.eq.arma")), "| salvato:", !!stored().gear.eq.arma, ok(J(ev, "progress.gear.eq.arma").m.length === 2 && stored().gear.pcs["arma:2"] === 3));
   const v2 = JSON.stringify({ game: "fortress-defense", version: 2, progress: { cleared: 40, seen: [], seals: 3, claims: [], tree: {}, loadout: [] }, settings: {} });

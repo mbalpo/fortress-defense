@@ -3,6 +3,39 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.16.0 — Protezione planetaria, fase 1
+
+- **Modalità nuova** (DESIGN.md § 17, regole **[deciso]** da Marco): si apre completando il 60 (avviso di sblocco); nel menu il pulsante “Protezione planetaria” con tipo del giorno
+  e partite rimaste prende il posto dell’elenco degli sblocchi. Griglia dei continenti 2 + 2 + 1 (Europa fire, Africa force, Asia electric, Americhe energy, Oceania physical) con icona,
+  livello e tipo dei nemici, frammenti dei due ranger e badge ×2; tocco (o tasti 1-5) = partita sul primo livello non completato del tipo.
+- **Regole**: tipo del giorno (lunedì-venerdì fissi, sabato e domenica a caso con il seme della data) con frammenti ×2; al massimo 2 partite al giorno, contate alla partenza,
+  “Continua” non conta; ondate sovrapposte: ogni ondata ha il suo tempo e allo scadere parte la successiva; carte quando un’ondata è ripulita, in coda e a gioco fermo;
+  ricompensa del mini-boss subito; boss dall’ondata 18 che conta come ondata 20, con il bordo inferiore a metà schermo alla fine dell’ondata 20; livello completato con
+  20 ondate partite e tutti i nemici sconfitti; autosalvataggio a ondata ripulita (“Continua” riparte dalla prima ondata non ripulita); frammenti a fine partita anche perdendo,
+  F × (0,7 × ondate ÷ 20 + 0,3 × mini-boss ÷ 3), divisi a caso tra i due ranger del tipo.
+- **Codice**: `PLANET`, `RANGERS`, `planetWave`, `planetTick`, `nextChoice`, `planetBossDef`, `planetReward`, `startPlanet`, `openPlanet`; `pw` (stato delle ondate sovrapposte);
+  `spawn` accetta il numero d’ondata e il nemico sostituito (`w`, `as`); `pick` torna in battaglia; salvataggio **versione 7** (`progress.planet`), partita sospesa con continente,
+  mini-boss e scelte in coda. Disegno: `planetScreen`, `landIcon` (sagome dei continenti), `planetEndScreen`, HUD con continente e tempo della prossima ondata, scritta delle ondate successive.
+- **Segnaposto [Claude] [provvisorio]**: nemici, mini-boss e boss della campagna del tipo del continente; difficoltà 55 + 5 × livello; F = 10; niente Sigilli né equipaggiamento in questa
+  modalità; abbandonare vale come perdere a quell’ondata; icone dei continenti semplici.
+- **Tempi delle ondate misurati con i bot** (`SEQ=1 node tests/tools/planet.js 1,5 30`, ondate in sequenza, 600 partite): mediana del tempo di pulizia di ogni ondata, da 8 s (ondata 1)
+  a 27 s (ondata 17). **Misura** con questi tempi (livelli 1, 5, 10, 60 partite per tipo e livello; tabella in DESIGN.md § 17): force ed electric 63-97%, fire 37-80%,
+  energy 13-80%, physical 0-23%. Differenza dovuta ai nemici segnaposto (physical contro il guardiano physical): nessun valore ritarato, decide Marco.
+- **Strumenti**: `tests/tools/planet.js` (bot con albero ed equipaggiamento attesi, `SEQ=1` per i tempi di pulizia, `K` per provare tempi diversi); `tests/bot.js`: `play` accetta un avvio
+  diverso dal tasto (`opts.start`) e restituisce la partita.
+- DESIGN.md: § 7 (salvataggio versione 7, partita sospesa), § 17 (“Fase 1 costruita”, segnaposto e misure).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/planet.js` (24 controlli): apertura dal 60, griglia, tipo del giorno, limite di 2 partite e giorno dopo, nemici solo del tipo, ondata 2 che parte
+al suo tempo con l’ondata 1 in campo, due ondate ripulite insieme → due scelte in coda a tempo fermo, salvataggio a ondata ripulita, mini-boss con ricompensa subito, boss all’ondata 18 con
+il numero 20 e la velocità giusta, carte dell’ondata 18 con il boss vivo, vittoria (livello sbloccato, frammenti 9), ×2, sconfitta, abbandono, salvataggio versione 7 e importazione della 6,
+ripresa con “Continua” che non conta. Aggiornati i controlli sulla versione del salvataggio (6 → 7) in `seals.js`, `equip.js`, `schermate.js`. `npm run screenshots`: nuove 72-76
+(menu, continenti, “sostituire?”, battaglia, sconfitta), testi dentro i bordi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; nuove scene “Menu dal livello 60”, “Protezione planetaria · continenti / battaglia / fine partita”).
+
+Checklist: aggiornata (versione 37): nuovo gruppo da provare sul telefono “Protezione planetaria (1.16)”; tra i valori di Claude i segnaposto della fase 1; tra le cose da decidere
+la differenza di difficoltà tra i tipi; nel riferimento del § 17 lo stato della fase 1.
+
 ## Decisioni di design: aspetto dei ranger (solo DESIGN.md, gioco invariato)
 
 - § 17 **[deciso]** (Marco): ranger di conversione = sfere metalliche fluttuanti del colore del tipo; ranger di supporto = cubi metallici fluttuanti con la lettera greca minuscola

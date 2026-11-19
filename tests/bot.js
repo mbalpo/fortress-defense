@@ -46,7 +46,8 @@ function makeGame({ seed = 1, patch = (h) => h, cleared = 50, level = 10, settin
 // policy: "random" | "smart"
 function play(opts, policy, startKey = "Enter", maxFrames = 200000) {
   const g = makeGame(opts); const rng = seeded((opts.seed || 1) * 7 + 3);
-  g.key(startKey); g.frame();
+  if (opts.start) opts.start(g); else g.key(startKey);   // opts.start: avvio diverso dal tasto (es. Protezione planetaria)
+  g.frame();
   let waveSeen = 1, result = null, picks = [];
   for (let f = 0; f < maxFrames && !result; f++) {
     if (f % 90 === 0) g.tap(30 + rng() * 300, 300);
@@ -70,7 +71,7 @@ function play(opts, policy, startKey = "Enter", maxFrames = 200000) {
     }
     T.length = 0;
   }
-  return { result: result || "TIMEOUT", wave: waveSeen, errors: g.errors, picks };
+  return { result: result || "TIMEOUT", wave: waveSeen, errors: g.errors, picks, g };
 }
 module.exports = { makeGame, play, seeded, SRC, APP };
 

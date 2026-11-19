@@ -100,7 +100,7 @@ console.log("— Salvataggio versione 2 —");
   console.log("caricato: Sigilli", ev("progress.seals"), "| premi", ev("progress.claims.join()"), "| nodi", ev("Object.keys(progress.tree).join()"),
     ok(ev("progress.seals") === 5 && ev("progress.claims.join()") === "s31,s31p" && ev("Object.keys(progress.tree).join()") === "sky:burn1"));
   const save = JSON.parse(ev("JSON.stringify(makeSave())"));
-  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 6 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
+  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 7 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
   const v1 = JSON.stringify({ game: "fortress-defense", version: 1, progress: { cleared: 12, seen: [] }, settings: {} });
   const d1 = JSON.parse(ev(`JSON.stringify(parseSave(${JSON.stringify(v1)}))`));
   console.log("versione 1 importata: livelli", d1.cleared, "| Sigilli", d1.seals, "| nodi", Object.keys(d1.tree).length, ok(d1.cleared === 12 && d1.seals === 0 && !Object.keys(d1.tree).length));
