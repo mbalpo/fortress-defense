@@ -107,7 +107,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero, con la scheda Abilità bloccata da un overlay fino a quel livello),
-  **50 → Epica**, **60 → Ranger (ipotesi di Marco) [da rivedere]**. Equipaggiamento (1.10.0, § 15), albero e abilità della barriera (fasi 1-3, § 16) sono costruiti. **[deciso]**
+  **50 → Epica**, **60 → Ranger e Protezione planetaria** (§ 17) **[deciso]**. Equipaggiamento (1.10.0, § 15), albero e abilità della barriera (fasi 1-3, § 16) sono costruiti. **[deciso]**
 - **Avviso di sblocco**: al primo completamento in Standard dei livelli 10, 20, 30, 31, 40 e 50 compare, sopra la schermata di vittoria, un avviso con ciò che si è sbloccato;
   si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’avviso spiega che l’equipaggiamento cade a ogni vittoria. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
@@ -534,7 +534,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   (prese 0,2 / 0,1); livello 25 pool libero 0 / 0; livello 25 pool completo 0,1 / 0,3 (prese 0 / 0,1). Per confronto, combo del guardiano offerte 0,1-0,5 a partita.
   Conferma: escono molto meno di una volta a partita. Nessun valore cambiato; se vanno rese più frequenti, le leve sono il peso delle carte combo (0,4) e le condizioni. **(aperto)**
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
-- **Ranger**: ipotesi di Marco: sblocco al livello 60. Funzionamento non ancora discusso (aiutanti ai lati del personaggio; nel gioco originale escono dalle uova).
+- **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: effetti dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
@@ -561,9 +561,9 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger · più guardiani da scegliere prima del combattimento · schermata degli sblocchi permanenti ·
+Ranger e Protezione planetaria (§ 17) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
-difesa planetaria con aree da sbloccare · livelli a rotazione settimanale · boss a tempo · eventi a roulette/estrazione · uova ·
+difesa planetaria con aree da sbloccare · boss a tempo · eventi a roulette/estrazione · uova ·
 audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
 
 ## 14. Strumenti di lavoro
@@ -998,3 +998,46 @@ Regole di calcolo **[Claude] [da rivedere]**:
     sono elencate in `docs/proposte-testi.md`, **da approvare** (non applicate).
   - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
   - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).
+
+## 17. Ranger e Protezione planetaria (da costruire)
+
+### Ranger
+- Sblocco al completamento del **livello 60** di Standard. **[deciso]**
+- **Due ranger per tipo di danno, 10 in tutto** **[deciso]** (Marco): uno di **supporto** (stati o statistiche, effetti da definire) e uno di **conversione**. Aiutanti equipaggiabili, **al massimo 2**, ai lati del guardiano, si muovono con lui **[ipotesi di Marco] [da confermare]**; **un solo ranger di conversione** alla volta, i supporti anche due insieme (quindi nessun tetto alla conversione) **[deciso]**.
+- **Conversione** **[deciso]**: **10% per livello** del danno del guardiano nel proprio tipo (100% al livello 10), come **quota del danno di ogni colpo**. Contro i nemici invisibili conta solo la parte energy. **[deciso]** (approvato da Marco)
+- **Physical** **[deciso]**: ignora il X% della resistenza del nemico, X = 10% per livello (100% al livello 10: il ×0,5 diventa ×1,0); le debolezze non cambiano. Lo stesso coefficiente è la **probabilità che i proiettili del guardiano attraversino i gusci** dei nemici physical.
+- **Frammenti**: ogni ranger ha i propri, esclusivi; raggiunta la soglia si sblocca e si può equipaggiare; con altri frammenti sale di livello (**livello massimo 10, per ora**). **[deciso]** I frammenti di ogni partita si dividono tra i due ranger del tipo in **proporzioni casuali**, senza scelta del giocatore; proporzione uniforme tra 0 e 100% a ogni partita, e se uno è al livello massimo vanno tutti all’altro. **[deciso]** (approvato da Marco)
+- **Costo dei livelli** **[deciso]** (Marco): il numero è il **totale di frammenti per avere quel livello**, non il costo della singola salita. Livello 1 = soglia di sblocco T; livello 2 = 1,5 T in tutto; livello 3 = 2 T; livello 4 = 2,5 T… livello L = T × (1 + 0,5 × (L − 1)), livello 10 = 5,5 T. Ogni salita costa quindi 0,5 T. Con T = 20 F un ranger al 10 richiede 110 F in tutto (90 F oltre lo sblocco). Portare tutti e 10 i ranger al 10 con F costante richiede circa 18 mesi per il giocatore di riferimento **[Claude] [provvisorio]**; crescita di F con la scala e costi: **da misurare con i bot**.
+- **Obiettivo** **[deciso]** (Marco): circa **4 mesi** per sbloccarli tutti. Soglia **[Claude] [provvisorio]**: T = 20 F per ranger (200 frammenti con F = 10 al livello 1), per un giocatore che gioca 5 giorni su 7, 2 partite al giorno sul tipo del giorno, con il 70% di ricompensa media: circa 3,6 mesi per un tipo medio e 4,0 per l’ultimo. Da misurare con i bot.
+
+### Protezione planetaria
+- Sezione del menu con **5 livelli**, che si apre completando il 60, **a griglia 2 + 2 + 1 centrato**: **Fire: Europa · Force: Africa · Electric: Asia · Energy: Americhe · Physical: Oceania** **[deciso]** (Marco). Ogni livello ha un’icona che ricorda il continente, il nome sotto e una riga descrittiva con **livello e tipo dei nemici** (es. “Livello 3 · nemici fire”). Ordine nella griglia (Europa, Africa / Asia, Americhe / Oceania), badge ×2 sul continente del giorno e partite rimaste del giorno **[deciso]** (approvati da Marco); icone da disegnare (classica e HD-2D).
+- Ogni tipo ha la **propria scala di livelli**. **[deciso]**
+- Livelli da **20 ondate non separate**: i nemici si accumulano; ogni ondata ha un **tempo stimato di completamento** e allo scadere parte la successiva, anche se i nemici della precedente non sono stati uccisi. Tempi da ricavare con i bot **[da misurare]**. **[deciso]**
+- **Scelta delle carte**: quando tutti i nemici di un’ondata sono sconfitti; per un mini-boss (ondate 5, 10, 15) la schermata delle carte vinte compare subito alla sconfitta. Il gioco è in pausa (timer compreso) durante la schermata e le scelte vanno **in coda** se ne scatta più di una. **[deciso]**
+- **Budget di scelte** invariato: **19 scelte + 9 carte dai 3 mini-boss**. **[deciso]**
+- **Sistema più punitivo**, accettato da Marco (spirale: meno ondate completate, meno carte, meno potenza); da rivedere dopo le prove. **[deciso]**
+- **Avanzamento**: completato un livello si sblocca il superiore, stesse regole e difficoltà maggiore. Livello completato = 20 ondate partite e tutti i nemici uccisi, mini-boss e boss compresi. **[deciso]** (approvato da Marco)
+- **Rotazione**: tutti i tipi sempre sbloccati; il tipo del giorno dà un **bonus ×2 alle ricompense** (valore **[provvisorio]**): lunedì physical, martedì force, mercoledì energy, giovedì electric, venerdì fire; sabato e domenica un tipo a caso ciascuno (un solo tipo per giorno, seme legato alla data **[Claude]**). **[deciso]**
+- **Ricompense**: frammenti **proporzionali a ondate raggiunte e mini-boss sconfitti**, anche senza completare il livello. **[deciso]** Formula (approvata da Marco, valori **[provvisorio]**): F × (0,7 × ondate raggiunte ÷ 20 + 0,3 × mini-boss sconfitti ÷ 3), ondata raggiunta = ondata partita.
+- **Limite**: al massimo **2 partite al giorno** in questa modalità (2 sullo stesso livello e tipo, oppure 1 su due diversi). **[deciso]** Si conta alla partenza, anche se persa o abbandonata; “Continua” non conta due volte; giorno = data locale **[Claude]**.
+- **Salvataggio** **[Claude]**: frammenti e livello dei ranger, livelli completati per tipo, data e partite del giorno; `SAVE_VERSION` +1; la partita sospesa (§ 2) salva anche lo stato della modalità.
+
+### Nemici della Protezione planetaria
+- Il livello di un tipo è popolato **solo da nemici di quel tipo**, con **resistenza al proprio tipo diversa tra loro**, per **tutti i tipi** (es. fire 1 con resistenza al fuoco 25%, fire 2 con 35%). **[deciso]** (Marco) Numero e valori: aperti (proposta di Claude: 4 per tipo, 3 normali e 1 speciale). La resistenza è propria di questi nemici, il segnaposto del § 6 non cambia per quelli della campagna **[Claude]**.
+- **Un nemico speciale per tipo** **[deciso]** (Marco; X e Y aperti):
+  - **fire**: kamikaze, se arriva alla cupola infligge danno in proporzione alla vita rimasta (formula aperta);
+  - **force**: dopo aver subito X danni diventa **invisibile**; lo colpiscono solo torrette energy (Laser, Beam), Disruption Drone, Gravity Vortex Gun ed effetti ad area (esplosioni, campi statici). Gli altri proiettili passano attraverso e non contano né come perforazione né per attivare effetti sul bersaglio; **guardiano e missili ricercanti non lo considerano come bersaglio**, a meno che il guardiano usi la conversione energy;
+  - **electric**: dopo aver subito X danni fa **uno scatto verso il basso, una sola volta**;
+  - **energy**: ogni X secondi è **immune ai danni** per Y secondi, **anche a quelli da stato**;
+  - **physical**: alla morte lascia un **guscio invincibile** per Y secondi. Non conta come nemico per completare l’ondata, non si sposta con attrazione né teletrasporto, non è un bersaglio. **Blocca** i proiettili di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil; **non** blocca Laser, Disruption Drone, Thunderbolt, Beam, Firewheel Drone, Hive e Gravity Vortex Gun. Il ranger physical dà al guardiano una probabilità di attraversarlo (vedi sopra).
+
+### Boss della Protezione planetaria
+- Un boss per tipo, con abilità esclusive e **più lenti dei boss attuali**; compaiono in **tutti i livelli, dal livello 1, all’ondata 18**. La velocità è tale che **alla fine dell’ondata 20 il boss sia a metà schermo** (quota misurata dal basso) **[deciso]** (Marco); il calcolo con i tempi delle ondate è da misurare **[Claude]**. Le abilità scalano con il livello del proprio tipo:
+  - **fire**: ammiraglia spaziale da guerra, lancia missili che intercettano i proiettili delle torrette (più frequenti al crescere del livello fire);
+  - **force**: nave madre rettangolare con ali squadrate, lunga il 75% dello schermo; quando la punta raggiunge il 75%, 50% e 25% di altezza rilascia 6 nemici alati (di più al crescere del livello force);
+  - **electric**: disco volante gigante, probabilità di ignorare il danno (effetto grafico di assorbimento), crescente con il livello electric; tetto 50% **[Claude]**;
+  - **energy**: prisma gigante (50% dello schermo in larghezza, centrato, 60% in altezza), raggio verticale a distanza (25% dello schermo), più frequente al crescere del livello energy; **non scende oltre il 25% dell’altezza** (il bordo inferiore resta sopra il 25%, misurato dal basso), così non copre cupola e torrette. **[deciso]**
+  - **physical**: meteorite gigante a tutta larghezza; a metà vita si divide in due meteore (circa metà schermo ciascuna) con la vita rimasta divisa tra loro; più scissioni al crescere del livello physical.
+- Aperti: punti vita (§ 5), velocità in px/s, formule per livello, tetti.
+- Nemici e boss nuovi sono **riutilizzabili nelle campagne**.

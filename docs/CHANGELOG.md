@@ -3,6 +3,59 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: Ranger e Protezione planetaria (solo DESIGN.md, gioco invariato)
+
+- **DESIGN.md**: nuovo **§ 17 “Ranger e Protezione planetaria (da costruire)”** con il testo di Marco preparato su claude.ai (ranger, frammenti e costi, modalità a 5 continenti,
+  ondate sovrapposte, rotazione e limite di 2 partite, ricompense, nemici speciali e boss per tipo). § 4: al 60 “Ranger e Protezione planetaria” **[deciso]**;
+  § 11: voce dei ranger sostituita con gli aperti del § 17; § 13: tolti “più guardiani da scegliere prima del combattimento” (**[deciso]**, con i ranger di conversione non servono)
+  e “livelli a rotazione settimanale” (ora nel § 17). Nessun’altra voce su “più guardiani” nel file. Versione del gioco invariata (1.15.1), nessun codice cambiato.
+- **Verifiche di fattibilità** (lettura del codice; righe di `app/index.html` salvo dove indicato):
+  1. *Modalità*: `mode` è una stringa (`standard`/`epic`, r. 709) controllata in 13 punti di index.html e 6 di draw.js; difficoltà da `curDiff`/`diffOf` (r. 1027, 138), avanzamento in
+     `progress.cleared`/`clearedEpic` (r. 737), fine livello in `winLevel` (r. 2738). Una terza modalità `planet` con il tipo scelto: nuovi campi in `progress` (livelli per tipo, frammenti,
+     ranger, data e partite del giorno), `SAVE_VERSION` 6 → 7 con migrazione in `parseSave` (r. 3021), `saveRun`/`loadRun` (r. 2491, 2499) che accettano `planet` e salvano tipo e ondate aperte.
+     Menu: oggi `menuScreen` (draw.js r. 488) ha la striscia Standard ⇄ Epica e due pulsanti; serve un pulsante “Protezione planetaria” dal 60 e una schermata nuova (griglia 2 + 2 + 1, badge ×2, partite rimaste).
+  2. *Ondate sovrapposte*: oggi sono separate in modo rigido: `update` chiama `endWave` solo con coda vuota e nessun nemico (r. 2735); `startWave` (r. 2557) svuota `ents` (proiettili ed effetti),
+     azzera lo stato delle torrette e ricrea la coda. Serve: nemici e coda con il numero d’ondata, un timer per ondata che fa partire la successiva senza svuotare nulla, una coda di scelte
+     (normali e ricompense dei mini-boss, oggi date solo a fine ondata con `bossBonus` → `giveBossRewards`, r. 2445/2463). La pausa del timer viene gratis: `frame` (r. 3121) aggiorna la logica
+     solo con `state === "play"`, quindi durante le carte tutto è fermo. Da decidere: la partita sospesa oggi riparte dall’inizio dell’ondata (`resumeRun`), con le ondate sovrapposte
+     va salvato tutto il campo o si accetta di ripartire dall’ondata più vecchia ancora aperta.
+  3. *Resistenza per nemico*: la tabella è `RESIST` (r. 104), letta solo in `damage` (r. 1091) con il tipo del nemico. Basta un campo facoltativo nella definizione (es. `selfRes: 0.25`)
+     letto per primo in `damage`: i nemici della campagna non cambiano. Nota: oggi la resistenza al proprio tipo è il 50% (×0,5); 25% e 35% sono più bassi. § 9 (generato) andrà esteso ai nemici nuovi.
+  4. *Conversione*: ogni chiamata a `damage` ha un solo tipo; il colpo del guardiano chiama `damage(e, dmg, "physical", …)` (r. 2266) e le combo aggiungono già chiamate separate di fuoco e force:
+     dividere il colpo in due quote (physical e convertita) è poco invasivo (due chiamate, o un parametro in più a `damage` per un solo numero a schermo). Gli invisibili sono più invasivi:
+     i bersagli passano da `living`/`randEnemy` (r. 1028-1029), `pickTargets` (r. 1177) e `nearestTo` (r. 1188), usati sia per mirare sia per le aree; serve separare “bersagliabili”
+     (senza invisibili e gusci) da “colpibili da un’area” e mettere un controllo nelle collisioni dei proiettili (guardiano r. 2261, Railgun `railShot` r. 1864, droni). Missili ricercanti: `missile` (r. 1217).
+  5. *Gusci*: meglio una lista propria (non in `enemies`): così restano fuori da fine ondata, bersagli, attrazione (r. 2011, 2102), teletrasporto (`teleportRoll` r. 1383, r. 2049) e Rimbalzo.
+     Il blocco va aggiunto nell’`update` di ogni proiettile bloccato: guardiano e Railgun hanno già un ciclo di collisione; Sky Guard (`missile`), Aeroblast (`aeroFire`, bomba a bersaglio fisso)
+     e Teslacoil (`teslaBall`) oggi volano fino al bersaglio senza toccare altro, quindi serve un controllo nuovo. Da decidere: un colpo bloccato esplode sul guscio (Aeroblast, Sky Guard) o si spegne?
+  6. *Ranger*: due entità disegnate ai lati di `player` e aggiornate in `playerTick` (r. 2178); il guardiano va da x 26 a 334 (`PLAYER_MIN/MAX`, r. 675), quindi ai bordi un ranger esce
+     dallo schermo: va limitato il movimento o avvicinato il ranger. Equipaggiamento: una lista in `progress` con il controllo “al massimo 2, un solo ranger di conversione”, come `loadout` (r. 737, `toggleEquip`).
+  7. *Dimensioni* (schermo logico 360 × 640; terreno `GROUND_Y` 584; cupola centro 584, semiassi 215 × 95, cima a y 489; torrette a y 570, guardiano a 554; barra del boss y 100-112 in draw.js r. 303):
+     force 75% = 270 px; energy 180 × 384 px; physical a tutta larghezza 360 px. Il 25% dal basso è y 480: il prisma ci sta (sopra la cima della cupola di 9 px al centro, 18 px ai suoi bordi),
+     con il bordo superiore a y 96, che tocca la barra del boss. **Conflitti**: tutte le collisioni sono cerchi di raggio `def.r` (53 usi), compresi contatto con la cupola (`touchesDome`, r. 2584)
+     e bersagli (centro con y ≥ 0): prisma, nave rettangolare e meteorite a tutta larghezza richiedono una sagoma di collisione nuova. La nave force rilascia al 25% di altezza, cioè quasi a contatto
+     con la cupola; “a metà schermo” va precisato (centro o bordo inferiore del boss).
+  8. *Bot*: `tests/bot.js` riconosce le schermate dai testi (“Ondata N/20”, “Scegli un potenziamento”, “Ricompensa mini-boss”) e parte dal menu con le frecce: per la modalità nuova serve
+     un avvio diretto (come `__ev` in `curva.js`), la coda di scelte e un registro dei tempi di pulizia di ogni ondata (da cui i tempi stimati, es. un percentile dei bot con albero ed
+     equipaggiamento attesi dal 60, `treeFor`/`gearFor`). Frammenti, T e F si calcolano fuori dal gioco con la formula del § 17 dalle ondate raggiunte e dai mini-boss sconfitti dei bot,
+     simulando il calendario (5 giorni su 7, 2 partite, rotazione); la crescita di F con la scala richiede le misure sui primi livelli di ogni tipo. Partite più lunghe (nemici accumulati): circa 0,5-1 s ciascuna.
+  9. *Grafica* (stima): 5 icone dei continenti e la schermata a griglia (1 lavoro); 20 nemici in classica e HD-2D (2-3 lavori); 5 boss enormi con animazioni proprie (scissione, raggio,
+     missili intercettori, rilascio di alati, assorbimento) in due grafiche (3-5 lavori); 10 ranger (2 lavori). Ogni pezzo va nel catalogo (`npm run catalog` e `catalog-hd2d`).
+  10. *Ordine proposto* (**[Claude]**, da valutare): fase 1, regole della modalità con un tipo e i nemici esistenti (uno per tipo c’è già in `ENEMY_DEFS`) e i boss attuali come segnaposto,
+     ondate sovrapposte, coda di scelte, limite giornaliero, salvataggio v7, misure dei tempi con i bot; fase 2, frammenti e ranger di conversione (i supporti aspettano gli effetti);
+     fase 3, resistenza per nemico e nemici nuovi, un tipo alla volta (fire e electric i più semplici, force e physical i più costosi per gli invisibili e i gusci); fase 4, i 5 boss
+     (rischio maggiore: sagome di collisione non circolari). Rischi: bilanciamento della spirale punitiva, partita sospesa con ondate aperte, prestazioni con molti nemici accumulati.
+- **Da chiarire con Marco** (emerso dalle verifiche): il boss compare all’ondata 18 e la carta di un’ondata arriva solo con tutti i suoi nemici sconfitti: se il boss conta per l’ondata 18,
+  le carte delle ondate 18 e 19 aspettano la sua morte (budget di 19 scelte a rischio); Thunderbolt, Firewheel e Hive contro gli invisibili e i danni da stato già applicati
+  (la bruciatura continua?); se un colpo bloccato dal guscio esplode; da dove si misura “metà schermo” per il boss.
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 30): tra i riferimenti la sezione del § 17; tra le cose da provare quando costruite Protezione planetaria (rotazione, ×2, limite di 2 partite),
+ranger (frammenti, conversione, ignora resistenza, gusci), nemici e boss nuovi; riscritte le voci sui ranger al livello 60 e tolta “Più guardiani, con scelta prima del combattimento”.
+
 ## 1.15.1 — Sigilli in Epica 2 + 2, rarità dei drop ridotte
 
 - **Sigilli normali in Epica** **[deciso]** (Marco): **2** al primo completamento e **2** al premio della cupola al 100% (4 per livello; prima 3 + 3). Standard invariato (1 + 1),
