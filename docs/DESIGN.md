@@ -534,7 +534,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   (prese 0,2 / 0,1); livello 25 pool libero 0 / 0; livello 25 pool completo 0,1 / 0,3 (prese 0 / 0,1). Per confronto, combo del guardiano offerte 0,1-0,5 a partita.
   Conferma: escono molto meno di una volta a partita. Nessun valore cambiato; se vanno rese più frequenti, le leve sono il peso delle carte combo (0,4) e le condizioni. **(aperto)**
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
-- **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: effetti dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
+- **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: danni, portate e valori intermedi dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
@@ -1003,12 +1003,38 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Ranger
 - Sblocco al completamento del **livello 60** di Standard. **[deciso]**
-- **Due ranger per tipo di danno, 10 in tutto** **[deciso]** (Marco): uno di **supporto** (stati o statistiche, effetti da definire) e uno di **conversione**. Aiutanti equipaggiabili, **al massimo 2**, ai lati del guardiano, si muovono con lui **[ipotesi di Marco] [da confermare]**; quando il guardiano è vicino al bordo, il ranger che uscirebbe dallo schermo si sposta **davanti al guardiano** (in alternativa accanto al ranger del lato opposto) **[deciso]** (Marco; fattibile, verifica di Claude); **un solo ranger di conversione** alla volta, i supporti anche due insieme (quindi nessun tetto alla conversione) **[deciso]**.
+- **Due ranger per tipo di danno, 10 in tutto** **[deciso]** (Marco): uno di **supporto** (stati o statistiche, effetti sotto, “Nomi e supporti”) e uno di **conversione**. Aiutanti equipaggiabili, **al massimo 2**, ai lati del guardiano, si muovono con lui **[ipotesi di Marco] [da confermare]**; quando il guardiano è vicino al bordo, il ranger che uscirebbe dallo schermo si sposta **davanti al guardiano** (in alternativa accanto al ranger del lato opposto) **[deciso]** (Marco; fattibile, verifica di Claude); **un solo ranger di conversione** alla volta, i supporti anche due insieme (quindi nessun tetto alla conversione) **[deciso]**.
 - **Conversione** **[deciso]**: **10% per livello** del danno del guardiano nel proprio tipo (100% al livello 10), come **quota del danno di ogni colpo**. Contro i nemici invisibili conta solo la parte energy. **[deciso]** (approvato da Marco)
 - **Physical** **[deciso]**: ignora il X% della resistenza del nemico, X = 10% per livello (100% al livello 10: il ×0,5 diventa ×1,0); le debolezze non cambiano. Lo stesso coefficiente è la **probabilità che i proiettili del guardiano attraversino i gusci** dei nemici physical.
 - **Frammenti**: ogni ranger ha i propri, esclusivi; raggiunta la soglia si sblocca e si può equipaggiare; con altri frammenti sale di livello (**livello massimo 10, per ora**). **[deciso]** I frammenti di ogni partita si dividono tra i due ranger del tipo in **proporzioni casuali**, senza scelta del giocatore; proporzione uniforme tra 0 e 100% a ogni partita, e se uno è al livello massimo vanno tutti all’altro. **[deciso]** (approvato da Marco)
+- **Aspetto dei frammenti** **[deciso]** (Marco): etichetta con il **nome del ranger** e icona a forma di **pezzo di puzzle**.
 - **Costo dei livelli** **[deciso]** (Marco): il numero è il **totale di frammenti per avere quel livello**, non il costo della singola salita. Livello 1 = soglia di sblocco T; livello 2 = 1,5 T in tutto; livello 3 = 2 T; livello 4 = 2,5 T… livello L = T × (1 + 0,5 × (L − 1)), livello 10 = 5,5 T. Ogni salita costa quindi 0,5 T. Con T = 20 F un ranger al 10 richiede 110 F in tutto (90 F oltre lo sblocco). Portare tutti e 10 i ranger al 10 con F costante richiede circa 18 mesi per il giocatore di riferimento **[Claude] [provvisorio]**; crescita di F con la scala e costi: **da misurare con i bot**.
 - **Obiettivo** **[deciso]** (Marco): circa **4 mesi** per sbloccarli tutti. Soglia **[Claude] [provvisorio]**: T = 20 F per ranger (200 frammenti con F = 10 al livello 1), per un giocatore che gioca 5 giorni su 7, 2 partite al giorno sul tipo del giorno, con il 70% di ricompensa media: circa 3,6 mesi per un tipo medio e 4,0 per l’ultimo. Da misurare con i bot.
+
+### Nomi e supporti dei ranger
+**[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,
+i danni sono **del tipo del ranger** e **crescono con il livello**. Valori dei livelli intermedi, danni e “corto raggio” in px: aperti.
+
+| Tipo | Supporto | Conversione |
+|---|---|---|
+| Fire | Alfa | Prometeo |
+| Force | Omega | Mnemosine |
+| Electric | Sigma | Ceo |
+| Energy | Gamma | Iperione |
+| Physical | Epsilon | Atlante |
+
+- I ranger di **conversione** hanno gli effetti già stabiliti (conversione). Lettura **[Claude] [da confermare]**: il ranger physical che ignora la resistenza e fa attraversare i gusci è **Atlante**, perché il guardiano spara già physical e una conversione in physical non cambierebbe nulla.
+- **Alfa** (fire): ogni X s una **fiammata a corto raggio** che dura Y s, con danni da fuoco e Z% di probabilità di **bruciatura**. Salendo di livello X cala, Y e Z crescono:
+  da **Y = 4 s, Z = 10%** a **Y = 10 s, Z = 100%**; anche il danno cresce. La bruciatura si può riapplicare allo stesso bersaglio quando la precedente è finita.
+  Grafica: fiammata, forse nuova (**[da decidere]**, Marco).
+- **Omega** (force): ogni X s un’**onda a corto raggio** che dà uno stato a caso tra **vulnerabilità, rallentamento e indebolimento**; salendo di livello crescono il danno
+  e l’**ampiezza dell’onda**, da **20°** a **120°** al massimo. Grafica: l’onda del drone, con l’ampiezza rivista.
+- **Sigma** (electric): ogni X s un **fulmine a ricerca a corto raggio** (dal primo bersaglio) con probabilità di **paralisi**: da **1 bersaglio e 5%** a **5 bersagli e 50%**;
+  con meno nemici può colpire più volte lo stesso. Grafica: il fulmine, che curva per raggiungere i bersagli o rimbalza tra loro come una saetta.
+- **Gamma** (energy): ogni X s **Y bolle di energia** a corto raggio che **esplodono quando un nemico le tocca** (come mine): **Y da 2 a 12**, raggio dell’esplosione sempre uguale,
+  danno che cresce meno degli altri supporti (le bolle sono di più). Grafica nuova: **bolla di sapone** (non le mine).
+- **Epsilon** (physical): ogni X s una **raffica di missili a ricerca** a corto raggio: **da 2 a 6 missili** (livello 10); ai livelli intermedi sale il numero, il danno o la portata
+  (quale a quale livello: aperto). Grafica: i mini-missili, nel colore physical.
 
 ### Protezione planetaria
 - Sezione del menu con **5 livelli**, che si apre completando il 60, **a griglia 2 + 2 + 1 centrato**: **Fire: Europa · Force: Africa · Electric: Asia · Energy: Americhe · Physical: Oceania** **[deciso]** (Marco). Ogni livello ha un’icona che ricorda il continente, il nome sotto e una riga descrittiva con **livello e tipo dei nemici** (es. “Livello 3 · nemici fire”). Ordine nella griglia (Europa, Africa / Asia, Americhe / Oceania), badge ×2 sul continente del giorno e partite rimaste del giorno **[deciso]** (approvati da Marco); icone da disegnare (classica e HD-2D).

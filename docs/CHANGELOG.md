@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: nomi e supporti dei ranger, frammenti (solo DESIGN.md, gioco invariato)
+
+- § 17, nuova sottosezione “Nomi e supporti dei ranger” **[deciso]** (Marco): Alfa / Prometeo (fire), Omega / Mnemosine (force), Sigma / Ceo (electric), Gamma / Iperione (energy),
+  Epsilon / Atlante (physical), supporto / conversione. Supporti: effetto ogni X s, da 40 s (livello 1) a 20 s (livello 10), danni del proprio tipo che crescono con il livello.
+  Alfa fiammata (Y 4 → 10 s, bruciatura 10 → 100%), Omega onda con stato a caso (ampiezza 20° → 120°), Sigma fulmine a ricerca (1 → 5 bersagli, paralisi 5 → 50%),
+  Gamma bolle che esplodono al contatto (2 → 12, raggio fisso, danno che cresce meno), Epsilon raffica di missili a ricerca (2 → 6). Grafiche indicate da Marco (fiammata forse nuova,
+  onda del drone, fulmine che curva o rimbalza, bolla di sapone, mini-missili physical).
+- Frammenti: etichetta con il nome del ranger e icona a pezzo di puzzle **[deciso]**.
+- Lettura **[Claude] [da confermare]**: il ranger physical che ignora la resistenza e attraversa i gusci è Atlante (conversione).
+- § 11: gli aperti dei ranger diventano “danni, portate e valori intermedi dei supporti”.
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 33): nel riferimento del § 17 riscritta la voce “due ranger per tipo” (supporti non più da definire), nuovi gruppo “Nomi e supporti” e voce dei frammenti;
+tra le cose da decidere la lettura su Atlante e la grafica della fiammata di Alfa.
+
 ## Decisioni di design: nave force e bersaglio dei boss giganti (solo DESIGN.md, gioco invariato)
 
 - § 17, **[deciso]** (Marco): rilasci della nave force a **75%, 55% e 35%** di altezza (punta inferiore; prima 75, 50, 25%: il terzo era a circa 9 px dalla cupola, ora a circa 73 px);
