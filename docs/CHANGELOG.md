@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: aspetto dei ranger (solo DESIGN.md, gioco invariato)
+
+- § 17 **[deciso]** (Marco): ranger di conversione = sfere metalliche fluttuanti del colore del tipo; ranger di supporto = cubi metallici fluttuanti con la lettera greca minuscola
+  (α, ω, σ, γ, ε) sul lato visibile nel colore del tipo, cubo anche di un altro colore.
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 36): nel riferimento dei ranger la voce sull’aspetto.
+
 ## Decisioni di design: Moduli e portata dei supporti dei ranger (solo DESIGN.md, gioco invariato)
 
 - § 17 **[deciso]** (Marco): ai supporti dei ranger valgono solo i Moduli per tipo di danno (non il nucleo né il Modulo 28); il corto raggio si misura dal ranger.

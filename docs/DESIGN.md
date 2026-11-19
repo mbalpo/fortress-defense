@@ -1026,6 +1026,9 @@ né il Modulo 28 (danno delle torrette) **[deciso]** (Marco, su lettura di Claud
 | Energy | Gamma | Iperione |
 | Physical | Epsilon | Atlante |
 
+- **Aspetto** **[deciso]** (Marco): i ranger di **conversione** sono **sfere metalliche fluttuanti** del colore del loro tipo; quelli di **supporto** sono **cubi metallici fluttuanti**
+  con la propria **lettera greca minuscola** (α Alfa, ω Omega, σ Sigma, γ Gamma, ε Epsilon) sul lato visibile, nel colore del tipo; il colore del cubo può essere diverso.
+  Da disegnare in classica e HD-2D.
 - I ranger di **conversione** hanno gli effetti già stabiliti (conversione). Il ranger physical che ignora la resistenza e fa attraversare i gusci è **Atlante** **[deciso]** (Marco).
 - **Alfa** (fire): ogni X s una **fiammata a corto raggio** che dura Y s, con danni da fuoco e Z% di probabilità di **bruciatura**. Salendo di livello X cala, Y e Z crescono:
   da **Y = 4 s, Z = 10%** a **Y = 10 s, Z = 100%**; anche il danno cresce. La bruciatura si può riapplicare allo stesso bersaglio quando la precedente è finita.
