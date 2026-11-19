@@ -3,6 +3,18 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: nave force e bersaglio dei boss giganti (solo DESIGN.md, gioco invariato)
+
+- § 17, **[deciso]** (Marco): rilasci della nave force a **75%, 55% e 35%** di altezza (punta inferiore; prima 75, 50, 25%: il terzo era a circa 9 px dalla cupola, ora a circa 73 px);
+  le ali della nave compaiono solo quando arriva al 75%, quindi il primo rilascio avviene in cima.
+- § 17, **[deciso]** (Marco): i boss giganti si possono colpire appena si vedono (oggi un nemico è bersaglio solo con il centro dentro lo schermo, `living`).
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 32): voce dei boss del § 17 con le soglie della nave force e il bersaglio appena visibili.
+
 ## Decisioni di design: risposte di Marco sul § 17 (solo DESIGN.md, gioco invariato)
 
 - § 17, **[deciso]** (Marco), in risposta alle verifiche di fattibilità:
