@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Decisioni di design: valori dei supporti dei ranger (solo DESIGN.md, gioco invariato)
+
+- § 17 **[deciso]** (Marco): il ranger physical che ignora la resistenza e fa attraversare i gusci è Atlante (era una lettura di Claude); “corto raggio” dei supporti = portata
+  dell’Aeroblast senza potenziamenti, 260 px; bolle di Gamma in campo 15 s; livelli di Epsilon (danno 2, 5, 8 · missile 3, 6, 9 · portata 4, 7 · al 10 portata e missile);
+  i supporti prendono i bonus dei Moduli e, nell’albero, solo i nodi Tipi del loro tipo e la durata degli stati (non “tutte le torrette”); danni di base un po’ sotto le torrette non potenziate.
+- § 17, proposta **[Claude] [provvisorio]**: danni di base circa l’85% di una torretta simile (Alfa 4/s e bruciatura 4/s per 3 s, Omega 20, Sigma 14, Gamma 20 con raggio 40 px,
+  Epsilon 20 per missile), crescita +15% del valore base per livello (×2,35 al 10, al passo con la vita dei nemici dal 60 al 200), Gamma +7%; tabella dei 10 livelli
+  (ciclo, durata e bruciatura di Alfa, ampiezza di Omega, bersagli e paralisi di Sigma, bolle di Gamma, missili, danno e portata di Epsilon). Da misurare con i bot.
+- § 17: la fiammata di Alfa riusa le fiamme già disegnate (`FX.fireField` della Sky Guard e `FX.fireTrail` del Firewheel, in classica e HD-2D), adattate alla forma **[Claude]**.
+- Da confermare: dei Moduli contano quelli per tipo di danno e non il nucleo né il Modulo 28 (lettura di Claude); da dove si misura il corto raggio.
+
+**Test**: `npm test`: tutti verdi (nessun codice cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 34): tolte le domande su Atlante e sulla grafica di Alfa; nel riferimento dei supporti la portata di 260 px, la durata delle bolle, i livelli di Epsilon,
+i bonus; tra le cose da decidere i valori proposti da Claude, i Moduli che contano e il punto da cui si misura il corto raggio.
+
 ## Decisioni di design: nomi e supporti dei ranger, frammenti (solo DESIGN.md, gioco invariato)
 
 - § 17, nuova sottosezione “Nomi e supporti dei ranger” **[deciso]** (Marco): Alfa / Prometeo (fire), Omega / Mnemosine (force), Sigma / Ceo (electric), Gamma / Iperione (energy),

@@ -1013,7 +1013,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Nomi e supporti dei ranger
 **[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,
-i danni sono **del tipo del ranger** e **crescono con il livello**. Valori dei livelli intermedi, danni e “corto raggio” in px: aperti.
+i danni sono **del tipo del ranger** e **crescono con il livello**. **Corto raggio** = portata dell’Aeroblast senza potenziamenti, **260 px** **[deciso]** (Marco).
+**Bonus** **[deciso]** (Marco): i supporti prendono i bonus dei Moduli e, nell’albero dei Sigilli, solo i nodi del ramo Tipi **specifici del loro tipo** e la **durata degli stati**;
+non “di tutte le torrette”, perché i ranger non sono torrette. Lettura **[Claude] [da confermare]**: per lo stesso motivo dei Moduli contano quelli per tipo di danno, non il nucleo
+né il Modulo 28 (danno delle torrette). Danni di base **leggermente sotto le torrette non potenziate** **[deciso]** (Marco); il livello 10 può arrivare oltre il 200 della campagna.
 
 | Tipo | Supporto | Conversione |
 |---|---|---|
@@ -1023,10 +1026,11 @@ i danni sono **del tipo del ranger** e **crescono con il livello**. Valori dei l
 | Energy | Gamma | Iperione |
 | Physical | Epsilon | Atlante |
 
-- I ranger di **conversione** hanno gli effetti già stabiliti (conversione). Lettura **[Claude] [da confermare]**: il ranger physical che ignora la resistenza e fa attraversare i gusci è **Atlante**, perché il guardiano spara già physical e una conversione in physical non cambierebbe nulla.
+- I ranger di **conversione** hanno gli effetti già stabiliti (conversione). Il ranger physical che ignora la resistenza e fa attraversare i gusci è **Atlante** **[deciso]** (Marco).
 - **Alfa** (fire): ogni X s una **fiammata a corto raggio** che dura Y s, con danni da fuoco e Z% di probabilità di **bruciatura**. Salendo di livello X cala, Y e Z crescono:
   da **Y = 4 s, Z = 10%** a **Y = 10 s, Z = 100%**; anche il danno cresce. La bruciatura si può riapplicare allo stesso bersaglio quando la precedente è finita.
-  Grafica: fiammata, forse nuova (**[da decidere]**, Marco).
+  Grafica: fiammata. Si possono riusare le fiamme già disegnate (lingue di fuoco, brace e scintille dell’Area infuocata della Sky Guard, `FX.fireField`, e della scia del Firewheel,
+  `FX.fireTrail`, in classica e HD-2D) adattandole alla forma della fiammata **[Claude]**.
 - **Omega** (force): ogni X s un’**onda a corto raggio** che dà uno stato a caso tra **vulnerabilità, rallentamento e indebolimento**; salendo di livello crescono il danno
   e l’**ampiezza dell’onda**, da **20°** a **120°** al massimo. Grafica: l’onda del drone, con l’ampiezza rivista.
 - **Sigma** (electric): ogni X s un **fulmine a ricerca a corto raggio** (dal primo bersaglio) con probabilità di **paralisi**: da **1 bersaglio e 5%** a **5 bersagli e 50%**;
@@ -1034,7 +1038,35 @@ i danni sono **del tipo del ranger** e **crescono con il livello**. Valori dei l
 - **Gamma** (energy): ogni X s **Y bolle di energia** a corto raggio che **esplodono quando un nemico le tocca** (come mine): **Y da 2 a 12**, raggio dell’esplosione sempre uguale,
   danno che cresce meno degli altri supporti (le bolle sono di più). Grafica nuova: **bolla di sapone** (non le mine).
 - **Epsilon** (physical): ogni X s una **raffica di missili a ricerca** a corto raggio: **da 2 a 6 missili** (livello 10); ai livelli intermedi sale il numero, il danno o la portata
-  (quale a quale livello: aperto). Grafica: i mini-missili, nel colore physical.
+  (livelli sotto). Grafica: i mini-missili, nel colore physical.
+- **Bolle di Gamma**: restano in campo **15 s** **[deciso]** (Marco: le mine durano 25 s, ma il ciclo arriva a 20 s).
+- **Epsilon, livelli** **[deciso]** (Marco): lv2 danno · lv3 missile · lv4 portata · lv5 danno · lv6 missile · lv7 portata · lv8 danno · lv9 missile · lv10 portata e missile (6 in tutto).
+
+**Valori proposti** **[Claude] [provvisorio]** (da misurare con i bot). Danni di base circa l’85% di una torretta non potenziata dello stesso genere;
+crescita del danno **+15% del valore base per livello** (×2,35 al 10): dal 60 (difficoltà effettiva circa 69) al 200 (230) la vita dei nemici cresce di circa ×2,4,
+quindi un ranger che sale con la campagna resta al passo, prima dei bonus di albero e Moduli. Valori a metà strada: interpolazione lineare tra livello 1 e 10, arrotondata.
+- **Alfa**: fiammata 4 danni al secondo a chi ci sta dentro (Area infuocata della Sky Guard 5/s); bruciatura 3 s a 4 al secondo (come quella della Sky Guard, 3 s).
+- **Omega**: 20 danni per onda (esplosione dell’Aeroblast 24); stato di 3 s.
+- **Sigma**: 14 danni per bersaglio (fulmine del Thunderbolt 16); paralisi come quella del Thunderbolt.
+- **Gamma**: 20 danni per esplosione (mina dell’Aeroblast 24), raggio fisso 40 px (esplosione dell’Aeroblast); il danno cresce di **+7%** per livello (×1,63 al 10) invece del 15%.
+- **Epsilon**: 20 danni per missile (missile della Sky Guard 24); ai livelli “danno” +30% del valore base (×1,9 dal lv8: con 6 missili, al 10 la raffica vale circa ×11 come i 5 bersagli di Sigma a ×2,35), ai livelli “portata” +15% della portata base (260 → 299 → 338 → 377 px).
+
+| Livello | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Ciclo X (tutti, s) | 40 | 37,8 | 35,6 | 33,3 | 31,1 | 28,9 | 26,7 | 24,4 | 22,2 | 20 |
+| Danno (tutti tranne Gamma ed Epsilon) | ×1 | ×1,15 | ×1,3 | ×1,45 | ×1,6 | ×1,75 | ×1,9 | ×2,05 | ×2,2 | ×2,35 |
+| Alfa: durata Y (s) | 4 | 4,7 | 5,3 | 6 | 6,7 | 7,3 | 8 | 8,7 | 9,3 | 10 |
+| Alfa: bruciatura Z | 10% | 20% | 30% | 40% | 50% | 60% | 70% | 80% | 90% | 100% |
+| Omega: ampiezza | 20° | 31° | 42° | 53° | 64° | 76° | 87° | 98° | 109° | 120° |
+| Sigma: bersagli | 1 | 1 | 2 | 2 | 3 | 3 | 4 | 4 | 5 | 5 |
+| Sigma: paralisi | 5% | 10% | 15% | 20% | 25% | 30% | 35% | 40% | 45% | 50% |
+| Gamma: bolle | 2 | 3 | 4 | 5 | 6 | 8 | 9 | 10 | 11 | 12 |
+| Gamma: danno | ×1 | ×1,07 | ×1,14 | ×1,21 | ×1,28 | ×1,35 | ×1,42 | ×1,49 | ×1,56 | ×1,63 |
+| Epsilon: missili | 2 | 2 | 3 | 3 | 3 | 4 | 4 | 4 | 5 | 6 |
+| Epsilon: danno | ×1 | ×1,3 | ×1,3 | ×1,3 | ×1,6 | ×1,6 | ×1,6 | ×1,9 | ×1,9 | ×1,9 |
+| Epsilon: portata (px) | 260 | 260 | 260 | 299 | 299 | 299 | 338 | 338 | 338 | 377 |
+
+Aperti: da quale punto si misura il corto raggio (il ranger o, come per le torrette dalla 1.14.2, il centro in basso).
 
 ### Protezione planetaria
 - Sezione del menu con **5 livelli**, che si apre completando il 60, **a griglia 2 + 2 + 1 centrato**: **Fire: Europa · Force: Africa · Electric: Asia · Energy: Americhe · Physical: Oceania** **[deciso]** (Marco). Ogni livello ha un’icona che ricorda il continente, il nome sotto e una riga descrittiva con **livello e tipo dei nemici** (es. “Livello 3 · nemici fire”). Ordine nella griglia (Europa, Africa / Asia, Americhe / Oceania), badge ×2 sul continente del giorno e partite rimaste del giorno **[deciso]** (approvati da Marco); icone da disegnare (classica e HD-2D).
