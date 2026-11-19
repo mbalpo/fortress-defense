@@ -837,7 +837,9 @@ drawWorld = function drawWorld() {
   drawDomeFill();
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
+  for (const r of RG.list) FX.ranger(r);           // ranger (1.17.0; in HD-2D dalla 1.18.0)
   if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
+  for (const h of shells) FX.husk(h);             // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);
   for (const o of ents) if (!o.under) o.draw();
   drawDomeEdge();
@@ -849,8 +851,25 @@ drawWorld = function drawWorld() {
 drawMenuBack = function drawMenuBack() { drawGround(); grade(); motes(); };   // i menu sul cielo, con la piattaforma
 // nemici: tutti e sette gli aspetti come sprite; un aspetto nuovo senza sprite usa il disegno classico
 const ROCK_LOOKS = ["rock", "asteroid", "meteor", "saucer"], SHIP_LOOKS = ["shard", "ship", "mothership"], baseEnemyBody = enemyBody;
+// nemici della Protezione planetaria (1.18.0): sprite a pixel dalla stessa sagoma della grafica classica, luce dall’alto a sinistra, dettagli sopra
+function inPoly(pts, u, v) { let o = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > v) !== (yj > v) && u < (xj - xi) * (v - yi) / (yj - yi) + xi) o = !o; } return o; }
+function hdFoe(e, c, look) {
+  const r = e.def.r, n = Math.ceil(r * 2.3 / PX), h = n / 2, P2 = ramp(c), sh = FOE_SHAPES[look], rd = FOE_ROUND[look];
+  const sp = procSprite("foe:" + look + ":" + c + ":" + r, n, n, (i, j) => {
+    const u = (i + 0.5 - h) / h * 1.15, v = (j + 0.5 - h) / h * 1.15;
+    if (rd ? u * u + v * v > rd * rd : !inPoly(sh, u, v)) return null;
+    const z = (u + v) * 0.5;                       // luce dall’alto a sinistra
+    return z < -0.45 ? P2[5] : z < -0.1 ? P2[4] : z < 0.3 ? P2[3] : z < 0.6 ? P2[2] : P2[1];
+  });
+  const a = ctx.globalAlpha;
+  if (look === "bomb") for (const d of [-0.3, 0.3]) pixelFlame(e.x + d * r, e.y - r * 0.7, 8 + 3 * Math.sin(clock * 11 + d * 7), 3, a, d > 0 ? 5 : 2);
+  blit(sp, e.x, e.y, h + 1, h + 1);
+  foeDetails(e, c, look);
+  light(e.x, e.y, r * 2.2, c, 0.45 * a);
+}
 enemyBody = function enemyBody(e, c, look) {
-  if (ROCK_LOOKS.includes(look)) hdEnemy(e, c, look); else if (SHIP_LOOKS.includes(look)) hdEnemy2(e, c, look); else baseEnemyBody(e, c, look);
+  if (ROCK_LOOKS.includes(look)) hdEnemy(e, c, look); else if (SHIP_LOOKS.includes(look)) hdEnemy2(e, c, look);
+  else if (FOE_SHAPES[look] || FOE_ROUND[look]) hdFoe(e, c, look); else baseEnemyBody(e, c, look);
 };
 // barra della vita a pixel con il contorno, il fondo scuro e la riga chiara in alto
 enemyBar = function enemyBar(e, look) {
@@ -1070,6 +1089,20 @@ Object.assign(FX, {
       pxEllipse(x, y, r, r, i ? TYPES.force.color : "#ffe0ff", (1 - k) * (1 - i * 0.25), ang - half, ang + half);
     }
     ctx.globalAlpha = 1; light(x + Math.cos(ang) * len * k, y + Math.sin(ang) * len * k, len * 0.6, TYPES.force.color, (1 - k) * 0.6);
+  },
+  immune(e) {                                    // speciale energy · scudo dell’immunità; HD-2D: esagono a pixel che pulsa e luce
+    const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12);
+    for (let i = 0; i < 6; i++) pxLine(e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r, e.x + Math.cos((i + 1) * 1.0472) * r, e.y + Math.sin((i + 1) * 1.0472) * r, "#7ff6ff", k);
+    light(e.x, e.y, r * 1.6, "#7ff6ff", 0.4 * k); ctx.globalAlpha = 1;
+  },
+  husk(h) {                                      // speciale physical · guscio vuoto; HD-2D: carapace a pixel grigio con la crepa
+    const a = Math.min(1, h.t / 0.6), n = Math.ceil(h.r * 2.3 / PX), m = n / 2;
+    const sp = procSprite("husk:" + h.r, n, n, (i, j) => {
+      const u = (i + 0.5 - m) / m * 1.15, v = (j + 0.5 - m) / m * 1.15;
+      if (!inPoly(FOE_SHAPES.crab, u, v)) return null;
+      return Math.abs(u + 0.1 - v * 0.3) < 0.09 ? "#2a3048" : (u + v) < -0.3 ? "#c9d2e6" : (u + v) < 0.4 ? "#8d96ad" : "#5d6478";
+    });
+    ctx.globalAlpha = a; blit(sp, h.x, h.y, m + 1, m + 1); ctx.globalAlpha = 1;
   },
   ranger(r) {                                    // ranger: sfera metallica (conversione) o cubo metallico con la lettera greca (supporto); HD-2D: a pixel, con luce del tipo
     const c = TYPES[r.type].color, x = r.x, y = r.y + Math.round(Math.sin(r.bob * 2.4) * 2.5 / PX) * PX;

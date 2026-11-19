@@ -241,3 +241,13 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
     b.save((n++) + "-ranger-" + id + ".png");
   }
 }
+{ // 1.18.0: nemici della Protezione planetaria (DESIGN.md § 17, fase 3): le 4 taglie per tipo, invisibile, immune, guscio; classica e HD-2D
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const SET = "selLevel = 42; startRun('standard'); queue = []; enemies.length = 0; let i = 0;" +
+    " for (const t of TYPE_KEYS) { let j = 0; for (const v of ['l', 'm', 'p', 's']) { spawn({ enemy: t + '_' + v, x: 50 + j * 80 }); Object.assign(enemies[enemies.length - 1], { y: 130 + i * 80, speed: 0, hp: 1e9, maxHp: 1e9 }); j++; } i++; }" +
+    " enemies[15].invis = true; enemies[7].immT = 1; shells.push({ x: 330, y: 450, r: 17, t: 3, max: 4 }); player.cd = 1e9;";
+  for (const [name, settings] of [["85-nemici-planetari.png", null], ["86-nemici-planetari-hd2d.png", { graphics: "hd2d" }]]) {
+    const g = game({ progress: { cleared: 64, seen: ALL_SEEN }, settings, src }); g.w.__ev(SET);
+    for (let k = 0; k < 6; k++) { g.w.__ev("domeHp = domeMax; player.cd = 1e9"); g.frame(); } g.save(name);
+  }
+}

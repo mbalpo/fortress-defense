@@ -3,6 +3,34 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.18.0 — Nemici nuovi della Protezione planetaria (fase 3)
+
+- **Nemici** (DESIGN.md § 17; proposta di Claude scelta da Marco, valori **[Claude] [provvisorio]**): quattro per tipo, 20 in tutto (`ENEMY_DEFS` da `fire_l` a `physical_s`):
+  leggero (Dardo, resistenza al proprio tipo 25%), medio (Gemma, 40%), pesante (Corazzato, 60%), speciale (50%). Ondate con le quantità della campagna e la taglia corrispondente;
+  speciali dall’ondata 3 (1, +1 ogni 5 ondate). Scoperte e avvisi per aspetto e tipo; nomi nuovi nella pausa.
+- **Speciali**: kamikaze fire (alla cupola danno × (1 + 4 × vita rimasta ÷ vita massima), poi muore), Spettro force invisibile dopo il 30% di vita persa (bersaglio solo di Laser, Beam,
+  Disruption Drone, Gravity Vortex Gun, Firewheel Drone e del guardiano con Iperione, che conta solo la parte energy; colpito dalle aree; i colpi gli passano attraverso),
+  Saetta electric (scatto di 120 px dopo il 40%), Prisma energy (immune 2 s ogni 6 s, anche ai danni da stato), Carapace physical (guscio di 4 s che blocca guardiano, Sky Guard,
+  Aeroblast, Railgun e Teslacoil; con Atlante il guardiano a volte lo attraversa).
+- **Codice**: `PLANET_FOE`, `PLANET_SPECIAL`, `SPECIAL`, `SEE_INVIS`, `PLANET_SIZE`; `damage` con la resistenza propria e l’immunità; `canSee`/`seeInvis` nei bersagli (`pickTargets`,
+  `nearestTo`, `randEnemy`, Sky Guard, Teslacoil), colpi che attraversano gli invisibili (guardiano, Railgun, onda dell’Hive); `shells` e `shellAt` nei colpi di guardiano, Sky Guard,
+  Aeroblast, Railgun e Teslacoil; `kamikaze`. Disegno: sagome `FOE_SHAPES`, `foeDetails`, `FX.immune`, `FX.husk` (classica e HD-2D, `hdFoe`).
+- **Correzione**: in HD-2D i ranger della 1.17.0 non si vedevano (il campo dell’HD-2D ha il suo `drawWorld`): ora ci sono, con i gusci.
+- **Misura con i bot** (tabella in DESIGN.md § 17): fire, electric ed energy simili a prima; **force 0 vittorie su 180** (gli invisibili arrivano alla cupola; senza invisibilità 23-30%,
+  senza speciali 53-58%); physical sempre il più duro. Tempi dei ranger con le quote nuove: tutti sbloccati in 14,5 mesi. Nessun valore ritarato: decide Marco.
+- `tests/tools/planet.js`: `REPL` per provare valori. DESIGN.md: § 17 (“Fase 3 costruita”).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/planet3.js` (17 controlli): 20 nemici con resistenze tra 25% e 60%, ondate solo del tipo e speciali, resistenza propria e debolezza,
+kamikaze (danno ×3 a metà vita), scatto una volta, immunità anche alla bruciatura, invisibili (non bersaglio, colpi che passano, visti dal Laser, colpiti dalle aree, Iperione,
+missili della Sky Guard), gusci (non bersaglio, bloccano il guardiano, la bomba dell’Aeroblast esplode sopra, durano 4 s, Atlante al 10 li attraversa), scoperte e nomi.
+`tests/planet.js`: la partita controlla i nemici nuovi del tipo (prima la meteora segnaposto). `tests/rangers.js`: in HD-2D i ranger si disegnano nel campo.
+`npm run screenshots`: nuove 85-86 (i 20 nemici con invisibile, immune e guscio, classica e HD-2D). `npm run design-lists`: § 8 e § 9 invariati.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D; 20 nemici nuovi).
+
+Checklist: aggiornata (versione 39): nuovo gruppo da provare “Nemici nuovi (1.18)”; tra i valori di Claude nemici e speciali; tra le cose da decidere il force impossibile con gli invisibili;
+riferimento del § 17 aggiornato.
+
 ## 1.17.0 — Ranger (Protezione planetaria, fase 2)
 
 - **Ranger** (DESIGN.md § 17, regole e valori decisi da Marco; tabella dei livelli dei supporti **[Claude] [provvisorio]**): livelli dai frammenti (soglia 200, totale T × (1 + 0,5 × (L − 1)),

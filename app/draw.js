@@ -232,9 +232,44 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
 }
 function drawEnemy(e) {
   const c = e.flash > 0 ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";
+  const a0 = ctx.globalAlpha;
+  if (e.invis) ctx.globalAlpha = a0 * (0.22 + 0.08 * Math.sin(clock * 6 + e.phase));   // speciale force invisibile: appena un riflesso
   enemyBody(e, c, look);
-  if (e.hp < e.maxHp || e.boss) enemyBar(e, look);
-  drawStatus(e);
+  if (e.immT > 0) FX.immune(e);                    // speciale energy: scudo durante l’immunità
+  ctx.globalAlpha = a0;
+  if ((e.hp < e.maxHp || e.boss) && !e.invis) enemyBar(e, look);
+  if (!e.invis) drawStatus(e);
+}
+// nemici della Protezione planetaria (1.18.0): sagome in coordinate del raggio (y verso il basso, cioè verso la cupola) [Claude, da rivedere]
+const FOE_SHAPES = {
+  dart: [[0, 1.1], [0.75, -0.6], [0.25, -0.3], [0, -0.9], [-0.25, -0.3], [-0.75, -0.6]],
+  gem: [[0, 1.05], [0.8, 0.45], [0.8, -0.45], [0, -1.05], [-0.8, -0.45], [-0.8, 0.45]],
+  tank: [[-0.6, 1], [0.6, 1], [1, 0.55], [1, -0.55], [0.6, -1], [-0.6, -1], [-1, -0.55], [-1, 0.55]],
+  wraith: [[0, -1], [0.7, -0.5], [0.8, 0.4], [0.5, 1], [0.25, 0.6], [0, 1], [-0.25, 0.6], [-0.5, 1], [-0.8, 0.4], [-0.7, -0.5]],
+  prism: [[0, 1], [0.9, -0.65], [-0.9, -0.65]],
+  crab: [[-1, 0.2], [-0.85, -0.45], [-0.4, -0.85], [0.4, -0.85], [0.85, -0.45], [1, 0.2], [0.6, 0.45], [-0.6, 0.45]],
+};
+const FOE_ROUND = { bomb: 0.85, spark: 0.7 };      // sagome tonde: raggio relativo
+const P = (e, pts) => pts.map(([u, v]) => [e.x + u * e.def.r, e.y + v * e.def.r]);
+function foeDetails(e, c, look) {                  // dettagli comuni a classica e HD-2D (sopra il corpo)
+  const r = e.def.r, x = e.x, y = e.y, dark = "rgba(7,11,22,0.55)", t = typeof clock === "number" ? clock : 0;
+  if (look === "dart") { disc(x - r * 0.35, y - r * 0.55, r * 0.14, "#fff6b0", 0.9); disc(x + r * 0.35, y - r * 0.55, r * 0.14, "#fff6b0", 0.9); }
+  else if (look === "gem") { ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - r * 0.8, y - r * 0.45); ctx.lineTo(x, y - r * 0.1); ctx.lineTo(x + r * 0.8, y - r * 0.45); ctx.moveTo(x, y - r * 0.1); ctx.lineTo(x, y + r * 1.05); ctx.stroke(); }
+  else if (look === "tank") { poly(P(e, [[-0.55, 0.55], [0.55, 0.55], [0.55, -0.55], [-0.55, -0.55]]), dark, null); for (const [u, v] of [[-0.75, -0.75], [0.75, -0.75], [-0.75, 0.75], [0.75, 0.75]]) disc(x + u * r, y + v * r, r * 0.09, "#e8eefc", 0.8); }
+  else if (look === "bomb") {                      // miccia con la scintilla
+    ctx.strokeStyle = "#5a4a3a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - r * 0.8); ctx.quadraticCurveTo(x + r * 0.4, y - r * 1.2, x + r * 0.2, y - r * 1.45); ctx.stroke();
+    disc(x + r * 0.2, y - r * 1.45, 2.5 + Math.sin(t * 30) * 1, "#fff6b0"); disc(x - r * 0.3, y - r * 0.3, r * 0.18, "#ffffff", 0.5);
+  } else if (look === "wraith") { disc(x - r * 0.3, y - r * 0.25, r * 0.13, "#ffffff", 0.9); disc(x + r * 0.3, y - r * 0.25, r * 0.13, "#ffffff", 0.9); }
+  else if (look === "spark") {                     // coda a zig-zag
+    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - r * 0.7);
+    for (let k = 1; k <= 4; k++) ctx.lineTo(x + (k % 2 ? 1 : -1) * r * 0.35, y - r * 0.7 - k * r * 0.35); ctx.stroke();
+    disc(x, y, r * 0.35, "#fffbea", 0.9);
+  } else if (look === "prism") { disc(x, y - r * 0.15, r * 0.22, "#ffffff", 0.8); }
+  else if (look === "crab") {                      // zampe e segmenti del carapace
+    ctx.strokeStyle = c; ctx.lineWidth = 1.6;
+    for (const sg of [-1, 1]) for (const k of [0, 1]) { ctx.beginPath(); ctx.moveTo(x + sg * r * (0.5 + k * 0.25), y + r * 0.4); ctx.lineTo(x + sg * r * (0.8 + k * 0.3), y + r * 0.85); ctx.stroke(); }
+    ctx.strokeStyle = dark; ctx.lineWidth = 1; for (const u of [-0.35, 0.35]) { ctx.beginPath(); ctx.moveTo(x + u * r, y - r * 0.8); ctx.lineTo(x + u * r * 1.3, y + r * 0.4); ctx.stroke(); }
+  }
 }
 // corpo del nemico (c = colore del tipo, bianco nel lampo del colpo) e barra della vita: punti di aggancio della grafica HD-2D
 function enemyBody(e, c, look) {
@@ -252,6 +287,10 @@ function enemyBody(e, c, look) {
     ctx.beginPath(); ctx.ellipse(x, y - r * 0.2, r * 0.6, r * 0.62, 0, Math.PI, 6.2832); ctx.fillStyle = "rgba(223,233,255,0.9)"; ctx.fill();
     ctx.beginPath(); ctx.ellipse(x, y, r * 1.15, r * 0.48, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
     for (const dx of [-0.6, 0, 0.6]) disc(x + dx * r, y + r * 0.1, r * 0.13, shade);
+  } else if (FOE_SHAPES[look] || FOE_ROUND[look]) {   // nemici della Protezione planetaria
+    if (look === "bomb") tail(e, r, 2.2, "rgba(255,170,80,0.6)");
+    if (FOE_ROUND[look]) disc(x, y, r * FOE_ROUND[look], c); else poly(P(e, FOE_SHAPES[look]), c, "rgba(7,11,22,0.6)", 1.3);
+    foeDetails(e, c, look);
   } else {                                     // nave aliena (mini-boss) e nave madre (boss finale): contorno dorato
     const w = look === "mothership" ? 1.2 : 1.05;
     if (look === "mothership") for (const sgn of [-1, 1]) poly([[x + sgn * r * 0.9, y - r * 0.35], [x + sgn * r * 1.55, y - r * 0.75], [x + sgn * r * 1.2, y + r * 0.1]], c, "#ffd166", 2);
@@ -327,7 +366,8 @@ function drawFortress() {
 function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, W, H); }
 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
-const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre" };
+const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre",
+  dart: "Dardo", gem: "Gemma", tank: "Corazzato", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace" };   // nomi della Protezione planetaria [Claude, da rivedere]
 const MUTED = "#8a9ac0";
 function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
 function tw(str, size, weight) { setFont(size, weight); const m = ctx.measureText(str); return m && typeof m.width === "number" ? m.width : str.length * size * 0.56; }
@@ -352,8 +392,9 @@ function levelEnemies() {                       // chi arriva davvero in questo 
   const D = curDiff(), kinds = new Map();
   for (let n = 1; n <= N_WAVES; n++)
     for (const g of waveSpec(n, D).groups) if (g.count > 0) {
-      const k = pw ? PLANET.enemy[planetType] : g.enemy, w = kinds.get(k) || []; if (!w.includes(n)) w.push(n); kinds.set(k, w);   // Protezione planetaria: solo il tipo del continente
+      const k = pw ? planetType + "_" + PLANET_SIZE[g.enemy] : g.enemy, w = kinds.get(k) || []; if (!w.includes(n)) w.push(n); kinds.set(k, w);   // Protezione planetaria: solo il tipo del continente
     }
+  if (pw) kinds.set(planetType + "_s", Array.from({ length: N_WAVES - 2 }, (_, i) => i + 3));   // speciale dall’ondata 3
   return {
     kinds: [...kinds.entries()].sort((a, b) => a[1][0] - b[1][0]),
     bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: pw ? Object.assign(bossDef(campLevel, n), { type: planetType }) : bossDef(campLevel, n) })) : [],
@@ -1180,6 +1221,7 @@ function drawWorld() {
   for (const r of RG.list) FX.ranger(r);           // ranger ai lati del guardiano (DESIGN.md § 17)
   if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
   for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
+  for (const h of shells) FX.husk(h);           // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);
   for (const o of ents) if (!o.under) o.draw();
   drawDomeEdge(); drawFortress();
@@ -1353,6 +1395,17 @@ const FX = {
       poly([[x - h, y - h + 3], [x + h, y - h + 3], [x + h, y + h + 3], [x - h, y + h + 3]], "#9aa6c8", "#4a5680", 1);
       txt(r.d.letter, x, y + 4, 13, c, "center", "800");
     }
+  },
+  immune(e) {                                    // speciale energy · scudo dell’immunità: anello esagonale che pulsa
+    const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12), pts = [];
+    for (let i = 0; i < 6; i++) pts.push([e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r]);
+    poly(pts, "rgba(127,246,255,0.12)", "rgba(127,246,255," + k + ")", 2);
+  },
+  husk(h) {                                      // speciale physical · guscio vuoto e invincibile, che svanisce alla fine
+    const a = Math.min(1, h.t / 0.6), x = h.x, y = h.y, r = h.r;
+    ctx.globalAlpha = a; poly([[x - r, y + r * 0.2], [x - r * 0.85, y - r * 0.45], [x - r * 0.4, y - r * 0.85], [x + r * 0.4, y - r * 0.85], [x + r * 0.85, y - r * 0.45], [x + r, y + r * 0.2], [x + r * 0.6, y + r * 0.45], [x - r * 0.6, y + r * 0.45]], "#6c7488", "#d5dce8", 1.6);
+    ctx.strokeStyle = "#2a3048"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - r * 0.2, y - r * 0.8); ctx.lineTo(x, y - r * 0.2); ctx.lineTo(x - r * 0.25, y + r * 0.3); ctx.stroke();
+    ctx.globalAlpha = 1;
   },
   rangerFlame(o, r) {                            // ranger Alfa · fiammata: le fiamme della scia del Firewheel lungo il getto
     const n = Math.max(2, Math.round(o.len / 22)), ca = Math.cos(o.ang), sa = Math.sin(o.ang), q = clamp(o.t / 0.4, 0, 1), pts = [];

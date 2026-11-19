@@ -1175,3 +1175,39 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   (fire 0,69 · force 0,87 · electric 0,90 · energy 0,57 · physical 0,19) fire, force, electric ed energy si sbloccano in 2,9-4,3 mesi, ma i ranger physical in **10,9 mesi**
   (58 per il livello 10): il continente physical con i nemici segnaposto (§ 17, fase 1) allunga tutto **[da decidere]**.
 - **Mancano**: nemici nuovi e speciali (fase 3), boss nuovi (fase 4); gli invisibili (solo la parte energy) e i gusci (attraversamento di Atlante) arrivano con i nemici della fase 3.
+
+### Fase 3 costruita (1.18.0): nemici nuovi e speciali
+- **Nemici** (proposta di Claude accettata da Marco come punto di partenza, valori **[Claude] [provvisorio]**): quattro per tipo, solo del tipo del continente, con la propria resistenza
+  al proprio tipo (le altre resistenze e debolezze come la tabella del § 6 per quel tipo; i nemici della campagna non cambiano):
+
+  | Taglia | Vita | Velocità | Raggio | Danno | Resistenza al proprio tipo | Aspetto |
+  |---|---|---|---|---|---|---|
+  | leggero | 36 | 60 | 10 | 1,5 | 25% | Dardo |
+  | medio | 60 | 42 | 13 | 3 | 40% | Gemma |
+  | pesante | 132 | 28 | 16 | 6 | 60% | Corazzato |
+  | speciale | 72 | 40 | 14 | 4 | 50% | Kamikaze (fire), Spettro (force), Saetta (electric), Prisma (energy), Carapace (physical) |
+
+  Vita, danno e velocità crescono con la difficoltà e con l’ondata come nella campagna. Ondate: le stesse quantità della campagna, con il nemico del continente della stessa taglia
+  (navicella e cristallo-cometa → leggero, meteora e frammento roccioso → medio, asteroide → pesante); gli speciali dall’ondata 3: 1, più uno ogni 5 ondate (2 dall’8, 3 dal 13, 4 dal 18), ogni 3 s.
+  Scoperte e avvisi “Nuovo nemico” per aspetto e tipo. Nomi e aspetto **[Claude] [da rivedere]**; disegnati in classica e HD-2D (sprite a pixel dalle stesse sagome).
+- **Speciali** (regole **[deciso]**, X e Y **[Claude] [provvisorio]**):
+  - **fire, kamikaze**: alla cupola un solo colpo da danno × (1 + 4 × vita rimasta ÷ vita massima), poi muore (×5 a vita piena, ×1 quasi morto);
+  - **force, invisibile** dopo aver perso il **30%** della vita: non è bersaglio di guardiano, missili e torrette che non lo vedono; i colpi gli passano attraverso. Lo colpiscono Laser, Beam,
+    Disruption Drone, Gravity Vortex Gun, Firewheel Drone (bersagli scelti da loro) e gli effetti ad area (esplosioni, campi, bruciature già applicate); non l’onda dell’Hive. Con Iperione
+    il guardiano lo vede e conta solo la parte energy. A schermo resta un riflesso trasparente, senza barra né stati;
+  - **electric, scatto**: dopo aver perso il **40%** della vita scende di **120 px in 0,3 s**, una volta (si ferma sulla cupola);
+  - **energy, immunità**: ogni **6 s** è immune per **2 s** a tutti i danni, anche da stato (scudo esagonale); fase a caso all’uscita;
+  - **physical, guscio** alla morte: **4 s**, invincibile, non è un nemico né un bersaglio, non conta per l’ondata; blocca i colpi di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil
+    (missili, bombe e sfere esplodono sul guscio, il Railgun si ferma); con Atlante ogni colpo del guardiano ha la probabilità del livello × 10% di attraversarlo (una prova per guscio).
+- **Misura 1.18.0** (`node tests/tools/planet.js 1,5,10 30`, come la fase 1; vittorie su 30 random / smart, tra parentesi l’ondata media; prima → dopo i nemici nuovi):
+
+  | Livello | Fire | Force | Electric | Energy | Physical |
+  |---|---|---|---|---|---|
+  | 1 | 11 / 12 → 13 / 6 (12) | 23 / 21 → **0 / 0** (6) | 20 / 19 → 19 / 17 (18) | 4 / 7 → 9 / 8 (12) | 1 / 0 → 0 / 0 (4) |
+  | 5 | 19 / 13 → 16 / 11 (16) | 24 / 24 → **0 / 0** (6) | 24 / 21 → 21 / 25 (19) | 8 / 4 → 8 / 11 (15) | 1 / 0 → 1 / 0 (5) |
+  | 10 | 24 / 23 → 21 / 19 (18) | 29 / 24 → **0 / 0** (7) | 27 / 29 → 28 / 25 (20) | 24 / 14 → 21 / 15 (17) | 5 / 7 → 7 / 3 (9) |
+
+  Il **force** diventa impossibile per i bot: gli invisibili arrivano alla cupola e quasi nessuna torretta li vede. Prove al livello 1 / 5 (20 partite per bot): senza invisibilità 23 / 30%,
+  senza speciali 53 / 58%. Physical resta il più duro (guardiano physical e pesanti al 60%). **[da decidere]** (Marco): valori degli invisibili (soglia, durata o chi li vede) e difficoltà per tipo.
+  Tempi dei ranger con queste quote (`tests/tools/ranger-tempi.js`, fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti sbloccati in 14,5 mesi (force 10,2, physical 14,5).
+- **Mancano**: i boss nuovi (fase 4); nella fase 4 anche gli alati della nave madre force.

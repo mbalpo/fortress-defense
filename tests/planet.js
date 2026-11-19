@@ -48,7 +48,7 @@ console.log("— Partita: nemici del tipo, ondate sovrapposte, scelte in coda �
   for (let i = 0; i < 200; i++) g.frame();
   const kinds = ev("[...new Set(enemies.map((e) => e.def.look + ':' + e.def.type))].join()");
   console.log("partita: modalità", ev("mode"), "| livello", ev("campLevel"), "| difficoltà", ev("curDiff()"), "| nemici", kinds,
-    ok(ev("mode") === "planet" && ev("campLevel") === 1 && ev("curDiff()") === 60 && kinds === "meteor:fire"));
+    ok(ev("mode") === "planet" && ev("campLevel") === 1 && ev("curDiff()") === 60 && kinds.split(",").every((k) => /^(dart|gem|tank|bomb):fire$/.test(k))));   // dalla 1.18.0 i nemici nuovi del tipo
   tough(ev);
   const next = ev("pw.next"); let f = 0;
   while (ev("wave") === 1 && f++ < 3000) { g.frame(); tough(ev); }

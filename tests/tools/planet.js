@@ -2,7 +2,7 @@
 // Uso: node tests/tools/planet.js <livelli planetari> [partite per bot, default 20] [primo seme, default 1] [tipi, default tutti]
 //   CAMP=<livello della campagna> (default: la difficoltà del livello planetario) · EQUIP=<vittorie per livello> (default 1,5, come curva.js)
 //   SEQ=1: ondate in sequenza (la successiva parte quando la precedente è ripulita) per misurare il tempo di pulizia di ogni ondata
-//   K=<fattore>: tempi delle ondate moltiplicati (PLANET.waveK) da provare
+//   K=<fattore>: tempi delle ondate moltiplicati (PLANET.waveK) da provare · REPL='[["testo", "sostituto"]]': altre sostituzioni nel sorgente
 const { play, makeGame } = require("../bot.js");
 const { gearFor } = require("./equip-atteso.js");
 const LVS = process.argv[2].split(",").map(Number), N = +(process.argv[3] || 20), S0 = +(process.argv[4] || 1);
@@ -15,6 +15,7 @@ function patch(h) {
   h = rep(h, "  wave = n; upBuild = false; pw.banner = 2;", "  wave = n; upBuild = false; pw.banner = 2; (window.__start = window.__start || [])[n] = Math.max(0, first ? 0 : waveTime);");
   if (SEQ) h = rep(h, "if (wave < N_WAVES && waveTime >= pw.next)", "if (wave < N_WAVES && pw.clr[wave])");
   if (K !== undefined) h = rep(h, "waveK: 1,", "waveK: " + +K + ",");
+  for (const [x, y] of JSON.parse(process.env.REPL || "[]")) h = rep(h, x, y);   // REPL='[["testo", "sostituto"]]': prove di valori
   return h;
 }
 // albero atteso: come curva.js (Sigilli e maggiori attesi, stessa strategia di spesa)

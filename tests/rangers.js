@@ -99,5 +99,8 @@ console.log("— Salvataggio, schermata, HD-2D —");
   const h = fresh(["epsilon", "iperione"], 6, null, { graphics: "hd2d" });
   h.g.key("Enter"); for (let i = 0; i < 2400; i++) { h.g.frame(); h.ev("domeHp = domeMax; if (state === 'upgrade') pick(0)"); }
   h.ev("openRangers('menu')"); h.g.frame();
-  console.log("HD-2D: grafica", h.ev("DRAW.GFX_ON"), "| partita con Epsilon e Iperione e schermata dei ranger, errori JS:", h.g.errors[0] || "nessuno", ok(h.ev("DRAW.GFX_ON") === "hd2d" && !h.g.errors.length && !g.errors.length));
+  h.ev("closeRangers(); selLevel = 30; startRun('standard'); window.__rc = 0; const f0 = DRAW.FX.ranger; DRAW.FX.ranger = (r) => { window.__rc++; return f0(r); }"); h.g.frame();
+  const drawsR = h.ev("window.__rc") > 0;           // il campo dell’HD-2D disegna i ranger (mancava nella 1.17.0)
+  console.log("HD-2D: grafica", h.ev("DRAW.GFX_ON"), "| ranger nel disegno del campo:", drawsR, "| partita con Epsilon e Iperione e schermata dei ranger, errori JS:", h.g.errors[0] || "nessuno",
+    ok(h.ev("DRAW.GFX_ON") === "hd2d" && drawsR && !h.g.errors.length && !g.errors.length));
 }

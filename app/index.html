@@ -161,6 +161,34 @@ function waveSpec(n, D) {
   ]};
 }
 const TYPE_KEYS = ["fire", "energy", "electric", "force", "physical"];
+/* ---------- NEMICI DELLA PROTEZIONE PLANETARIA (DESIGN.md § 17, fase 3) ----------
+   Quattro per tipo, solo del tipo del continente: leggero, medio, pesante e lo speciale; ognuno resiste al proprio tipo in modo diverso (selfRes, tra il 25 e il 60% [deciso]),
+   le altre resistenze e debolezze come la tabella RESIST del tipo. Valori [Claude, provvisorio]; speciali: fire kamikaze, force invisibile, electric scatto, energy immune, physical guscio. */
+const PLANET_FOE = {
+  l: { hp: 36,  speed: 60, r: 10, dmg: 1.5, selfRes: 0.25, look: "dart" },   // leggero: veloce e fragile
+  m: { hp: 60,  speed: 42, r: 13, dmg: 3,   selfRes: 0.4,  look: "gem" },    // medio
+  p: { hp: 132, speed: 28, r: 16, dmg: 6,   selfRes: 0.6,  look: "tank" },   // pesante: lento e corazzato
+  s: { hp: 72,  speed: 40, r: 14, dmg: 4,   selfRes: 0.5 },                  // speciale
+};
+const PLANET_SPECIAL = { fire: ["bomb", "kami"], force: ["wraith", "invis"], electric: ["spark", "dash"], energy: ["prism", "immune"], physical: ["crab", "husk"] };
+for (const t of TYPE_KEYS) for (const v of ["l", "m", "p", "s"]) {
+  const d = Object.assign({ type: t, planet: true }, PLANET_FOE[v]);
+  if (v === "s") Object.assign(d, { look: PLANET_SPECIAL[t][0], special: PLANET_SPECIAL[t][1] });
+  ENEMY_DEFS[t + "_" + v] = d;
+}
+// valori degli speciali [Claude, provvisorio]: X e Y del § 17
+const SPECIAL = {
+  invisAt: 0.3,                 // force: invisibile dopo aver perso il 30% della vita
+  dashAt: 0.4, dashPx: 120, dashT: 0.3,   // electric: dopo aver perso il 40% scatta in basso di 120 px in 0,3 s, una volta
+  immEvery: 6, immFor: 2,       // energy: ogni 6 s è immune ai danni (anche da stato) per 2 s
+  husk: 4,                      // physical: guscio invincibile per 4 s
+  kamiK: 4,                     // fire: alla cupola danno × (1 + 4 × vita rimasta ÷ vita massima), poi muore
+};
+// torrette che colpiscono gli invisibili (oltre agli effetti ad area) [deciso]; il guardiano solo con la conversione energy
+const SEE_INVIS = ["laser", "beam", "disr", "vortex", "wheel"];
+// ondate della Protezione planetaria: le stesse quantità della campagna, con il nemico del continente della stessa taglia; speciali dall’ondata 3
+// (1 + uno ogni 5 ondate, ogni 3 s) [Claude, provvisorio]
+const PLANET_SIZE = { drone: "l", wisp: "l", spitter: "m", shell: "m", brute: "p" };
 const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed: 20, r: 24, dmg: 9, boss: true, look: "ship",
   kbRes: 0.4 + 0.1 * ((lv * 7 + n / 5) % 5), statRes: 0.25 + 0.1 * ((lv * 3 + n / 5) % 4) });   // resistenze variabili: spinte 40-80%, stati 25-55%
 // vita base del boss finale, tarata con i bot perché i muri si superino circa nel 30% delle partite (scelta di Marco):
@@ -189,7 +217,6 @@ const PLANET = {
   order: ["fire", "force", "electric", "energy", "physical"],   // griglia 2 + 2 + 1: Europa, Africa / Asia, Americhe / Oceania [deciso]
   land: { fire: "Europa", force: "Africa", electric: "Asia", energy: "Americhe", physical: "Oceania" },
   week: [null, "physical", "force", "energy", "electric", "fire", null],   // domenica … sabato; sabato e domenica a caso (seme = data) [deciso]
-  enemy: { fire: "spitter", energy: "wisp", electric: "drone", force: "brute", physical: "shell" },   // segnaposto: i nemici della campagna di quel tipo [Claude, provvisorio]
   F: 10,                                                       // frammenti di una partita piena al livello 1 [Claude, provvisorio] (crescita con la scala: da misurare)
   diff: (L) => 55 + 5 * L,                                     // difficoltà: livello 1 = 60, +5 per livello [Claude, provvisorio]
   bossAt: 18,                                                  // il boss compare all’ondata 18 e conta come ondata 20 [deciso]
@@ -1156,7 +1183,13 @@ function fromLv2(s) { s.level = 2; s.lv2 = true; return s; }
 function newTurret(id, i) { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); return turretsLv2 ? fromLv2(s) : s; }
 const curDiff = () => mode === "planet" ? PLANET.diff(campLevel) : diffOf(campLevel, mode === "epic");
 const living = () => enemies.filter((e) => !e.dead && e.y >= 0);
-const randEnemy = () => { const l = living(); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
+// invisibili (speciale force, 1.18.0): restano colpibili dagli effetti ad area (living), ma non sono bersagli di chi non li vede (canSee)
+let seeInvis = false;                              // vero solo mentre spara una torretta di SEE_INVIS o il guardiano con la conversione energy
+const canSee = (e) => !e.invis || seeInvis;
+const randEnemy = () => { const l = living().filter(canSee); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
+// gusci (speciale physical): invincibili per qualche secondo, non sono nemici né bersagli; bloccano i colpi di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil
+let shells = [];
+const shellAt = (x, y) => shells.find((h) => dist(h.x, h.y, x, y) <= h.r + 2);
 const N = (s, id) => s.up[id] || 0;
 const has = (s, id) => (s.up[id] || 0) > 0;
 // carte standard potenziate dall’albero: s.sb = livello del nodo per carta (preso in makeShooter, fisso per la partita)
@@ -1218,7 +1251,8 @@ function popup(e, v, mult, src) {
 }
 // ignore = ignora le resistenze del nemico (Laser, Raggi penetranti); un numero da 0 a 1 = ne ignora quella quota (ranger Atlante, le debolezze non cambiano)
 function damage(e, base, type, quiet, src, ignore) {
-  let mult = RESIST[e.def.type][type];
+  if (e.immT > 0) return;                          // speciale energy: immune ai danni, anche da stato (1.18.0)
+  let mult = e.def.selfRes != null && type === e.def.type ? 1 - e.def.selfRes : RESIST[e.def.type][type];   // nemici della Protezione planetaria: resistenza propria al loro tipo
   if (ignore && mult < 1) mult = ignore === true ? 1 : mult + (1 - mult) * ignore;
   if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia combustibile (Firewheel)
   if (e.vulnT > 0 && (e.vulnType === "all" || e.vulnType === type)) mult *= 1 + 0.25 * (1 - (e.statRes || 0));
@@ -1226,6 +1260,7 @@ function damage(e, base, type, quiet, src, ignore) {
   const d = base * mult;
   e.hp -= d; e.flash = 0.06;
   if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
+  else if (e.def.special === "invis" && !e.invis && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) e.invis = true;   // speciale force: diventa invisibile
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
     if (e.accT > 0) return;
@@ -1235,6 +1270,7 @@ function damage(e, base, type, quiet, src, ignore) {
 
 // effetti alla morte di un nemico (tutte le morti passano da damage)
 function onDeath(e) {
+  if (e.def.special === "husk") shells.push({ x: e.x, y: e.y, r: e.def.r + 3, t: SPECIAL.husk, max: SPECIAL.husk });   // speciale physical: guscio invincibile
   if (e.burnT > 0 && e.skyBurnT > 0 && e.skyBurnS && has(e.skyBurnS, "burn3")) { const s = e.skyBurnS, x = e.x, y = e.y; later(0.05, () => skyCombust(s, x, y)); }
 }
 
@@ -1307,7 +1343,7 @@ const inReach = (e, range) => (e.x - RANGE_FROM.x) ** 2 + (e.y - RANGE_FROM.y) *
 function pickTargets(pos, range, n) {
   const c = [];
   for (const e of enemies) {
-    if (e.dead || e.y < 0) continue;
+    if (e.dead || e.y < 0 || !canSee(e)) continue;
     if (!inReach(e, range)) continue;
     const d2 = (e.x - pos.x) ** 2 + (e.y - pos.y) ** 2;
     c.push({ e, s: settings.targeting === "highest" ? -e.hp : d2 });
@@ -1317,7 +1353,7 @@ function pickTargets(pos, range, n) {
 }
 function nearestTo(x, y, maxD, exclude) {
   let best = null, bd = maxD;
-  for (const e of living()) { if (exclude && exclude.has(e)) continue; const d = dist(e.x, e.y, x, y); if (d < bd) { bd = d; best = e; } }
+  for (const e of living()) { if ((exclude && exclude.has(e)) || !canSee(e)) continue; const d = dist(e.x, e.y, x, y); if (d < bd) { bd = d; best = e; } }
   return best;
 }
 
@@ -1335,7 +1371,7 @@ function skyStats(s) {
 // combo Missili sovraccarichi: la carica della Teslacoil (0,5 / 1 / 2 s in più) allunga il ciclo di sparo della Sky Guard (voluto, DESIGN.md § 10)
 const skyCharge = (s) => { if (s.id !== "sky") return 0; const t = kOn(s, "kTesla"); return t ? teslaChargeT(t) - 0.7 : 0; };
 function skyFire(s) {
-  const list = living().filter((e) => inReach(e, rangeOf(s)));
+  const list = living().filter((e) => inReach(e, rangeOf(s)) && canSee(e));
   if (!list.length) return false;
   const cnt = skyCount(s);
   const charged = !!kOn(s, "kTesla");
@@ -1353,6 +1389,7 @@ function missile(s, x, y, mini, target, onHit) {
       let d = Math.atan2(this.t.y - this.y, this.t.x - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d));
       this.a += clamp(d, -turn * dt, turn * dt);
       this.x += Math.cos(this.a) * sp * dt; this.y += Math.sin(this.a) * sp * dt;
+      if (shells.length && shellAt(this.x, this.y)) { this.dead = true; if (onHit) onHit(this.x, this.y, null); else skyImpact(s, this.x, this.y, mini); return; }   // esplode sul guscio
       if (has(s, "pass") && !mini)
         for (const e of living()) if (dist(e.x, e.y, this.x, this.y) <= e.def.r + 10) skyBurn(s, e, 3, 5 * dmgM(s));
       if (dist(this.t.x, this.t.y, this.x, this.y) <= this.t.def.r + 6) { this.dead = true; if (onHit) onHit(this.x, this.y, this.t); else skyImpact(s, this.x, this.y, mini); }
@@ -1533,6 +1570,7 @@ function aeroFire(s) {
       update(dt) {
         const d = dist(tx, ty, this.x, this.y), mv = 260 * dt;
         if (d <= mv) { this.dead = true; aeroBoom(s, tx, ty, false); } else { this.x += (tx - this.x) / d * mv; this.y += (ty - this.y) / d * mv; }
+        if (!this.dead && shells.length && shellAt(this.x, this.y)) { this.dead = true; aeroBoom(s, this.x, this.y, false); }   // esplode sul guscio
       },
       draw() { FX.aeroBomb(this); } });
   }
@@ -1881,7 +1919,7 @@ function hiveWave(s, o, dmg, ang) {
   const len = 130 * (has(s, "waveR") ? 1.4 : 1);
   for (const e of living()) {
     const dx = e.x - o.x, dy = e.y - o.y, d = Math.hypot(dx, dy);
-    if (d > len + e.def.r) continue;
+    if (d > len + e.def.r || e.invis) continue;                                // l’Hive non colpisce gli invisibili [deciso]
     let da = Math.atan2(dy, dx) - ang; da = Math.atan2(Math.sin(da), Math.cos(da));
     if (Math.abs(da) > HIVE_HALF + e.def.r / Math.max(d, 1)) continue;        // fuori dal cono
     damage(e, dmg * 0.9, "force", false, "hive");
@@ -2003,8 +2041,9 @@ function railShot(s, x, y, a, st) {
     },
     update(dt) {
       this.x += Math.cos(a) * 1000 * dt; this.y += Math.sin(a) * 1000 * dt;
+      if (shells.length && shellAt(this.x, this.y)) { this.end(); return; }   // il guscio ferma il proiettile
       for (const e of living()) {
-        if (hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 4) continue;
+        if (hit.has(e) || e.invis || dist(e.x, e.y, this.x, this.y) > e.def.r + 4) continue;
         const avail = st.pierce;                         // perforazioni disponibili al momento dell’impatto
         hit.add(e); st.hits++; st.pierce--;
         const crit = has(s, "crit") && Math.random() < 0.3 ? 1.5 : 1;            // Colpo critico
@@ -2065,6 +2104,7 @@ function teslaBall(s, x, y, target, bounces, hitSet) {
       const d = dist(this.t.x, this.t.y, this.x, this.y), mv = 420 * dt;
       if (d <= this.t.def.r + 8 + mv) { this.dead = true; teslaBoom(s, this.x, this.y, bounces, hitSet); return; }
       this.x += (this.t.x - this.x) / d * mv; this.y += (this.t.y - this.y) / d * mv;
+      if (shells.length && shellAt(this.x, this.y)) { this.dead = true; teslaBoom(s, this.x, this.y, bounces, hitSet); return; }   // esplode sul guscio
       if (this.age > 6) this.dead = true;
     },
     draw() { FX.teslaBall(this); } });
@@ -2079,7 +2119,7 @@ function teslaBoom(s, x, y, bounces, hitSet) {
   }
   ring(x, y, rad, TYPES.electric.color, 0.3);
   if (has(s, "chain")) {
-    const near = living().filter((e) => !hitSet.has(e) && dist(e.x, e.y, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
+    const near = living().filter((e) => !hitSet.has(e) && canSee(e) && dist(e.x, e.y, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
     for (const e of near) { hitSet.add(e); damage(e, dmg * 0.4, "electric", false, "tesla"); bolt(zigzag(x, y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5); }
   }
   if (has(s, "orb")) teslaOrb(s, x, y, rad);
@@ -2282,6 +2322,9 @@ const BEHAV = {
   tesla: { fire: teslaFire, tick: teslaTick, draw: teslaDraw }, vortex: { fire: vortexFire },
 };
 function runTurret(s, dt) {
+  seeInvis = SEE_INVIS.includes(s.id); runTurret0(s, dt); seeInvis = false;
+}
+function runTurret0(s, dt) {
   const b = BEHAV[s.id];
   if (b.tick) b.tick(s, dt);
   if (s.busy > 0) return;
@@ -2376,6 +2419,7 @@ function startRangers() {
 // colpo del guardiano: con un ranger di conversione una quota (10% per livello) va nel tipo del ranger [deciso]; Atlante ignora parte della resistenza
 function guardHit(e, dmg, quiet) {
   const c = RG.conv, k = c ? c.k : 0;
+  if (e.invis) { if (c && c.type === "energy") damage(e, dmg * k, "energy", quiet, "player"); return; }   // contro gli invisibili conta solo la parte energy [deciso]
   if (k < 1) damage(e, dmg * (1 - k), "physical", quiet, "player", RG.ign);
   if (k > 0 && !e.dead) damage(e, dmg * k, c.type, quiet || k < 0.5, "player");
 }
@@ -2499,8 +2543,11 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
       if (this.reb) {                            // dopo un rimbalzo il colpo non attraversa la cupola: se la rientra si ferma sul bordo
         if (domeK(this.x, this.y, 0) > 1) this.out = true; else if (this.out) { this.dead = true; return; }
       }
+      const sh = shells.length && shellAt(this.x, this.y);   // guscio: blocca il colpo; con Atlante a volte lo attraversa (una prova per guscio)
+      if (sh && !(this.pass && this.pass.has(sh))) { if (RG.ign && Math.random() < RG.ign) (this.pass = this.pass || new Set()).add(sh); else { this.dead = true; return; } }
       for (const e of living()) {
         if (this.hit.has(e) || dist(e.x, e.y, this.x, this.y) > e.def.r + 3) continue;
+        if (e.invis && !(RG.conv && RG.conv.type === "energy")) continue;   // invisibile: il colpo passa attraverso
         if (GEAR.ext) gearExtend(e);
         const dmg1 = dmg;                          // Moduli 6, 13, 18 (bonus sul nemico colpito) e critico (1); senza equipaggiamento dmg non cambia
         { const gm = p.gm || 1, gh = gearHit(e), cr = GEAR.crit && Math.random() < GEAR.crit; if (gh || cr) dmg = dmg1 * (gm + gh) / gm * (cr ? 1.5 : 1); }
@@ -2720,7 +2767,7 @@ function pick(i) {
 const ALERT_T = 3.5;
 let alerts = [];
 // mini-boss e boss finale si scoprono tipo per tipo; gli altri nemici per aspetto
-const seenKey = (def) => def.look === "ship" || def.look === "mothership" ? def.look + ":" + def.type : def.look;
+const seenKey = (def) => def.look === "ship" || def.look === "mothership" || def.planet ? def.look + ":" + def.type : def.look;   // nemici della Protezione planetaria: per tipo
 function markSeen(e) {
   const k = seenKey(e.def); if (!e.def.look || progress.seen.includes(k)) return;
   progress.seen.push(k); saveProgress(); alerts.push({ def: e.def, t: ALERT_T });
@@ -2788,7 +2835,7 @@ function startRun(m, resume) {
   rangeShow = null; tapPend = null;
   mode = m; campLevel = m === "planet" ? planetLv(planetType) : selOf(m); bossBonus = 0; bonusLeft = 0; bonusMode = false;
   pw = m === "planet" ? { next: 0, clr: [], mb: 0, choices: [], banner: 0, started: false, paid: false } : null; planetGain = null;
-  enemies = []; ents = []; floaters = [];
+  enemies = []; ents = []; floaters = []; shells = [];
   GEAR = gearStats(progress.gear); gearRun(); if (resume) turretsLv2 = !!resume.t2;
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan"); player.frzL = treeLv("player:frenzy");
@@ -2839,9 +2886,10 @@ function planetWave(n) {
     for (let k = 1; k < n; k++) pw.clr[k] = true;  // ripresa: le ondate prima di n sono già ripulite
   }
   wave = n; upBuild = false; pw.banner = 2;
-  const t0 = first ? 0 : waveTime, D = curDiff(), kind = PLANET.enemy[planetType];
-  for (const g of waveSpec(n, D).groups)           // solo nemici del tipo del continente; vita e danno del nemico che sostituiscono (segnaposto)
-    for (let i = 0; i < g.count; i++) queue.push({ t: t0 + g.at + i * g.every, enemy: kind, as: g.enemy, w: n, x: 30 + Math.random() * (W - 60) });
+  const t0 = first ? 0 : waveTime, D = curDiff(), t = planetType;
+  for (const g of waveSpec(n, D).groups)           // solo nemici del tipo del continente (1.18.0): stessa taglia del nemico della campagna
+    for (let i = 0; i < g.count; i++) queue.push({ t: t0 + g.at + i * g.every, enemy: t + "_" + PLANET_SIZE[g.enemy], w: n, x: 30 + Math.random() * (W - 60) });
+  if (n >= 3) for (let i = 0; i < 1 + Math.floor((n - 3) / 5); i++) queue.push({ t: t0 + 2 + i * 3, enemy: t + "_s", w: n, x: 30 + Math.random() * (W - 60) });
   if (CAMPAIGN.bossWaves.includes(n)) queue.push({ t: t0 + 3, enemy: "boss", def: Object.assign(bossDef(campLevel, n), { type: planetType }), w: n, x: W / 2 });
   if (n === PLANET.bossAt) queue.push({ t: t0 + 2, enemy: "boss", def: planetBossDef(), w: N_WAVES, x: W / 2 });
   queue.sort((a, b) => a.t - b.t);
@@ -2890,6 +2938,12 @@ function spawn(q) {
   });
 }
 
+// speciale fire (kamikaze): alla cupola un colpo da danno × (1 + kamiK × vita rimasta ÷ vita massima), poi muore (senza ricompense)
+function kamikaze(e) {
+  const k = 1 + SPECIAL.kamiK * clamp(e.hp / e.maxHp, 0, 1), d0 = e.dmg;
+  e.dmg = d0 * k; domeHit(e); e.dmg = d0;
+  e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5);
+}
 function touchesDome(e) {
   const dx = (e.x - DOME.cx) / (DOME.rx + e.def.r), dy = (e.y - DOME.cy) / (DOME.ry + e.def.r);
   return dx * dx + dy * dy <= 1 || e.y + e.def.r >= GROUND_Y;
@@ -2998,7 +3052,7 @@ function update(dt) {
   player.targetX = clamp(player.targetX, PLAYER_MIN, PLAYER_MAX);
   const dx = player.targetX - player.x, step = PLAYER_SPEED * dt;
   player.x += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
-  playerTick(player, dt);
+  seeInvis = !!(RG.conv && RG.conv.type === "energy"); playerTick(player, dt); seeInvis = false;   // il guardiano vede gli invisibili solo con la conversione energy
   rangerTick(dt);
   for (const s of slots) if (s) runTurret(s, dt);
 
@@ -3012,6 +3066,12 @@ function update(dt) {
     e.accT = Math.max(0, e.accT - dt); e.flash = Math.max(0, e.flash - dt); e.rot += e.spin * dt;
     e.destrT = Math.max(0, e.destrT - dt); if (e.destrT <= 0) e.destrN = 0;
     e.skyBurnT = Math.max(0, e.skyBurnT - dt); e.fireVulnT = Math.max(0, e.fireVulnT - dt);
+    if (e.def.special === "immune") {               // speciale energy: ogni immEvery s immune per immFor s (fase a caso all’uscita)
+      if (e.immCd === undefined) e.immCd = Math.random() * SPECIAL.immEvery;
+      if (e.immT > 0) e.immT -= dt; else if ((e.immCd -= dt) <= 0) { e.immT = SPECIAL.immFor; e.immCd = SPECIAL.immEvery; }
+    }
+    if (e.def.special === "dash" && !e.dashDone && e.hp <= (1 - SPECIAL.dashAt) * e.maxHp) { e.dashDone = true; e.dashT = SPECIAL.dashT; }   // speciale electric
+    if (e.dashT > 0) { e.dashT -= dt; if (!touchesDome(e)) e.y += SPECIAL.dashPx / SPECIAL.dashT * dt; }
     if (e.paraT > 0 && e.shock > 0) {                // scossa continua (Thunderbolt): danno a intervalli finché dura la paralisi
       e.shockCd -= dt;
       if (e.shockCd <= 0) { e.shockCd = 0.3; damage(e, e.shock, "electric", true, "thunder"); if (e.dead) continue; }
@@ -3019,6 +3079,7 @@ function update(dt) {
     if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, "fire", true, "burn"); if (e.burnT <= 0) e.burnDps = 0; if (e.dead) continue; }
     e.curSpeed = e.speed * (e.slowT > 0 ? 1 - 0.5 * (1 - (e.statRes || 0)) : 1) * (e.paraT > 0 ? 0 : 1);
     if (touchesDome(e)) {
+      if (e.def.special === "kami") { kamikaze(e); continue; }   // speciale fire: esplode sulla cupola
       if (e.paraT <= 0) { e.atk -= dt; if (e.atk <= 0) { domeHit(e); e.atk = ATTACK_EVERY; } }
     } else if (e.paraT <= 0) {
       e.y += e.curSpeed * dt;
@@ -3026,6 +3087,7 @@ function update(dt) {
     }
   }
 
+  for (const h of shells) h.t -= dt; shells = shells.filter((h) => h.t > 0);   // gusci (speciale physical)
   domeSince += dt; domeFlash = Math.max(0, domeFlash - dt); domeImmT = Math.max(0, domeImmT - dt);
   abilityTick(dt);
 
@@ -3338,7 +3400,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.17.0";
+const APP_VERSION = "1.18.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
