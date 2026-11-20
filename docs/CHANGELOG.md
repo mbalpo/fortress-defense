@@ -3,6 +3,18 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione — letture della Carta iniziale e della Carta extra confermate (nessuna versione nuova)
+
+- **[deciso]** (Marco): confermate le letture di Claude della 1.22.0 (DESIGN.md § 16 “Carta iniziale e Carta extra”): carte ammesse = standard e voci lv1 delle chain non bloccate,
+  una standard conta come una pila, finestra di scelta e “nessuna carta” toccando di nuovo; per la Carta extra basta che gli altri potenziamenti della barriera siano al livello 1
+  (la regola dei livelli non vale) e la scelta extra viene dopo quella normale e prima della ricompensa del mini-boss. Da **[Claude] [da rivedere]** a **[deciso]**. Il codice non cambia.
+
+**Test**: nessuno (solo documenti e checklist).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 48): tolte da “Interpretazioni da confermare” le due voci della Carta iniziale e della Carta extra; aggiunte nel riferimento dei Sigilli.
+
 ## 1.22.0 — Carta iniziale e Carta extra nell’albero dei Sigilli
 
 - **Carta iniziale** **[deciso]** (Marco, DESIGN.md § 16 “Carta iniziale e Carta extra”): nodo nuovo per il guardiano e per ogni torretta, 3 maggiori, un livello, dopo tutti gli altri nodi

@@ -955,7 +955,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Carta extra** **[deciso]** (Marco): nel ramo potenziamenti della barriera, livello 1 **3 maggiori**, ogni livello successivo **1 maggiore + 1 Sigillo**, **5 livelli**; requisito: **tutti gli altri potenziamenti
   della barriera** sbloccati. Al livello X si sceglie **una carta in più** alla fine di un’ondata, **esattamente X volte per livello giocato**, in ondate estratte a caso: a inizio livello
   si estraggono **X ondate diverse tra la 1 e la 19**; dopo ognuna, oltre alla scelta normale, una seconda scelta di carte. In **tutte le modalità**.
-- **Letture e dettagli di Claude** **[Claude] [da rivedere]**:
+- **Letture e dettagli di Claude**, confermati da Marco dopo la 1.22.0 **[deciso]**:
   - carte ammesse come Carta iniziale: le **standard** e le **voci lv1 delle chain**, se non bloccate dall’albero (le voci lv2 e lv3 richiedono la torretta al livello 2 e 3, le combo e i level up no);
     una standard scelta conta come una pila (le altre 2 restano sceglibili); il valore mostrato è quello potenziato dall’albero;
   - nell’albero: comprata la Carta iniziale si apre subito una finestra con le carte; toccando di nuovo il nodo si cambia; toccando la carta già scelta si torna a “nessuna carta”;
