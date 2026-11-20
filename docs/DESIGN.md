@@ -1283,7 +1283,9 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **Disco volante**: lente d’acciaio scuro, fascia orizzontale con le luci che scorrono (visibili davanti e dietro), cupola di vetro scuro, gradini e antenna sotto con il bagliore del tipo, scariche sul bordo.
   - **Prisma gigante**: anello di energia poco sopra il nucleo che pulsa, con tre luci che girano.
   - **Meteorite**: compare intero; scia di fuoco d’ingresso nell’atmosfera dietro, bordo davanti arroventato, leggero tremolio (solo disegno); anche i pezzi.
-  - **Ammiraglia**: forma invariata; intercettori corretti (vedi tabella).
+  - **Ammiraglia**: intercettori corretti (vedi tabella). Ridisegnata nella 1.23.2 (Marco: era sottotono rispetto agli altri boss) **[Claude] [da rivedere]**: stessa sagoma, ora incrociatore d’acciaio
+    con ali a freccia (bordi e strisce del tipo), sovrastruttura chiara, ponte di comando con vetro scuro, finestre e radar, prua e linea centrale del tipo; tre motori con gondole, scia del tipo e fiamma;
+    cinque torrette binate che seguono il guardiano, luci che corrono lungo le ali, luci di navigazione rossa e verde, baie dei missili che si accendono prima della salva, lampeggiatore di prua.
   - **Nemici**: Dardo con dorso, abitacolo, motore e luci; **Razzo** (al posto della Gemma) con punta, alette e fascia del tipo, oblò e fiamma; **Artiglio** (al posto del Corazzato) modulo
     d’assalto con cupola di vetro, anello del tipo con luci e tre artigli; Kamikaze con due alette; **Spettro** ala volante stealth con i bordi del tipo; **Saetta** freccia frastagliata verso il basso;
     **Prisma** come il Prisma gigante in miniatura (spigoli, nucleo, anello); il **guscio** del Carapace è ribaltato, con le zampe in alto.

@@ -338,9 +338,23 @@ const FOE_LAYERS = {
 FOE_LAYERS.mclaw = FOE_LAYERS.tank.map((L, i) => (i === 3 ? Object.assign({}, L, { st: "#ffd166" }) : L));    // Artiglio maggiore: l’Artiglio grande
 FOE_LAYERS.mprism = FOE_LAYERS.prism.map((L, i) => (i === 0 ? Object.assign({}, L, { st: "#ffd166" }) : L));  // Prisma maggiore: il Prisma grande
 // boss giganti (1.19.0; Nave madre e Disco volante ridisegnati nella 1.19.1) in unità della box: u × semilarghezza, v × semialtezza
+const FLAG_HULL = [[-1, -0.3], [-0.7, -0.8], [0.7, -0.8], [1, -0.3], [0.8, 0.2], [0.35, 0.35], [0.15, 1], [-0.15, 1], [-0.35, 0.35], [-0.8, 0.2]];   // sagoma dell’Ammiraglia (la stessa dalla 1.19.0)
 const CARRIER_HULL = [[-0.74, -1], [0.74, -1], [0.95, -0.82], [1, -0.2], [0.88, 0.4], [0.6, 0.78], [0.3, 1], [-0.3, 1], [-0.6, 0.78], [-0.88, 0.4], [-1, -0.2], [-0.95, -0.82]];
 const GIANT_LAYERS = {
-  flagship: [{ p: [[-1, -0.3], [-0.7, -0.8], [0.7, -0.8], [1, -0.3], [0.8, 0.2], [0.35, 0.35], [0.15, 1], [-0.15, 1], [-0.35, 0.35], [-0.8, 0.2]], r: "c", st: "#ffd166" }],
+  flagship: [                                      // Ammiraglia (1.23.2): incrociatore d’acciaio con ali a freccia, sovrastruttura, ponte di comando, strisce e prua del tipo
+    { p: [[-0.6, -0.94], [-0.38, -0.94], [-0.38, -0.7], [-0.6, -0.7]], r: "m1" }, { p: mir([[-0.6, -0.94], [-0.38, -0.94], [-0.38, -0.7], [-0.6, -0.7]]), r: "m1" },   // gondole dei motori
+    { p: [[-0.12, -0.98], [0.12, -0.98], [0.12, -0.7], [-0.12, -0.7]], r: "m1" },
+    { p: FLAG_HULL, r: "m2" },
+    { p: [[-1, -0.3], [-0.8, 0.2], [-0.35, 0.35], [-0.42, 0.08], [-0.86, -0.06]], r: "m1", s: 0 }, { p: mir([[-1, -0.3], [-0.8, 0.2], [-0.35, 0.35], [-0.42, 0.08], [-0.86, -0.06]]), r: "m1", s: 0 },
+    { p: [[-0.98, -0.33], [-0.7, -0.78], [-0.62, -0.78], [-0.88, -0.3]], r: "c", s: 0 }, { p: mir([[-0.98, -0.33], [-0.7, -0.78], [-0.62, -0.78], [-0.88, -0.3]]), r: "c", s: 0 },
+    { p: [[-0.9, -0.17], [-0.5, -0.13], [-0.5, -0.05], [-0.88, -0.09]], r: "c", d: 0.15, s: 0 }, { p: mir([[-0.9, -0.17], [-0.5, -0.13], [-0.5, -0.05], [-0.88, -0.09]]), r: "c", d: 0.15, s: 0 },
+    { p: [[-0.44, -0.74], [0.44, -0.74], [0.52, -0.3], [0.32, 0.3], [0.13, 0.86], [-0.13, 0.86], [-0.32, 0.3], [-0.52, -0.3]], r: "m3" },
+    { p: [[-0.15, 1], [0.15, 1], [0.24, 0.8], [0, 0.7], [-0.24, 0.8]], r: "c", d: 0.1 },
+    { p: [[-0.34, 0.36], [-0.21, 0.36], [-0.18, 0.58], [-0.29, 0.58]], r: "k" }, { p: mir([[-0.34, 0.36], [-0.21, 0.36], [-0.18, 0.58], [-0.29, 0.58]]), r: "k" },   // baie dei missili
+    { p: [[-0.24, -0.6], [0.24, -0.6], [0.28, -0.1], [0, 0.08], [-0.28, -0.1]], r: "m2", d: 0.1 },
+    { p: [[-0.17, -0.52], [0.17, -0.52], [0.19, -0.32], [-0.19, -0.32]], r: "m3", d: -0.15 },
+    { p: [[-0.15, -0.2], [0.15, -0.2], [0.08, -0.04], [-0.08, -0.04]], r: "gd" },
+    { p: [[-0.04, -0.06], [0.04, -0.06], [0.03, 0.6], [-0.03, 0.6]], r: "c", d: 0.3, s: 0 }],
   carrier: [                                       // Nave madre: scafo d’acciaio a cuneo, ponte rialzato, strisce e prua del tipo
     { p: CARRIER_HULL, r: "m2" },
     { p: [[-1, -0.2], [-0.95, -0.82], [-0.8, -0.82], [-0.83, -0.2], [-0.72, 0.38], [-0.88, 0.4]], r: "m1", s: 0 }, { p: mir([[-1, -0.2], [-0.95, -0.82], [-0.8, -0.82], [-0.83, -0.2], [-0.72, 0.38], [-0.88, 0.4]]), r: "m1", s: 0 },
@@ -401,13 +415,41 @@ function giantBehind(e, c, look) {
 function giantRockPath(e) { rockPath(e, e.def.r); }   // sagoma del meteorite (la HD-2D ha la sua)
 function giantDetails(e, c, look) {              // dettagli dei giganti, sopra il corpo (uguali in classica e HD-2D)
   const x = e.x, y = e.y, t = typeof clock === "number" ? clock : 0, dark = "rgba(7,11,22,0.5)";
-  if (look === "flagship") {                     // fiamme dei motori in alto, torri, ponte e oblò
-    const [hw, hh] = e.def.box;
-    for (const u of [-0.5, 0, 0.5]) flame(x + u * hw - 6, y - hh * 0.8, 18 + 6 * Math.sin(t * 13 + u * 5), 7, 1);
-    poly(GB(e, [[-0.45, -0.55], [0.45, -0.55], [0.3, 0.2], [-0.3, 0.2]]), dark, null);
-    for (const u of [-0.75, -0.4, 0.4, 0.75]) { disc(x + u * hw, y - hh * 0.15, 9, "#2a3048"); ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + u * hw, y - hh * 0.15); ctx.lineTo(x + u * hw * 1.02, y + hh * 0.25); ctx.stroke(); }
-    for (let i = -3; i <= 3; i++) disc(x + i * 12, y - hh * 0.35, 2.5, "#ffd166", 0.9);
-    disc(x, y + hh * 0.75, 7, "#fff6b0", 0.8 + 0.2 * Math.sin(t * 9));
+  if (look === "flagship") {                     // Ammiraglia (1.23.2): pannelli, motori, torrette che seguono il guardiano, radar, luci di navigazione, baie dei missili
+    const [hw, hh] = e.def.box, U = (u) => x + u * hw, V = (v) => y + v * hh;
+    ctx.strokeStyle = "rgba(7,11,22,0.35)"; ctx.lineWidth = 1;
+    for (const [u, v, w, h] of [[-0.4, -0.68, 0.22, 0.14], [0.18, -0.68, 0.22, 0.14], [-0.46, -0.24, 0.14, 0.4], [0.32, -0.24, 0.14, 0.4], [-0.27, 0.12, 0.1, 0.2], [0.17, 0.12, 0.1, 0.2],
+      [-0.82, -0.28, 0.2, 0.14], [0.62, -0.28, 0.2, 0.14], [-0.66, -0.58, 0.14, 0.18], [0.52, -0.58, 0.14, 0.18]]) ctx.strokeRect(U(u), V(v), w * hw, h * hh);
+    for (const u of [-0.49, 0, 0.49]) {            // motori in coda (in alto): ugelli, scia del tipo e fiamma
+      ctx.fillStyle = "#1b2036"; ctx.fillRect(U(u) - 9, V(-0.98) - 4, 18, 6);
+      const f = 0.7 + 0.3 * Math.sin(t * 23 + u * 9);
+      const g = ctx.createLinearGradient(0, V(-0.98) - 34 * f, 0, V(-0.98)); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, c);
+      ctx.globalAlpha = 0.8; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(U(u) - 8, V(-0.98) - 3); ctx.lineTo(U(u), V(-0.98) - 34 * f); ctx.lineTo(U(u) + 8, V(-0.98) - 3); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      flame(U(u), V(-0.98) - 3, 14 * f, 5, 0.9); disc(U(u), V(-0.98) - 2, 4, "#ffffff", 0.9 * f);
+    }
+    const px = typeof player === "object" && player ? player.x : x;
+    for (const [u, v, r] of [[-0.42, -0.36, 9], [0.42, -0.36, 9], [-0.72, -0.12, 7], [0.72, -0.12, 7], [0, 0.44, 7]]) {   // torrette binate che seguono il guardiano
+      const a = Math.atan2(GROUND_Y - V(v), px - U(u)), ox = -Math.sin(a) * 2.5, oy = Math.cos(a) * 2.5;
+      ctx.strokeStyle = "#1b2036"; ctx.lineWidth = 2.5;
+      for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(U(u) + k * ox, V(v) + k * oy); ctx.lineTo(U(u) + k * ox + Math.cos(a) * r * 1.6, V(v) + k * oy + Math.sin(a) * r * 1.6); ctx.stroke(); }
+      disc(U(u), V(v), r, "#353c56"); disc(U(u), V(v), r * 0.6, "#646f8f"); disc(U(u), V(v), r * 0.28, c, 0.9);
+    }
+    const ra = t * 2.2, rx = U(0), ry = V(-0.42);   // radar sul ponte
+    ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(rx - Math.cos(ra) * 13, ry - Math.sin(ra) * 4); ctx.lineTo(rx + Math.cos(ra) * 13, ry + Math.sin(ra) * 4); ctx.stroke();
+    disc(rx, ry, 3, c);
+    for (let i = -3; i <= 3; i++) disc(x + i * 7, V(-0.13), 1.6, "#ffd166", 0.55 + 0.4 * Math.sin(t * 3 + i));   // finestre del ponte
+    for (const sg of [-1, 1]) for (let k = 0; k < 6; k++) {   // luci che corrono lungo le ali, verso la punta
+      const q = ((t * 1.1 - k / 6) % 1 + 1) % 1; disc(U(sg * (0.52 + k * 0.07)), V(-0.09 - k * 0.012), 1.7, "#ffffff", q < 0.2 ? 1 : 0.15);
+    }
+    const blink = Math.floor(t * 2) % 2 ? 1 : 0.25;   // luci di navigazione alle punte delle ali
+    disc(U(-0.97), V(-0.3), 3, "#ff4d6a", blink); disc(U(0.97), V(-0.3), 3, "#3fe08a", blink);
+    const ready = clamp(1 - (e.icd || 0) / 2, 0, 1);   // baie dei missili: si accendono quando la salva è vicina
+    for (const sg of [-1, 1]) for (let k = 0; k < 3; k++) {
+      const bx = U(sg * 0.26) + sg * (k - 1) * 1.2, by = V(0.4 + k * 0.06);
+      ctx.fillStyle = "#e8eefc"; ctx.fillRect(bx - 4, by - 1.5, 8, 3); disc(bx + sg * 4, by, 1.5, c, 0.4 + 0.6 * ready);
+    }
+    disc(x, V(0.92), 4, "#ffffff", Math.floor(t * 3) % 3 ? 0.2 : 1);   // lampeggiatore di prua
+    disc(x, V(0.78), 7 * (0.8 + 0.2 * Math.sin(t * 9)), c, 0.45);
   } else if (look === "carrier") {               // pannelli, motori, torrette che seguono il guardiano, radar che gira, luci della pista
     const [hw, hh] = e.def.box, U = (u) => x + u * hw, V = (v) => y + v * hh;
     ctx.strokeStyle = "rgba(7,11,22,0.35)"; ctx.lineWidth = 1;

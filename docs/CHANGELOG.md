@@ -3,6 +3,20 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.23.2 — Ammiraglia ridisegnata
+
+- **Richiesta di Marco**: l’Ammiraglia (boss gigante fire) era sottotono rispetto agli altri boss. Disegno **[Claude] [da rivedere]** (DESIGN.md § 17, “Grafica rivista”): stessa sagoma e collisioni,
+  ora a strati come la Nave madre: scafo d’acciaio con ali a freccia (bordi e strisce del tipo, lati in ombra), sovrastruttura chiara, ponte di comando (vetro scuro, finestre, radar che gira),
+  prua e linea centrale del tipo, gondole dei tre motori con scia del tipo e fiamma; torrette binate che seguono il guardiano, luci che corrono sulle ali, luci di navigazione, baie dei missili
+  che si accendono quando la salva è vicina, lampeggiatore di prua. Niente più contorno dorato (come gli altri giganti). Uguale in classica e HD-2D (sprite dalle stesse sagome).
+- Codice: `GIANT_LAYERS.flagship`, `FLAG_HULL` e il ramo `flagship` di `giantDetails` in `draw.js`.
+
+**Test**: `npm test`: tutti verdi (nessun test cambiato).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): scena “Boss gigante · Ammiraglia” con la descrizione nuova.
+
+Checklist: aggiornata (versione 51): nel gruppo “Grafica rivista” la voce sull’Ammiraglia ridisegnata.
+
 ## 1.23.1 — Incremento ritarato nella campagna
 
 - **[deciso]** (Marco): ritarare il mini-boss maggiore Incremento (Artiglio maggiore) **solo nella campagna**; nei continenti va bene vincere meno.
