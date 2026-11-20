@@ -210,6 +210,7 @@ const MAJ = {
   splits: 2, splitDmg: 0.6, splitR: 0.72,   // Scissione: 2 generazioni (4 pezzi), danno ×0,6 a ogni scissione [deciso]; raggio dei pezzi ×0,72 [Claude]
   adaptStep: 0.1, adaptMax: 9,              // Adattamento: ogni 10% di vita persa, al massimo 9 cambi [deciso]
   regenEvery: 2, regenN: 4,                 // Incremento: ogni 2 s, fino a 4 nemici [deciso]
+  regenCamp: 0.25,                           // Incremento nella campagna: quota del danno al secondo del guardiano (ritarato, 1.23.1; nei continenti resta 1) [Marco: solo la campagna]
   invisAt: 0.3, invisT: 10, stopAt: 0.75,   // Invisibilità: a −30% di vita, per 10 s; si ferma con il bordo inferiore al 25% dal basso [deciso]
   deflect: 0.5, orbEvery: 0.4, orbT: 0.7,   // Deviazione: 50% del danno, una sfera ogni 0,4 s [deciso]; volo della sfera 0,7 s [Claude]
 };
@@ -3235,7 +3236,7 @@ function miniTick(e, dt) {
       e.rgTg.push(...c.slice(0, MAJ.regenN - e.rgTg.length));
     }
     if ((e.rgCd -= dt) <= 0) {                      // un solo timer da 2 s: a ogni bersaglio il danno al secondo del guardiano
-      e.rgCd = MAJ.regenEvery; const v = guardDps(player), col = TYPES[e.def.type].color;
+      e.rgCd = MAJ.regenEvery; const v = guardDps(player) * (pw ? 1 : MAJ.regenCamp), col = TYPES[e.def.type].color;
       for (const o of e.rgTg) if (o.hp < o.maxHp) {
         o.hp = Math.min(o.maxHp, o.hp + v); o.healT = 1; o.healC = col;
         if (floaters.length < 60) floaters.push({ x: o.x, y: o.y - o.def.r - 6, life: 1, max: 1, size: 14, txt: "+", color: col });
@@ -3784,7 +3785,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.23.0";
+const APP_VERSION = "1.23.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

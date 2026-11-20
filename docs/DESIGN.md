@@ -172,7 +172,10 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   Deviazione 53,3% · **Incremento 31,7%** (il più duro: rigenera i nemici con il danno al secondo del guardiano, ondata media 14,2). Epica non misurata a parte: la rampa è per difficoltà
   e il test controlla che coincida. Protezione planetaria `node tests/tools/planet.js 1,3,5,7,10 10` (100 partite per livello, 5 tipi): livello 1 (nessun maggiore) 28% · **3** 45% → 44% ·
   **5** 36% → 33% · **7** 40% → 35% · **10** 52% → 43% (al 10 l’energy da 10 a 5 su 20). Le differenze fino al 100 sono vicine al rumore (±7-10 punti con questi campioni);
-  il 100 passa da poco sopra a poco sotto il 50%, il 150 era già sotto. Nessun valore ritarato **[da decidere]** (Marco): soprattutto l’Incremento.
+  il 100 passa da poco sopra a poco sotto il 50%, il 150 era già sotto.
+- **Misura 1.23.1** (Incremento ritarato **solo nella campagna** **[deciso]** (Marco, 20/11/2026: nei continenti va bene vincere meno)): rigenerazione = danno al secondo del guardiano × `MAJ.regenCamp`.
+  Incremento da solo alle tre ondate del 100 (60 partite, stessi semi): ×1 31,7% · ×0,5 35,0% · ×0,35 36,7% · ×0,3 45,0% · **×0,25 46,7%** · ×0,2 58,3% (nave aliena 55,0%, le altre abilità 50-65%):
+  scelto **×0,25** **[Claude] [provvisorio]**. Rampa con i maggiori: **70** 55,0% · **85** 61,7% · **100** 50,0% (prima 48,3%) · **150** 45,0% (senza maggiori 46,7%: già sotto il 50%, nel rumore).
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -1338,7 +1341,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     e Modulo 16 solo all’ultimo pezzo. Per il Meteorite gigante cambia solo che anello e Modulo 16 non scattano più a ogni pezzo.
   - **Adattamento**: il profilo del tipo T è la riga `RESIST[T]` (la stessa tabella dei nemici di tipo T); una soglia per ogni 10% di vita persa (90%, 80% … 10%): a ogni soglia si confrontano
     i danni ricevuti dall’ultima, poi si azzerano; un solo colpo che passa più soglie le conta tutte (la seconda trova i danni azzerati: invariato). Contano tutti i danni, anche quelli degli stati.
-  - **Incremento**: bersagli tra i nemici entrati nello schermo; si rigenerano solo quelli feriti (fino alla vita massima), con “+” senza numero; cavi a 5 px di ampiezza nel colore del tipo.
+  - **Incremento**: nella campagna rigenera il 25% del danno al secondo del guardiano (`MAJ.regenCamp`, 1.23.1, § 5), nei continenti il 100% della regola; bersagli tra i nemici entrati nello schermo; si rigenerano solo quelli feriti (fino alla vita massima), con “+” senza numero; cavi a 5 px di ampiezza nel colore del tipo.
   - **Invisibilità**: stessa soglia dello speciale force (`SPECIAL.invisAt`); primo raggio 3 s dopo l’ingresso, poi ogni `BOSS_L.rayEvery` (livello 1 + ⌊(difficoltà − 70) ÷ 10⌋ come i giganti
     nella campagna, il livello del continente nei continenti); raggio dal centro del prisma, nel colore del tipo, largo 6 px (il gigante 9). Raggio e avviso partono anche mentre è invisibile.
     Si ferma con il bordo inferiore a y 480, 9 px sopra la cima della cupola: non tocca mai la barriera, quindi fa danno solo con il raggio (danno 9 × 2 ogni 9 s al livello 1, contro 9 ogni 1,2 s della nave aliena alla cupola).

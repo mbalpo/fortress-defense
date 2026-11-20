@@ -108,10 +108,15 @@ console.log("— Incremento (Artiglio maggiore) —");
   ev(SOLO("regen", "electric", 200) + foe("drone", 200, 230, 0.4) + foe("wisp", 150, 210, 0.4) + foe("spitter", 220, 160, 0.4) + foe("shell", 120, 260, 0.4) + foe("brute", 330, 500, 0.4) + foe("drone", 30, 520, 0.4) + " player.cd = 1e9;");
   const a = J(ev, `(() => { for (const e of enemies) e.speed = 0; update(0.05); return { tg: B.rgTg.map((o) => enemies.indexOf(o)), uniq: new Set(B.rgTg).size }; })()`);
   console.log("bersagli: i 4 più vicini, mai doppi:", a.tg.join(" "), ok(a.tg.length === 4 && a.uniq === 4 && a.tg.every((i) => i >= 1 && i <= 4)));
-  const h = J(ev, `(() => { const v = guardDps(player), hp0 = enemies.map((e) => e.hp); for (let i = 0; i < 41; i++) { player.cd = 1e9; for (const e of enemies) e.speed = 0; update(0.05); }
+  const h = J(ev, `(() => { const v = guardDps(player) * MAJ.regenCamp, hp0 = enemies.map((e) => e.hp); for (let i = 0; i < 41; i++) { player.cd = 1e9; for (const e of enemies) e.speed = 0; update(0.05); }
     const d = enemies.map((e, i) => +(e.hp - hp0[i]).toFixed(2)); return { v: +v.toFixed(2), d, plus: floaters.filter((f) => f.txt === "+").length, glow: enemies.filter((e) => e.healT > 0).length }; })()`);
-  console.log("dopo 2 s: +" + h.v + " ai 4 bersagli (danno al secondo del guardiano), agli altri 0:", h.d.slice(1).join(" "), "· “+”", h.plus, "· bagliori", h.glow,
+  console.log("campagna, dopo 2 s: +" + h.v + " ai 4 bersagli (danno al secondo del guardiano ×" + J(ev, "MAJ.regenCamp") + "), agli altri 0:", h.d.slice(1).join(" "), "· “+”", h.plus, "· bagliori", h.glow,
     ok(h.d.slice(1, 5).every((x) => Math.abs(x - h.v) < 0.01) && h.d.slice(5).every((x) => x === 0) && h.plus === 4 && h.glow === 4));
+  {
+    const { ev: pe } = planet("electric", 7);
+    const ph = J(pe, `(() => { ${SOLO("regen", "electric", 200)} ${foe("drone", 200, 230, 0.4)} player.cd = 1e9; const o = enemies[1], h0 = o.hp, v = guardDps(player); for (let i = 0; i < 41; i++) { player.cd = 1e9; for (const e of enemies) e.speed = 0; update(0.05); } return { d: +(o.hp - h0).toFixed(2), v: +v.toFixed(2) }; })()`);
+    console.log("Protezione planetaria, dopo 2 s: +" + ph.d + " = danno al secondo del guardiano intero", ph.v, ok(Math.abs(ph.d - ph.v) < 0.01));
+  }
   const k = J(ev, `(() => { const t0 = B.rgTg[0]; damage(t0, 1e9, "fire", true); update(0.01); return { has: B.rgTg.includes(t0), n: B.rgTg.length, far: B.rgTg.some((o) => o.y > 400) }; })()`);
   console.log("bersaglio morto: sostituito dal più vicino rimasto:", !k.has, k.n, ok(!k.has && k.n === 4 && k.far));
   const s = J(ev, `(() => { damage(B, 1e9, "fire", true); update(0.01); const hp0 = enemies.map((e) => e.hp); for (let i = 0; i < 50; i++) { player.cd = 1e9; update(0.05); } return enemies.every((e, i) => e.hp === hp0[i]); })()`);

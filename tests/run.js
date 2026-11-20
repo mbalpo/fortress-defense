@@ -111,7 +111,7 @@ const T = [
     /fire livelli 1-7 e 10: 1:- \| 2:- \| 3:15 \| 4:15 \| 5:10,15 \| 6:10,15 \| 7:5,10,15 \| 10:5,10,15 .* ✓/, /energy livelli 3-7: abilità viste .* ✓/, /tre abilità diverse in ogni livello: true ✓/, /combinazioni abilità-tipo 25 di 25 .* ✓/,
     /al 50%: 2 pezzi .* ✓/, /seconda scissione .* 4 pezzi .* ✓/, /ricompensa dopo ognuno dei 4 pezzi: 0 0 0 1 ✓/, /Protezione planetaria: mini-boss sconfitti dopo ogni pezzo 0 0 0 1 · ricompense in coda 1 ✓/,
     /profilo iniziale del tipo fire .* electric 1 · electric ×0.5 physical ×1.5 ✓/, /al massimo 9 cambi: .* ✓/, /parità → invariato: - 1 .* ✓/,
-    /bersagli: i 4 più vicini, mai doppi: .* ✓/, /dopo 2 s: .* “\+” 4 · bagliori 4 ✓/, /bersaglio morto: sostituito .* ✓/, /sconfitto il mini-boss la rigenerazione si ferma: true ✓/,
+    /bersagli: i 4 più vicini, mai doppi: .* ✓/, /campagna, dopo 2 s: .* ×0\.25\).* “\+” 4 · bagliori 4 ✓/, /Protezione planetaria, dopo 2 s: .* ✓/, /bersaglio morto: sostituito .* ✓/, /sconfitto il mini-boss la rigenerazione si ferma: true ✓/,
     /a −30% di vita diventa invisibile .* ✓/, /visibile dopo 10 s: true ✓/, /con uno stato .* torna visibile: true ✓/, /si ferma con il bordo inferiore a 480 .* ✓/, /raggio anche da invisibile .* 1 ✓/,
     /colpo da 100 fire: subisce 50 e devia 50 .* ✓/, /sfera a parabola sul nemico con più vita .* ✓/, /senza nemici validi non devia: 100 0 ✓/,
     /chiavi delle scoperte dei maggiori: 25 .* ✓/, /le 25 chiavi si importano tutte: 25 ✓/, /avviso al primo incontro: true .* ✓/, /pausa al 100: 3 maggiori sconosciuti: 3 .* ✓/, /pausa all’85: maggiori 2 .* ✓/,

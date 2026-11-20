@@ -3,6 +3,19 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.23.1 — Incremento ritarato nella campagna
+
+- **[deciso]** (Marco): ritarare il mini-boss maggiore Incremento (Artiglio maggiore) **solo nella campagna**; nei continenti va bene vincere meno.
+- **Valore [Claude] [provvisorio]**: nella campagna rigenera il 25% del danno al secondo del guardiano (`MAJ.regenCamp = 0.25`); nei continenti resta il 100%. DESIGN.md § 5 (“Misura 1.23.1”) e § 17.
+- **Misura** (`EQUIP=1.5 node tests/tools/curva.js 100 30` con il solo Incremento, 60 partite, stessi semi): ×1 31,7% · ×0,5 35,0% · ×0,35 36,7% · ×0,3 45,0% · ×0,25 46,7% · ×0,2 58,3%
+  (nave aliena 55,0%). Rampa con i maggiori: 70 55,0% · 85 61,7% · 100 50,0% (prima 48,3%) · 150 45,0% (senza maggiori 46,7%).
+
+**Test**: `npm test`: tutti verdi. `tests/v123.js`: l’Incremento nella campagna rigenera ×0,25, nella Protezione planetaria il danno al secondo intero (37 controlli).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo la versione, nessun disegno nuovo.
+
+Checklist: aggiornata (versione 50): la domanda sull’Incremento diventa la misura ritarata (×0,25 nella campagna); il valore tra quelli di Claude.
+
 ## 1.23.0 — Mini-boss maggiori
 
 - **Regole** **[deciso]** (Marco, DESIGN.md § 17 “Mini-boss maggiori”, § 2, § 4): cinque mini-boss con un’abilità, ognuno nei cinque tipi (25 varianti): **Asteroide maggiore** (Scissione),
