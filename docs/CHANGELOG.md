@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione — pacco regalo in Epica prima del 60 (nessuna versione nuova)
+
+- **[deciso]** (Marco): in Epica dal 31, chi non ha ancora completato il 60 di Standard riceve dal pacco regalo frammenti di ranger non ancora visibili; restano salvati per quando
+  si aprono. Il codice già fa così. DESIGN.md § 17 (“Costruito (1.21.0)”): da **[Claude] [da confermare]** a **[deciso]**.
+
+**Test**: nessuno (solo documenti e checklist).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 46): tolta da “Da decidere o confermare” la voce sui frammenti in Epica 31 prima del 60; aggiunta nel riferimento dei ranger.
+
 ## 1.21.0 — Pacco regalo
 
 - **Regole** **[deciso]** (Marco, DESIGN.md § 17 “Pacco regalo”, § 2 Guardiano, § 4 sblocchi, § 11): in Standard dal livello 61 e in Epica dal 31, non nella Protezione planetaria; una volta per livello,

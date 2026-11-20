@@ -1294,7 +1294,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   Sagoma: raggio 15 px; colore rosa `#ff5fa8` con nastro giallo. Nella scheda “Nemici del livello” c’è solo se il pacco è stato estratto per quel livello (con l’ondata e il premio).
   Scoperta: chiave `gift` in `progress.seen` (le scoperte accettano già chiavi nuove: nessun `SAVE_VERSION` nuovo; tetto delle scoperte salvate portato da 50 a 80).
   Avviso del premio per 3,5 s sotto l’avviso dei nemici. In Epica 31 un giocatore che non ha ancora completato il 60 di Standard riceve frammenti di ranger non ancora visibili:
-  restano salvati per quando si aprono **[Claude] [da confermare]**.
+  restano salvati per quando si aprono **[deciso]** (Marco, dopo la 1.21.0).
 - **Misura 1.21.0** (bot che ignorano il pacco): `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` dà **gli stessi numeri** partita per partita sulla 1.20.0 e sulla 1.21.0,
   anche con il pacco forzato in ogni livello (probabilità 100%): 61 8/15 e 5/15, 70 12/15 e 5/15, 100 9/15 e 7/15 (random / smart). L’effetto sui muri di un giocatore che insegue il pacco
   resta da misurare con un bot che lo miri **[da misurare]**.
