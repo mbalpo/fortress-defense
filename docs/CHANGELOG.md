@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione — tolti eventi a roulette e uova (nessuna versione nuova)
+
+- **[deciso]** (Marco): gli eventi a roulette / estrazione e le uova e ricompense dei ranger non si costruiscono più, perché gestiti in altro modo.
+- DESIGN.md § 13 (“Da costruire”): tolti “eventi a roulette/estrazione” e “uova”.
+
+**Test**: nessuno (solo documenti e checklist).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 42): tolte da “Resto del progetto, non ancora costruito” le voci “Eventi a roulette / estrazione” e “Uova e ricompense dei ranger”.
+
 ## 1.19.0 — Boss giganti della Protezione planetaria (fase 4)
 
 - **Cinque boss** (DESIGN.md § 17; regole di Marco, valori, nomi e aspetto **[Claude] [provvisorio]**): Ammiraglia (fire, intercettori che distruggono i colpi delle torrette),

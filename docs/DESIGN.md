@@ -567,7 +567,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 Ranger e Protezione planetaria (§ 17) · schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
-difesa planetaria con aree da sbloccare · boss a tempo · eventi a roulette/estrazione · uova ·
+difesa planetaria con aree da sbloccare · boss a tempo ·
 audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
 
 ## 14. Strumenti di lavoro
