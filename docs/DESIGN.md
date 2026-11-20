@@ -964,6 +964,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
   160 65,0 → 51,0 · 170 77,0 → 65,5 · 180 80,5 → 64,5 · 190 51,5 → 48,0 · 200 70,0 → 54,0: **media 55,7% → 50,9%** (quota 0 48,9%, quota 1 51,8%). Il calo viene dalla tabella delle rarità
   (140, 150, 160-200); la quota pesa poco e dal 150 quota 0,5 e 1 danno gli stessi numeri (il limite sono i maggiori). Già la 1.15.0 era sotto il 50% al 60, 80, 90 e 110.
   Muri sotto la soglia: 60, 80, 90, 140, 150, 190. **[deciso]** (Marco): **per ora restano così**, nessuna ritaratura; da rivedere con i ranger in arrivo.
+  **Misura 1.20.0** (nemici nuovi nella campagna dal 70, § 17 “Nemici nuovi nella campagna”; stessi semi e strumento della 1.15.1, 200 partite per muro):
+  prima → con i nemici nuovi a vita piena → dopo la taratura (vita dei nemici nuovi ×0,7, giganti al 90, 130, 170, 190 ×0,75):
+  70 60,5 → 29,0 → **54,5** · 80 25,5 → 15,5 → **21,5** · 90 47,0 → 38,0 → **52,0** · 100 53,0 → 37,0 → **58,0** · 110 53,5 → 49,5 → **55,5** · 120 63,0 → 57,5 → **69,0** ·
+  130 66,0 → 56,0 → **56,0** · 140 24,0 → 17,5 → **31,0** · 150 45,0 → 42,0 → **51,0** · 160 51,0 → 50,5 → **53,5** · 170 65,5 → 38,5 → **57,5** · 180 64,5 → 59,0 → **69,5** ·
+  190 48,0 → 36,0 → **55,0** · 200 54,0 → 50,0 → **63,5**: media dal 70 **51,5% → 53,4%**. Fuori dai muri: 75 64,0 → 68,0 · 105 83,5 → 86,5 · 145 70,5 → 61,5 (a vita piena).
+  Senza gli speciali (prova): 70 50,0 · 100 54,0 · 140 22,0: il calo a vita piena veniva soprattutto dagli speciali. Restano sotto il 50% l’80 e il 140, già sotto prima (decisione della 1.15.1).
 - **Risolti dal testo di Marco** (erano aperti): lato della Repulsiva (dove ci sono più nemici); Riflettente solo “parte” del danno (sotto il 100%); valore base di Ustionante
   e Minata (statistiche delle torrette, altrimenti fisso); Backup una sola volta per partita; Congelante usa l’indebolimento (niente stato nuovo per la velocità di attacco).
   Applicati da Claude nella fase 2, da confermare: nodi 6 e 7 fusi in “Ignorare un colpo”; un solo nodo globale per la durata degli stati.
@@ -1003,7 +1009,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
   - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).
 
-## 17. Ranger e Protezione planetaria (da costruire)
+## 17. Ranger e Protezione planetaria (costruiti: 1.16.0-1.20.0)
 
 ### Ranger
 - Sblocco al completamento del **livello 60** di Standard. **[deciso]**
@@ -1244,3 +1250,13 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Collisioni**: i giganti hanno una sagoma a rettangolo arrotondato (`def.box`, `edist`) per colpi, aree, laser (nove punti), portata e contatto con la cupola; il meteorite è un cerchio.
 - **Misura 1.19.0** (`node tests/tools/planet.js 1,5,10 30`, come le fasi 1 e 3): quasi uguale alla 1.18.1 (es. livello 10: fire 21 / 18, force 16 / 13, electric 26 / 23,
   energy 18 / 12, physical 7 / 3): chi arriva all’ondata 18 di solito batte anche il boss. Physical sempre il più duro. Nessun valore ritarato.
+
+### Nemici nuovi nella campagna (1.20.0)
+- **Dalla difficoltà 70** (livello 70 in Standard, 40 in Epica) **[deciso]** (Marco): ogni nemico delle ondate è per **metà** il classico e per metà il nemico della
+  Protezione planetaria della **stessa taglia e dello stesso tipo** (navicella → Dardo electric, cristallo-cometa → Dardo energy, meteora → Razzo fire, frammento roccioso → Razzo physical,
+  asteroide → Artiglio force), estratto a caso nemico per nemico; gli **speciali** dall’ondata 3 come nei continenti (1, più uno ogni 5 ondate, ogni 3 s), di un tipo a caso.
+- **Boss finale alternato** **[deciso]**: ai multipli di 10 gigante alle decine dispari (70, 90, 110…; Epica 40, 60…), nave madre alle pari; il gigante è del tipo che il livello
+  avrebbe (`finalBossDef`), entra all’ondata 20 come il boss finale, con la stessa vita e velocità; barra in alto “BOSS FINALE · nome”. Mini-boss classici.
+- **Valori [Claude] [provvisorio]**: livello delle abilità del gigante 1 + ⌊(difficoltà − 70) / 10⌋ (1 al 70, 14 al 200; nei continenti è il livello del continente);
+  vita dei nemici nuovi e degli speciali nella campagna **×0,7** (`CAMP_NEW.hpK`), giganti al 90, 130, 170, 190 **×0,75** (`CAMP_NEW.giantK`): misura in § 5 (“Misura 1.20.0”).
+- **Pausa**: la scheda “Nemici del livello” scorre col dito (dal 70 elenca 15 nemici); le scoperte dei nemici nuovi valgono per tipo, come nei continenti.

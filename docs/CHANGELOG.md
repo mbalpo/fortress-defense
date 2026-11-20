@@ -3,6 +3,27 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.20.0 — Nemici nuovi e boss giganti nella campagna dal 70
+
+- **Regola** **[deciso]** (Marco, DESIGN.md § 17 “Nemici nuovi nella campagna”): dalla difficoltà 70 (Standard 70, Epica 40) ogni nemico è per metà il classico e per metà
+  il nemico della Protezione planetaria della stessa taglia e tipo (`CAMP_NEW`, `newOf`, `startWave`); speciali dall’ondata 3 (tipo a caso); ai multipli di 10 boss finale alternato:
+  gigante alle decine dispari, nave madre alle pari (`campGiantDef`, `campFinalDef`). Il livello delle abilità del gigante sta nella definizione (`gl`); la vita totale per la barra
+  in alto sta sul nemico (`totMax`), anche fuori dalla Protezione planetaria.
+- **Taratura** (**[Claude] [provvisorio]**, DESIGN.md § 5 “Misura 1.20.0”): a vita piena i muri dal 70 calavano di 5-30 punti (soprattutto per gli speciali; 70 al 29%);
+  vita dei nemici nuovi e degli speciali in campagna ×0,7 e giganti al 90, 130, 170, 190 ×0,75: media dei muri dal 70 da 51,5% a 53,4%. Restano sotto il 50% l’80 (21,5) e il 140 (31,0),
+  già sotto prima.
+- **Pausa**: la scheda “Nemici del livello” scorre col dito (`pauseScroll`); le scoperte dei nemici nuovi e dei giganti si leggono per tipo (prima nella scheda risultavano sempre
+  sconosciuti, anche nei continenti); boss finale gigante con il suo nome.
+- DESIGN.md: § 17 (titolo: costruiti) e nuova sottosezione; § 5 misura 1.20.0.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/campnew.js`: niente nuovi al 69, metà al 70 e speciali per ondata, Epica 39 / 40, stesso tipo del classico, boss finali alternati
+(60-200 ed Epica), Meteorite gigante al 90 diviso e vittoria, scheda Nemici con 15 nemici che scorre, tre livelli giocati senza errori. Misure: `EQUIP=1.5 node tests/tools/curva.js L 100`
+sui muri dal 70 al 200 (200 partite per muro, prima e dopo) e prove al 70, 75, 100, 105, 140, 145, 170. `npm run screenshots`: nuove 101-102 (campagna al 70, pausa).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D).
+
+Checklist: aggiornata (versione 44): nuovo gruppo da provare “Nemici nuovi nella campagna (1.20)”; tra i valori di Claude livello dei giganti e vite ×0,7 / ×0,75; tra le cose da decidere i muri 80 e 140.
+
 ## Catalogo — tolta la sezione 8 “Da aggiungere” (nessuna versione nuova)
 
 - `tests/tools/catalog.js`: tolta la sezione 8 (e il suo collegamento nell’indice), che teneva il posto ai ranger: sono costruiti e disegnati (1.17.0-1.19.1).

@@ -543,9 +543,9 @@ function drawHud() {
     if (wave < N_WAVES) txt("Ondata " + (wave + 1) + " tra " + Math.max(0, Math.ceil(pw.next - waveTime)) + " s", W - 10, 79, 10, "#9fb4d9", "right", "600");
   } else txt("Liv " + campLevel + " · " + MODES[mode].label + (mode === "epic" ? " (diff " + curDiff() + ")" : ""), W - 10, 62, 12, mode === "epic" ? "#ff7a3d" : "#9fb4d9", "right", "600");
   const fb = enemies.find((e) => e.final && !e.dead);
-  if (fb && fb.def.giant && pw) {                    // boss gigante della Protezione planetaria: nome e vita totale (anche dopo le scissioni del meteorite)
-    txt(fb.def.name.toUpperCase(), W / 2, 94, 11, "#ffd166", "center", "800");
-    bossBar(enemies.filter((e) => e.final && !e.dead).reduce((a, e) => a + Math.max(0, e.hp), 0) / (pw.bossMax || fb.maxHp), TYPES[fb.def.type].color);
+  if (fb && fb.def.giant) {                          // boss gigante (Protezione planetaria e campagna dal 70): nome e vita totale (anche dopo le scissioni del meteorite)
+    txt((pw ? "" : "BOSS FINALE · ") + fb.def.name.toUpperCase(), W / 2, 94, 11, "#ffd166", "center", "800");
+    bossBar(enemies.filter((e) => e.final && !e.dead).reduce((a, e) => a + Math.max(0, e.hp), 0) / ((pw && pw.bossMax) || fb.totMax || fb.maxHp), TYPES[fb.def.type].color);
   } else if (fb) {                                   // boss finale: barra della vita grande, sempre visibile
     txt("BOSS FINALE", W / 2, 94, 11, "#ffd166", "center", "800");
     bossBar(fb.hp / fb.maxHp, TYPES[fb.def.type].color);
@@ -616,13 +616,16 @@ function levelEnemies() {                       // chi arriva davvero in questo 
   const D = curDiff(), kinds = new Map();
   for (let n = 1; n <= N_WAVES; n++)
     for (const g of waveSpec(n, D).groups) if (g.count > 0) {
-      const k = pw ? planetType + "_" + PLANET_SIZE[g.enemy] : g.enemy, w = kinds.get(k) || []; if (!w.includes(n)) w.push(n); kinds.set(k, w);   // Protezione planetaria: solo il tipo del continente
+      const ks = pw ? [planetType + "_" + PLANET_SIZE[g.enemy]] : campNew() ? [g.enemy, newOf(g.enemy)] : [g.enemy];   // Protezione planetaria: solo il tipo del continente; campagna dal 70: anche i nuovi
+      for (const k of ks) { const w = kinds.get(k) || []; if (!w.includes(n)) w.push(n); kinds.set(k, w); }
     }
-  if (pw) kinds.set(planetType + "_s", Array.from({ length: N_WAVES - 2 }, (_, i) => i + 3));   // speciale dall’ondata 3
+  const from3 = Array.from({ length: N_WAVES - 2 }, (_, i) => i + 3);
+  if (pw) kinds.set(planetType + "_s", from3);       // speciale dall’ondata 3
+  else if (campNew()) for (const t of TYPE_KEYS) kinds.set(t + "_s", from3);   // campagna dal 70: speciali di tutti i tipi
   return {
     kinds: [...kinds.entries()].sort((a, b) => a[1][0] - b[1][0]),
     bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: pw ? Object.assign(bossDef(campLevel, n), { type: planetType }) : bossDef(campLevel, n) })) : [],
-    fin: pw ? planetBossDef() : hasFinalBoss() ? finalBossDef(campLevel) : null,
+    fin: pw ? planetBossDef() : hasFinalBoss() ? campFinalDef(campLevel) : null,
   };
 }
 function unknownRow(y, title, sub) {             // riga "incognita" per chi non hai ancora incontrato
@@ -636,13 +639,15 @@ function pauseEnemies() {
   const { kinds, bosses, fin } = levelEnemies(), seen = (key) => progress.seen.includes(key);
   const bossTypes = [...new Set(bosses.map((b) => b.def.type))];           // ogni tipo di mini-boss si scopre a parte
   const all = kinds.length + bossTypes.length + (fin ? 1 : 0);
-  const known = kinds.filter(([k]) => seen(ENEMY_DEFS[k].look)).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen("mothership:" + fin.type) ? 1 : 0);
-  let y = 106;
+  const known = kinds.filter(([k]) => seen(seenKey(ENEMY_DEFS[k]))).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen(seenKey(fin)) ? 1 : 0);
+  const top = 100, bottom = 576;                 // l’elenco scorre col dito tra il titolo e i pulsanti (1.20.0)
+  let y = top + 6 - pauseScroll;
+  ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, bottom - top); ctx.clip();
   txt("Livello " + campLevel + " · " + MODES[mode].label + " · difficoltà " + curDiff() + " · scoperti " + known + " su " + all, 16, y, 11, "#9fb4d9", "left", "600"); y += 14;
   txt("Il colore indica il tipo di danno: resiste ×0,5, debole ×1,5", 16, y, 10, "#6f82ad", "left", "500"); y += 18;
   for (const [k, waves] of kinds) {
     const d = ENEMY_DEFS[k], r = resOf(d.type);
-    if (!seen(d.look)) { unknownRow(y, "Nemico sconosciuto", "Lo scoprirai quando entra in campo (dalla " + waves[0] + "ª ondata)"); y += 40; continue; }
+    if (!seen(seenKey(d))) { unknownRow(y, "Nemico sconosciuto", "Lo scoprirai quando entra in campo (dalla " + waves[0] + "ª ondata)"); y += 40; continue; }
     enemyIcon(d, 34, y + 18, 15);
     segs([[ENEMY_NAME[d.look] + "  ", "#e8eefc", 13, "700"], [TYPES[d.type].name, TYPES[d.type].color, 11, "700"]], 62, y + 4, 13);
     segs([["Resiste a ", MUTED], ...typeList(r.res), ["  ·  Debole a ", MUTED], ...typeList(r.weak)], 62, y + 21, 11);
@@ -665,13 +670,17 @@ function pauseEnemies() {
     }
     txt("Immuni a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 18;
   }
-  if (fin && !seen("mothership:" + fin.type)) unknownRow(y, "Boss finale sconosciuto", "Ondata " + N_WAVES + " · lo scoprirai quando entra in campo");
+  if (fin && !seen(seenKey(fin))) { unknownRow(y, "Boss finale sconosciuto", "Ondata " + N_WAVES + " · lo scoprirai quando entra in campo"); y += 40; }
   else if (fin) {
     enemyIcon(fin, 34, y + 14, 16);
-    txt("Boss finale · nave madre (ondata " + N_WAVES + ")", 62, y + 4, 13, "#ffd166", "left", "700"); y += 20;
+    txt("Boss finale · " + (fin.giant ? fin.name.toLowerCase() : "nave madre") + " (ondata " + N_WAVES + ")", 62, y + 4, 13, "#ffd166", "left", "700"); y += 20;
     bossLine(0, fin, y); y += 30;
-    txt("Immune a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500");
+    txt("Immune a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 14;
   }
+  ctx.restore();
+  const content = y + pauseScroll - top;           // altezza del contenuto: lo scorrimento non va oltre la fine
+  pauseScroll = clamp(pauseScroll, 0, Math.max(0, content - (bottom - top) + 6));
+  if (content > bottom - top) txt(pauseScroll > 0 ? "▲ ▼ trascina per scorrere" : "▼ trascina in su per vedere gli altri nemici", W / 2, bottom + 2, 10, "#8a9ac0", "center", "500");
 }
 function drawAlert() {                           // avviso "nuovo nemico" sotto la barra in alto
   const a = alerts[0]; if (!a) return;
@@ -1829,7 +1838,7 @@ if (GFX_ON === "hd2d") eval("(" + FORTRESS_DRAW_HD + ")")();
 
 // quello che serve fuori: il gioco usa draw, FX, thunderDraw e teslaDraw; il catalogo anche il resto
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
-  drawTurret, drawPlayer, guardianShape, drawCrosshair, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
+  drawTurret, drawPlayer, guardianShape, drawCrosshair, levelEnemies, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
   menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button,
   PIECE_ART, pieceIcon, modIcon, rarColor, cardMark, GFX_ON, GFX_INFO };
 }

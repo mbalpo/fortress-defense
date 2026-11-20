@@ -2882,13 +2882,15 @@ function startWave(n) {
   wave = n; waveTime = -1.2; ents = []; upBuild = false;
   for (const s of [player, ...slots]) if (s) { s.st = s.id === "player" ? { charge: s.st.charge, frenzyT: s.st.frenzyT || 0 } : {}; s.busy = 0; s.cd = Math.min(s.cd, 0.8); }
   queue = [];
+  const nw = campNew();                            // dalla difficoltà 70: metà nemici nuovi e gli speciali (1.20.0)
   for (const g of waveSpec(n, curDiff()).groups)
     for (let i = 0; i < g.count; i++)
-      queue.push({ t: g.at + i * g.every, enemy: g.enemy, x: 30 + Math.random() * (W - 60) });
+      queue.push({ t: g.at + i * g.every, enemy: nw && Math.random() < CAMP_NEW.share ? newOf(g.enemy) : g.enemy, x: 30 + Math.random() * (W - 60) });
+  if (nw && n >= 3) for (let i = 0; i < 1 + Math.floor((n - 3) / 5); i++) queue.push({ t: 2 + i * 3, enemy: TYPE_KEYS[Math.floor(Math.random() * 5)] + "_s", x: 30 + Math.random() * (W - 60) });
   if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(n))                       // mini-boss
     queue.push({ t: 3, enemy: "boss", def: bossDef(campLevel, n), x: W / 2 });
-  if (n === N_WAVES && hasFinalBoss())                                         // boss finale
-    queue.push({ t: 2, enemy: "boss", def: finalBossDef(campLevel), x: W / 2 });
+  if (n === N_WAVES && hasFinalBoss())                                         // boss finale (dal 70 alternato con i giganti)
+    queue.push({ t: 2, enemy: "boss", def: campFinalDef(campLevel), x: W / 2 });
   queue.sort((a, b) => a.t - b.t);
   state = "play";
   saveRun();                                     // partita in sospeso: si riparte da qui
@@ -2938,12 +2940,29 @@ function planetBossDef() {
   const D = curDiff(), P = PLANET_BOSS[planetType], T = [18, 19, 20].reduce((a, n) => a + planetWaveT(n, D), 0) - 2, L = campLevel;
   const v = (H / 2) / Math.max(10, T) / (levelSpeed(D) * waveSpeed(N_WAVES));   // bordo inferiore da 0 a metà schermo nelle ondate 18-20
   return { type: planetType, hp: FINAL_BOSS_HP[30] * (1 + 1.5 * Math.pow(Math.max(0, D / 10 - 4), 0.35)), speed: v, dmg: 8, boss: true, final: true, giant: true, planet: true,
-    look: P.look, name: P.name, box: P.box, r: P.box ? Math.min(P.box[0], P.box[1]) : P.r, kbRes: 1, statRes: 0.6,
+    look: P.look, name: P.name, box: P.box, r: P.box ? Math.min(P.box[0], P.box[1]) : P.r, kbRes: 1, statRes: 0.6, gl: L,
     absorb: planetType === "electric" ? BOSS_L.absorb(L) : 0, stopAt: planetType === "energy" ? H * 0.75 : 0, split: planetType === "physical" ? BOSS_L.splits(L) : 0 };
 }
+/* ---------- NEMICI NUOVI NELLA CAMPAGNA (1.20.0, DESIGN.md § 17) ----------
+   Dalla difficoltà 70 (livello 70 in Standard, 40 in Epica) [deciso, Marco]: ogni nemico delle ondate è per metà il classico e per metà il nemico
+   della Protezione planetaria della stessa taglia e dello stesso tipo; gli speciali (tipo a caso) dall’ondata 3 come nei continenti; ai multipli di 10
+   il boss finale si alterna: gigante alle decine dispari (70, 90, 110…), nave madre alle pari. Livello delle abilità del gigante e vita [Claude, provvisorio]. */
+const CAMP_NEW = { from: 70, share: 0.5, hpK: 0.7,   // hpK: vita dei nemici nuovi e degli speciali nella campagna (misura 1.20.0)
+  giantK: { 90: 0.75, 130: 0.75, 170: 0.75, 190: 0.75 } };   // fattore della vita del gigante per livello (oltre a FINAL_BOSS_K), tarato con i bot
+const campNew = () => mode !== "planet" && curDiff() >= CAMP_NEW.from;
+const campGiant = () => campNew() && Math.floor(curDiff() / 10) % 2 === 1;
+const campGiantLv = (D) => 1 + Math.floor((D - CAMP_NEW.from) / 10);   // 1 alla difficoltà 70, 14 alla 200
+const newOf = (k) => ENEMY_DEFS[k].type + "_" + PLANET_SIZE[k];           // nemico nuovo della stessa taglia e tipo
+function campGiantDef(lv) {
+  const fb = finalBossDef(lv), t = fb.type, P = PLANET_BOSS[t], L = campGiantLv(curDiff());
+  return { type: t, hp: fb.hp * (CAMP_NEW.giantK[lv] || 1), speed: fb.speed, dmg: fb.dmg, boss: true, final: true, giant: true, planet: true, gl: L,
+    look: P.look, name: P.name, box: P.box, r: P.box ? Math.min(P.box[0], P.box[1]) : P.r, kbRes: 1, statRes: 0.6,
+    absorb: t === "electric" ? BOSS_L.absorb(L) : 0, stopAt: t === "energy" ? H * 0.75 : 0, split: t === "physical" ? BOSS_L.splits(L) : 0 };
+}
+const campFinalDef = (lv) => (campGiant() ? campGiantDef(lv) : finalBossDef(lv));
 // abilità dei boss giganti, a ogni passo
 function giantTick(e, dt) {
-  const L = campLevel, b = bottomOf(e);
+  const L = e.def.gl || campLevel, b = bottomOf(e);
   if (b <= 0) return;
   if (e.def.look === "flagship") {
     e.icd = (e.icd === undefined ? 2 : e.icd) - dt;
@@ -3044,9 +3063,10 @@ function spawn(q) {
   const dq = q.def || ENEMY_DEFS[q.enemy]; if (dq.giant && pw) pw.bossMax = 0;   // vita totale del boss gigante (barra in alto), anche dopo le scissioni
   const d = q.def || ENEMY_DEFS[q.enemy], b = q.as ? ENEMY_DEFS[q.as] : d, D = curDiff();
   const hp = b.hp * levelHp(D) * waveHp(q.w || wave) * (d.final || pw ? 1 : WALL_ENEMY_HP[campLevel] || 1);
+  const hpN = !pw && d.planet && !d.giant ? CAMP_NEW.hpK : 1;   // campagna dal 70: vita dei nemici nuovi (1.20.0)
   if (d.giant && pw) pw.bossMax = hp;
-  enemies.push({ w: q.w || wave,
-    def: d, boss: !!d.boss, final: !!d.final, kbRes: d.kbRes || 0, statRes: d.statRes || 0, x: q.x, y: -(d.box ? d.box[1] : d.r), hp, maxHp: hp,
+  enemies.push({ w: q.w || wave, totMax: d.giant ? hp : 0,
+    def: d, boss: !!d.boss, final: !!d.final, kbRes: d.kbRes || 0, statRes: d.statRes || 0, x: q.x, y: -(d.box ? d.box[1] : d.r), hp: hp * hpN, maxHp: hp * hpN,
     speed: d.speed * levelSpeed(D) * waveSpeed(q.w || wave), curSpeed: 0, dmg: b.dmg * levelDmg(D) * waveDmg(q.w || wave),
     flash: 0, phase: rnd(0, 6.28), dead: false, acc: 0, accT: 0, atk: 0.3,
     shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34), rot: rnd(0, 6.28), spin: rnd(-0.8, 0.8),
@@ -3342,7 +3362,7 @@ function tapUnequip() { if (gearRO()) return; if (gearArm !== "u") { gearArm = "
 function tapLock(kind, k, lk) { gearArm = null; gearMsg = ""; toggleLock(kind, k, lk); }
 function tapLockEq() { gearArm = null; gearMsg = ""; lockEquipped(gearSel); }
 function tapLockSlot(i) { gearArm = null; gearMsg = ""; lockSlot(gearSel, i); }
-let pauseTab = "enemies", pauseQuit = false;
+let pauseTab = "enemies", pauseQuit = false, pauseScroll = 0, pauseDrag = null;   // la scheda Nemici scorre col dito (1.20.0: dal 70 i nemici sono tanti)
 // griglia dei livelli (1.12.3): modalità mostrata, pagina da 50, filtro “solo con Sigilli da prendere”, livello scelto
 let lvMode = "standard", lvPage = 0, lvFilter = false, lvSel = 1;
 // menuMode: modalità attiva del selettore del menu (frecce, griglia); cambia con il suo interruttore, la griglia e l’ultima partita (1.14.2)
@@ -3381,7 +3401,7 @@ function openGuide() { state = "guide"; guideScroll = 0; }
 function closeGuide() { state = "menu"; guideDrag = null; }
 // potenziamenti presi, dalla scelta delle carte (1.12.3)
 let upBuild = false;
-function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; pressing = false; pauseQuit = false; }
+function pauseGame() { if (state !== "play") return; state = "pause"; dragging = false; pressing = false; pauseQuit = false; pauseScroll = 0; }
 function resumeGame() { if (state !== "pause") return; state = "play"; pauseQuit = false; }
 
 /* DISEGNO: in draw.js (vedi in cima: const DRAW). */
@@ -3439,6 +3459,7 @@ cv.addEventListener("pointerdown", (e) => {
     if (state === "play") try { cv.setPointerCapture(e.pointerId); } catch (_) {}
     return;
   }
+  if (state === "pause" && pauseTab === "enemies" && p.y > 96 && p.y < 578) { pauseDrag = { y: p.y, s: pauseScroll }; return; }   // trascinare scorre i nemici in pausa (non sulle torrette)
   if (state === "play") {
     beginDrag(p);                                // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
@@ -3446,6 +3467,7 @@ cv.addEventListener("pointerdown", (e) => {
 });
 cv.addEventListener("pointermove", (e) => {
   if (state === "guide" && guideDrag) { guideScroll = Math.max(0, guideDrag.s - (toLogical(e).y - guideDrag.y)); return; }
+  if (state === "pause" && pauseDrag) { pauseScroll = Math.max(0, pauseDrag.s - (toLogical(e).y - pauseDrag.y)); return; }
   if (tapPend) {
     const p = toLogical(e); tapPend.last = p;
     if (Math.hypot(p.x - tapPend.x, p.y - tapPend.y) < RANGE_TAP.move) return;
@@ -3459,7 +3481,7 @@ function setPress(p) { press.x = p.x; press.y = Math.min(p.y, GROUND_Y - 50); }
 const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
 const stopDrag = () => { dragging = false; pressing = false; };
 cv.addEventListener("pointerup", (e) => {
-  stopDrag(); guideDrag = null;
+  stopDrag(); guideDrag = null; pauseDrag = null;
   const q = tapPend; tapPend = null;
   if (q && rtime - q.t < RANGE_TAP.ms && (state === "play" || state === "pause") && slots[q.i]) rangeShow = { i: q.i, t0: rtime };   // un solo raggio: sostituisce il precedente
   const c = cardPress; cardPress = null;
@@ -3523,7 +3545,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.19.1";
+const APP_VERSION = "1.20.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

@@ -269,3 +269,11 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   const g = game({ progress: PP, settings: { graphics: "hd2d" }, src }); g.w.__ev("openPlanet()"); g.frame(); g.save("99-planetaria-hd2d.png");
   g.w.__ev("openRangers('planet')"); g.frame(); g.save("100-ranger-hd2d.png");
 }
+{ // 1.20.0: campagna dal 70 con i nemici nuovi: battaglia e scheda Nemici della pausa (scorre)
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const g = game({ progress: { cleared: 90, seen: ALL_SEEN }, src }); const e = g.w.__ev;
+  e("setSel('standard', 70); startRun('standard'); startWave(9); domeHp = 1e6;");
+  for (let k = 0; k < 400; k++) { e("domeHp = 1e6; alerts.length = 0; if (state === 'upgrade') pick(0)"); g.frame(); }
+  g.save("101-campagna-70.png");
+  e("for (const k of Object.keys(ENEMY_DEFS)) progress.seen.push(seenKey(ENEMY_DEFS[k])); pauseGame(); pauseTab = 'enemies'"); g.frame(); g.save("102-campagna-70-pausa.png");
+}
