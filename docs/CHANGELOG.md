@@ -3,6 +3,32 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.22.0 — Carta iniziale e Carta extra nell’albero dei Sigilli
+
+- **Carta iniziale** **[deciso]** (Marco, DESIGN.md § 16 “Carta iniziale e Carta extra”): nodo nuovo per il guardiano e per ogni torretta, 3 maggiori, un livello, dopo tutti gli altri nodi
+  (torrette: anche lo Sblocco permanente). Si sceglie una carta standard o chain con cui iniziare la partita, cambiabile tra una partita e l’altra; vale anche per una torretta che arriva
+  dopo come carta; occupa un posto del livello 1 senza costare una scelta; in tutte le modalità.
+- **Carta extra** **[deciso]** (Marco): nodo nuovo della barriera, 5 livelli (3 maggiori, poi 1 maggiore + 1 Sigillo), dopo tutti gli altri potenziamenti della barriera; al livello X,
+  X scelte in più per livello giocato, dopo X ondate diverse estratte a caso tra la 1 e la 19; in tutte le modalità.
+- **Letture di Claude [da rivedere]**: carte ammesse = standard e voci lv1 delle chain non bloccate; finestra di scelta subito dopo l’acquisto e toccando il nodo (di nuovo sulla carta = nessuna);
+  per la Carta extra basta che gli altri nodi siano al livello 1 (la regola dei livelli non vale); scelta extra dopo quella normale e prima della ricompensa del mini-boss, titolo “Carta extra”;
+  nella Protezione planetaria in coda dopo l’ondata ripulita.
+- **Codice**: `buildTree` (`<entità>:start`), `barrier:extra` con `reqOne` in `nodeState`, `startOptions`, `setStartCard`, `applyStart` (in `newTurret` e in `startRun`), `extraRoll`, `extraWaves`
+  (partita sospesa: `xw`; coda della Protezione planetaria: `"extra"`); `draw.js`: riga del nodo, finestra `startPicker`, righe dell’albero più basse quando sono 11 (torrette), titolo della scelta extra.
+- **Salvataggio versione 9** (`SAVE_VERSION`): `progress.startCards`; le versioni 1-8 si importano senza carte scelte, le carte non valide si scartano.
+- Bot (`curva.js`, `planet.js`): non comprano la Carta iniziale. DESIGN.md: § 4 (budget), § 7 (versione 9), § 16 (costi, totale dei maggiori 145 → 188, nodi, regola generale, sottosezione nuova).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/v122.js`: 12 nodi Carta iniziale con costi e requisiti, acquisto con due tocchi e finestra, carte proposte (solo standard e chain lv1, le bloccate no),
+guardiano e Sky Guard equipaggiata con la carta all’inizio, Laser arrivato da carta con la sua, Beam senza nodo senza carta, Continua senza doppioni, nessun cambio con la partita in sospeso,
+“Azzera”, salvataggio v9 (esporta, reimporta, non validi, versione 8); Carta extra: costi, requisiti, livello 5 con gli altri al 1, ondate estratte, nessun `Math.random` senza il nodo, scelta extra,
+ordine con il mini-boss, Protezione planetaria e partita sospesa, livello 5 giocato con 24 carte prese, schermate dell’albero senza errori. Aggiornati i controlli che cambiano davvero:
+versione del salvataggio 9 (`savetest`, `seals`, `equip`, `schermate`, `planet`, `rangers`), nodi della Sky Guard e numero dei nodi (`seals`), maggiori della barriera 15 e dell’albero 188 (`v114`).
+`npm run screenshots`: nuove 109-113 (albero con la Carta iniziale, finestra di scelta, guardiano con 11 nodi, barriera con la Carta extra, scelta extra).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo la versione, nessun disegno nuovo.
+
+Checklist: aggiornata (versione 47): nuovo gruppo da provare “Carta iniziale e Carta extra (1.22)”; tra le interpretazioni le letture di Claude; nei riferimenti costi e regole dei due nodi.
+
 ## Documentazione — pacco regalo in Epica prima del 60 (nessuna versione nuova)
 
 - **[deciso]** (Marco): in Epica dal 31, chi non ha ancora completato il 60 di Standard riceve dal pacco regalo frammenti di ranger non ancora visibili; restano salvati per quando

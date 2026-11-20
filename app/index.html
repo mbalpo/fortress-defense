@@ -541,10 +541,13 @@ const locked = (who, id) => (TREE_LOCKS[who] || []).includes(id) && !(META.unloc
 // Costi e valori [Claude, provvisori].
 // Sigilli (◆) e Sigilli maggiori (✦, 1.12.0, Marco): le carte bloccate costano quanto il loro livello (lv1 1, lv2 2, lv3 3); lo Sblocco permanente 3 maggiori;
 // le abilità d’ingresso della barriera 1 Sigillo, le altre 3. mcosts[L] = Sigilli maggiori per passare dal livello L al L+1.
-const SEAL_COST = { chain: [1, 2, 3], permMajor: 3, abilityEntry: 1, abilityUnlock: 3 };
+const SEAL_COST = { chain: [1, 2, 3], permMajor: 3, abilityEntry: 1, abilityUnlock: 3,
+  startMajor: 3,                                   // Carta iniziale (1.22.0): 3 maggiori, un livello [deciso, Marco]
+  extra: [0, 1, 1, 1, 1], extraMajor: [3, 1, 1, 1, 1] };   // Carta extra della barriera: livello 1 3 maggiori, poi 1 maggiore + 1 Sigillo per livello [deciso, Marco]
 // nodi a livelli: il livello L costa 1 + ⌊(L − 1) / 5⌋ Sigilli (1 per i livelli 1-5, 2 per i 6-10, 3 per gli 11-15, 4 per i 16-20)
 const levelCost = (L) => 1 + Math.floor((L - 1) / 5);
 const CAT_NAME = { lu: "Level up", std: "Standard" };
+const startKind = (u) => u.cat === "std" || (u.cat === "chain" && u.lv === 1);   // carte ammesse come Carta iniziale (1.22.0): standard o voce lv1 di una chain
 // potenziamento delle carte standard: per livello del nodo, bonus in % e a numero ×(1 + 0,4·L), riduzioni della ricarica ×(1 + 0,2·L),
 // malus −1/3 per livello (zero al 3, poi diventa bonus)
 const STD_BOOST = { bonus: 0.4, reduce: 0.2, max: 5, maxDmg: 20 };   // i nodi del danno arrivano al 20 (crescita lunga, campagna fino a 200 e oltre)
@@ -602,6 +605,9 @@ function buildTree(who) {
     // Frenesia potenziata: danno in frenesia fino a ×3 al livello 3, carica +2 s per livello [Marco; valori intermedi Claude]
     nodes.push(lvNode("player:frenzy", who, "Frenesia potenziata", 3, (L) => "danno ×" + fmt(frenzyK(L)) + ", carica +" + 2 * L + " s", null, MAJ_EACH));
   }
+  // Carta iniziale (1.22.0) [deciso, Marco]: dopo tutti gli altri nodi (per le torrette anche lo Sblocco permanente); una carta standard o chain scelta tra una partita e l’altra
+  nodes.push({ id: who + ":start", who, kind: "start", name: "Carta iniziale", sub: "Parti con una carta standard o chain a scelta", req: nodes.map((n) => n.id),
+    max: 1, costs: [0], mcosts: [SEAL_COST.startMajor] });
   return nodes;
 }
 const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree(w)]));
@@ -615,6 +621,11 @@ TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + 
   lvNode("barrier:ignore", "barrier", "Ignorare un colpo", 5, (L) => pctS(TREE_VAL.ignore * L) + " dei colpi ignorati", ["barrier:red"], MAJ_FIRST),
   // Marco: la torretta o il guardiano con più carte scelte nella partita ha +5/10/15/20/25% di danno (a parità: tutti quelli in testa)
   lvNode("barrier:cards", "barrier", "Più carte, più danno", 5, (L) => "chi ha più carte: danno +" + pctS(TREE_VAL.cards * L), ["barrier:red"], MAJ_FIRST)];
+// Carta extra (1.22.0) [deciso, Marco]: dopo tutti gli altri potenziamenti della barriera (basta averli sbloccati: reqOne, la regola dei livelli non vale);
+// al livello L, L scelte di carte in più per livello giocato, dopo L ondate diverse estratte a caso tra la 1 e la 19
+TREE.barrier.push({ id: "barrier:extra", who: "barrier", kind: "level", name: "Carta extra", max: 5, costs: SEAL_COST.extra, mcosts: SEAL_COST.extraMajor,
+  req: TREE.barrier.map((n) => n.id), reqOne: true, reqMsg: "Prima tutti gli altri potenziamenti della barriera",
+  fx: (L) => L + (L === 1 ? " scelta in più" : " scelte in più") + " per livello, in ondate a caso" });
 // Abilità della barriera (DESIGN.md § 16, fase 3): 3 gruppi, una abilità equipaggiata per gruppo, dal livello 40 completato.
 // La prima di ogni gruppo è l’abilità d’ingresso (livello 1 senza spesa); la seconda si sblocca con un nodo, la terza dopo la seconda.
 // Valori per livello 1-5 [Claude, provvisori] salvo quelli dati da Marco (Potenziante, Congelante: gas e altezza, mine da 4).
@@ -796,7 +807,8 @@ const PROGRESS_KEY = "fortress-progress-v1";
 // gear = equipaggiamento: inventario, pezzi equipaggiati e Moduli installati (cleanGear)
 // majors = Sigilli maggiori da spendere (dalla 1.12.0: boss in Epica)
 // planet = Protezione planetaria (1.16.0): lv livelli completati per tipo, frags frammenti dei ranger, day partite del giorno { d: "AAAA-MM-GG", n }, eq ranger equipaggiati (1.17.0)
-const progress = { cleared: 0, clearedEpic: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, gear: { pcs: {}, mods: {}, eq: {} }, planet: null };
+// startCards = carta iniziale scelta per entità (1.22.0) { player: "dmg", sky: "burn1" }, valida solo con il nodo “Carta iniziale” comprato
+const progress = { cleared: 0, clearedEpic: 0, seen: [], seals: 0, majors: 0, claims: [], tree: {}, loadout: [], abilities: null, startCards: {}, gear: { pcs: {}, mods: {}, eq: {} }, planet: null };
 function cleanPlanet(p) {                          // da dati qualsiasi; i salvataggi precedenti alla versione 7 partono da zero
   const q = p && p.planet && typeof p.planet === "object" ? p.planet : {}, lv = {}, frags = {};
   for (const t of PLANET.order) lv[t] = q.lv && Number.isFinite(q.lv[t]) ? clamp(Math.floor(q.lv[t]), 0, 9999) : 0;
@@ -827,7 +839,12 @@ function cleanSeals(p) {
     abilities = {};
     for (const [g, , ids] of AB_GROUPS) { const id = p.abilities[g]; if (ids.includes(id) && tree["ab:" + id]) abilities[g] = id; }
   }
-  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, majors: p && Number.isFinite(p.majors) ? clamp(Math.floor(p.majors), 0, 1e6) : 0, claims, tree, loadout, abilities };
+  const startCards = {};                         // versione 9: carta iniziale per entità, solo con il nodo comprato e una carta standard o chain lv1 dell’entità
+  if (p && p.startCards && typeof p.startCards === "object") for (const who in p.startCards) {
+    const def = who === "player" ? PLAYER_DEF : TURRETS[who], u = def && def.ups.find((v) => v.id === p.startCards[who]);
+    if (u && tree[who + ":start"] && startKind(u)) startCards[who] = u.id;
+  }
+  return { seals: p && Number.isFinite(p.seals) ? clamp(Math.floor(p.seals), 0, 1e6) : 0, majors: p && Number.isFinite(p.majors) ? clamp(Math.floor(p.majors), 0, 1e6) : 0, claims, tree, loadout, abilities, startCards };
 }
 try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
@@ -959,7 +976,7 @@ const abilitiesOpen = () => progress.cleared >= CAMPAIGN.barrierUnlock;
 const nodeCost = (n) => n.costs[Math.min(nodeLv(n), n.max - 1)];             // costo del prossimo livello
 const nodeMCost = (n) => n.mcosts ? n.mcosts[Math.min(nodeLv(n), n.max - 1)] : 0;   // Sigilli maggiori del prossimo livello
 // max (livello massimo) · ready (si può comprare) · req (i nodi precedenti non sono abbastanza alti) · poor (Sigilli insufficienti)
-const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.req.some((r) => treeLv(r) < Math.min(nodeLv(n) + 1, TREE_NODE[r].max)) ? "req"
+const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.req.some((r) => treeLv(r) < (n.reqOne ? 1 : Math.min(nodeLv(n) + 1, TREE_NODE[r].max))) ? "req"
   : progress.seals < nodeCost(n) || progress.majors < nodeMCost(n) ? "poor" : "ready";
 function buyNode(n) {
   if (nodeState(n) !== "ready") return false;
@@ -982,9 +999,24 @@ function resetSection(sec) {
   const r = sectionRefund(sec); if (!r.nodes) return null;
   for (const n of SECTION_NODES[sec]()) delete progress.tree[n.id];
   progress.seals += r.seals; progress.majors += r.majors;
+  for (const n of SECTION_NODES[sec]()) if (n.kind === "start") delete progress.startCards[n.who];
   if (sec === "turrets") progress.loadout = [];
   if (sec === "barrier") progress.abilities = {};
   saveProgress(); return r;
+}
+/* ---------- CARTA INIZIALE (1.22.0, DESIGN.md § 16) ----------
+   Con il nodo comprato si sceglie una carta standard o la voce lv1 di una chain (non bloccata dall’albero) del guardiano o della torretta; si applica a inizio partita
+   (guardiano) o quando la torretta entra in campo, equipaggiata o da carta [deciso, Marco]. Occupa uno dei 3 posti del livello 1 senza costare una scelta [deciso]. */
+const startOptions = (who) => (who === "player" ? PLAYER_DEF : TURRETS[who]).ups.filter((u) => startKind(u) && !locked(who, u.id));
+let treePick = null;                             // entità di cui si sta scegliendo la carta iniziale (finestra sopra l’albero)
+function setStartCard(who, id) {
+  if (runPending() || !treeLv(who + ":start")) return false;
+  if (progress.startCards[who] === id) delete progress.startCards[who]; else if (startOptions(who).some((u) => u.id === id)) progress.startCards[who] = id; else return false;
+  saveProgress(); return true;
+}
+function applyStart(s) {                         // non passa da applyOption: non è una scelta e non va tra le carte della partita in sospeso (si riapplica da sola)
+  const id = progress.startCards[s.id], u = id && treeLv(s.id + ":start") && startOptions(s.id).find((v) => v.id === id);
+  if (u) applyUp(s, u);
 }
 function toggleEquip(id) {
   if (!progress.tree[id + ":perm"]) return false;
@@ -1187,7 +1219,7 @@ function gearRun() {
 }
 // Moduli 29 e 30: l’entità parte dal livello 2; i potenziamenti restano 12 e i level up 3 (il primo la lascia al 2) [deciso, § 15]
 function fromLv2(s) { s.level = 2; s.lv2 = true; return s; }
-function newTurret(id, i) { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); return turretsLv2 ? fromLv2(s) : s; }
+function newTurret(id, i) { const s = makeShooter(TURRETS[id], SLOT_X[i], GROUND_Y - 14); if (turretsLv2) fromLv2(s); applyStart(s); return s; }   // carta iniziale (1.22.0)
 const curDiff = () => mode === "planet" ? PLANET.diff(campLevel) : diffOf(campLevel, mode === "epic");
 const onScreen = (e) => e.def.giant ? bottomOf(e) >= 4 : e.y >= 0;   // i boss giganti sono bersagli appena si vedono [deciso]
 const living = () => enemies.filter((e) => !e.dead && onScreen(e));
@@ -2832,7 +2864,7 @@ function describe(opt) {
 }
 function applyOption(opt) {
   runCards.push(opt.kind === "new" ? ["n", opt.id] : ["u", opt.who.id, opt.up.id]);   // carte prese, per la partita in sospeso
-  if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = newTurret(opt.id, f); }
+  if (opt.kind === "new") { const f = slots.indexOf(null); slots[f] = newTurret(opt.id, f); markTop(); }
   else applyUp(opt.who, opt.up);
 }
 function giveBossRewards() {                  // il mini-boss dà carte a caso, applicate subito
@@ -2860,6 +2892,8 @@ function pick(i) {
   const opt = options[i]; if (!opt) return;
   applyOption(opt); runPicks++;
   options = [];
+  if (extraNow) { extraNow = false; options = rollOptions(cardsN); if (options.length) { extraMode = true; cardsShown(); return; } }   // Carta extra (1.22.0)
+  extraMode = false;
   if (bonusLeft > 0) { giveBossRewards(); if (rewards.length) { bonusMode = true; cardsShown(); return; } rewards = null; }
   bonusMode = false;
   startWave(wave + 1);
@@ -2890,7 +2924,7 @@ function runCounters() { return { counterLeft, lowImmUsed, domeImmT, healLeft, r
 function writeRun() { try { localStorage.setItem(RUN_KEY, JSON.stringify(suspended)); } catch (e) {} }
 function saveRun() {
   suspended = { v: 1, app: APP_VERSION, lv: campLevel, mode, wave, cards: runCards.slice(), t2: turretsLv2, p2: runP2, dome: domeHp,
-    frz: { charge: player.st.charge || 0, frenzyT: player.st.frenzyT || 0 }, c: runCounters(), ab: AB, shield: domeShield, power: powerBonus, gift: giftPlan };   // gift: ondata ed esito del pacco regalo (1.21.0)
+    frz: { charge: player.st.charge || 0, frenzyT: player.st.frenzyT || 0 }, c: runCounters(), ab: AB, shield: domeShield, power: powerBonus, gift: giftPlan, xw: extraWaves };   // xw: ondate della Carta extra (1.22.0)   // gift: ondata ed esito del pacco regalo (1.21.0)
   if (pw) Object.assign(suspended, { wave: planetResumeWave(), pt: planetType, mb: pw.mb, pq: pw.choices.slice() });   // Protezione planetaria: si riparte dall’ondata dopo l’ultima ripulita
   writeRun();
 }
@@ -2900,7 +2934,7 @@ function runFlags() { if (!suspended || state === "menu") return; suspended.c = 
 function loadRun() {
   let r = null;
   try { r = JSON.parse(localStorage.getItem(RUN_KEY) || "null"); } catch (e) {}
-  const okPlanet = r && r.mode === "planet" && planetOpen() && PLANET.land[r.pt] && r.lv === planetLv(r.pt) && Array.isArray(r.pq) && r.pq.every((c) => c === "cards" || c === "boss");
+  const okPlanet = r && r.mode === "planet" && planetOpen() && PLANET.land[r.pt] && r.lv === planetLv(r.pt) && Array.isArray(r.pq) && r.pq.every((c) => c === "cards" || c === "boss" || c === "extra");
   const ok = r && r.v === 1 && r.app === APP_VERSION && (r.mode === "standard" || r.mode === "epic" && epicUnlocked() || okPlanet) && Number.isInteger(r.lv)
     && r.lv >= 1 && (r.mode === "planet" || r.lv <= maxSelectable(r.mode)) && Number.isInteger(r.wave) && r.wave >= 1 && r.wave <= N_WAVES && Array.isArray(r.cards) && Number.isFinite(r.dome) && r.dome > 0;
   if (!ok) { if (r) clearRun(); return null; }
@@ -2959,6 +2993,8 @@ function startRun(m, resume) {
     if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
     slots[f] = newTurret(id, f);
   }
+  applyStart(player); markTop();                  // carta iniziale del guardiano (1.22.0)
+  extraWaves = resume ? extraLoad(resume.xw) : extraRoll();   // Carta extra (1.22.0)
   if (resume) resumeRun(resume); else { giftRoll(); startWave(1); }
 }
 
@@ -3130,7 +3166,7 @@ function planetTick(dt) {
   for (let n = 1; n <= wave; n++) {
     if (pw.clr[n] || queue.some((q) => q.w === n) || enemies.some((e) => e.w === n && !e.dead)) continue;
     pw.clr[n] = true;
-    if (n < N_WAVES) { pw.choices.push("cards"); saveRun(); }      // autosalvataggio: “Continua” riparte dall’ondata dopo la prima non ripulita
+    if (n < N_WAVES) { pw.choices.push("cards"); if (extraWaves.includes(n)) pw.choices.push("extra"); saveRun(); }   // Carta extra (1.22.0)      // autosalvataggio: “Continua” riparte dall’ondata dopo la prima non ripulita
   }
   if (wave === N_WAVES && !queue.length && !enemies.length) { winLevel(); return; }
   if (pw.choices.length) nextChoice();
@@ -3139,7 +3175,7 @@ function nextChoice() {                            // la prima scelta in coda: c
   while (pw.choices.length) {
     const c = pw.choices.shift();
     if (c === "boss") { bonusLeft = 1; giveBossRewards(); if (rewards.length) { bonusMode = true; state = "upgrade"; cardsShown(); return; } rewards = null; continue; }
-    bonusMode = false; rewards = null;
+    bonusMode = false; rewards = null; extraMode = c === "extra";
     cardsN = GEAR.four && Math.random() < GEAR.four ? 4 : 3;
     options = rollOptions(cardsN);                 // (scritta così perché alcuni test sostituiscono la chiamata della campagna)
     if (options.length) { state = "upgrade"; cardsShown(); return; }
@@ -3355,11 +3391,22 @@ function winLevel() {
   saveProgress();
   setSel(mode, campLevel + 1);
 }
+/* ---------- CARTA EXTRA (1.22.0, DESIGN.md § 16) ----------
+   Al livello L del nodo: a inizio livello si estraggono L ondate diverse tra la 1 e la 19 [deciso, Marco]; dopo ognuna, oltre alla scelta normale, una seconda scelta di carte.
+   In tutte le modalità [deciso]. Math.random solo con il nodo comprato. */
+let extraWaves = [], extraNow = false, extraMode = false;
+function extraRoll() {
+  const L = treeLv("barrier:extra"), w = Array.from({ length: N_WAVES - 1 }, (_, i) => i + 1), out = [];
+  for (let i = 0; i < L; i++) out.push(w.splice(Math.floor(Math.random() * w.length), 1)[0]);
+  return out.sort((a, b) => a - b);
+}
+const extraLoad = (xw) => Array.isArray(xw) ? [...new Set(xw.filter((n) => Number.isInteger(n) && n >= 1 && n < N_WAVES))].slice(0, 5) : [];
 function endWave() {
   if (giftWait >= 0 || (gift && gift.phase !== "out")) giftDone();   // l’ondata finisce prima del timer: il pacco se ne va e il premio sfuma
   gift = null; giftWait = -1;
   if (wave >= N_WAVES) { winLevel(); return; }
-  bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null;
+  bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null; extraMode = false;
+  extraNow = extraWaves.includes(wave);            // Carta extra: dopo la scelta normale, un’altra
   cardsN = GEAR.four && Math.random() < GEAR.four ? 4 : 3;                       // Modulo 22: a volte 4 carte (la scelta resta una)
   options = rollOptions();
   if (!options.length) { bonusLeft = 0; startWave(wave + 1); } else { state = "upgrade"; cardsShown(); }
@@ -3382,15 +3429,17 @@ function tapReset() {                            // “Azzera”: due tocchi, co
   if (treeArm !== "reset") { treeArm = "reset"; return; }
   treeArm = null; resetSection(treeSection());
 }
-function closeTree() { state = "menu"; treeArm = null; }
+function closeTree() { state = "menu"; treeArm = null; treePick = null; }
 const SUSPENDED_MSG = "Partita in sospeso: continua o abbandona per modificare";
 function tapNode(n) {                            // primo tocco: seleziona; secondo tocco: compra (rimborso solo azzerando la sezione)
   if (runPending()) { treeArm = null; return; }  // partita in sospeso: albero in sola lettura
   if (n.kind === "ability" && !abilitiesOpen()) { treeArm = null; return; }   // scheda Abilità bloccata fino al 40
   if (n.kind === "perm" && nodeOwned(n)) { toggleEquip(n.who); treeArm = null; return; }
+  if (n.kind === "start" && nodeOwned(n)) { treePick = n.who; treeArm = null; return; }   // Carta iniziale: si sceglie (o si cambia) la carta
   if (nodeState(n) === "max") { treeArm = null; return; }
   if (treeArm !== n.id) { treeArm = n.id; return; }
   buyNode(n); treeArm = null;
+  if (n.kind === "start" && nodeOwned(n)) treePick = n.who;   // appena comprata: si sceglie subito la carta
 }
 // pausa: il gioco si ferma (update gira solo in "play") e si apre il riepilogo
 // schermata dell’equipaggiamento: pezzo scelto, inventario (pezzi o Moduli), modalità (usa, fondi, scarta), rarità dei Moduli mostrati,
@@ -3636,16 +3685,17 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.21.0";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+const APP_VERSION = "1.22.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
 // · 7: planet (Protezione planetaria: livelli per tipo, frammenti dei ranger, partite del giorno); dalle versioni precedenti si parte da zero
 // · 8: planet.eq (ranger equipaggiati); dalla versione 7 nessun ranger equipaggiato
+// · 9: startCards (carta iniziale per entità, 1.22.0); dalle versioni precedenti nessuna carta scelta
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
-    progress: { cleared: progress.cleared, clearedEpic: progress.clearedEpic, seen: [...progress.seen], seals: progress.seals, majors: progress.majors, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, gear: JSON.parse(JSON.stringify(progress.gear)), planet: JSON.parse(JSON.stringify(progress.planet)) },
+    progress: { cleared: progress.cleared, clearedEpic: progress.clearedEpic, seen: [...progress.seen], seals: progress.seals, majors: progress.majors, claims: [...progress.claims], tree: { ...progress.tree }, loadout: [...progress.loadout], abilities: progress.abilities && { ...progress.abilities }, startCards: { ...progress.startCards }, gear: JSON.parse(JSON.stringify(progress.gear)), planet: JSON.parse(JSON.stringify(progress.planet)) },
     settings: { targeting: settings.targeting } };
 }
 const makeCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(makeSave()))));
@@ -3676,7 +3726,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
 }
 function applySave(d) {
   progress.cleared = d.cleared; progress.clearedEpic = d.clearedEpic; progress.seen = d.seen;
-  progress.seals = d.seals; progress.majors = d.majors; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.gear = d.gear; progress.planet = d.planet;
+  progress.seals = d.seals; progress.majors = d.majors; progress.claims = d.claims; progress.tree = d.tree; progress.loadout = d.loadout; progress.abilities = d.abilities; progress.startCards = d.startCards; progress.gear = d.gear; progress.planet = d.planet;
   settings.targeting = d.targeting;            // un eventuale "aim" dei file vecchi è ignorato
   saveProgress(); saveSettings(); selLevel = maxSelectable(); selEpic = maxSelectable("epic");
   clearRun();                                    // con un salvataggio importato la partita in sospeso non vale più

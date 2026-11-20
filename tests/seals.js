@@ -40,8 +40,8 @@ console.log("— Albero: acquisto dei nodi e carte sbloccate —");
   const st = (i) => ev(`nodeState(TREE.sky[${i}])`);
   const ids = "TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.card || n.kind).join(' ')";
   console.log("sblocchi della Sky Guard:", ev(ids), "| costi:", ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.costs[0]).join(' ')"),
-    ok(ev(ids) === "burn1 burn2 burn3 splitB fire again perm" && ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.costs[0]).join(' ')") === "1 2 3 2 1 2 0"
-      && ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.mcosts[0]).join(' ')") === "0 0 0 0 0 0 3"));   // dalla 1.12.0: costo = livello della carta, Sblocco permanente 3 maggiori
+    ok(ev(ids) === "burn1 burn2 burn3 splitB fire again perm start" && ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.costs[0]).join(' ')") === "1 2 3 2 1 2 0 0"
+      && ev("TREE.sky.filter((n) => n.kind !== 'level').map((n) => n.mcosts[0]).join(' ')") === "0 0 0 0 0 0 3 3"));   // dalla 1.12.0: costo = livello della carta, Sblocco permanente 3 maggiori; dalla 1.22.0 Carta iniziale 3 maggiori
   console.log("stato iniziale: lv1", st(0), "| lv2", st(1), "| finale", st(6), ok(st(0) === "ready" && st(1) === "req" && st(6) === "req"));
   ev("openTree(); treeSel = 'sky'; tapNode(TREE.sky[0])");
   console.log("primo tocco: in attesa, Sigilli", ev("progress.seals"), ok(ev("treeArm") === "sky:burn1" && ev("progress.seals") === 7));
@@ -100,7 +100,7 @@ console.log("— Salvataggio versione 2 —");
   console.log("caricato: Sigilli", ev("progress.seals"), "| premi", ev("progress.claims.join()"), "| nodi", ev("Object.keys(progress.tree).join()"),
     ok(ev("progress.seals") === 5 && ev("progress.claims.join()") === "s31,s31p" && ev("Object.keys(progress.tree).join()") === "sky:burn1"));
   const save = JSON.parse(ev("JSON.stringify(makeSave())"));
-  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 8 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
+  console.log("esportato: versione", save.version, "| Sigilli", save.progress.seals, ok(save.version === 9 && save.progress.seals === 5 && save.progress.tree["sky:burn1"] === 1));
   const v1 = JSON.stringify({ game: "fortress-defense", version: 1, progress: { cleared: 12, seen: [] }, settings: {} });
   const d1 = JSON.parse(ev(`JSON.stringify(parseSave(${JSON.stringify(v1)}))`));
   console.log("versione 1 importata: livelli", d1.cleared, "| Sigilli", d1.seals, "| nodi", Object.keys(d1.tree).length, ok(d1.cleared === 12 && d1.seals === 0 && !Object.keys(d1.tree).length));
@@ -114,7 +114,7 @@ console.log("— Fase 2: nodi a livelli —");
   const { ev } = fresh(40, { seals: 100, majors: 10 });
   console.log("nodi: Sky Guard", ev("TREE.sky.length"), "| guardiano", ev("TREE.player.length"), "| tipi", ev("TREE.types.length"), "| barriera", ev("TREE.barrier.length"),
     "| carte standard della Sky Guard:", ev("TREE.sky.filter((n) => n.kind === 'level').map((n) => n.id).join(' ')"),
-    ok(ev("TREE.sky.length") === 10 && ev("TREE.player.length") === 10 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 6));
+    ok(ev("TREE.sky.length") === 11 && ev("TREE.player.length") === 11 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 7));   // 1.22.0: Carta iniziale e Carta extra
   const costs = [], mc = []; for (let i = 0; i < 21; i++) { const before = ev("progress.seals"), mb = ev("progress.majors"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); mc.push(mb - ev("progress.majors")); }
   console.log("Danno maggiorato della Sky Guard, livelli 1-20 e oltre: costi", costs.join(""), "(totale " + costs.reduce((a, b) => a + b) + ") | maggiori", mc.join(""), "| stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
     ok(costs.join("") === "111112222233333444440" && mc.join("") === "100001000010000100000" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));

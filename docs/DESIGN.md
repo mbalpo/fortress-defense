@@ -118,6 +118,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Fino a difficoltà 10 solo nemici “piccoli” (niente asteroidi). **[deciso]**
 - Budget di scelte: 19 per partita, **28 dal livello 11** con i 3 mini-boss. Servono 19 scelte per riempire tutto al tetto lv1, 39 al tetto lv2,
   64 al tetto lv3 (4 torrette + guardiano). Massimizzarne 2 richiede almeno 26 scelte, 3 almeno 39. **[deciso]**
+  Dalla 1.22.0 la **Carta extra** della barriera aggiunge da 1 a 5 scelte per livello, e la **Carta iniziale** una carta a inizio partita per il guardiano e per ogni torretta (§ 16). **[deciso]**
   **Nessun limite di torri al livello 3** (1.10.1, Marco): tolta la regola “al massimo 2 tra torri e guardiano al massimo” (era già spenta nel codice) e le scelte saltate
   per le torrette equipaggiate: le carte si scelgono dopo ogni ondata anche con torrette equipaggiate, che quindi si aggiungono al budget. **[deciso]**
 - Progressione salvata sul dispositivo: livelli completati, nemici scoperti, Sigilli (saldo, livelli dei nodi, premi già riscossi per livello e modalità); impostazioni (bersaglio) a parte. Il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione (§ 7). **[deciso]**
@@ -203,6 +204,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   Versione 7 (1.16.0): in più `progress.planet` = `{ lv: { fire: n, … }, frags: { alfa: n, … }, day: { d: "AAAA-MM-GG", n } }` (Protezione planetaria, § 17: livelli completati per tipo,
   frammenti dei ranger, partite del giorno); le versioni 1-6 si importano con la Protezione planetaria da zero; tipi, ranger e date non validi vengono scartati. **[Claude]**
   Versione 8 (1.17.0): in più `progress.planet.eq` (ranger equipaggiati, al massimo 2 e un solo ranger di conversione); la versione 7 si importa senza ranger equipaggiati. **[Claude]**
+  Versione 9 (1.22.0): in più `progress.startCards` (Carta iniziale per entità, § 16); le versioni precedenti si importano senza carte scelte. **[Claude]**
   Le versioni 1 e 2 si importano con l’inventario vuoto; pezzi, Moduli e installazioni non validi (tipi o effetti sconosciuti, doppioni, più Moduli degli slot) vengono scartati. **[Claude]**
   Se il formato cambia: alzare `SAVE_VERSION` e gestire la migrazione in `parseSave`. Non esporta la partita in sospeso (§ 2). L’import accetta anche file con `aim` (versioni precedenti) e lo ignora; la versione del formato non cambia. **[Claude]**
 - `localStorage`: `fortress-progress-v1` (livelli, nemici scoperti, Sigilli e albero, equipaggiamento; la chiave non cambia, i campi nuovi mancanti valgono zero), `fortress-proto-v1` (impostazioni).
@@ -801,7 +803,8 @@ Regole di calcolo **[Claude] [da rivedere]**:
     Più carte più danno. **Vita %** (20 livelli): 1 maggiore ai livelli **6, 11, 16**, il livello 1 no, perché è la radice dell’albero della barriera e senza questa eccezione
     nessun nodo sarebbe acquistabile prima del primo maggiore (Epica). Si pagano anche i Sigilli normali di sempre. Le abilità d’ingresso (Rigenerazione, Repulsiva, Ustionante)
     non sono gratis: **1 Sigillo**. Chi aveva già completato il 40 con un salvataggio precedente le tiene **[deciso]**.
-  - Nodi già comprati con i costi vecchi restano. Totale di maggiori per l’albero intero: guardiano 13, ogni torretta 9, sezione per tipo 25, barriera 8 (145 in tutto).
+  - **Carta iniziale** (1.22.0, guardiano e ogni torretta): **3 maggiori**, un livello. **Carta extra** (1.22.0, barriera): livello 1 **3 maggiori**, livelli 2-5 **1 maggiore + 1 Sigillo** ciascuno. **[deciso]** (Marco)
+  - Nodi già comprati con i costi vecchi restano. Totale di maggiori per l’albero intero: guardiano 16, ogni torretta 12, sezione per tipo 25, barriera 15 (188 in tutto; fino alla 1.21.0 13, 9, 25, 8: 145).
 - **Flusso** **[deciso]**: i Sigilli cadono dal **livello 31** (nessuno prima). Standard: **1** per livello; Epica: **2** per livello (2 al primo completamento e 2 al premio della cupola al 100%, 4 in tutto), dal livello 1 di Epica. **[deciso]** (Marco; prima 3 e 3, **[da misurare]**)
   Si riscuotono al primo completamento. Non si riottengono completando di nuovo il livello, tranne **una sola volta per livello e modalità**, completandolo con la
   **barriera al 100% a fine livello** (la vita si misura alla fine: contano anche cure e Backup). Ogni livello e modalità paga quindi al massimo due volte.
@@ -813,7 +816,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Barriera
 - **Spina** **[deciso]** (schema): Vita % → Riduzione danno. Da lì due rami.
-  - **Potenziamenti avanzati**: Vita fissa · Riduzione cooldown abilità · torretta o guardiano con più carte (+cadenza) · ignorare un colpo (nodi 6 e 7 fusi: nemici normali e boss).
+  - **Potenziamenti avanzati**: Vita fissa · Riduzione cooldown abilità · torretta o guardiano con più carte (+cadenza) · ignorare un colpo (nodi 6 e 7 fusi: nemici normali e boss) · **Carta extra** (1.22.0, dopo tutti gli altri, vedi sotto).
   - **Abilità** (fino a 3 equipaggiate dal livello 40; potenziabili nell’albero), in tre gruppi per ruolo, ognuno con un’abilità d’ingresso sempre sceglibile:
     - **Resistere**: Rigenerazione · Barriera di backup · Barriera impenetrabile
     - **Controllo**: Barriera repulsiva · Barriera congelante · Barriera riflettente
@@ -838,12 +841,13 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
 ### Torrette
 - **Sezione condivisa per tipo** **[deciso]**: danno del tipo, durata degli status, danno di tutte le torrette. Valgono **solo per le torrette** (il guardiano ha già il suo albero e l’equipaggiamento).
-- **Nodi per ogni torretta (10)** **[deciso]** (erano 9: il level up lv1 è stato aggiunto nella 1.9.4, Marco):
+- **Nodi per ogni torretta (11)** **[deciso]** (erano 9: il level up lv1 è stato aggiunto nella 1.9.4, la Carta iniziale nella 1.22.0, Marco):
   - sblocco della chain da 3 voci (3 nodi, in sequenza);
   - sblocco di uno dei due lv2 dell’altra chain (1);
   - sblocco di un level up lv1 (1) e di un level up lv2 (1), come per il guardiano;
   - potenziamento delle 3 carte standard (3 nodi, con più livelli ciascuno): azzerano i malus e aumentano anche di molto i bonus, con l’obiettivo di restare efficaci fino a ~200 livelli di campagna;
-  - **sblocco permanente della torretta** (1, nodo finale).
+  - **sblocco permanente della torretta** (1);
+  - **Carta iniziale** (1, dalla 1.22.0, dopo tutti gli altri compreso lo Sblocco permanente; vedi sotto).
 - **Sblocco permanente**: con il nodo acquistato la torretta si può equipaggiare prima dell’ondata 1, fino a 4. Dalla 1.10.1 le torrette equipaggiate **non consumano scelte** (prima le prime N scelte venivano saltate): le carte restano 19 (28 dal livello 11) in più delle torrette equipaggiate. Le torrette già equipaggiate non escono più come carte. **[deciso]**
 - **Carte bloccate** (non disponibili fino all’acquisto, dal livello 1; i livelli 1-30 si giocano con il pool libero, vedi § 5) **[Claude] [da rivedere]**.
   Criterio: si blocca la carta che aggiunge una meccanica o il salto di potenza maggiore; restano libere quelle numeriche.
@@ -865,7 +869,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 | Teslacoil | Sovraccarico | Sfera rallentante | Esplosione a catena | Esplosioni paralizzanti |
 | Gravity Vortex Gun | Buco nero statico | Varchi stabili | Buco nero iperdenso | Secondo buco nero |
 
-### Guardiano **[deciso]** (10 nodi dalla 1.12.0)
+### Guardiano **[deciso]** (10 nodi dalla 1.12.0, 11 dalla 1.22.0 con la Carta iniziale)
 - Sblocco della chain **Colpi esplosivi** (3 nodi, in sequenza); lv2 **Frenesia furiosa**; level up lv1 **Colpo pesante**; level up lv2 **Rimbalzo**.
 - Potenziamenti: carta standard **Danno maggiorato**; riduzione del malus di **+1 proiettile**; **Ventaglio potenziato** (1.12.0, prima “ampliato”: non aggiunge proiettili, alza il danno dei secondari dal 30% all’**80%** del principale al livello 3; 47%, 63%, 80%); **Frenesia potenziata** (1.12.0, 3 livelli): danno in frenesia da ×1,35 a ×1,9, ×2,45, **×3** e carica **+2 s per livello** (32, 34, 36 s; con Carica rapida da 25). **[deciso]** (valori intermedi **[Claude]**)
 - Restano libere: chain Frenesia (lv1, Carica rapida, lv3), Ventaglio, Perforazione II, Cadenza maggiorata, le tre carte standard.
@@ -943,8 +947,31 @@ Regole di calcolo **[Claude] [da rivedere]**:
   125 84,5 · 175 99,5 (respiro tra i muri). **Senza equipaggiamento** (solo albero atteso): 40 17% · 100 3% · 200 0%: dal 40 l’equipaggiamento diventa necessario.
   Rumore circa ±7 punti per muro con 200 partite.
 
+### Carta iniziale e Carta extra (1.22.0)
+- **Carta iniziale** **[deciso]** (Marco): nel ramo del guardiano e per ogni torretta, **3 maggiori**, un solo livello; requisito: **tutti gli altri nodi** del guardiano o della torretta sbloccati
+  (per le torrette anche lo **Sblocco permanente**). Permette di scegliere **una carta standard o chain** tra quelle disponibili per il guardiano o la torretta, con cui **iniziare la partita**;
+  la carta si può cambiare tra una partita e l’altra. Vale anche per una torretta che **arriva dopo come carta** (non solo per quelle equipaggiate): la riceve quando entra in campo.
+  **Occupa uno dei 3 posti del livello 1** (e quindi dei 12) senza costare una scelta del budget. Vale in **tutte le modalità** (campagna, Epica, Protezione planetaria).
+- **Carta extra** **[deciso]** (Marco): nel ramo potenziamenti della barriera, livello 1 **3 maggiori**, ogni livello successivo **1 maggiore + 1 Sigillo**, **5 livelli**; requisito: **tutti gli altri potenziamenti
+  della barriera** sbloccati. Al livello X si sceglie **una carta in più** alla fine di un’ondata, **esattamente X volte per livello giocato**, in ondate estratte a caso: a inizio livello
+  si estraggono **X ondate diverse tra la 1 e la 19**; dopo ognuna, oltre alla scelta normale, una seconda scelta di carte. In **tutte le modalità**.
+- **Letture e dettagli di Claude** **[Claude] [da rivedere]**:
+  - carte ammesse come Carta iniziale: le **standard** e le **voci lv1 delle chain**, se non bloccate dall’albero (le voci lv2 e lv3 richiedono la torretta al livello 2 e 3, le combo e i level up no);
+    una standard scelta conta come una pila (le altre 2 restano sceglibili); il valore mostrato è quello potenziato dall’albero;
+  - nell’albero: comprata la Carta iniziale si apre subito una finestra con le carte; toccando di nuovo il nodo si cambia; toccando la carta già scelta si torna a “nessuna carta”;
+    con una partita in sospeso non si cambia (come il resto dell’albero); “Azzera” della sezione toglie anche la carta scelta;
+  - Carta extra: “sbloccati” = livello almeno 1; la **regola dei livelli non vale** (si arriva al 5 con gli altri nodi al livello 1); le ondate si estraggono con `Math.random` solo con il nodo comprato
+    (senza il nodo le calibrazioni non cambiano); la scelta extra viene dopo quella normale e prima della ricompensa del mini-boss; titolo “Carta extra”; Modulo 22 (4 carte) e “Rinnova le carte”
+    valgono come nella scelta normale; nella Protezione planetaria la scelta extra va in coda dopo quella dell’ondata ripulita;
+  - partita in sospeso: salvate le ondate estratte (`xw`); la carta iniziale si riapplica da sola alla ripresa (non è tra le carte rigiocate);
+  - salvataggio **versione 9**: `progress.startCards` = `{ player: "dmg", sky: "burn1" }`; le versioni precedenti si importano senza carte scelte; carte non valide (nodo non comprato, carta non standard né chain lv1) scartate;
+  - bot (`curva.js`, `planet.js`): non comprano la Carta iniziale (non saprebbero sceglierla); la Carta extra sì. Nessuna misura nuova: i due nodi aggiungono solo potenza e arrivano tardi,
+    quindi i muri non scendono sotto la soglia del 50% (§ 15).
+- **Costruito nella 1.22.0**: `buildTree` (nodo `<entità>:start`), `TREE.barrier` (`barrier:extra`, `reqOne`), `startOptions`, `setStartCard`, `applyStart`, `extraRoll`; finestra `startPicker` in `draw.js`.
+
 ### Regole generali
 - I Sigilli non danno scelte o carte in più: il budget di scelte (§ 4) resta valido. **[deciso]** Eccezione dalla 1.10.1: le torrette equipaggiate non consumano più scelte (§ 4).
+  Eccezioni dalla 1.22.0 **[deciso]** (Marco): la **Carta iniziale** dà una carta dall’inizio della partita e la **Carta extra** da 1 a 5 scelte in più per livello (sotto).
 - **Da misurare con i bot**: muri 10/20/30 con il pool libero; potenza richiesta fino a 200 livelli (con la formula attuale la vita base dei nemici è ×1,9 al 100 e ×3,2 al 200 rispetto al 30, ma la curva oltre il 30 cambierà);
   costi e livelli dei nodi; valori dei tetti; effetto sulle prime ondate delle torrette in anticipo; effetto dei maggiori sulla barriera: Vita % resta acquistabile fino al livello 5,
   ma Riduzione danno e gli altri 4 nodi richiedono un maggiore e arrivano dopo il primo (Epica); muri 40 e 50.

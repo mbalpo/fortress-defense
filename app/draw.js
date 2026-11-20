@@ -1007,7 +1007,7 @@ function upgradeScreen() {
   dim(0.84);
   if (upBuild) { upBuildScreen(); return; }
   if (rewards) { rewardScreen(); return; }
-  txt(bonusMode ? "Ricompensa mini-boss" : "Ondata " + wave + " superata", W / 2, 86, 24, bonusMode ? "#ffd166" : "#3fe0a0", "center", "800");
+  txt(bonusMode ? "Ricompensa mini-boss" : extraMode ? "Carta extra" : "Ondata " + wave + " superata", W / 2, 86, 24, bonusMode || extraMode ? "#ffd166" : "#3fe0a0", "center", "800");   // Carta extra della barriera (1.22.0)
   txt("Scegli un potenziamento", W / 2, 116, 13, "#9fb4d9", "center", "500");
   const four = options.length > 3, step = four ? 100 : 122, h = four ? 92 : 110, k = h / 110;   // con 4 carte (Modulo 22) sono più basse
   options.forEach((opt, i) => {
@@ -1030,27 +1030,31 @@ function upgradeScreen() {
 const TREE_TABS = [["player", "Guardiano"], ["turrets", "Torrette"], ["barrier", "Barriera"]];
 // costo del prossimo livello: Sigilli maggiori (✦) e normali (◆)
 const costLabel = (n) => { const m = nodeMCost(n), c = nodeCost(n); return (m ? m + " ✦" : "") + (m && c ? " + " : "") + (c || !m ? c + " ◆" : ""); };
-function treeNodeRow(n, y, x0, w0) {
-  const X = x0 || 16, Wd = w0 || 328, R = X + Wd;      // posizione e larghezza della riga
+function treeNodeRow(n, y, x0, w0, h0) {
+  const X = x0 || 16, Wd = w0 || 328, R = X + Wd, H0 = h0 || 40, q = H0 / 40;   // posizione, larghezza e altezza della riga (più bassa con 11 nodi, 1.22.0)
   const st = nodeState(n), L = nodeLv(n), armed = treeArm === n.id, eq = n.kind === "perm" && progress.loadout.includes(n.who);
   const full = st === "max", stroke = full ? (eq ? "#c9a2ff" : "#3fe0a0") : armed ? "#ffd166" : st === "ready" ? "#7fa0e0" : "#2c3a5f";
-  button(X, y, Wd, 40, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
+  button(X, y, Wd, H0, "", () => tapNode(n), { stroke, fill: full ? "rgba(63,224,160,0.10)" : L ? "rgba(63,224,160,0.05)" : "rgba(18,30,58,0.92)" });
   const name = (ny) => txt(n.name, X + 10, ny, 12, st === "req" && !L ? "#6f82ad" : "#e8eefc", "left", "700");
   let sub = n.sub, subC = "#6f82ad";
   if (n.kind === "level" || n.kind === "ability") { sub = !L ? "Livello 1: " + n.fx(1) : n.fx(L) + (full ? "" : " → " + n.fx(L + 1)); subC = L ? "#9fb4d9" : "#6f82ad"; }
   if (armed) { sub = "Tocca di nuovo per spendere " + costLabel(n); subC = "#ffd166"; }
-  else if (st === "req") sub = n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" || n.kind === "ability" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
+  else if (st === "req") sub = n.reqMsg ? n.reqMsg : n.kind === "start" ? (n.who === "player" ? "Prima tutti gli altri nodi del guardiano" : "Prima tutti gli altri nodi, anche lo Sblocco permanente") : n.kind === "perm" ? "Prima tutti gli sblocchi della torretta" : n.kind === "level" || n.kind === "ability" ? "Prima il nodo “" + TREE_NODE[n.req[0]].name + "” al livello " + (L + 1) : "Prima il nodo sopra";
   else if (full && n.kind === "perm") { sub = eq ? "In campo dall’ondata 1 · tocca per togliere" : "Tocca per equipaggiare (" + progress.loadout.length + "/4)"; subC = eq ? "#c9a2ff" : "#9fb4d9"; }
+  else if (full && n.kind === "start") {          // Carta iniziale (1.22.0): la carta scelta, o l’invito a sceglierla
+    const id = progress.startCards[n.who], u = id && startOptions(n.who).find((v) => v.id === id);
+    sub = u ? "Carta: " + u.name + " · tocca per cambiarla" : "Tocca per scegliere la carta"; subC = u ? "#c9a2ff" : "#ffd166";
+  }
   // descrizione su una riga o, se non ci sta, su due (1.14.2): a capo prima di “→ livello successivo”, altrimenti tra le parole
   const sw = Wd - 20 - tw(costLabel(n), 12, "700") - 8;
-  if (tw(sub, 10, "500") <= sw) { name(y + 13); txt(sub, X + 10, y + 29, 10, subC, "left", "500"); }
+  if (tw(sub, 10, "500") <= sw) { name(y + 13 * q); txt(sub, X + 10, y + 29 * q, 10, subC, "left", "500"); }
   else {
     const k = sub.indexOf(" → "), two = k > 0 ? [sub.slice(0, k), sub.slice(k + 1)] : wrap(sub, sw, 9.5);
-    name(y + 10); fitTxt(two[0], X + 10, y + 23, sw, 9.5, subC, "left", "500"); fitTxt(two.slice(1).join(" "), X + 10, y + 33, sw, 9.5, subC, "left", "500");
+    name(y + 10 * q); fitTxt(two[0], X + 10, y + 23 * q, sw, 9.5, subC, "left", "500"); fitTxt(two.slice(1).join(" "), X + 10, y + 33 * q, sw, 9.5, subC, "left", "500");
   }
-  if (n.max > 1) txt(L + "/" + n.max, R - 44, y + 13, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
-  if (full) txt("✓", R - 12, y + 20, 15, "#3fe0a0", "right", "800");
-  else txt(costLabel(n), R - 10, y + (n.max > 1 ? 29 : 20), 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : nodeMCost(n) ? "#ffd166" : "#c9a2ff", "right", "700");
+  if (n.max > 1) txt(L + "/" + n.max, R - 44, y + 13 * q, 10, L ? "#3fe0a0" : "#6f82ad", "right", "700");
+  if (full) txt("✓", R - 12, y + 20 * q, 15, "#3fe0a0", "right", "800");
+  else txt(costLabel(n), R - 10, y + (n.max > 1 ? 29 : 20) * q, 12, st === "poor" ? "#ff7a7a" : st === "req" ? "#6f82ad" : nodeMCost(n) ? "#ffd166" : "#c9a2ff", "right", "700");
 }
 function treeScreen() {
   dim(0.92);
@@ -1068,7 +1072,7 @@ function treeScreen() {
       { size: 12, fill: on ? "rgba(201,162,255,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#c9a2ff" : "#2c4272", color: on ? "#e8eefc" : "#9fb4d9" });
   });
   // righe alte 40 a passo 45; se non stanno nello schermo (10 nodi per torretta) il passo si stringe fino a far finire l’ultima a 636
-  const rows = (list, y0) => { const step = Math.min(45, (636 - 40 - y0) / Math.max(1, list.length - 1)); list.forEach((n, i) => treeNodeRow(n, y0 + i * step)); };
+  const rows = (list, y0) => { const step = Math.min(45, (636 - 40 - y0) / Math.max(1, list.length - 1)), h = Math.min(40, step - 3); list.forEach((n, i) => treeNodeRow(n, y0 + i * step, 0, 0, h)); };
   if (treeTab === "player") {
     txt("Guardiano · sblocchi e carte standard", 16, 98, 12, "#9fb4d9", "left", "700");
     rows(TREE.player, 112);
@@ -1100,6 +1104,25 @@ function treeScreen() {
       txt("Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + ".", 16, 140 + TREE.barrier.length * 45 + 8, 10, "#6f82ad", "left", "500");
     } else treeAbilities();
   }
+  if (treePick) startPicker(treePick);
+}
+// Carta iniziale (1.22.0): finestra sopra l’albero con le carte standard e le voci lv1 delle chain non bloccate; tocco = sceglie (di nuovo sulla scelta = nessuna carta)
+function startPicker(who) {
+  buttons.length = 0;                             // l’albero sotto non risponde ai tocchi
+  const def = who === "player" ? PLAYER_DEF : TURRETS[who], list = startOptions(who), c = who === "player" ? "#e8eefc" : TYPES[def.type].color, cur = progress.startCards[who];
+  const h = 92 + list.length * 46, y0 = Math.max(60, (H - h) / 2);
+  dim(0.6); rr(16, y0, W - 32, h, 12); ctx.fillStyle = "rgba(12,20,40,0.98)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#c9a2ff"; ctx.stroke();
+  txt("Carta iniziale · " + (who === "player" ? "Guardiano" : def.name), W / 2, y0 + 20, 14, c, "center", "800");
+  txt("Dall’ondata 1, occupa un posto del livello 1", W / 2, y0 + 38, 10, "#9fb4d9", "center", "500");
+  const sh = makeShooter(def, 0, 0);               // per il testo delle standard con il valore potenziato dall’albero, come nella scelta delle carte (1.14.3)
+  list.forEach((u, i) => {
+    const y = y0 + 50 + i * 46, on = cur === u.id;
+    button(28, y, W - 56, 40, "", () => setStartCard(who, u.id), { stroke: on ? "#c9a2ff" : "#2c4272", fill: on ? "rgba(201,162,255,0.16)" : "rgba(18,30,58,0.92)" });
+    txt(u.name, 40, y + 14, 12, on ? "#e8eefc" : "#c9d4ee", "left", "700");
+    fitTxt((u.cat === "std" ? "Standard · " + stdDesc(sh, u) : "Chain · voce lv1 · " + u.desc), 40, y + 29, W - 104, 10, "#6f82ad", "left", "500");
+    if (on) txt("✓", W - 40, y + 21, 15, "#c9a2ff", "right", "800");
+  });
+  button(W / 2 - 60, y0 + h - 38, 120, 30, "Fatto", () => { treePick = null; }, { size: 12, stroke: "#c9a2ff" });
 }
 // abilità della barriera: tre gruppi, un pallino per equipaggiare (una per gruppo), la riga per comprare i livelli
 function treeAbilities() {

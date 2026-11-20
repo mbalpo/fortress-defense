@@ -31,7 +31,7 @@ console.log("— Maggiori della barriera —");
   const { ev } = fresh(40, { seals: 50, majors: 0 });
   const tot = ev("Object.values(TREE_NODE).reduce((a, n) => a + (n.mcosts || []).reduce((x, y) => x + y, 0), 0)");
   const bar = ev("TREE.barrier.reduce((a, n) => a + n.mcosts.reduce((x, y) => x + y, 0), 0)");
-  console.log("maggiori: barriera", bar, "| albero intero", tot, ok(bar === 8 && tot === 145));
+  console.log("maggiori: barriera", bar, "| albero intero", tot, ok(bar === 15 && tot === 188));   // 1.22.0: Carta extra 3 + 4 nella barriera, Carta iniziale 3 per guardiano e 11 torrette
   for (let i = 0; i < 5; i++) ev("buyNode(TREE_NODE['barrier:hp'])");
   console.log("Vita % al 5 senza maggiori:", ev("treeLv('barrier:hp')"), "| al 6:", ev("nodeState(TREE_NODE['barrier:hp'])"), "| Riduzione danno:", ev("nodeState(TREE_NODE['barrier:red'])"),
     ok(ev("treeLv('barrier:hp')") === 5 && ev("nodeState(TREE_NODE['barrier:hp'])") === "poor" && ev("nodeState(TREE_NODE['barrier:red'])") === "poor"));

@@ -115,7 +115,7 @@ console.log("— Salvataggio e partita sospesa —");
   const { g, ev } = fresh(60, { planet: { lv: { fire: 3, force: 1 }, frags: { alfa: 12, ceo: 4, xyz: 9 }, day: { d: "2026-11-19", n: 1 } } });
   const save = JSON.parse(ev("JSON.stringify(makeSave())"));
   console.log("esportato: versione", save.version, "| planet", JSON.stringify(save.progress.planet.lv), "| frammenti Alfa", save.progress.planet.frags.alfa, "| sconosciuti tolti", !("xyz" in save.progress.planet.frags),
-    ok(save.version === 8 && save.progress.planet.lv.fire === 3 && save.progress.planet.lv.energy === 0 && save.progress.planet.frags.alfa === 12 && !("xyz" in save.progress.planet.frags)));
+    ok(save.version === 9 && save.progress.planet.lv.fire === 3 && save.progress.planet.lv.energy === 0 && save.progress.planet.frags.alfa === 12 && !("xyz" in save.progress.planet.frags)));
   const v6 = JSON.parse(ev(`JSON.stringify(parseSave(JSON.stringify({ game: "fortress-defense", version: 6, progress: { cleared: 70, seen: [] } })))`));
   console.log("versione 6 importata: Protezione planetaria da zero", JSON.stringify(v6.planet.lv), ok(Object.values(v6.planet.lv).every((n) => n === 0) && v6.planet.day.n === 0));
   console.log("partite di oggi dal salvataggio: rimaste", ev("gamesLeft()"), ok(ev("gamesLeft()") === 1));

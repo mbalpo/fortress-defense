@@ -24,9 +24,9 @@ const sealsAt = (L) => Math.floor(PER * Math.max(0, L - 31) + (2 + 2 * EPICA100)
 const majorsAt = (L) => Math.floor(epicAt(L) * (1 - 0.9 ** 3) + Math.floor(epicAt(L) / 10));
 // strategia di spesa: costo del prossimo livello × peso; vince il più basso (pari: ordine dell'albero)
 const SPEND = `(() => {
-  const W = (n) => n.kind === "perm" ? 99 : n.id === "types:all" || n.id === "player:std:dmg" || n.id === "barrier:cards" ? 1 : n.id === "barrier:hp" || n.id === "barrier:red" ? 1.3
+  const W = (n) => n.kind === "perm" || n.kind === "start" ? 99 : n.id === "types:all" || n.id === "player:std:dmg" || n.id === "barrier:cards" ? 1 : n.id === "barrier:hp" || n.id === "barrier:red" ? 1.3
     : n.id.startsWith("types:dmg") ? 2.5 : /:std:dmg$/.test(n.id) ? 4 : n.kind === "ability" ? (!n.req.length ? 3 : 99) : n.kind === "level" ? 6 : 3;
-  // un Sigillo maggiore vale come 5 normali nella scelta (i bot non equipaggiano torrette: lo Sblocco permanente non serve)
+  // un Sigillo maggiore vale come 5 normali nella scelta (i bot non equipaggiano torrette: lo Sblocco permanente non serve; non scelgono la Carta iniziale, 1.22.0)
   for (;;) {
     let best = null, bw = Infinity;
     for (const n of Object.values(TREE_NODE)) if (nodeState(n) === "ready") { const w = (nodeCost(n) + 5 * nodeMCost(n)) * W(n); if (w < bw) { bw = w; best = n; } }

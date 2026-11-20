@@ -20,7 +20,7 @@ function patch(h) {
 }
 // albero atteso: come curva.js (Sigilli e maggiori attesi, stessa strategia di spesa)
 const SPEND = `(() => {
-  const W = (n) => n.kind === "perm" ? 99 : n.id === "types:all" || n.id === "player:std:dmg" || n.id === "barrier:cards" ? 1 : n.id === "barrier:hp" || n.id === "barrier:red" ? 1.3
+  const W = (n) => n.kind === "perm" || n.kind === "start" ? 99 : n.id === "types:all" || n.id === "player:std:dmg" || n.id === "barrier:cards" ? 1 : n.id === "barrier:hp" || n.id === "barrier:red" ? 1.3
     : n.id.startsWith("types:dmg") ? 2.5 : /:std:dmg$/.test(n.id) ? 4 : n.kind === "ability" ? (!n.req.length ? 3 : 99) : n.kind === "level" ? 6 : 3;
   for (;;) {
     let best = null, bw = Infinity;

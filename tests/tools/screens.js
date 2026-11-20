@@ -295,3 +295,13 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   e(SET + " gift.y = -2; gift.phase = 'in'; pressing = false;"); for (let k = 0; k < 8; k++) { e("domeHp = domeMax"); g.frame(); } g.save((n++) + "-pacco-avviso.png");
   e("pauseGame(); pauseTab = 'enemies'"); g.frame(); g.save((n++) + "-pacco-pausa.png");
 }
+{ // 1.22.0: Carta iniziale (riga nell’albero con 11 nodi, finestra di scelta) e Carta extra (riga della barriera, scelta extra dopo l’ondata)
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const g = game({ progress: { cleared: 90, seen: ALL_SEEN, seals: 40, majors: 12 }, src }), e = g.w.__ev;
+  e("for (const w of ['player', 'sky', 'barrier']) for (const n of TREE[w]) progress.tree[n.id] = 1; progress.tree['barrier:extra'] = 2; progress.startCards = { sky: 'burn1' }; state = 'tree'; treeTab = 'turrets'; treeSel = 'sky';");
+  g.frame(); g.save("109-albero-carta-iniziale.png");
+  e("treePick = 'sky'"); g.frame(); g.save("110-carta-iniziale-scelta.png");
+  e("treePick = null; treeTab = 'player'"); g.frame(); g.save("111-albero-guardiano-11-nodi.png");
+  e("treeTab = 'barrier'; barrierTab = 'nodes'"); g.frame(); g.save("112-albero-carta-extra.png");
+  e("closeTree(); setSel('standard', 12); startRun('standard'); extraWaves = [1]; queue = []; enemies = []; waveTime = 1; update(0.02); pick(0); cardsAt = -9;"); g.frame(); g.save("113-carta-extra.png");
+}

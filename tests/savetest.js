@@ -46,7 +46,7 @@ const tick = () => new Promise((r) => setTimeout(r, 30));
   const h = game({});
   h.tap(180, 580); h.frame();
   const before = h.w.localStorage.getItem("fortress-progress-v1");
-  for (const [label, text, expect] of [["testo qualsiasi", "ciao", "leggibile"], ["altro gioco", JSON.stringify({ game: "altro", version: 1 }), "Non è un salvataggio di Planet"], ["codice troncato", g.cap.clip.slice(0, 40), "non è valido"], ["versione futura", JSON.stringify({ game: "fortress-defense", version: 9, progress: { cleared: 3 } }), "non supportata"], ["vuoto", "", "niente da importare"]]) {
+  for (const [label, text, expect] of [["testo qualsiasi", "ciao", "leggibile"], ["altro gioco", JSON.stringify({ game: "altro", version: 1 }), "Non è un salvataggio di Planet"], ["codice troncato", g.cap.clip.slice(0, 40), "non è valido"], ["versione futura", JSON.stringify({ game: "fortress-defense", version: 10, progress: { cleared: 3 } }), "non supportata"], ["vuoto", "", "niente da importare"]]) {
     h.d.getElementById("codeBox").value = text; h.click("btnPaste");
     const m = h.msg(), conf = !h.d.getElementById("confirmBox").hidden;
     console.log(("rifiuto: " + label).padEnd(28), "→", m, ok(m.includes(expect) && !conf));
