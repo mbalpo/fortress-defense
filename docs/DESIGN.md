@@ -565,7 +565,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 
 ## 13. Da costruire
 
-Ranger e Protezione planetaria (§ 17) · schermata degli sblocchi permanenti ·
+Schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · boss a tempo ·
 audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
@@ -1031,7 +1031,7 @@ né il Modulo 28 (danno delle torrette) **[deciso]** (Marco, su lettura di Claud
 | Physical | Epsilon | Atlante |
 
 - **Aspetto** **[deciso]** (Marco): i ranger di **conversione** sono **sfere metalliche fluttuanti** del colore del loro tipo; quelli di **supporto** sono **cubi metallici fluttuanti**
-  con la propria **lettera greca minuscola** (α Alfa, ω Omega, σ Sigma, γ Gamma, ε Epsilon) sul lato visibile, nel colore del tipo; il colore del cubo può essere diverso.
+  con la propria **lettera greca minuscola** (α Alfa, ω Omega, σ Sigma, γ Gamma, ε Epsilon) sul lato visibile, nel colore del tipo; il colore del cubo può essere diverso. Dalla 1.19.1 ogni cubo ha un metallo scuro di un colore suo (blu Alfa, verde Omega, viola Sigma, bordeaux Gamma, bronzo Epsilon) **[Claude] [da rivedere]** e la lettera è centrata sulla faccia davanti.
   Da disegnare in classica e HD-2D.
 - I ranger di **conversione** hanno gli effetti già stabiliti (conversione). Il ranger physical che ignora la resistenza e fa attraversare i gusci è **Atlante** **[deciso]** (Marco).
 - **Alfa** (fire): ogni X s una **fiammata a corto raggio** che dura Y s, con danni da fuoco e Z% di probabilità di **bruciatura**. Salendo di livello X cala, Y e Z crescono:
@@ -1126,7 +1126,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **F = 10** (frammenti di una partita piena), costante: la crescita con la scala è da misurare; **×2** nel giorno del tipo;
   - in questa modalità **niente Sigilli, niente equipaggiamento e niente Sigilli maggiori** (non previsti dal § 17); i frammenti di una partita **abbandonata** valgono come una sconfitta
     a quell’ondata; con una partita sospesa, toccare un continente chiede “Sostituire la partita sospesa?” (secondo tocco); il livello giocato è sempre il primo non completato del tipo;
-  - icone dei continenti: sagome semplici in `draw.js` (uguali in classica e HD-2D), da rifinire.
+  - icone dei continenti: dalla 1.19.1 globi con i contorni geografici semplificati (proiezione ortografica centrata sul continente, `LANDS` in `draw.js`), mare scuro, ombra della sfera e atmosfera del tipo; in HD-2D globo a pixel con il retino.
 - **Misura 1.16.0** (`node tests/tools/planet.js 1,5,10 30`, bot con albero ed equipaggiamento attesi della campagna di pari difficoltà, tempi delle ondate qui sopra;
   60 partite per tipo e livello: vittorie su 30 random / smart e, tra parentesi, ondata media raggiunta):
 
@@ -1183,8 +1183,8 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   | Taglia | Vita | Velocità | Raggio | Danno | Resistenza al proprio tipo | Aspetto |
   |---|---|---|---|---|---|---|
   | leggero | 36 | 60 | 10 | 1,5 | 25% | Dardo |
-  | medio | 60 | 42 | 13 | 3 | 40% | Gemma |
-  | pesante | 132 | 28 | 16 | 6 | 60% | Corazzato |
+  | medio | 60 | 42 | 13 | 3 | 40% | Razzo (fino alla 1.19.0 “Gemma”) |
+  | pesante | 132 | 28 | 16 | 6 | 60% | Artiglio (fino alla 1.19.0 “Corazzato”) |
   | speciale | 72 | 40 | 14 | 4 | 50% | Kamikaze (fire), Spettro (force), Saetta (electric), Prisma (energy), Carapace (physical) |
 
   Vita, danno e velocità crescono con la difficoltà e con l’ondata come nella campagna. Ondate: le stesse quantità della campagna, con il nemico del continente della stessa taglia
@@ -1224,12 +1224,23 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 
   | Tipo | Boss | Sagoma (px) | Abilità e valori per livello L del continente |
   |---|---|---|---|
-  | fire | Ammiraglia | 260 × 140 | ogni max(3, 8 − 0,5 (L − 1)) s, 2 + ⌊(L − 1)/4⌋ intercettori: inseguono il colpo di torretta più vicino (missili, bombe, sfere, proiettili del Railgun) e lo distruggono |
+  | fire | Ammiraglia | 260 × 140 | ogni max(3, 8 − 0,5 (L − 1)) s, 2 + ⌊(L − 1)/4⌋ intercettori, solo se ci sono colpi di torretta in volo (missili, bombe, sfere, proiettili del Railgun): dalla 1.19.1 ognuno prenota un colpo diverso (il più vicino libero), mira al punto d’incontro e lo distrugge |
   | force | Nave madre | 120 × 270 (ali squadrate di 66 px per lato dal 75%) | quando la punta arriva al 75%, 55%, 35% di altezza **[deciso]** rilascia 6 + ⌊(L − 1)/3⌋ alati (vita 30, veloci, resistenza force 30%) |
   | electric | Disco volante | 300 × 110 | assorbe ogni colpo con probabilità 0,1 + 0,04 (L − 1), tetto 50% **[Claude]**; lampo bianco |
   | energy | Prisma gigante | 180 × 384 (50% × 60% dello schermo) **[deciso]** | si ferma con il bordo inferiore al 25% dal basso **[deciso]**; ogni max(3, 9 − 0,5 (L − 1)) s un raggio verticale di 160 px **[deciso]** (avviso 0,7 s): se arriva alla cupola danno × 2 |
   | physical | Meteorite | 360 (tutta la larghezza) | a metà vita si divide in due meteore di metà diametro con la vita rimasta; generazioni min(3, 1 + ⌊(L − 1)/5⌋) |
 
+- **Grafica rivista (1.19.1)** (richieste di Marco **[deciso]**, disegni **[Claude] [da rivedere]**): sagome “a strati” (`FOE_LAYERS`, `GIANT_LAYERS` in `draw.js`: poligoni ed ellissi con un ruolo
+  di colore: tipo, metallo, vetro), le stesse in classica e HD-2D (sprite a pixel con il bordo in rilievo). Il colore del tipo non copre più tutta la forma dei boss nuovi.
+  - **Nave madre**: scafo d’acciaio a cuneo con ponte rialzato, strisce e prua del tipo; animati motori, torrette che seguono il guardiano, radar, luci della pista, hangar e lampeggiatori;
+    dal 75% di altezza le ali escono da sotto lo scafo con i caccia agganciati (uno in meno per lato a ogni rilascio).
+  - **Disco volante**: lente d’acciaio scuro, fascia orizzontale con le luci che scorrono (visibili davanti e dietro), cupola di vetro scuro, gradini e antenna sotto con il bagliore del tipo, scariche sul bordo.
+  - **Prisma gigante**: anello di energia poco sopra il nucleo che pulsa, con tre luci che girano.
+  - **Meteorite**: compare intero; scia di fuoco d’ingresso nell’atmosfera dietro, bordo davanti arroventato, leggero tremolio (solo disegno); anche i pezzi.
+  - **Ammiraglia**: forma invariata; intercettori corretti (vedi tabella).
+  - **Nemici**: Dardo con dorso, abitacolo, motore e luci; **Razzo** (al posto della Gemma) con punta, alette e fascia del tipo, oblò e fiamma; **Artiglio** (al posto del Corazzato) modulo
+    d’assalto con cupola di vetro, anello del tipo con luci e tre artigli; Kamikaze con due alette; **Spettro** ala volante stealth con i bordi del tipo; **Saetta** freccia frastagliata verso il basso;
+    **Prisma** come il Prisma gigante in miniatura (spigoli, nucleo, anello); il **guscio** del Carapace è ribaltato, con le zampe in alto.
 - **Collisioni**: i giganti hanno una sagoma a rettangolo arrotondato (`def.box`, `edist`) per colpi, aree, laser (nove punti), portata e contatto con la cupola; il meteorite è un cerchio.
 - **Misura 1.19.0** (`node tests/tools/planet.js 1,5,10 30`, come le fasi 1 e 3): quasi uguale alla 1.18.1 (es. livello 10: fire 21 / 18, force 16 / 13, electric 26 / 23,
   energy 18 / 12, physical 7 / 3): chi arriva all’ondata 18 di solito batte anche il boss. Physical sempre il più duro. Nessun valore ritarato.

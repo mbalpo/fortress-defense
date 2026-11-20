@@ -27,6 +27,14 @@ function rr(x, y, w, h, r) {
   ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
+// cubi dei ranger di supporto (1.19.1): metallo scuro di un colore diverso per ognuno, per far risaltare la lettera del tipo [Claude, da rivedere]
+const RANGER_CUBE = { α: ["#4a63a8", "#2a3c70", "#1a2650"], ω: ["#3f7a62", "#22503f", "#14352a"], σ: ["#6a4f9e", "#41306a", "#2a1e48"],
+  γ: ["#9a4458", "#6a2638", "#481826"], ε: ["#8a6436", "#5c3f1e", "#3e2a12"] };
+function glyph(s, x, cy, size, color) {            // carattere centrato davvero sul punto (cx, cy), misurando il disegno della lettera
+  ctx.font = "800 " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const m = ctx.measureText(s), up = m.actualBoundingBoxAscent, dn = m.actualBoundingBoxDescent;
+  ctx.fillStyle = color; ctx.fillText(s, x, isFinite(up) && isFinite(dn) ? cy + (up - dn) / 2 : cy + size * 0.3);
+}
 function txt(s, x, y, size, color, align, weight) {
   ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.fillStyle = color || "#e8eefc"; ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
@@ -232,31 +240,146 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
 }
 function drawEnemy(e) {
   const c = e.flash > 0 && !e.def.giant ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";   // i giganti non lampeggiano tutti di bianco
-  const a0 = ctx.globalAlpha;
+  const a0 = ctx.globalAlpha, jit = look === "bigrock" && typeof clock === "number";   // meteorite: leggero tremolio (solo disegno)
   if (e.invis) ctx.globalAlpha = a0 * (0.22 + 0.08 * Math.sin(clock * 6 + e.phase));   // speciale force invisibile: appena un riflesso
+  if (jit) { ctx.save(); ctx.translate(Math.sin(clock * 47 + e.phase) * 1.3, Math.cos(clock * 59 + e.phase) * 1); }
   enemyBody(e, c, look);
+  if (jit) ctx.restore();
   if (e.immT > 0) FX.immune(e);                    // speciale energy: scudo durante l’immunità
   ctx.globalAlpha = a0;
   if ((e.hp < e.maxHp || e.boss) && !e.invis && !e.def.giant) enemyBar(e, look);   // i giganti hanno la barra in alto
   if (!e.invis && !e.def.giant) drawStatus(e);
 }
-// nemici della Protezione planetaria (1.18.0): sagome in coordinate del raggio (y verso il basso, cioè verso la cupola) [Claude, da rivedere]
-const FOE_SHAPES = {
-  dart: [[0, 1.1], [0.75, -0.6], [0.25, -0.3], [0, -0.9], [-0.25, -0.3], [-0.75, -0.6]],
-  gem: [[0, 1.05], [0.8, 0.45], [0.8, -0.45], [0, -1.05], [-0.8, -0.45], [-0.8, 0.45]],
-  tank: [[-0.6, 1], [0.6, 1], [1, 0.55], [1, -0.55], [0.6, -1], [-0.6, -1], [-1, -0.55], [-1, 0.55]],
-  wraith: [[0, -1], [0.7, -0.5], [0.8, 0.4], [0.5, 1], [0.25, 0.6], [0, 1], [-0.25, 0.6], [-0.5, 1], [-0.8, 0.4], [-0.7, -0.5]],
-  prism: [[0, 1], [0.9, -0.65], [-0.9, -0.65]],
-  crab: [[-1, 0.2], [-0.85, -0.45], [-0.4, -0.85], [0.4, -0.85], [0.85, -0.45], [1, 0.2], [0.6, 0.45], [-0.6, 0.45]],
-  wing: [[0, 1], [0.4, 0.3], [1, 0.1], [0.7, -0.3], [0.3, -0.2], [0, -0.7], [-0.3, -0.2], [-0.7, -0.3], [-1, 0.1], [-0.4, 0.3]],   // alati della nave madre
+/* ---------- SAGOME A STRATI (1.19.1): nemici della Protezione planetaria e boss giganti ----------
+   Uno strato è un poligono { p: [[u, v], …] } o un’ellisse { e: [cu, cv, ru, rv] } (top: solo la metà di sopra) in unità della sagoma
+   (raggio del nemico, o semilarghezza e semialtezza del gigante; y verso il basso, cioè verso la cupola), con un ruolo di colore r:
+   c = colore del tipo, m1/m2/m3 = metallo scuro/medio/chiaro, g = vetro, gd = vetro scuro, k = nero, w = bianco;
+   d = più scuro (0-1) o più chiaro (negativo), a = opacità, st = colore del bordo, s: 0 = senza bordo.
+   La classica li riempie in ordine (drawLayers); la HD-2D ne fa uno sprite a pixel ombreggiato con lo stesso disegno (layerBody in draw-hd2d.js).
+   Disegni [Claude, da rivedere]. */
+const ROLE = { m1: "#353c56", m2: "#646f8f", m3: "#a6b0c9", g: "#a9dcff", gd: "#26304c", k: "#11162a", w: "#f2f6ff" };
+const roleCol = (r, c) => (r === "c" ? c : ROLE[r]);
+const mir = (p) => p.map(([u, v]) => [-u, v]);   // copia specchiata (lato sinistro)
+function inPoly(pts, u, v) { let o = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > v) !== (yj > v) && u < (xj - xi) * (v - yi) / (yj - yi) + xi) o = !o; } return o; }
+const inLayer = (L, u, v) => (L.e ? !(L.top && v > L.e[1]) && ((u - L.e[0]) / L.e[2]) ** 2 + ((v - L.e[1]) / L.e[3]) ** 2 <= 1 : inPoly(L.p, u, v));
+function layerPath(L, x, y, sx, sy) {
+  ctx.beginPath();
+  if (L.e) ctx.ellipse(x + L.e[0] * sx, y + L.e[1] * sy, L.e[2] * sx, L.e[3] * sy, 0, L.top ? Math.PI : 0, 6.2832);
+  else L.p.forEach(([u, v], i) => (i ? ctx.lineTo(x + u * sx, y + v * sy) : ctx.moveTo(x + u * sx, y + v * sy)));
+  ctx.closePath();
+}
+function drawLayers(layers, x, y, sx, sy, c, lw) {
+  const fl = c === "#ffffff", a0 = ctx.globalAlpha;   // lampo del colpo: tutto bianco
+  for (const L of layers) {
+    layerPath(L, x, y, sx, sy); ctx.globalAlpha = a0 * (L.a == null ? 1 : L.a);
+    ctx.fillStyle = fl ? "#ffffff" : roleCol(L.r, c); ctx.fill();
+    if (L.d && !fl) { ctx.fillStyle = L.d > 0 ? "rgba(7,11,22," + L.d + ")" : "rgba(255,255,255," + -L.d + ")"; ctx.fill(); }
+    if (L.s !== 0) { ctx.lineWidth = L.st ? (lw || 1) * 2.4 : lw || 1; ctx.strokeStyle = L.st || "rgba(7,11,22,0.55)"; ctx.stroke(); }
+  }
+  ctx.globalAlpha = a0;
+}
+// punto di aggancio: la HD-2D lo sostituisce con lo sprite a pixel (key: nome della sagoma, per la cache)
+function layerBody(key, layers, x, y, sx, sy, c, lw) { drawLayers(layers, x, y, sx, sy, c, lw); }
+
+// nemici: quattro per tipo (leggero, medio, pesante, speciale) più gli alati della nave madre
+const DART = [[0, 1.1], [0.75, -0.6], [0.25, -0.3], [0, -0.9], [-0.25, -0.3], [-0.75, -0.6]];
+const FOE_LAYERS = {
+  dart: [                                          // Dardo: freccia del tipo con dorso di metallo, abitacolo e punte delle ali scure
+    { p: DART, r: "c" }, { p: [[0.75, -0.6], [0.52, -0.12], [0.4, -0.43]], r: "c", d: 0.4, s: 0 }, { p: mir([[0.75, -0.6], [0.52, -0.12], [0.4, -0.43]]), r: "c", d: 0.4, s: 0 },
+    { p: [[0, 0.82], [0.15, -0.2], [0, -0.78], [-0.15, -0.2]], r: "m3" }, { e: [0, 0.28, 0.09, 0.2], r: "g", s: 0 }],
+  gem: [                                           // Razzo (prima “Gemma”): punta verso la cupola, alette e fascia del tipo, oblò
+    { p: [[0.38, -0.25], [0.92, -0.62], [0.92, -1], [0.34, -0.8]], r: "c", d: 0.2 }, { p: mir([[0.38, -0.25], [0.92, -0.62], [0.92, -1], [0.34, -0.8]]), r: "c", d: 0.2 },
+    { p: [[0, 1.15], [0.3, 0.75], [0.42, 0.2], [0.42, -0.55], [0.3, -0.85], [-0.3, -0.85], [-0.42, -0.55], [-0.42, 0.2], [-0.3, 0.75]], r: "m3" },
+    { p: [[0, 1.15], [0.3, 0.75], [0.36, 0.52], [-0.36, 0.52], [-0.3, 0.75]], r: "c" },
+    { p: [[-0.42, -0.12], [0.42, -0.12], [0.42, -0.3], [-0.42, -0.3]], r: "c", d: 0.15 },
+    { p: [[0.08, -0.25], [0.08, -1.05], [-0.08, -1.05], [-0.08, -0.25]], r: "c", d: 0.3 },
+    { p: [[-0.3, 0.45], [-0.2, 0.45], [-0.2, -0.65], [-0.3, -0.6]], r: "w", a: 0.55, s: 0 },
+    { e: [0, 0.18, 0.25, 0.25], r: "m1" }, { e: [0, 0.18, 0.17, 0.17], r: "g", s: 0 }],
+  tank: [                                          // Artiglio (prima “Corazzato”): modulo d’assalto con cupola di vetro e tre artigli verso la cupola
+    { p: [[0.3, 0.35], [0.82, 0.68], [0.7, 1.12], [0.6, 0.86], [0.2, 0.6]], r: "m2" }, { p: mir([[0.3, 0.35], [0.82, 0.68], [0.7, 1.12], [0.6, 0.86], [0.2, 0.6]]), r: "m2" },
+    { p: [[-0.13, 0.55], [0.13, 0.55], [0.06, 1.18], [-0.06, 1.18]], r: "m2" },
+    { e: [0, 0, 1, 0.72], r: "c", d: 0.3 }, { e: [0, -0.06, 0.82, 0.56], r: "m2" },
+    { p: [[0.72, -0.18], [1.02, -0.1], [1.02, 0.12], [0.72, 0.2]], r: "m3" }, { p: mir([[0.72, -0.18], [1.02, -0.1], [1.02, 0.12], [0.72, 0.2]]), r: "m3" },
+    { e: [0, -0.14, 0.54, 0.48], r: "g" }, { e: [-0.2, -0.32, 0.15, 0.1], r: "w", a: 0.75, s: 0 }],
+  bomb: [                                          // Kamikaze: bomba del tipo con due alette e calotta di metallo
+    { p: [[0.5, -0.2], [1.38, -0.62], [1.42, -0.06], [0.6, 0.3]], r: "m2" }, { p: mir([[0.5, -0.2], [1.38, -0.62], [1.42, -0.06], [0.6, 0.3]]), r: "m2" },
+    { e: [0, 0, 0.85, 0.85], r: "c" }, { e: [0, -0.62, 0.42, 0.24], r: "m3" }, { e: [0, 0.1, 0.85, 0.12], r: "c", d: 0.3, s: 0 }],
+  wraith: [                                        // Spettro: ala volante stealth, scura, con i bordi d’attacco del tipo
+    { p: [[0, 1.02], [1.12, -0.12], [0.96, -0.45], [0.66, -0.24], [0.4, -0.56], [0, -0.3], [-0.4, -0.56], [-0.66, -0.24], [-0.96, -0.45], [-1.12, -0.12]], r: "m2", d: 0.15 },
+    { p: [[0, 0.62], [0.6, -0.08], [0.32, -0.3], [0, -0.12], [-0.32, -0.3], [-0.6, -0.08]], r: "gd", s: 0 },
+    { p: [[0, 0.78], [0.13, 0.42], [0, 0.3], [-0.13, 0.42]], r: "c", d: 0.35 }],
+  spark: [                                         // Saetta: freccia frastagliata verso il basso, tutta spigoli, con il cuore bianco
+    { p: [[0, 1.15], [0.58, 0.32], [0.3, 0.36], [0.66, -0.12], [0.3, -0.04], [0.46, -0.62], [0.13, -0.32], [0, -0.98], [-0.13, -0.32], [-0.46, -0.62], [-0.3, -0.04], [-0.66, -0.12], [-0.3, 0.36], [-0.58, 0.32]], r: "c" },
+    { p: [[0, 0.88], [0.2, 0.36], [0.1, 0.3], [0.2, -0.1], [0, -0.55], [-0.2, -0.1], [-0.1, 0.3], [-0.2, 0.36]], r: "w", a: 0.85, s: 0 }],
+  prism: [                                         // Prisma: il Prisma gigante in miniatura (faccia destra in ombra, spigoli e anello nei dettagli)
+    { p: [[0, -1.05], [0.62, -0.58], [0.62, 0.58], [0, 1.08], [-0.62, 0.58], [-0.62, -0.58]], r: "c" },
+    { p: [[0, -1.05], [0.62, -0.58], [0.62, 0.58], [0, 1.08]], r: "c", d: 0.3, s: 0 }],
+  crab: [                                          // Carapace (guscio con zampe nei dettagli)
+    { p: [[-1, 0.2], [-0.85, -0.45], [-0.4, -0.85], [0.4, -0.85], [0.85, -0.45], [1, 0.2], [0.6, 0.45], [-0.6, 0.45]], r: "c" }],
+  wing: [{ p: [[0, 1], [0.4, 0.3], [1, 0.1], [0.7, -0.3], [0.3, -0.2], [0, -0.7], [-0.3, -0.2], [-0.7, -0.3], [-1, 0.1], [-0.4, 0.3]], r: "c" }],   // alati della nave madre
 };
-// boss giganti (1.19.0): sagome in coordinate della box (u × semilarghezza, v × semialtezza); disco ellittico e meteorite tondo [Claude, da rivedere]
-const GIANT_SHAPES = {
-  flagship: [[-1, -0.3], [-0.7, -0.8], [0.7, -0.8], [1, -0.3], [0.8, 0.2], [0.35, 0.35], [0.15, 1], [-0.15, 1], [-0.35, 0.35], [-0.8, 0.2]],
-  carrier: [[-1, -1], [1, -1], [1, 0.75], [0.4, 1], [-0.4, 1], [-1, 0.75]],
-  bigprism: [[0, -1], [0.9, -0.55], [0.9, 0.55], [0, 1], [-0.9, 0.55], [-0.9, -0.55]],
+// boss giganti (1.19.0; Nave madre e Disco volante ridisegnati nella 1.19.1) in unità della box: u × semilarghezza, v × semialtezza
+const CARRIER_HULL = [[-0.74, -1], [0.74, -1], [0.95, -0.82], [1, -0.2], [0.88, 0.4], [0.6, 0.78], [0.3, 1], [-0.3, 1], [-0.6, 0.78], [-0.88, 0.4], [-1, -0.2], [-0.95, -0.82]];
+const GIANT_LAYERS = {
+  flagship: [{ p: [[-1, -0.3], [-0.7, -0.8], [0.7, -0.8], [1, -0.3], [0.8, 0.2], [0.35, 0.35], [0.15, 1], [-0.15, 1], [-0.35, 0.35], [-0.8, 0.2]], r: "c", st: "#ffd166" }],
+  carrier: [                                       // Nave madre: scafo d’acciaio a cuneo, ponte rialzato, strisce e prua del tipo
+    { p: CARRIER_HULL, r: "m2" },
+    { p: [[-1, -0.2], [-0.95, -0.82], [-0.8, -0.82], [-0.83, -0.2], [-0.72, 0.38], [-0.88, 0.4]], r: "m1", s: 0 }, { p: mir([[-1, -0.2], [-0.95, -0.82], [-0.8, -0.82], [-0.83, -0.2], [-0.72, 0.38], [-0.88, 0.4]]), r: "m1", s: 0 },
+    { p: [[-0.56, -0.9], [0.56, -0.9], [0.62, -0.3], [0.5, 0.45], [0.26, 0.84], [-0.26, 0.84], [-0.5, 0.45], [-0.62, -0.3]], r: "m3" },
+    { p: [[-0.66, -0.3], [-0.58, -0.3], [-0.46, 0.5], [-0.54, 0.5]], r: "c", s: 0 }, { p: mir([[-0.66, -0.3], [-0.58, -0.3], [-0.46, 0.5], [-0.54, 0.5]]), r: "c", s: 0 },
+    { p: [[-0.3, 1], [0.3, 1], [0.44, 0.88], [0, 0.8], [-0.44, 0.88]], r: "c", d: 0.15 },
+    { p: [[-0.3, 0.22], [0.3, 0.22], [0.24, 0.6], [-0.24, 0.6]], r: "k" },
+    { p: [[-0.34, -0.78], [0.34, -0.78], [0.38, -0.12], [0.2, 0.12], [-0.2, 0.12], [-0.38, -0.12]], r: "m2", d: 0.1 },
+    { p: [[-0.22, -0.66], [0.22, -0.66], [0.25, -0.22], [-0.25, -0.22]], r: "m3", d: -0.15 },
+    { p: [[-0.16, -0.12], [0.16, -0.12], [0.1, 0.05], [-0.1, 0.05]], r: "gd" }],
+  disc: [                                          // Disco volante: lente d’acciaio scuro con fascia, cupola di vetro scuro, gradini e antenna sotto
+    { p: [[-0.05, 0.5], [0.05, 0.5], [0, 1]], r: "m1" },
+    { e: [0, 0.3, 0.36, 0.3], r: "m1" }, { e: [0, 0.14, 0.62, 0.36], r: "m1", d: -0.08 },
+    { e: [0, 0, 1, 0.3], r: "m2", d: 0.2 }, { e: [0, -0.06, 0.9, 0.2], r: "m2", d: -0.05, s: 0 },
+    { e: [0, -0.04, 0.36, 0.12], r: "m3", s: 0 },
+    { e: [0, -0.1, 0.27, 0.66], r: "gd", top: true }, { e: [-0.08, -0.4, 0.07, 0.16], r: "w", a: 0.3, s: 0 },
+    { p: [[-1, 0.02], [-0.6, 0.06], [0.6, 0.06], [1, 0.02], [0.6, 0.13], [-0.6, 0.13]], r: "k" }],
+  bigprism: [{ p: [[0, -1], [0.9, -0.55], [0.9, 0.55], [0, 1], [-0.9, 0.55], [-0.9, -0.55]], r: "c", st: "#ffd166" }],
 };
+// ali della nave madre (lato destro; il sinistro è specchiato): escono da sotto lo scafo
+const CARRIER_WING = [
+  { p: [[0.8, -0.62], [2.12, -0.5], [2.24, -0.32], [2.1, 0.12], [0.8, 0.26]], r: "m2" },
+  { p: [[1.05, -0.48], [1.98, -0.4], [2.06, -0.3], [1.95, 0.02], [1.05, 0.12]], r: "m3" },
+  { p: [[1.1, 0.03], [1.95, -0.06], [1.95, 0], [1.1, 0.09]], r: "c", s: 0 },
+  { p: [[1.4, -0.38], [1.62, -0.38], [1.62, -0.12], [1.4, -0.12]], r: "m1" }];
+const CARRIER_WING_L = CARRIER_WING.map((L) => Object.assign({}, L, { p: mir(L.p) }));
 const GB = (e, pts) => pts.map(([u, v]) => [e.x + u * e.def.box[0], e.y + v * e.def.box[1]]);
+// anello orbitale (Prisma e Prisma gigante): metà dietro più tenue, tre luci che girano; la HD-2D lo rifà a pixel
+function orbitRing(x, y, rx, ry, c, t, lw) {
+  ctx.lineWidth = lw || 2; ctx.strokeStyle = c;
+  ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, Math.PI, 6.2832); ctx.stroke();
+  ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI); ctx.stroke(); ctx.globalAlpha = 1;
+  for (let k = 0; k < 3; k++) { const a = t * 2.2 + k * 2.0944, s = Math.sin(a); disc(x + Math.cos(a) * rx, y + s * ry, (lw || 2) * (1.4 + 0.5 * s), s > 0 ? "#ffffff" : c, s > 0 ? 0.95 : 0.45); }
+}
+// sotto il corpo del gigante: ali e caccia agganciati della nave madre, scia d’ingresso del meteorite
+function giantBehind(e, c, look) {
+  const x = e.x, y = e.y, t = typeof clock === "number" ? clock : 0;
+  if (look === "carrier") {
+    const [hw, hh] = e.def.box, wp = clamp((bottomOf(e) - H * 0.25 + 60) / 60, 0, 1);   // le ali escono nell’ultimo tratto prima del 75% di altezza
+    if (wp <= 0) return;
+    const docked = 3 - (e.rel || []).filter(Boolean).length;   // caccia ancora agganciati sotto l’ala: uno in meno a ogni rilascio
+    for (const sg of [-1, 1]) {
+      const ox = x - sg * (1 - wp) * hw * 1.3;
+      for (let k = 0; k < docked; k++) layerBody("wing", FOE_LAYERS.wing, ox + sg * hw * (1.3 + k * 0.32), y + hh * 0.3, 9, 9, c);
+      layerBody(sg > 0 ? "cwingR" : "cwingL", sg > 0 ? CARRIER_WING : CARRIER_WING_L, ox, y, hw, hh, c, 1.5);
+      disc(ox + sg * hw * 2.15, y - hh * 0.4, 2.5, sg > 0 ? "#3fe08a" : "#ff4d6a", Math.floor(t * 2) % 2 ? 1 : 0.25);   // luci di posizione
+    }
+  } else if (look === "bigrock") {                 // ingresso nell’atmosfera: scia di plasma e lingue di fuoco sul bordo di dietro
+    const r = e.def.r, g = ctx.createLinearGradient(x, y - r * 2.2, x, y);
+    g.addColorStop(0, "rgba(255,120,40,0)"); g.addColorStop(0.6, "rgba(255,140,50,0.28)"); g.addColorStop(1, "rgba(255,200,120,0.5)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - r * 0.95, y); ctx.quadraticCurveTo(x - r * 0.5, y - r * 1.6, x, y - r * 2.2); ctx.quadraticCurveTo(x + r * 0.5, y - r * 1.6, x + r * 0.95, y); ctx.closePath(); ctx.fill();
+    for (let k = 0; k < 9; k++) {
+      const a = Math.PI + 0.25 + k / 8 * (Math.PI - 0.5), f = 0.75 + 0.35 * Math.sin(t * 13 + k * 1.7);
+      flame(x + Math.cos(a) * r * 0.82, y + Math.sin(a) * r * 0.82, r * (0.3 + 0.25 * Math.abs(Math.sin(a))) * f, r * 0.1, 0.9);
+    }
+  }
+}
+function giantRockPath(e) { rockPath(e, e.def.r); }   // sagoma del meteorite (la HD-2D ha la sua)
 function giantDetails(e, c, look) {              // dettagli dei giganti, sopra il corpo (uguali in classica e HD-2D)
   const x = e.x, y = e.y, t = typeof clock === "number" ? clock : 0, dark = "rgba(7,11,22,0.5)";
   if (look === "flagship") {                     // fiamme dei motori in alto, torri, ponte e oblò
@@ -266,47 +389,101 @@ function giantDetails(e, c, look) {              // dettagli dei giganti, sopra 
     for (const u of [-0.75, -0.4, 0.4, 0.75]) { disc(x + u * hw, y - hh * 0.15, 9, "#2a3048"); ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + u * hw, y - hh * 0.15); ctx.lineTo(x + u * hw * 1.02, y + hh * 0.25); ctx.stroke(); }
     for (let i = -3; i <= 3; i++) disc(x + i * 12, y - hh * 0.35, 2.5, "#ffd166", 0.9);
     disc(x, y + hh * 0.75, 7, "#fff6b0", 0.8 + 0.2 * Math.sin(t * 9));
-  } else if (look === "carrier") {               // scafo a pannelli, hangar e ali squadrate (dal 75% di altezza)
+  } else if (look === "carrier") {               // pannelli, motori, torrette che seguono il guardiano, radar che gira, luci della pista
+    const [hw, hh] = e.def.box, U = (u) => x + u * hw, V = (v) => y + v * hh;
+    ctx.strokeStyle = "rgba(7,11,22,0.35)"; ctx.lineWidth = 1;
+    for (const [u, v, w, h] of [[-0.5, -0.86, 0.32, 0.1], [0.18, -0.86, 0.32, 0.1], [-0.55, 0.0, 0.22, 0.32], [0.33, 0.0, 0.22, 0.32], [-0.42, 0.5, 0.16, 0.18], [0.26, 0.5, 0.16, 0.18], [-0.5, -0.6, 0.12, 0.4], [0.38, -0.6, 0.12, 0.4]]) ctx.strokeRect(U(u), V(v), w * hw, h * hh);
+    for (const u of [-0.55, -0.2, 0.2, 0.55]) {    // motori in coda (in alto): ugelli e bagliore del tipo
+      ctx.fillStyle = "#1b2036"; ctx.fillRect(U(u) - 8, V(-1) - 5, 16, 6);
+      const f = 0.7 + 0.3 * Math.sin(t * 23 + u * 9);
+      const g = ctx.createLinearGradient(0, V(-1) - 26 * f, 0, V(-1)); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, c);
+      ctx.globalAlpha = 0.8; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(U(u) - 6, V(-1) - 4); ctx.lineTo(U(u), V(-1) - 26 * f); ctx.lineTo(U(u) + 6, V(-1) - 4); ctx.closePath(); ctx.fill();
+      disc(U(u), V(-1) - 5, 4, "#ffffff", 0.9 * f);
+    }
+    const px = typeof player === "object" && player ? player.x : x, py = GROUND_Y;
+    for (const [u, v] of [[-0.62, -0.55], [0.62, -0.55], [-0.66, 0.2], [0.66, 0.2]]) {   // torrette
+      const a = Math.atan2(py - V(v), px - U(u));
+      ctx.strokeStyle = "#1b2036"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(U(u), V(v)); ctx.lineTo(U(u) + Math.cos(a) * 11, V(v) + Math.sin(a) * 11); ctx.stroke();
+      disc(U(u), V(v), 6, "#353c56"); disc(U(u), V(v), 2.5, c, 0.9);
+    }
+    const ra = t * 1.8, rx = U(0), ry = V(-0.45);   // radar sul ponte
+    ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(rx - Math.cos(ra) * 11, ry - Math.sin(ra) * 4); ctx.lineTo(rx + Math.cos(ra) * 11, ry + Math.sin(ra) * 4); ctx.stroke();
+    disc(rx, ry, 3, c);
+    for (const sg of [-1, 1]) for (let k = 0; k < 6; k++) {   // luci della pista lungo le strisce, verso la prua
+      const q = ((t * 1.2 - k / 6) % 1 + 1) % 1; disc(U(sg * (0.62 - k * 0.022)), V(-0.25 + k * 0.13), 1.8, "#ffffff", q < 0.2 ? 1 : 0.15);
+    }
+    const sw = (Math.sin(t * 1.6) * 0.5 + 0.5);   // hangar: luce che spazza
+    ctx.globalAlpha = 0.6; ctx.fillStyle = c; ctx.fillRect(U(-0.24 + sw * 0.4), V(0.24), 0.08 * hw, 0.34 * hh); ctx.globalAlpha = 1;
+    disc(U(0), V(0.94), 3, "#ffffff", Math.floor(t * 3) % 3 ? 0.2 : 1);   // lampeggiatore di prua
+  } else if (look === "disc") {                  // fascia con le luci che scorrono (davanti e dietro), bagliore sotto, scariche sul bordo
     const [hw, hh] = e.def.box;
-    if (e.wingsOut) for (const sg of [-1, 1]) { poly([[x + sg * hw, y - hh * 0.55], [x + sg * hw * 2.1, y - hh * 0.55], [x + sg * hw * 2.1, y + hh * 0.15], [x + sg * hw, y + hh * 0.3]], c, "#ffd166", 2);
-      for (const k of [0.3, 0.6, 0.9]) disc(x + sg * hw * (1 + k), y - hh * 0.2, 3, "#fff6b0", 0.8); }
-    ctx.strokeStyle = dark; ctx.lineWidth = 2; for (const v of [-0.6, -0.2, 0.2, 0.55]) { ctx.beginPath(); ctx.moveTo(x - hw, y + v * hh); ctx.lineTo(x + hw, y + v * hh); ctx.stroke(); }
-    for (const v of [-0.4, 0, 0.38]) poly(GB(e, [[-0.45, v - 0.08], [0.45, v - 0.08], [0.45, v + 0.08], [-0.45, v + 0.08]]), "#1a1430", "#ffd166", 1);
-    disc(x, y + hh * 0.85, 8, "#fff6b0", 0.7 + 0.3 * Math.sin(t * 7));
-  } else if (look === "disc") {                  // cupola di vetro e luci che girano
-    const [hw, hh] = e.def.box;
-    ctx.beginPath(); ctx.ellipse(x, y - hh * 0.45, hw * 0.38, hh * 0.85, 0, Math.PI, 6.2832); ctx.fillStyle = "rgba(223,233,255,0.85)"; ctx.fill();
-    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.2832 + t * 1.5; disc(x + Math.cos(a) * hw * 0.82, y + Math.sin(a) * hh * 0.45, 4, Math.cos(a) > 0 ? "#fff6b0" : "#ffe14d", 0.5 + 0.5 * Math.max(0, Math.sin(a))); }
-  } else if (look === "bigprism") {              // spigoli chiari e nucleo che pulsa
+    for (let i = 0; i < 26; i++) {
+      const a = (i / 26 + t * 0.12) * 6.2832, s = Math.sin(a), lx = x + Math.cos(a) * hw * 0.96, ly = y + hh * (0.075 + s * 0.035);
+      ctx.globalAlpha = s > 0 ? 1 : 0.4; ctx.fillStyle = c; ctx.fillRect(lx - 3, ly - 1.2, 6, 2.4);
+    }
+    ctx.globalAlpha = 1;
+    const p = 0.55 + 0.45 * Math.sin(t * 4);
+    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.globalAlpha = 0.5 + 0.4 * p; ctx.beginPath(); ctx.ellipse(x, y + hh * 0.3, hw * 0.34, hh * 0.28, 0, 0.25, Math.PI - 0.25); ctx.stroke(); ctx.globalAlpha = 1;
+    disc(x, y + hh, 4 + 2 * p, c, 0.8); disc(x, y + hh, 2, "#ffffff", 0.9);
+    for (const u of [-0.2, -0.1, 0, 0.1, 0.2]) disc(x + u * hw, y - hh * 0.06, 2, c, 0.5 + 0.5 * Math.sin(t * 6 + u * 20));
+    const q = t % 1.7;
+    if (q < 0.14) {                              // scarica elettrica dal bordo
+      const sg = Math.floor(t / 1.7) % 2 ? 1 : -1, bx = x + sg * hw * 0.98, by = y + hh * 0.05;
+      ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(bx, by);
+      for (let k = 1; k <= 4; k++) ctx.lineTo(bx + sg * k * 7, by + (k % 2 ? -6 : 5) + k * 3); ctx.stroke();
+    }
+  } else if (look === "bigprism") {              // spigoli chiari, nucleo che pulsa e, poco sopra, l’anello di energia che lo muove
     const [hw, hh] = e.def.box; ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.beginPath();
     ctx.moveTo(x, y - hh); ctx.lineTo(x, y + hh); ctx.moveTo(x - 0.9 * hw, y - 0.55 * hh); ctx.lineTo(x, y); ctx.lineTo(x + 0.9 * hw, y - 0.55 * hh); ctx.stroke();
     disc(x, y + hh * 0.2, hw * 0.28 * (0.9 + 0.1 * Math.sin(t * 5)), "#ffffff", 0.55);
-  } else if (look === "bigrock") {               // crateri e crepe
+    orbitRing(x, y + hh * 0.05 + Math.sin(t * 1.5) * 3, hw * 1.12, hh * 0.1, c, t, 3);
+  } else if (look === "bigrock") {               // crateri e crepe; bordo davanti arroventato dall’atmosfera
     const r = e.def.r; for (const q of [[-0.35, -0.25, 0.2], [0.3, 0.2, 0.16], [0.05, 0.55, 0.12], [-0.5, 0.35, 0.1], [0.45, -0.45, 0.13]]) disc(x + q[0] * r, y + q[1] * r, q[2] * r, dark);
     ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x - r * 0.1, y - r * 0.8); ctx.lineTo(x + r * 0.05, y - r * 0.2); ctx.lineTo(x - r * 0.15, y + r * 0.3); ctx.stroke();
+    const p = 0.6 + 0.4 * Math.sin(t * 9);
+    ctx.save(); giantRockPath(e); ctx.clip();
+    const g = ctx.createLinearGradient(x, y + r, x, y + r * 0.1);
+    g.addColorStop(0, "rgba(255,120,40," + (0.75 * p) + ")"); g.addColorStop(0.35, "rgba(255,170,70," + (0.35 * p) + ")"); g.addColorStop(1, "rgba(255,170,70,0)");
+    ctx.fillStyle = g; ctx.fillRect(x - r * 1.2, y, r * 2.4, r * 1.2);
+    ctx.beginPath(); ctx.rect(x - r * 1.2, y + r * 0.35, r * 2.4, r); ctx.clip();
+    giantRockPath(e); ctx.strokeStyle = "#ffd27a"; ctx.lineWidth = r * 0.05; ctx.globalAlpha = 0.5 + 0.4 * p; ctx.stroke();
+    ctx.restore();
   }
 }
-const FOE_ROUND = { bomb: 0.85, spark: 0.7 };      // sagome tonde: raggio relativo
-const P = (e, pts) => pts.map(([u, v]) => [e.x + u * e.def.r, e.y + v * e.def.r]);
-function foeDetails(e, c, look) {                  // dettagli comuni a classica e HD-2D (sopra il corpo)
-  const r = e.def.r, x = e.x, y = e.y, dark = "rgba(7,11,22,0.55)", t = typeof clock === "number" ? clock : 0;
-  if (look === "dart") { disc(x - r * 0.35, y - r * 0.55, r * 0.14, "#fff6b0", 0.9); disc(x + r * 0.35, y - r * 0.55, r * 0.14, "#fff6b0", 0.9); }
-  else if (look === "gem") { ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - r * 0.8, y - r * 0.45); ctx.lineTo(x, y - r * 0.1); ctx.lineTo(x + r * 0.8, y - r * 0.45); ctx.moveTo(x, y - r * 0.1); ctx.lineTo(x, y + r * 1.05); ctx.stroke(); }
-  else if (look === "tank") { poly(P(e, [[-0.55, 0.55], [0.55, 0.55], [0.55, -0.55], [-0.55, -0.55]]), dark, null); for (const [u, v] of [[-0.75, -0.75], [0.75, -0.75], [-0.75, 0.75], [0.75, 0.75]]) disc(x + u * r, y + v * r, r * 0.09, "#e8eefc", 0.8); }
-  else if (look === "bomb") {                      // miccia con la scintilla
+function foeDetails(e, c, look) {                  // dettagli animati comuni a classica e HD-2D (sopra il corpo)
+  const r = e.def.r, x = e.x, y = e.y, t = typeof clock === "number" ? clock : 0, ph = e.phase || 0;
+  if (look === "dart") {                           // fiamma del motore e luci di posizione
+    flame(x, y - r * 0.72, r * (0.5 + 0.15 * Math.sin(t * 25 + ph)), r * 0.16, 0.9);
+    const on = Math.floor(t * 3 + ph) % 2; disc(x - r * 0.55, y - r * 0.42, r * 0.11, "#ff4d6a", on ? 1 : 0.3); disc(x + r * 0.55, y - r * 0.42, r * 0.11, "#3fe08a", on ? 0.3 : 1);
+  } else if (look === "gem") {                     // razzo: fiamma di scarico in coda (in alto)
+    for (const [dx, k] of [[0, 1], [-0.14, 0.7], [0.14, 0.7]]) flame(x + dx * r, y - r * 0.82, r * k * (0.7 + 0.2 * Math.sin(t * 27 + ph + dx * 9)), r * 0.13, 0.95);
+  } else if (look === "tank") {                    // luci che girano sull’anello e riflesso nella cupola
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832 + t * 1.4, s = Math.sin(a); disc(x + Math.cos(a) * r * 0.91, y + s * r * 0.64, r * 0.07, s > -0.3 ? "#fff6b0" : c, 0.4 + 0.5 * Math.max(0, s)); }
+  } else if (look === "bomb") {                    // miccia con la scintilla
     ctx.strokeStyle = "#5a4a3a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - r * 0.8); ctx.quadraticCurveTo(x + r * 0.4, y - r * 1.2, x + r * 0.2, y - r * 1.45); ctx.stroke();
-    disc(x + r * 0.2, y - r * 1.45, 2.5 + Math.sin(t * 30) * 1, "#fff6b0"); disc(x - r * 0.3, y - r * 0.3, r * 0.18, "#ffffff", 0.5);
-  } else if (look === "wraith") { disc(x - r * 0.3, y - r * 0.25, r * 0.13, "#ffffff", 0.9); disc(x + r * 0.3, y - r * 0.25, r * 0.13, "#ffffff", 0.9); }
-  else if (look === "spark") {                     // coda a zig-zag
-    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - r * 0.7);
-    for (let k = 1; k <= 4; k++) ctx.lineTo(x + (k % 2 ? 1 : -1) * r * 0.35, y - r * 0.7 - k * r * 0.35); ctx.stroke();
-    disc(x, y, r * 0.35, "#fffbea", 0.9);
-  } else if (look === "prism") { disc(x, y - r * 0.15, r * 0.22, "#ffffff", 0.8); }
-  else if (look === "crab") {                      // zampe e segmenti del carapace
-    ctx.strokeStyle = c; ctx.lineWidth = 1.6;
-    for (const sg of [-1, 1]) for (const k of [0, 1]) { ctx.beginPath(); ctx.moveTo(x + sg * r * (0.5 + k * 0.25), y + r * 0.4); ctx.lineTo(x + sg * r * (0.8 + k * 0.3), y + r * 0.85); ctx.stroke(); }
-    ctx.strokeStyle = dark; ctx.lineWidth = 1; for (const u of [-0.35, 0.35]) { ctx.beginPath(); ctx.moveTo(x + u * r, y - r * 0.8); ctx.lineTo(x + u * r * 1.3, y + r * 0.4); ctx.stroke(); }
+    disc(x + r * 0.2, y - r * 1.45, 2.5 + Math.sin(t * 30) * 1, "#fff6b0"); disc(x - r * 0.3, y - r * 0.25, r * 0.16, "#ffffff", 0.5);
+  } else if (look === "wraith") {                  // bordi d’attacco del tipo e motori incassati
+    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.globalAlpha *= 0.8; ctx.beginPath();
+    ctx.moveTo(x - r * 1.12, y - r * 0.12); ctx.lineTo(x, y + r * 1.02); ctx.lineTo(x + r * 1.12, y - r * 0.12); ctx.stroke(); ctx.globalAlpha /= 0.8;
+    for (const sg of [-1, 1]) disc(x + sg * r * 0.3, y - r * 0.36, r * 0.09, c, 0.6 + 0.3 * Math.sin(t * 8 + ph));
+  } else if (look === "spark") {                   // scintille che crepitano attorno
+    ctx.strokeStyle = "#fff6b0"; ctx.lineWidth = 1;
+    for (let k = 0; k < 3; k++) {
+      const a = t * 9 + k * 2.1 + ph, d = r * (0.9 + 0.25 * Math.sin(t * 31 + k)); if (Math.sin(t * 17 + k * 3) < 0.2) continue;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6); ctx.lineTo(x + Math.cos(a + 0.3) * d * 0.85, y + Math.sin(a + 0.3) * d * 0.85); ctx.lineTo(x + Math.cos(a - 0.1) * d, y + Math.sin(a - 0.1) * d); ctx.stroke();
+    }
+  } else if (look === "prism") {                   // spigoli, nucleo e anello come il Prisma gigante
+    ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - r * 1.05); ctx.lineTo(x, y + r * 1.08); ctx.stroke();
+    disc(x, y + r * 0.2, r * 0.2 * (0.9 + 0.15 * Math.sin(t * 5 + ph)), "#ffffff", 0.7);
+    orbitRing(x, y - r * 0.05, r * 0.95, r * 0.18, c, t + ph, 1.2);
+  } else if (look === "crab") {                    // zampe e segmenti del carapace
+    crabLegs(x, y, r, c, 1);
+    ctx.strokeStyle = "rgba(7,11,22,0.55)"; ctx.lineWidth = 1; for (const u of [-0.35, 0.35]) { ctx.beginPath(); ctx.moveTo(x + u * r, y - r * 0.8); ctx.lineTo(x + u * r * 1.3, y + r * 0.4); ctx.stroke(); }
   }
+}
+function crabLegs(x, y, r, c, dir) {               // zampe del carapace (dir −1: ribaltato, zampe in alto)
+  ctx.strokeStyle = c; ctx.lineWidth = 1.6;
+  for (const sg of [-1, 1]) for (const k of [0, 1]) { ctx.beginPath(); ctx.moveTo(x + sg * r * (0.5 + k * 0.25), y + dir * r * 0.4); ctx.lineTo(x + sg * r * (0.8 + k * 0.3), y + dir * r * 0.85); ctx.stroke(); }
 }
 // corpo del nemico (c = colore del tipo, bianco nel lampo del colpo) e barra della vita: punti di aggancio della grafica HD-2D
 function enemyBody(e, c, look) {
@@ -325,13 +502,14 @@ function enemyBody(e, c, look) {
     ctx.beginPath(); ctx.ellipse(x, y, r * 1.15, r * 0.48, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke();
     for (const dx of [-0.6, 0, 0.6]) disc(x + dx * r, y + r * 0.1, r * 0.13, shade);
   } else if (e.def.giant) {                    // boss giganti della Protezione planetaria
-    if (look === "disc") { ctx.beginPath(); ctx.ellipse(x, y, e.def.box[0], e.def.box[1] * 0.6, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#ffd166"; ctx.stroke(); }
-    else if (look === "bigrock") { rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke(); }
-    else poly(GB(e, GIANT_SHAPES[look]), c, "#ffd166", 3);
+    giantBehind(e, c, look);
+    if (look === "bigrock") { rockPath(e, r); ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(7,11,22,0.6)"; ctx.stroke(); }
+    else layerBody("giant:" + look, GIANT_LAYERS[look], x, y, e.def.box[0], e.def.box[1], c, 1.5);
     giantDetails(e, c, look);
-  } else if (FOE_SHAPES[look] || FOE_ROUND[look]) {   // nemici della Protezione planetaria
+  } else if (FOE_LAYERS[look]) {               // nemici della Protezione planetaria
     if (look === "bomb") tail(e, r, 2.2, "rgba(255,170,80,0.6)");
-    if (FOE_ROUND[look]) disc(x, y, r * FOE_ROUND[look], c); else poly(P(e, FOE_SHAPES[look]), c, "rgba(7,11,22,0.6)", 1.3);
+    if (look === "spark") tail(e, r, 2, "rgba(255,240,140,0.45)");
+    layerBody(look, FOE_LAYERS[look], x, y, r, r, c, 1.2);
     foeDetails(e, c, look);
   } else {                                     // nave aliena (mini-boss) e nave madre (boss finale): contorno dorato
     const w = look === "mothership" ? 1.2 : 1.05;
@@ -412,7 +590,7 @@ function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, 
 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
 const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre",
-  dart: "Dardo", gem: "Gemma", tank: "Corazzato", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace", wing: "Alato",
+  dart: "Dardo", gem: "Razzo", tank: "Artiglio", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace", wing: "Alato",
   flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite" };   // nomi della Protezione planetaria [Claude, da rivedere]
 const MUTED = "#8a9ac0";
 function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
@@ -637,21 +815,28 @@ function menuScreen() {
   buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
 }
 /* ---------- PROTEZIONE PLANETARIA (1.16.0): griglia dei continenti ---------- */
-// sagome dei continenti in coordinate da −1 a 1 (icone semplici della fase 1, da rifinire; classica e HD-2D uguali)
+// sagome dei continenti sul globo (1.19.1): contorni geografici semplificati, proiezione ortografica centrata sul continente, coordinate da −1 a 1
+// (generate da coordinate di longitudine e latitudine; classica e HD-2D uguali)
 const LANDS = {
-  fire: [[[-0.9, 0.2], [-0.6, -0.3], [-0.3, -0.2], [-0.1, -0.7], [0.3, -0.8], [0.5, -0.4], [0.9, -0.5], [0.8, 0.1], [0.4, 0.2], [0.3, 0.6], [0.1, 0.3], [-0.1, 0.7], [-0.3, 0.4], [-0.6, 0.5]]],
-  force: [[[-0.6, -0.8], [0.2, -0.85], [0.5, -0.5], [0.9, -0.35], [0.6, 0.1], [0.4, 0.5], [0.1, 0.9], [-0.1, 0.6], [-0.2, 0.1], [-0.8, -0.1], [-0.9, -0.5]]],
-  electric: [[[-0.95, -0.4], [-0.4, -0.75], [0.3, -0.7], [0.95, -0.5], [0.8, 0], [0.5, 0.1], [0.6, 0.5], [0.2, 0.3], [0, 0.7], [-0.2, 0.2], [-0.5, 0.4], [-0.8, 0]]],
-  energy: [[[-0.6, -0.9], [0.2, -0.9], [0.3, -0.5], [0, -0.2], [-0.1, 0], [-0.4, -0.3], [-0.7, -0.5]], [[-0.05, 0.05], [0.4, 0.15], [0.35, 0.5], [0.1, 0.95], [0, 0.5], [-0.1, 0.2]]],
-  physical: [[[-0.8, -0.2], [-0.3, -0.5], [0.1, -0.3], [0.3, -0.6], [0.7, -0.2], [0.8, 0.3], [0.4, 0.6], [-0.4, 0.5], [-0.8, 0.3]], [[0.75, 0.55], [0.9, 0.6], [0.8, 0.85]]],
+  fire: [[[-0.89, 0.56], [-0.88, 0.46], [-0.82, 0.34], [-0.81, 0.28], [-0.56, 0.34], [-0.53, 0.23], [-0.61, 0.11], [-0.51, 0.1], [-0.41, 0.06], [-0.32, 0], [-0.29, -0.07], [-0.18, -0.09], [-0.18, -0.18], [-0.18, -0.25], [-0.11, -0.27], [-0.12, -0.19], [-0.07, -0.12], [-0.03, -0.1], [0.08, -0.14], [0.16, -0.17], [0.17, -0.27], [0.23, -0.28], [0.2, -0.37], [0.31, -0.4], [0.35, -0.42], [0.54, -0.57], [0.8, 0.15], [0.73, 0.12], [0.69, 0.21], [0.62, 0.28], [0.49, 0.23], [0.46, 0.34], [0.46, 0.46], [0.4, 0.51], [0.32, 0.51], [0.29, 0.58], [0.32, 0.64], [0.27, 0.72], [0.23, 0.65], [0.16, 0.56], [0.16, 0.47], [0.03, 0.4], [-0.04, 0.3], [-0.09, 0.35], [-0.04, 0.47], [0.04, 0.5], [0.13, 0.56], [0.06, 0.59], [0.07, 0.62], [0.03, 0.66], [0.02, 0.57], [-0.04, 0.53], [-0.11, 0.48], [-0.16, 0.42], [-0.21, 0.35], [-0.26, 0.38], [-0.35, 0.39], [-0.42, 0.39], [-0.42, 0.45], [-0.52, 0.49], [-0.55, 0.56], [-0.58, 0.6], [-0.64, 0.64], [-0.77, 0.64]], [[-0.25, -0.33], [-0.22, -0.49], [-0.15, -0.55], [-0.04, -0.66], [0.02, -0.78], [0.08, -0.85], [0.15, -0.9], [0.24, -0.87], [0.26, -0.85], [0.24, -0.78], [0.28, -0.69], [0.32, -0.55], [0.35, -0.51], [0.3, -0.43], [0.21, -0.39], [0.18, -0.39], [0.15, -0.43], [0.14, -0.53], [0.2, -0.63], [0.14, -0.66], [0.13, -0.57], [0.08, -0.5], [0.06, -0.43], [0.09, -0.37], [0.04, -0.24], [-0.03, -0.17], [-0.06, -0.2], [-0.09, -0.33], [-0.18, -0.3]], [[-0.62, 0.01], [-0.4, 0], [-0.38, -0.07], [-0.42, -0.12], [-0.45, -0.19], [-0.43, -0.31], [-0.44, -0.37], [-0.49, -0.38], [-0.55, -0.29], [-0.53, -0.22], [-0.5, -0.16], [-0.54, -0.14], [-0.53, -0.04], [-0.59, -0.07]], [[-0.6, -0.09], [-0.58, -0.18], [-0.6, -0.25], [-0.68, -0.22], [-0.72, -0.11]], [[-0.75, -0.78], [-0.66, -0.85], [-0.56, -0.81], [-0.55, -0.72], [-0.67, -0.7], [-0.74, -0.76]]],
+  force: [[[-0.89, -0.35], [-0.85, -0.46], [-0.86, -0.51], [-0.74, -0.67], [-0.66, -0.73], [-0.55, -0.86], [-0.47, -0.84], [-0.36, -0.88], [-0.21, -0.89], [-0.2, -0.84], [-0.22, -0.81], [-0.11, -0.78], [0, -0.74], [0, -0.79], [0.11, -0.76], [0.21, -0.74], [0.28, -0.75], [0.32, -0.7], [0.42, -0.53], [0.46, -0.43], [0.59, -0.29], [0.61, -0.24], [0.78, -0.27], [0.78, -0.23], [0.72, -0.09], [0.58, 0.06], [0.52, 0.14], [0.5, 0.26], [0.53, 0.34], [0.52, 0.45], [0.38, 0.61], [0.37, 0.67], [0.3, 0.72], [0.29, 0.79], [0.23, 0.84], [0.16, 0.89], [0.06, 0.9], [0, 0.92], [-0.04, 0.9], [-0.05, 0.85], [-0.08, 0.78], [-0.12, 0.74], [-0.14, 0.64], [-0.2, 0.51], [-0.21, 0.45], [-0.17, 0.35], [-0.21, 0.21], [-0.29, 0.08], [-0.27, -0.03], [-0.31, -0.07], [-0.37, -0.06], [-0.45, -0.12], [-0.57, -0.08], [-0.71, -0.07], [-0.79, -0.14], [-0.83, -0.2], [-0.86, -0.25], [-0.9, -0.29]], [[0.74, 0.36], [0.75, 0.45], [0.64, 0.69], [0.59, 0.7], [0.56, 0.62], [0.6, 0.48]]],
+  electric: [[[-0.4, -0.73], [-0.29, -0.69], [-0.15, -0.73], [-0.09, -0.72], [0.02, -0.78], [0.11, -0.73], [0.23, -0.72], [0.27, -0.76], [0.38, -0.8], [0.43, -0.84], [0.5, -0.85], [0.53, -0.8], [0.55, -0.71], [0.53, -0.7], [0.61, -0.67], [0.64, -0.64], [0.68, -0.53], [0.59, -0.62], [0.51, -0.62], [0.47, -0.57], [0.49, -0.46], [0.55, -0.44], [0.58, -0.36], [0.58, -0.25], [0.53, -0.21], [0.53, -0.17], [0.57, -0.05], [0.53, -0.02], [0.5, -0.08], [0.47, -0.11], [0.43, -0.08], [0.41, -0.12], [0.37, -0.07], [0.43, -0.04], [0.41, 0.01], [0.47, 0.06], [0.49, 0.1], [0.47, 0.17], [0.43, 0.25], [0.37, 0.3], [0.3, 0.34], [0.26, 0.33], [0.23, 0.37], [0.22, 0.41], [0.28, 0.46], [0.29, 0.53], [0.24, 0.57], [0.21, 0.6], [0.21, 0.56], [0.17, 0.56], [0.12, 0.51], [0.11, 0.58], [0.18, 0.68], [0.19, 0.72], [0.18, 0.73], [0.12, 0.69], [0.07, 0.61], [0.07, 0.52], [0.05, 0.45], [-0.01, 0.46], [-0.02, 0.4], [-0.06, 0.35], [-0.1, 0.34], [-0.16, 0.34], [-0.17, 0.37], [-0.3, 0.45], [-0.31, 0.55], [-0.37, 0.58], [-0.39, 0.55], [-0.44, 0.41], [-0.44, 0.31], [-0.48, 0.26], [-0.53, 0.2], [-0.62, 0.16], [-0.68, 0.12], [-0.69, 0.1], [-0.71, 0.14], [-0.66, 0.2], [-0.71, 0.26], [-0.81, 0.27], [-0.92, 0.26], [-0.95, 0.25], [-0.94, 0.19], [-0.95, 0.04], [-0.94, -0.12], [-0.93, -0.16], [-0.89, -0.21], [-0.85, -0.26], [-0.91, -0.33], [-0.91, -0.38], [-0.88, -0.42], [-0.85, -0.4], [-0.81, -0.39], [-0.74, -0.31], [-0.67, -0.29], [-0.64, -0.33], [-0.62, -0.38], [-0.68, -0.43]], [[0.61, 0.02], [0.61, -0.04], [0.66, -0.05], [0.68, -0.09], [0.72, -0.12], [0.7, -0.18], [0.67, -0.25], [0.66, -0.23], [0.68, -0.17], [0.66, -0.13], [0.62, -0.08], [0.6, -0.04]], [[0.65, -0.25], [0.68, -0.27], [0.69, -0.32], [0.63, -0.33], [0.64, -0.28]], [[0.01, 0.66], [0.06, 0.69], [0.19, 0.78], [0.23, 0.84], [0.16, 0.82], [0.11, 0.77]], [[0.3, 0.7], [0.34, 0.69], [0.44, 0.59], [0.5, 0.61], [0.47, 0.69], [0.44, 0.77], [0.33, 0.78], [0.31, 0.74]], [[-0.32, 0.56], [-0.28, 0.61], [-0.29, 0.63], [-0.32, 0.63], [-0.32, 0.59]]],
+  energy: [[[-0.42, -0.91], [-0.34, -0.94], [-0.32, -0.94], [-0.31, -0.92], [-0.26, -0.91], [-0.21, -0.89], [-0.1, -0.88], [-0.13, -0.79], [-0.12, -0.77], [-0.05, -0.75], [-0.02, -0.71], [0.01, -0.74], [0.03, -0.8], [0.06, -0.82], [0.13, -0.8], [0.18, -0.76], [0.25, -0.71], [0.23, -0.65], [0.17, -0.61], [0.13, -0.59], [0.13, -0.56], [0.08, -0.55], [0.06, -0.49], [0.06, -0.47], [-0.02, -0.4], [0, -0.33], [-0.01, -0.3], [-0.03, -0.32], [-0.04, -0.36], [-0.06, -0.38], [-0.14, -0.38], [-0.15, -0.37], [-0.21, -0.38], [-0.27, -0.34], [-0.28, -0.25], [-0.25, -0.19], [-0.18, -0.19], [-0.17, -0.23], [-0.11, -0.24], [-0.14, -0.14], [-0.07, -0.14], [-0.06, -0.05], [-0.03, -0.02], [0.01, -0.03], [0.05, -0.01], [0.09, -0.05], [0.15, -0.08], [0.21, -0.05], [0.31, -0.05], [0.34, -0.02], [0.39, 0.02], [0.47, 0.05], [0.51, 0.1], [0.53, 0.14], [0.6, 0.16], [0.66, 0.17], [0.71, 0.2], [0.71, 0.26], [0.65, 0.33], [0.63, 0.41], [0.59, 0.48], [0.54, 0.5], [0.48, 0.55], [0.46, 0.58], [0.38, 0.66], [0.32, 0.68], [0.32, 0.71], [0.24, 0.73], [0.2, 0.76], [0.21, 0.78], [0.18, 0.81], [0.15, 0.82], [0.16, 0.84], [0.12, 0.87], [0.12, 0.88], [0.1, 0.9], [0.07, 0.88], [0.05, 0.83], [0.09, 0.78], [0.09, 0.72], [0.13, 0.62], [0.16, 0.45], [0.08, 0.4], [0.05, 0.35], [0.01, 0.26], [-0.02, 0.23], [0, 0.18], [0, 0.13], [0.02, 0.11], [0.04, 0.07], [0.05, 0.02], [-0.01, 0.01], [-0.05, -0.01], [-0.1, -0.04], [-0.13, -0.09], [-0.2, -0.11], [-0.24, -0.15], [-0.28, -0.14], [-0.35, -0.17], [-0.41, -0.23], [-0.4, -0.27], [-0.46, -0.28], [-0.47, -0.38], [-0.5, -0.4], [-0.51, -0.44], [-0.54, -0.48], [-0.54, -0.53], [-0.54, -0.57], [-0.49, -0.65], [-0.47, -0.68], [-0.45, -0.69], [-0.47, -0.71], [-0.46, -0.76], [-0.44, -0.8], [-0.44, -0.82], [-0.44, -0.83], [-0.46, -0.85], [-0.49, -0.84], [-0.52, -0.83], [-0.56, -0.81], [-0.58, -0.81], [-0.52, -0.84], [-0.5, -0.86], [-0.47, -0.88]], [[0, -0.26], [0.09, -0.21], [0.05, -0.21], [0, -0.25]]],
+  physical: [[[-0.88, 0.01], [-0.86, 0.14], [-0.76, 0.37], [-0.69, 0.38], [-0.58, 0.33], [-0.52, 0.27], [-0.4, 0.22], [-0.28, 0.31], [-0.22, 0.26], [-0.2, 0.33], [-0.15, 0.41], [-0.05, 0.41], [0.01, 0.43], [0.1, 0.39], [0.19, 0.22], [0.21, 0.1], [0.2, 0.01], [0.13, -0.08], [0, -0.19], [-0.02, -0.31], [-0.08, -0.34], [-0.11, -0.44], [-0.14, -0.37], [-0.13, -0.26], [-0.18, -0.23], [-0.25, -0.27], [-0.29, -0.39], [-0.41, -0.4], [-0.48, -0.34], [-0.51, -0.28], [-0.59, -0.3], [-0.69, -0.17], [-0.71, -0.1], [-0.81, -0.05]], [[-0.02, 0.49], [0.05, 0.49], [0.04, 0.56], [0, 0.57]], [[0.66, 0.36], [0.69, 0.42], [0.71, 0.47], [0.76, 0.49], [0.71, 0.53], [0.7, 0.55], [0.65, 0.58], [0.66, 0.53], [0.65, 0.51], [0.68, 0.45]], [[0.61, 0.54], [0.64, 0.57], [0.6, 0.61], [0.54, 0.65], [0.48, 0.7], [0.44, 0.68], [0.49, 0.62], [0.54, 0.6], [0.59, 0.57]], [[-0.46, -0.7], [-0.37, -0.71], [-0.25, -0.7], [-0.16, -0.68], [-0.01, -0.62], [0.05, -0.58], [0.04, -0.54], [0.12, -0.45], [0, -0.51], [-0.08, -0.49], [-0.12, -0.49], [-0.19, -0.52], [-0.23, -0.51], [-0.25, -0.6], [-0.37, -0.63], [-0.43, -0.65]]],
 };
-function landIcon(t, x, y, r, dimmed) {          // pianeta con il continente nel colore del tipo
-  const c = TYPES[t].color;
-  disc(x, y, r, "#0d1630"); disc(x, y, r, c, dimmed ? 0.05 : 0.12);
-  ctx.strokeStyle = c; ctx.globalAlpha = dimmed ? 0.4 : 0.9; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
-  ctx.globalAlpha = dimmed ? 0.45 : 1;
-  for (const part of LANDS[t]) poly(part.map(([u, v]) => [x + u * r * 0.72, y + v * r * 0.72]), c, "#e8eefc", 1);
-  ctx.globalAlpha = 1;
+function landIcon(t, x, y, r, dimmed) {          // globo con il continente nel colore del tipo: mare scuro, ombra della sfera, atmosfera del tipo
+  const c = TYPES[t].color, a0 = ctx.globalAlpha;
+  ctx.globalAlpha = a0 * (dimmed ? 0.5 : 1);
+  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+  g.addColorStop(0, "#1d3566"); g.addColorStop(1, "#0a1226");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 0.5, 0, 6.2832); ctx.clip();
+  for (const part of LANDS[t]) poly(part.map(([u, v]) => [x + u * r, y + v * r]), c, "rgba(7,11,22,0.5)", 0.8);
+  const s = ctx.createRadialGradient(x - r * 0.4, y - r * 0.45, r * 0.2, x - r * 0.1, y - r * 0.1, r * 1.25);
+  s.addColorStop(0, "rgba(255,255,255,0.18)"); s.addColorStop(0.45, "rgba(255,255,255,0)"); s.addColorStop(1, "rgba(5,8,20,0.6)");
+  ctx.fillStyle = s; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); ctx.restore();
+  ctx.strokeStyle = c; ctx.globalAlpha = a0 * (dimmed ? 0.4 : 0.9); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke();
+  ctx.globalAlpha = a0;
 }
 function planetScreen() {
   dim(0.8);
@@ -1435,11 +1620,11 @@ const FX = {
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.fill();
       ctx.strokeStyle = "rgba(232,238,252,0.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.stroke();
     } else {
-      const h = 8;                               // cubo in assonometria: faccia davanti, sopra e lato (metallo), lettera sulla faccia davanti
-      poly([[x - h, y - h + 3], [x - h + 4, y - h - 1], [x + h + 4, y - h - 1], [x + h, y - h + 3]], "#c9d2e6", "#4a5680", 1);
-      poly([[x + h, y - h + 3], [x + h + 4, y - h - 1], [x + h + 4, y + h - 1], [x + h, y + h + 3]], "#6f7ba3", "#4a5680", 1);
-      poly([[x - h, y - h + 3], [x + h, y - h + 3], [x + h, y + h + 3], [x - h, y + h + 3]], "#9aa6c8", "#4a5680", 1);
-      txt(r.d.letter, x, y + 4, 13, c, "center", "800");
+      const h = 8, [ct, cf, cs] = RANGER_CUBE[r.d.letter] || RANGER_CUBE.α;   // cubo in assonometria: sopra, davanti e lato nel colore del ranger (1.19.1)
+      poly([[x - h, y - h + 3], [x - h + 4, y - h - 1], [x + h + 4, y - h - 1], [x + h, y - h + 3]], ct, "#0d1124", 1);
+      poly([[x + h, y - h + 3], [x + h + 4, y - h - 1], [x + h + 4, y + h - 1], [x + h, y + h + 3]], cs, "#0d1124", 1);
+      poly([[x - h, y - h + 3], [x + h, y - h + 3], [x + h, y + h + 3], [x - h, y + h + 3]], cf, "#0d1124", 1);
+      glyph(r.d.letter, x, y + 3, 13, c);         // lettera al centro della faccia davanti
     }
   },
   prismRay(o) {                                  // Prisma gigante · raggio verticale: prima una linea sottile di avviso, poi il raggio
@@ -1453,11 +1638,12 @@ const FX = {
     for (let i = 0; i < 6; i++) pts.push([e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r]);
     poly(pts, "rgba(127,246,255,0.12)", "rgba(127,246,255," + k + ")", 2);
   },
-  husk(h) {                                      // speciale physical · guscio vuoto e invincibile, che svanisce alla fine
+  husk(h) {                                      // speciale physical · guscio vuoto e invincibile, ribaltato (zampe in alto), che svanisce alla fine
     const a = Math.min(1, h.t / 0.6), x = h.x, y = h.y, r = h.r;
-    ctx.globalAlpha = a; poly([[x - r, y + r * 0.2], [x - r * 0.85, y - r * 0.45], [x - r * 0.4, y - r * 0.85], [x + r * 0.4, y - r * 0.85], [x + r * 0.85, y - r * 0.45], [x + r, y + r * 0.2], [x + r * 0.6, y + r * 0.45], [x - r * 0.6, y + r * 0.45]], "#6c7488", "#d5dce8", 1.6);
-    ctx.strokeStyle = "#2a3048"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - r * 0.2, y - r * 0.8); ctx.lineTo(x, y - r * 0.2); ctx.lineTo(x - r * 0.25, y + r * 0.3); ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = a;
+    poly(FOE_LAYERS.crab[0].p.map(([u, v]) => [x + u * r, y - v * r]), "#6c7488", "#d5dce8", 1.6);
+    ctx.strokeStyle = "#2a3048"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - r * 0.2, y + r * 0.8); ctx.lineTo(x, y + r * 0.2); ctx.lineTo(x - r * 0.25, y - r * 0.3); ctx.stroke();
+    ctx.globalAlpha = a; crabLegs(x, y, r, "#9aa3b8", -1); ctx.globalAlpha = 1;
   },
   rangerFlame(o, r) {                            // ranger Alfa · fiammata: le fiamme della scia del Firewheel lungo il getto
     const n = Math.max(2, Math.round(o.len / 22)), ca = Math.cos(o.ang), sa = Math.sin(o.ang), q = clamp(o.t / 0.4, 0, 1), pts = [];

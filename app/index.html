@@ -2947,7 +2947,10 @@ function giantTick(e, dt) {
   if (b <= 0) return;
   if (e.def.look === "flagship") {
     e.icd = (e.icd === undefined ? 2 : e.icd) - dt;
-    if (e.icd <= 0) { e.icd = BOSS_L.interceptEvery(L); for (let i = 0; i < BOSS_L.interceptN(L); i++) interceptor(e.x + rnd(-0.7, 0.7) * e.def.box[0], b - 10); }
+    if (e.icd <= 0) {                              // salva solo con colpi delle torrette in volo (1.19.1), altrimenti riprova tra poco
+      if (!ents.some((o) => o.proj && !o.dead)) e.icd = 0.4;
+      else { e.icd = BOSS_L.interceptEvery(L); for (let i = 0; i < BOSS_L.interceptN(L); i++) interceptor(e.x + rnd(-0.7, 0.7) * e.def.box[0], b - 10); }
+    }
   } else if (e.def.look === "carrier") {
     e.rel = e.rel || []; e.wingsOut = b >= H * (1 - BOSS_L.wingsAt[0]);   // le ali compaiono al 75% di altezza [deciso]
     BOSS_L.wingsAt.forEach((k, i) => {
@@ -2963,16 +2966,31 @@ function giantTick(e, dt) {
     if (e.rcd <= 0) { e.rcd = BOSS_L.rayEvery(L); prismRay(e, e.x + rnd(-0.8, 0.8) * e.def.box[0]); }
   }
 }
-// fire: missile che insegue il colpo di torretta più vicino e lo distrugge (missili, bombe, sfere, proiettili del Railgun)
+// fire: missile che intercetta un colpo di torretta (missili, bombe, sfere, proiettili del Railgun) e lo distrugge. Dalla 1.19.1 ogni intercettore
+// prenota un colpo diverso (il più vicino libero), mira dove il colpo sarà (velocità stimata tra due passi) e vira più stretto; senza colpi in volo aspetta
+const interceptTaken = (o) => ents.some((m) => m.intercept && !m.dead && m.tg === o);
 function interceptor(x, y) {
-  spawnEnt({ x, y, a: Math.PI / 2, age: 0, dead: false, tint: "#ff4d6a", intercept: true,
+  spawnEnt({ x, y, a: Math.PI / 2, age: 0, dead: false, tint: "#ff4d6a", intercept: true, tg: null, last: null,
     update(dt) {
       this.age += dt; if (this.age > 6) { this.dead = true; return; }
-      let tg = null, bd = 1e9; for (const o of ents) if (o.proj && !o.dead) { const d = dist(o.x, o.y, this.x, this.y); if (d < bd) { bd = d; tg = o; } }
-      if (tg) { let d = Math.atan2(tg.y - this.y, tg.x - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d)); this.a += clamp(d, -5 * dt, 5 * dt); }
-      this.x += Math.cos(this.a) * 240 * dt; this.y += Math.sin(this.a) * 240 * dt;
-      if (tg && bd < 10) { tg.dead = true; this.dead = true; ring(this.x, this.y, 12, "#ff4d6a", 0.25); }
-      if (this.y > GROUND_Y || this.x < -20 || this.x > W + 20) this.dead = true;
+      if (!this.tg || this.tg.dead) {              // nuovo bersaglio: il colpo libero più vicino (se sono tutti presi, il più vicino)
+        this.tg = null; this.last = null; let bd = 1e9, bf = 1e9, free = null, any = null;
+        for (const o of ents) if (o.proj && !o.dead) { const d = dist(o.x, o.y, this.x, this.y); if (d < bd) { bd = d; any = o; } if (d < bf && !interceptTaken(o)) { bf = d; free = o; } }
+        this.tg = free || any;
+      }
+      const tg = this.tg, sp = 260;
+      if (tg) {
+        const vx = this.last ? (tg.x - this.last.x) / dt : 0, vy = this.last ? (tg.y - this.last.y) / dt : 0; this.last = { x: tg.x, y: tg.y };
+        const Dx = tg.x - this.x, Dy = tg.y - this.y, qa = vx * vx + vy * vy - sp * sp, qb = 2 * (Dx * vx + Dy * vy), qc = Dx * Dx + Dy * Dy;   // punto d’incontro: |D + V·t| = sp·t
+        const disc = qb * qb - 4 * qa * qc; let k = 0;
+        if (Math.abs(qa) < 1e-6) k = qb < 0 ? -qc / qb : 0; else if (disc >= 0) { const r1 = (-qb - Math.sqrt(disc)) / (2 * qa), r2 = (-qb + Math.sqrt(disc)) / (2 * qa); k = Math.min(...[r1, r2].filter((r) => r > 0), 2); if (!isFinite(k)) k = 0; }
+        const ax = tg.x + vx * k, ay = tg.y + vy * k;
+        let d = Math.atan2(ay - this.y, ax - this.x) - this.a; d = Math.atan2(Math.sin(d), Math.cos(d)); this.a += clamp(d, -9 * dt, 9 * dt);
+      }
+      const v = tg || this.age > 0.3 ? sp : 60;    // senza bersaglio esce piano dallo scafo
+      this.x += Math.cos(this.a) * v * dt; this.y += Math.sin(this.a) * v * dt;
+      if (tg && dist(tg.x, tg.y, this.x, this.y) < 12) { tg.dead = true; this.dead = true; ring(this.x, this.y, 12, "#ff4d6a", 0.25); }
+      if (this.y > GROUND_Y || this.y < -40 || this.x < -20 || this.x > W + 20) this.dead = true;
     },
     draw() { FX.missile(this, true); } });
 }
@@ -3505,7 +3523,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.19.0";
+const APP_VERSION = "1.19.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

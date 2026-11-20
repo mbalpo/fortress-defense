@@ -223,14 +223,18 @@ function scenes(turretIds) {
         setup: START(42) + " queue = []; enemies.length = 0; for (const x of [130, 180, 230]) { spawn({ enemy: 'brute', x }); Object.assign(enemies[enemies.length - 1], { y: 360, speed: 0, hp: 1e9, maxHp: 1e9 }); } RG.list[0].t = 0; player.cd = 1e9;",
         each: KEEP + " player.cd = 1e9; for (const e of enemies) e.hp = 1e9;", frames: 20 }, ["FX.ranger", "SUPPORT." + id]);
   // 1.19.0: boss giganti della Protezione planetaria (DESIGN.md § 17, fase 4), a metà schermo con la loro abilità
-  for (const [t, extra] of [["fire", " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);"], ["force", ""], ["electric", ""], ["energy", " b.rcd = 0;"], ["physical", " damage(b, b.hp * 0.55, 'fire', true);"]])
-    add(1, "boss-" + t, "Boss gigante · " + { fire: "Ammiraglia", force: "Nave madre", electric: "Disco volante", energy: "Prisma gigante", physical: "Meteorite" }[t],
-      { fire: "Lancia intercettori contro i colpi delle torrette.", force: "Ali dal 75% di altezza, rilascia gli alati.", electric: "A volte assorbe il danno (lampi).",
-        energy: "Raggio verticale di 160 px; non scende sotto il 25%.", physical: "A tutta larghezza; a metà vita si divide in due." }[t],
+  // 1.19.1: Nave madre e Disco volante ridisegnati, anello del Prisma, meteorite intero (scia d’ingresso, tremolio) e poi diviso
+  for (const [t, extra, id] of [["fire", " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);"], ["force", ""], ["electric", ""], ["energy", " b.rcd = 0;"], ["physical", " b.y -= 60;"],
+    ["physical", " damage(b, b.hp * 0.55, 'fire', true);", "boss-physical-diviso"]])
+    add(1, id || "boss-" + t, "Boss gigante · " + { fire: "Ammiraglia", force: "Nave madre", electric: "Disco volante", energy: "Prisma gigante", physical: "Meteorite" }[t] + (id ? " (diviso)" : ""),
+      id ? "A metà vita si divide in due pezzi con la vita rimasta (anche i pezzi entrano nell’atmosfera)." :
+      { fire: "Lancia intercettori: ognuno prenota un colpo delle torrette in volo e mira dove sarà.", force: "Scafo d’acciaio con strisce del tipo; motori, torrette che seguono il guardiano, radar, luci della pista; dal 75% di altezza escono le ali con i caccia agganciati, che rilascia come alati.",
+        electric: "Lente d’acciaio scuro: fascia con le luci che scorrono (davanti e dietro), cupola di vetro scuro, bagliore e antenna sotto, scariche sul bordo; a volte assorbe il danno (lampi).",
+        energy: "Anello di energia che gira poco sopra il nucleo; raggio verticale di 160 px; non scende sotto il 25%.", physical: "Intero, a tutta larghezza: scia di fuoco d’ingresso nell’atmosfera, bordo davanti arroventato, leggero tremolio." }[t],
       { progress: Object.assign({}, PP, { planet: Object.assign({}, PP.planet, { lv: { [t]: 6 } }) }),
         setup: "openPlanet(); startPlanet('" + t + "'); queue = []; enemies = []; for (let k = 1; k < 20; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); wave = 20; pw.next = Infinity; pw.choices = []; waveTime += 2.1; update(0.01);" +
           " const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + extra,
-        each: KEEP + " for (const x of enemies) if (x.final) x.speed = 0; player.cd = 1e9;", frames: t === "energy" ? 50 : 20 }, ["giantDetails", "FX.prismRay"]);
+        each: KEEP + " for (const x of enemies) if (x.final) x.speed = 0; player.cd = 1e9;", frames: t === "energy" ? 50 : 20 }, ["giantDetails", "giantBehind", "layerBody", "GIANT_LAYERS", "orbitRing", "FX.prismRay"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);
@@ -316,6 +320,7 @@ function tiles(M) {
   for (const n of [1, 2, 3, 4, 5]) add("pile:" + n, "Distruzione · " + n + (n > 1 ? " pile" : " pila"), `DRAW.statusIcon("destr", 0, 0, "#8aa0c8", { destrN: ${n} });`, [-9, -9, 18, 18], 5);
   add("tutti-gli-stati", "Tutti gli stati insieme", foe('ENEMY_DEFS["brute"]', { slowT: 1, paraT: 1, weakT: 1, vulnT: 1, burnT: 1, destrN: 3, destrT: 1 }), [-46, -42, 92, 66], 3);
   // effetti: una tessera per funzione di FX, più le parti delle torrette e dell’HUD
+  const CK = "const c0 = clock; clock = T; try { ", CK0 = " } finally { clock = c0; }";
   const FXT = {
     ring: ["const life = 0.35, o = { t: life - (T % 0.6) }; if (o.t > 0) FX.ring(o, 0, 0, 30, TYPES.physical.color, life);", [-36, -36, 72, 72], 2],
     bolt: ["const pts = [{ x: -30, y: -30 }, { x: -12, y: -14 }, { x: -20, y: 2 }, { x: 4, y: 8 }, { x: -2, y: 22 }, { x: 26, y: 30 }], o = { t: 0.15 - (T % 0.4) }; if (o.t > 0) FX.bolt(o, pts, TYPES.electric.color, 0.15, 1.5);", [-36, -36, 72, 72], 2],
@@ -346,6 +351,16 @@ function tiles(M) {
     domeGas: ["FX.domeGas(60 + 80 * ((T * 0.25) % 1), 1);", [0, 330, 360, 250], 1],
     domeAura: ["DRAW.drawDomeEdge(); FX.domeAura(['#e8eefc', '#ff8a3d', '#ffd166', '#3fe0a0'][Math.floor(T) % 4]);", [0, 440, 360, 140], 1],
     shieldCount: ["FX.shieldCount(0, 0, 1 + Math.floor(T) % 5);", [-12, -12, 24, 24], 4],
+    // 1.19.1: le tessere che mancavano (ranger, boss giganti, speciali, combo dell’Hive); CK = orologio del gioco portato al tempo del catalogo
+    ranger: [CK + "Object.keys(RANGER_DEF).forEach((id, i) => FX.ranger({ x: -88 + (i % 5) * 44, y: Math.floor(i / 5) * 36 - 10, bob: T + i, type: RANGER_DEF[id].type, d: RANGER_DEF[id] }));" + CK0, [-106, -30, 212, 76], 2],
+    prismRay: ["FX.prismRay({ x: 0, y0: -60, y1: 60, t: T % 1.6 });", [-20, -64, 40, 128], 1.5],
+    immune: [CK + "const e = { x: 0, y: 0, def: { r: 14 } }; FX.immune(e);" + CK0, [-24, -24, 48, 48], 3],
+    husk: ["FX.husk({ x: 0, y: 0, r: 17, t: 3 - (T % 3.6) });", [-24, -24, 48, 48], 3],
+    rangerFlame: [CK + "FX.rangerFlame({ len: 110, ang: -Math.PI / 2 + 0.5 * Math.sin(T), t: 0.4 }, { x: 0, y: 60 });" + CK0, [-70, -70, 140, 140], 1.5],
+    bubble: ["[0, 1, 2].forEach((k) => FX.bubble({ x: -24 + k * 24, y: 0, age: (T + k * 4) % RV.gammaLife, seed: k * 2 }));", [-40, -18, 80, 36], 3],
+    fireTrail: [CK + "FX.fireTrail([0, 1, 2, 3, 4].map((k) => ({ x: -48 + k * 24, y: 8 * Math.sin(k + T), t: 1 - k * 0.18 })), 1);" + CK0, [-64, -34, 128, 56], 2],
+    hiveBeam: ["[1, 2, 3].forEach((lvl, i) => { const o = { x: -40 + i * 40, y: 18, lvl, ray: { t: 0.3 } }; FX.hiveDrone(o); FX.hiveBeam(o, { x: -40 + i * 40 + 12 * Math.sin(T * 2 + i), y: -22 }); });", [-60, -34, 120, 66], 2],
+    hiveSparks: [CK + "[1, 2, 3].forEach((lvl, i) => { const o = { x: -36 + i * 36, y: 0, lvl, kami: 0 }; FX.hiveDrone(o); FX.hiveSparks(o); });" + CK0, [-56, -24, 112, 48], 3],
   };
   for (const k of M.fxKeys) { const t = FXT[k] || ["", [-20, -20, 40, 40], 2]; add("fx:" + k, "FX." + k, t[0], t[1], t[2], true, { fx: k, missing: !FXT[k] }); }
   add("parte:thunderDraw", "thunderDraw (sfere del Thunderbolt)", "DRAW.thunderDraw({ st: { sph: [{ x: -14, y: 0 }, { x: 14, y: 0 }] } });", [-28, -14, 56, 28], 3);
@@ -670,7 +685,7 @@ ${palette}
 <script type="text/plain" id="src-game">${P.game}</script>
 <script type="application/json" id="data-gfx">${JSON.stringify(P.gfx)}</script>
 <script type="application/json" id="data-scenes">${JSON.stringify(S.map((s) => ({ id: s.id, cfg: s.cfg }))).replace(/</g, "\\u003c")}</script>
-<script type="application/json" id="data-tiles">${JSON.stringify(T.map((t) => ({ key: t.key, code: t.code, box: t.box, zoom: t.zoom, anim: t.anim }))).replace(/</g, "\\u003c")}</script>
+<script type="application/json" id="data-tiles">${JSON.stringify(T.map((t) => ({ key: t.key, voce: t.voce, code: t.code, box: t.box, zoom: t.zoom, anim: t.anim }))).replace(/</g, "\\u003c")}</script>
 <script>
 "use strict";
 const harness = ${harness};

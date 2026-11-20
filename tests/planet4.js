@@ -41,9 +41,14 @@ console.log("— Collisioni con la sagoma —");
 console.log("— Abilità —");
 {
   const f = bossGame("fire"); f.ev("B().y = 100; B().speed = 0; B().icd = 0"); hold(f.ev); f.g.frame();
-  const n = f.ev("ents.filter((o) => o.intercept).length");
-  f.ev("const P = ents.find((o) => o.intercept); spawnEnt({ x: P.x, y: P.y + 30, dead: false, proj: true, update() {}, draw() {} })"); for (let i = 0; i < 20; i++) { hold(f.ev); f.g.frame(); }
-  console.log("Ammiraglia: salva di", n, "intercettori (livello 1: 2) | colpo di torretta distrutto:", f.ev("ents.filter((o) => o.proj).length") === 0, ok(n === 2 && f.ev("ents.filter((o) => o.proj).length") === 0));
+  const n0 = f.ev("ents.filter((o) => o.intercept).length");   // nessun colpo in volo: nessuna salva (1.19.1)
+  f.ev("spawnEnt({ x: 100, y: 330, dead: false, proj: true, update() {}, draw() {} }); spawnEnt({ x: 260, y: 600, dead: false, proj: true, update(dt) { this.y -= 300 * dt; }, draw() {} }); B().icd = 0");
+  hold(f.ev); f.g.frame(); hold(f.ev); f.g.frame();
+  const n = f.ev("ents.filter((o) => o.intercept).length"), two = f.ev("(() => { const m = ents.filter((o) => o.intercept); return m.length === 2 && !!m[0].tg && !!m[1].tg && m[0].tg !== m[1].tg; })()");
+  for (let i = 0; i < 60; i++) { hold(f.ev); f.g.frame(); }
+  const left = f.ev("ents.filter((o) => o.proj).length");
+  console.log("Ammiraglia: senza colpi in volo nessuna salva:", n0, "| salva di", n, "intercettori (livello 1: 2), su due colpi diversi:", two, "| colpi distrutti (uno fermo, uno che sale):", left === 0,
+    ok(n0 === 0 && n === 2 && two && left === 0));
 
   const c = bossGame("force", 4); c.ev("B().speed = 0");
   const at = (b) => { c.ev(`B().y += ${b} - bottomOf(B())`); hold(c.ev); c.g.frame(); return [c.ev("enemies.filter((e) => e.def.look === 'wing').length"), c.ev("!!B().wingsOut")]; };

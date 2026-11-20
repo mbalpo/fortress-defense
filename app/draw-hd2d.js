@@ -851,43 +851,94 @@ drawWorld = function drawWorld() {
 drawMenuBack = function drawMenuBack() { drawGround(); grade(); motes(); };   // i menu sul cielo, con la piattaforma
 // nemici: tutti e sette gli aspetti come sprite; un aspetto nuovo senza sprite usa il disegno classico
 const ROCK_LOOKS = ["rock", "asteroid", "meteor", "saucer"], SHIP_LOOKS = ["shard", "ship", "mothership"], baseEnemyBody = enemyBody;
-// nemici della Protezione planetaria (1.18.0): sprite a pixel dalla stessa sagoma della grafica classica, luce dall’alto a sinistra, dettagli sopra
-function inPoly(pts, u, v) { let o = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > v) !== (yj > v) && u < (xj - xi) * (v - yi) / (yj - yi) + xi) o = !o; } return o; }
-function hdFoe(e, c, look) {
-  const r = e.def.r, n = Math.ceil(r * 2.3 / PX), h = n / 2, P2 = ramp(c), sh = FOE_SHAPES[look], rd = FOE_ROUND[look];
-  const sp = procSprite("foe:" + look + ":" + c + ":" + r, n, n, (i, j) => {
-    const u = (i + 0.5 - h) / h * 1.15, v = (j + 0.5 - h) / h * 1.15;
-    if (rd ? u * u + v * v > rd * rd : !inPoly(sh, u, v)) return null;
-    const z = (u + v) * 0.5;                       // luce dall’alto a sinistra
-    return z < -0.45 ? P2[5] : z < -0.1 ? P2[4] : z < 0.3 ? P2[3] : z < 0.6 ? P2[2] : P2[1];
+// continenti (1.19.1): globo a pixel con il retino, mare scuro, continente nella rampa del tipo, luce dall’alto a sinistra, atmosfera a pixel
+landIcon = function landIcon(t, x, y, r, dimmed) {
+  const c = TYPES[t].color, P = ramp(c), n = Math.round(r * 2 / PX), h = n / 2;
+  const sp = procSprite("land:" + t + ":" + n, n, n, (i, j) => {
+    const u = (i + 0.5 - h) / h, v = (j + 0.5 - h) / h, d = u * u + v * v; if (d > 1) return null;
+    const lit = -u * 0.45 - v * 0.55 + Math.sqrt(1 - d) * 0.75, b = dith(i, j, clamp((lit + 0.25) / 1.25, 0, 0.999), 4);
+    return LANDS[t].some((p) => inPoly(p, u, v)) ? P[b + 1] : ["#070c1c", "#0c1630", "#132250", "#1c3170"][b];
   });
-  const a = ctx.globalAlpha;
+  ctx.globalAlpha = dimmed ? 0.5 : 1; blit(sp, x, y, h + 1, h + 1);
+  pxEllipse(x, y, r + 1, r + 1, c, dimmed ? 0.35 : 0.85); ctx.globalAlpha = 1;
+  if (!dimmed) light(x, y, r * 1.4, c, 0.22);
+};
+// sagome a strati (1.19.1): uno sprite a pixel per sagoma, colore e misura; luce dall’alto a sinistra, ogni strato con il bordo in rilievo
+// (chiaro in alto a sinistra, scuro in basso a destra); gli strati trasparenti si mescolano con quello sotto
+function layerBox(layers) {
+  if (layers.bb) return layers.bb;
+  let u0 = 9, v0 = 9, u1 = -9, v1 = -9;
+  for (const L of layers) for (const [u, v] of L.e ? [[L.e[0] - L.e[2], L.e[1] - L.e[3]], [L.e[0] + L.e[2], L.e[1] + L.e[3]]] : L.p) { u0 = Math.min(u0, u); v0 = Math.min(v0, v); u1 = Math.max(u1, u); v1 = Math.max(v1, v); }
+  return (layers.bb = [u0, v0, u1, v1]);
+}
+layerBody = function layerBody(key, layers, x, y, sx, sy, c) {
+  const [u0, v0, u1, v1] = layerBox(layers), nx = Math.max(2, Math.round((u1 - u0) * sx / PX)), ny = Math.max(2, Math.round((v1 - v0) * sy / PX));
+  const fl = c === "#ffffff", du = (u1 - u0) / nx, dv = (v1 - v0) / ny, cu = (u0 + u1) / 2, cv = (v0 + v1) / 2, hu = (u1 - u0) / 2, hv = (v1 - v0) / 2;
+  const sp = procSprite("lay:" + key + ":" + c + ":" + nx + "x" + ny, nx, ny, (i, j) => {
+    const u = u0 + (i + 0.5) * du, v = v0 + (j + 0.5) * dv;
+    const topAt = (uu, vv, below) => { for (let k = (below == null ? layers.length : below) - 1; k >= 0; k--) if (inLayer(layers[k], uu, vv)) return k; return -1; };
+    const colorOf = (k) => {
+      const L = layers[k], P = ramp(fl ? "#eef2ff" : roleCol(L.r, c));
+      let z = ((u - cu) / hu + (v - cv) / hv) * 0.5 + (L.d || 0) * 1.4;
+      if (L.s !== 0) { if (topAt(u - du, v - dv) < k) z -= 0.7; if (topAt(u + du, v + dv) < k) z += 0.7; }
+      const col = P[Math.min(L.r === "gd" || L.r === "k" ? 3 : 5, z < -0.45 ? 5 : z < -0.1 ? 4 : z < 0.3 ? 3 : z < 0.6 ? 2 : 1)];   // vetro scuro e nero non schiariscono
+      if (L.a == null || L.a >= 1) return col;
+      const b = topAt(u, v, k); return b < 0 ? (L.a >= 0.5 ? col : null) : mix(colorOf(b), col, L.a);
+    };
+    const k = topAt(u, v); return k < 0 ? null : colorOf(k);
+  });
+  blit(sp, x + u0 * sx, y + v0 * sy, 1, 1);
+};
+function hdFoe(e, c, look) {
+  const r = e.def.r, a = ctx.globalAlpha;
   if (look === "bomb") for (const d of [-0.3, 0.3]) pixelFlame(e.x + d * r, e.y - r * 0.7, 8 + 3 * Math.sin(clock * 11 + d * 7), 3, a, d > 0 ? 5 : 2);
-  blit(sp, e.x, e.y, h + 1, h + 1);
+  if (look === "spark") for (let k = 1; k <= 3; k++) pxDot(e.x + (k % 2 ? 2 : -2), e.y - r - k * 5, "#fff6b0", 0.6 * a / k);
+  ctx.globalAlpha = a;
+  layerBody(look, FOE_LAYERS[look], e.x, e.y, r, r, c);
   foeDetails(e, c, look);
   light(e.x, e.y, r * 2.2, c, 0.45 * a);
 }
-// boss giganti (1.19.0): un solo sprite a pixel per sagoma e colore (meteorite con il rumore della roccia), dettagli e luci sopra
+// boss giganti (1.19.0; a strati dalla 1.19.1): sprite a pixel della sagoma, il meteorite con il rumore della roccia; dettagli e luci sopra
+const hdRockR = (a) => 0.9 + 0.08 * Math.sin(a * 5) + 0.04 * Math.sin(a * 11);
+giantRockPath = function giantRockPath(e) {
+  ctx.beginPath(); for (let k = 0; k <= 48; k++) { const a = k / 48 * 6.2832, q = e.def.r * hdRockR(a); if (k) ctx.lineTo(e.x + Math.cos(a) * q, e.y + Math.sin(a) * q); else ctx.moveTo(e.x + q, e.y); } ctx.closePath();
+};
 function hdGiant(e, c, look) {
-  const P2 = ramp(c), box = e.def.box || [e.def.r, e.def.r], nx = Math.ceil(box[0] * 2 / PX), ny = Math.ceil(box[1] * 2 / PX);
-  const sp = procSprite("giant:" + look + ":" + c + ":" + box.join("x"), nx, ny, (i, j) => {
-    const u = (i + 0.5) / nx * 2 - 1, v = (j + 0.5) / ny * 2 - 1;
-    let inside;
-    if (look === "disc") inside = u * u + (v / 0.6) ** 2 <= 1;
-    else if (look === "bigrock") inside = u * u + v * v <= (0.9 + 0.08 * Math.sin(Math.atan2(v, u) * 5) + 0.04 * Math.sin(Math.atan2(v, u) * 11)) ** 2;
-    else inside = inPoly(GIANT_SHAPES[look], u, v);
-    if (!inside) return null;
-    const z = (u + v) * 0.5 + (look === "bigrock" ? (hash2(i, j) - 0.5) * 0.25 : 0);
-    return z < -0.5 ? P2[5] : z < -0.15 ? P2[4] : z < 0.25 ? P2[3] : z < 0.6 ? P2[2] : P2[1];
-  });
-  blit(sp, e.x, e.y, nx / 2 + 1, ny / 2 + 1);
+  giantBehind(e, c, look);
+  if (look === "bigrock") {
+    const P2 = ramp(c), n = Math.ceil(e.def.r * 2 / PX);
+    const sp = procSprite("giant:bigrock:" + c + ":" + n, n, n, (i, j) => {
+      const u = (i + 0.5) / n * 2 - 1, v = (j + 0.5) / n * 2 - 1, a = Math.atan2(v, u);
+      if (u * u + v * v > hdRockR(a) ** 2) return null;
+      const z = (u + v) * 0.5 + (hash2(i, j) - 0.5) * 0.25;
+      return z < -0.5 ? P2[5] : z < -0.15 ? P2[4] : z < 0.25 ? P2[3] : z < 0.6 ? P2[2] : P2[1];
+    });
+    blit(sp, e.x, e.y, n / 2 + 1, n / 2 + 1);
+  } else layerBody("giant:" + look, GIANT_LAYERS[look], e.x, e.y, e.def.box[0], e.def.box[1], c);
   giantDetails(e, c, look);
+  const box = e.def.box || [e.def.r, e.def.r];
   light(e.x, e.y, Math.max(box[0], box[1]) * 1.3, c, 0.35 * ctx.globalAlpha);
+  if (look === "bigrock") light(e.x, e.y + e.def.r * 0.8, e.def.r * 0.9, "#ff8a3d", 0.5);
 }
+const baseGiantBehind = giantBehind;
+giantBehind = function giantBehind(e, c, look) {   // HD-2D: scia del meteorite a pixel (lingue di fuoco e luce calda), il resto come la classica
+  if (look !== "bigrock") { baseGiantBehind(e, c, look); return; }
+  const r = e.def.r, a = ctx.globalAlpha;
+  for (let k = 0; k < 11; k++) {
+    const an = Math.PI + 0.25 + k / 10 * (Math.PI - 0.5), f = 0.75 + 0.35 * Math.sin(clock * 13 + k * 1.7);
+    pixelFlame(e.x + Math.cos(an) * r * 0.82, e.y + Math.sin(an) * r * 0.82, r * (0.35 + 0.3 * Math.abs(Math.sin(an))) * f, r * 0.08, a, k);
+  }
+  ctx.globalAlpha = a; light(e.x, e.y - r, r * 1.3, "#ff8a3d", 0.6);
+};
+orbitRing = function orbitRing(x, y, rx, ry, c, t) {   // HD-2D: anello a pixel, metà dietro tenue, luci che girano
+  pxEllipse(x, y, rx, ry, c, 0.35, Math.PI, 6.2832); pxEllipse(x, y, rx, ry, c, 0.9, 0, Math.PI);
+  for (let k = 0; k < 3; k++) { const an = t * 2.2 + k * 2.0944, s = Math.sin(an); pxDot(x + Math.cos(an) * rx, y + s * ry, s > 0 ? "#ffffff" : c, s > 0 ? 1 : 0.5); }
+  ctx.globalAlpha = 1; light(x, y, rx * 0.6, c, 0.25);
+};
 enemyBody = function enemyBody(e, c, look) {
   if (e.def.giant) { hdGiant(e, c, look); return; }
   if (ROCK_LOOKS.includes(look)) hdEnemy(e, c, look); else if (SHIP_LOOKS.includes(look)) hdEnemy2(e, c, look);
-  else if (FOE_SHAPES[look] || FOE_ROUND[look]) hdFoe(e, c, look); else baseEnemyBody(e, c, look);
+  else if (FOE_LAYERS[look]) hdFoe(e, c, look); else baseEnemyBody(e, c, look);
 };
 // barra della vita a pixel con il contorno, il fondo scuro e la riga chiara in alto
 enemyBar = function enemyBar(e, look) {
@@ -1118,14 +1169,16 @@ Object.assign(FX, {
     for (let i = 0; i < 6; i++) pxLine(e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r, e.x + Math.cos((i + 1) * 1.0472) * r, e.y + Math.sin((i + 1) * 1.0472) * r, "#7ff6ff", k);
     light(e.x, e.y, r * 1.6, "#7ff6ff", 0.4 * k); ctx.globalAlpha = 1;
   },
-  husk(h) {                                      // speciale physical · guscio vuoto; HD-2D: carapace a pixel grigio con la crepa
-    const a = Math.min(1, h.t / 0.6), n = Math.ceil(h.r * 2.3 / PX), m = n / 2;
+  husk(h) {                                      // speciale physical · guscio vuoto, ribaltato con le zampe in alto; HD-2D: carapace a pixel grigio con la crepa
+    const a = Math.min(1, h.t / 0.6), n = Math.ceil(h.r * 2.3 / PX), m = n / 2, sh = FOE_LAYERS.crab[0].p;
     const sp = procSprite("husk:" + h.r, n, n, (i, j) => {
       const u = (i + 0.5 - m) / m * 1.15, v = (j + 0.5 - m) / m * 1.15;
-      if (!inPoly(FOE_SHAPES.crab, u, v)) return null;
-      return Math.abs(u + 0.1 - v * 0.3) < 0.09 ? "#2a3048" : (u + v) < -0.3 ? "#c9d2e6" : (u + v) < 0.4 ? "#8d96ad" : "#5d6478";
+      if (!inPoly(sh, u, -v)) return null;
+      return Math.abs(u + 0.1 + v * 0.3) < 0.09 ? "#2a3048" : (u + v) < -0.3 ? "#c9d2e6" : (u + v) < 0.4 ? "#8d96ad" : "#5d6478";
     });
-    ctx.globalAlpha = a; blit(sp, h.x, h.y, m + 1, m + 1); ctx.globalAlpha = 1;
+    ctx.globalAlpha = a; blit(sp, h.x, h.y, m + 1, m + 1);
+    for (const sg of [-1, 1]) for (const k of [0, 1]) pxLine(h.x + sg * h.r * (0.5 + k * 0.25), h.y - h.r * 0.4, h.x + sg * h.r * (0.8 + k * 0.3), h.y - h.r * 0.85, "#9aa3b8", a);
+    ctx.globalAlpha = 1;
   },
   ranger(r) {                                    // ranger: sfera metallica (conversione) o cubo metallico con la lettera greca (supporto); HD-2D: a pixel, con luce del tipo
     const c = TYPES[r.type].color, x = r.x, y = r.y + Math.round(Math.sin(r.bob * 2.4) * 2.5 / PX) * PX;
@@ -1138,12 +1191,12 @@ Object.assign(FX, {
         ctx.fillRect(Math.round(x / PX) * PX + i * PX - PX / 2, Math.round(y / PX) * PX + j * PX - PX / 2, PX, PX);
       }
     } else {
-      const bx = Math.round(x / PX) * PX, by = Math.round(y / PX) * PX, n = 4;   // cubo: faccia davanti 8 × 8 pixel, sopra e lato più scuri
-      for (let j = -n; j < n; j++) for (let i = -n; i < n; i++) { ctx.fillStyle = j === -n || i === -n ? "#c9d2e6" : "#8d99bf"; ctx.fillRect(bx + i * PX, by + j * PX, PX, PX); }
-      ctx.fillStyle = "#dfe6f6"; for (let i = -n + 1; i <= n; i++) ctx.fillRect(bx + i * PX, by - (n + 1) * PX, PX, PX);
-      ctx.fillStyle = "#5d6890"; for (let j = -n; j < n; j++) ctx.fillRect(bx + n * PX, by + j * PX, PX, PX);
+      const bx = Math.round(x / PX) * PX, by = Math.round(y / PX) * PX, n = 4, [ct, cf, cs] = RANGER_CUBE[r.d.letter] || RANGER_CUBE.α;   // cubo: faccia davanti 8 × 8 pixel, sopra e lato nel colore del ranger (1.19.1)
+      for (let j = -n; j < n; j++) for (let i = -n; i < n; i++) { ctx.fillStyle = j === -n || i === -n ? ct : cf; ctx.fillRect(bx + i * PX, by + j * PX, PX, PX); }
+      ctx.fillStyle = mix(ct, "#ffffff", 0.25); for (let i = -n + 1; i <= n; i++) ctx.fillRect(bx + i * PX, by - (n + 1) * PX, PX, PX);
+      ctx.fillStyle = cs; for (let j = -n; j < n; j++) ctx.fillRect(bx + n * PX, by + j * PX, PX, PX);
       light(x, y, 16, c, 0.35);
-      txt(r.d.letter, x, y + 4, 13, c, "center", "800");
+      glyph(r.d.letter, bx, by, 13, c);              // lettera al centro della faccia davanti
     }
   },
   bubble(o) {                                    // ranger Gamma · bolla di sapone; HD-2D: cerchio a pixel iridescente, riflesso e luce energy

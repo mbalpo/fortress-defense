@@ -88,11 +88,12 @@ const T = [
     /invisibile dopo il 30%: .* ✓/, /con Iperione al 5 .* ✓/, /stato senza torretta che lo vede: .* ✓/, /Sky Guard: missili solo sul visibile: .* ✓/, /carapace sconfitto: .* ✓/, /colpo del guardiano bloccato .* ✓/,
     /bomba dell’Aeroblast lanciata: true .* ✓/, /dopo 4 s il guscio sparisce: 0 ✓/, /con Atlante al 10 .* ✓/, /scoperte per tipo: .* ✓/, /errori JS: nessuno ✓/]],
   ["planet4.js", "Protezione planetaria (fase 4): boss giganti, ingresso, collisioni con la sagoma, intercettori, alati, assorbimento, raggio, scissioni, vittoria, HD-2D",
-    [/sagome \(larghezza × altezza\): .* ✓/, /bersaglio appena si vede: .* ✓/, /colpo dritto in alto .* ✓/, /a 160 px dal centro .* ✓/, /Ammiraglia: salva di 2 .* ✓/,
+    [/sagome \(larghezza × altezza\): .* ✓/, /bersaglio appena si vede: .* ✓/, /colpo dritto in alto .* ✓/, /a 160 px dal centro .* ✓/, /Ammiraglia: senza colpi in volo nessuna salva: 0 \| salva di 2 .* su due colpi diversi: true .* ✓/,
     /Nave madre al livello 4 .* ✓/, /Disco volante: assorbimento .* ✓/, /Prisma gigante: si ferma .* ✓/, /Meteorite al livello 6 .* ✓/, /tutti i pezzi sconfitti → vittoria: won ✓/,
     /i cinque boss in HD-2D .* errori JS: nessuno ✓/]],
   ["catalog.js", "catalogo grafico: al passo con i file del gioco e completo", [/hash del catalogo: .* ✓/, /torrette \(TURRETS\): \d+\/\d+ nel catalogo ✓/,
-    /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/]],
+    /disegni \(TURRET_ART\): .* ✓/, /effetti per torretta: .* ✓/, /nemici \(ENEMY_DEFS\): .* ✓/, /stati \(STATUS_ICONS\): .* ✓/, /\(FX\): .* ✓/, /tipi di danno .* ✓/, /pezzi dell’equipaggiamento \(PIECES\): 6\/6 .* ✓/, /Moduli \(modIcon\): 6\/6 .* ✓/, /sezioni fisse: .* ✓/,
+    /catalogo-grafico\.html: tessere senza disegno nessuna ✓/, /catalogo-grafico-alternativo\.html: tessere senza disegno nessuna ✓/]],
 ];
 const only = process.argv.slice(2);
 let fails = 0; const t0 = Date.now();

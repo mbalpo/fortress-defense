@@ -3,6 +3,32 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.19.1 — Grafica di boss e nemici nuovi, continenti, ranger, intercettori, catalogo
+
+Correzioni chieste da Marco dopo la prova della 1.19.0 (richieste **[deciso]**, disegni **[Claude] [da rivedere]**, DESIGN.md § 17 “Grafica rivista”).
+- **Sagome a strati** (`draw.js`: `FOE_LAYERS`, `GIANT_LAYERS`, `drawLayers`, punto di aggancio `layerBody`): poligoni ed ellissi con un ruolo di colore (tipo, metallo, vetro, vetro scuro);
+  la HD-2D ne fa uno sprite a pixel con il bordo in rilievo (`layerBody` in `draw-hd2d.js`). Il colore del tipo non copre più tutta la forma dei boss nuovi.
+- **Nave madre** ridisegnata (scafo d’acciaio, ponte, strisce e prua del tipo; motori, torrette che seguono il guardiano, radar, luci della pista, hangar; ali che escono da sotto lo scafo
+  con i caccia agganciati). **Disco volante** ridisegnato (lente d’acciaio scuro, fascia con le luci che scorrono davanti e dietro, cupola scura, bagliore e antenna sotto, scariche).
+  **Prisma gigante**: anello di energia sopra il nucleo (`orbitRing`). **Meteorite**: intero all’inizio (nelle schermate e nel catalogo prima si vedeva solo diviso), scia d’ingresso
+  nell’atmosfera (`giantBehind`), bordo davanti arroventato, tremolio solo nel disegno.
+- **Intercettori dell’Ammiraglia**: prima puntavano sempre il colpo più vicino (tutti lo stesso, cambiando idea a ogni passo) e partivano anche senza colpi in volo, quindi giravano a vuoto.
+  Ora la salva parte solo con colpi delle torrette in volo; ogni intercettore prenota un colpo diverso, mira al punto d’incontro e vira più stretto (9 rad/s, prima 5).
+- **Nemici**: Dardo con dettagli (dorso, abitacolo, motore, luci); **Razzo** al posto della Gemma; **Artiglio** al posto del Corazzato; Kamikaze con due alette; **Spettro** ala stealth;
+  **Saetta** freccia frastagliata; **Prisma** come il gigante in miniatura; **guscio** del Carapace ribaltato con le zampe in alto (classica e HD-2D). Nomi in `ENEMY_NAME`; le scoperte non cambiano (stessa chiave `look`).
+- **Continenti**: globi con i contorni geografici veri semplificati (proiezione ortografica, `LANDS`), ombra della sfera; in HD-2D globo a pixel con il retino (prima mancava).
+- **Ranger di supporto**: lettera centrata davvero sulla faccia del cubo (`glyph`, misura il disegno della lettera) e cubo di un colore suo per ognuno (`RANGER_CUBE`).
+- **Catalogo**: tessere per `FX.ranger`, `FX.prismRay`, `FX.immune`, `FX.husk`, `FX.rangerFlame`, `FX.bubble`, `FX.fireTrail`, `FX.hiveBeam`, `FX.hiveSparks` (prima vuote in entrambi i cataloghi);
+  scena del meteorite intero e diviso.
+- DESIGN.md: § 13 senza “Ranger e Protezione planetaria” (costruita); § 17 grafica rivista, intercettori, nomi Razzo e Artiglio, colori dei cubi; continenti.
+
+**Test**: `npm test`: tutti verdi. `tests/planet4.js`: senza colpi in volo nessuna salva, due intercettori su due colpi diversi, distrutti sia un colpo fermo sia uno che sale.
+`tests/catalog.js`: nuovo controllo “tessere senza disegno: nessuna” in entrambi i cataloghi. `npm run screenshots`: guardate 85-100 (nuove 97-98 meteorite diviso, 99 continenti e 100 ranger in HD-2D).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D).
+
+Checklist: aggiornata (versione 43): nuovo gruppo da provare “Grafica rivista (1.19.1)”; nella 1.19 la voce sugli intercettori diventa “mirano ai colpi”; nomi Razzo e Artiglio; tolta da “Resto del progetto” la voce “Ranger e Protezione planetaria”; tra i valori di Claude disegni e colori dei cubi.
+
 ## Documentazione — tolti eventi a roulette e uova (nessuna versione nuova)
 
 - **[deciso]** (Marco): gli eventi a roulette / estrazione e le uova e ricompense dei ranger non si costruiscono più, perché gestiti in altro modo.

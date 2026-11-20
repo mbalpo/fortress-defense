@@ -254,11 +254,18 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
 { // 1.19.0: boss giganti della Protezione planetaria (DESIGN.md § 17, fase 4), classica e HD-2D, a metà schermo (bordo inferiore a 320)
   const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
   let n = 87;
-  for (const t of ["fire", "force", "electric", "energy", "physical"]) for (const settings of [null, { graphics: "hd2d" }]) {
+  for (const tt of ["fire", "force", "electric", "energy", "physical", "physical-diviso"]) for (const settings of [null, { graphics: "hd2d" }]) {
+    const split = tt === "physical-diviso", t = split ? "physical" : tt;
     const g = game({ progress: { cleared: 64, seen: ALL_SEEN, planet: { lv: { [t]: 6 }, frags: {}, day: { d: "", n: 0 }, eq: [] } }, settings, src }), e = g.w.__ev;
     e(`openPlanet(); startPlanet("${t}"); queue = []; enemies = []; for (let k = 1; k < 18; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); waveTime += 2.1`);
-    e("update(0.01); const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + (t === "physical" ? " damage(b, b.hp * 0.55, 'fire');" : "") + (t === "energy" ? " b.rcd = 0;" : "") + (t === "fire" ? " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);" : ""));
+    e("update(0.01); const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + (split ? " damage(b, b.hp * 0.55, 'fire');" : t === "physical" ? " b.y -= 60;" : "") + (t === "energy" ? " b.rcd = 0;" : "") + (t === "fire" ? " b.icd = 0; slots[0] = makeShooter(TURRETS.sky, SLOT_X[0], GROUND_Y - 14);" : ""));
     for (let k = 0; k < (t === "energy" ? 50 : 20); k++) { e("domeHp = domeMax; if (state === 'upgrade') pick(0); for (const x of enemies) if (x.final) x.speed = 0"); g.frame(); }
-    g.save((n++) + "-boss-" + t + (settings ? "-hd2d" : "") + ".png");
+    g.save((n++) + "-boss-" + t + (split ? "-diviso" : "") + (settings ? "-hd2d" : "") + ".png");
   }
+}
+{ // 1.19.1: continenti a pixel e cubi dei ranger in HD-2D
+  const PP = { cleared: 64, seen: ALL_SEEN, planet: { lv: { fire: 2, force: 0, electric: 1, energy: 0, physical: 0 }, frags: { alfa: 650, sigma: 1100 }, day: { d: "", n: 0 }, eq: ["sigma"] } };
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const g = game({ progress: PP, settings: { graphics: "hd2d" }, src }); g.w.__ev("openPlanet()"); g.frame(); g.save("99-planetaria-hd2d.png");
+  g.w.__ev("openRangers('planet')"); g.frame(); g.save("100-ranger-hd2d.png");
 }

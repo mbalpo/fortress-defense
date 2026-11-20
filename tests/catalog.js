@@ -49,5 +49,8 @@ for (const file of [C.OUT, path.join(path.dirname(C.OUT), "catalogo-grafico-alte
     w.__cat.step(10); errs = w.__cat.errors; gfx = w.__ev("DRAW.GFX_ON"); w.close();
   } catch (e) { errs = [e.message]; }
   const want = name.includes("alternativo") ? "hd2d" : "classic";
+  // 1.19.1: ogni tessera ha davvero un disegno (FX.ranger, FX.prismRay, FX.husk… avevano la tessera vuota)
+  const empty = JSON.parse($("#data-tiles").textContent).filter((t) => !String(t.code || "").trim()).map((t) => t.voce || t.key);
+  console.log(name + ": tessere senza disegno " + (empty.length ? empty.join(", ") : "nessuna"), ok(!empty.length));
   console.log(name + " nel browser: scena “battaglia” " + (errs.length ? "errori: " + errs.join("; ") : "senza errori") + " | grafica " + gfx, ok(!errs.length && gfx === want));
 }
