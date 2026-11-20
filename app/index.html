@@ -192,6 +192,41 @@ const SEE_INVIS = ["laser", "beam", "disr", "vortex", "wheel"];
 const PLANET_SIZE = { drone: "l", wisp: "l", spitter: "m", shell: "m", brute: "p" };
 const bossDef = (lv, n) => ({ type: TYPE_KEYS[(lv + n / 5) % 5], hp: 480, speed: 20, r: 24, dmg: 9, boss: true, look: "ship",
   kbRes: 0.4 + 0.1 * ((lv * 7 + n / 5) % 5), statRes: 0.25 + 0.1 * ((lv * 3 + n / 5) % 4) });   // resistenze variabili: spinte 40-80%, stati 25-55%
+/* ---------- MINI-BOSS MAGGIORI (1.23.0, DESIGN.md § 17) ----------
+   Cinque abilità, ognuna in tutti i tipi [deciso, Marco]: il tipo segue bossDef (a rotazione; nei continenti quello del continente), l’abilità è indipendente.
+   Campagna, per difficoltà (uguale in Standard ed Epica): dalla 70 l’ondata 15, dalla 85 la 10 e la 15, dalla 100 tutte e tre. Protezione planetaria per livello
+   del continente: 3-4 la 15, 5-6 la 10 e la 15, dal 7 tutte. Vita, velocità e danno della nave aliena [Claude, provvisorio]; aspetto in draw.js (FOE_LAYERS). */
+const MAJOR_DEF = {
+  split:   { name: "Asteroide maggiore", look: "mrock",  r: 26, ab: "Scissione",    txt: "Scissione: a metà vita si divide, fino a 4 pezzi" },
+  adapt:   { name: "Cristallo maggiore", look: "mshard", r: 24, ab: "Adattamento",  txt: "Adattamento: ogni 10% di vita persa cambia resistenza" },
+  regen:   { name: "Artiglio maggiore",  look: "mclaw",  r: 26, ab: "Incremento",   txt: "Incremento: ogni 2 s rigenera fino a 4 nemici" },
+  invis:   { name: "Prisma maggiore",    look: "mprism", r: 24, ab: "Invisibilità", txt: "Invisibile a −30% di vita; raggio da lontano" },
+  deflect: { name: "Riflesso maggiore",  look: "mirror", r: 24, ab: "Deviazione",   txt: "Deviazione: metà del danno va agli altri nemici" },
+};
+const MAJOR_KEYS = Object.keys(MAJOR_DEF);
+const MAJ = {
+  from: [[100, [5, 10, 15]], [85, [10, 15]], [70, [15]]],                         // campagna: difficoltà → ondate con il maggiore [deciso]
+  planet: (L) => (L >= 7 ? [5, 10, 15] : L >= 5 ? [10, 15] : L >= 3 ? [15] : []),   // Protezione planetaria [deciso]; quali ondate nei livelli 3-6 [Claude]
+  splits: 2, splitDmg: 0.6, splitR: 0.72,   // Scissione: 2 generazioni (4 pezzi), danno ×0,6 a ogni scissione [deciso]; raggio dei pezzi ×0,72 [Claude]
+  adaptStep: 0.1, adaptMax: 9,              // Adattamento: ogni 10% di vita persa, al massimo 9 cambi [deciso]
+  regenEvery: 2, regenN: 4,                 // Incremento: ogni 2 s, fino a 4 nemici [deciso]
+  invisAt: 0.3, invisT: 10, stopAt: 0.75,   // Invisibilità: a −30% di vita, per 10 s; si ferma con il bordo inferiore al 25% dal basso [deciso]
+  deflect: 0.5, orbEvery: 0.4, orbT: 0.7,   // Deviazione: 50% del danno, una sfera ogni 0,4 s [deciso]; volo della sfera 0,7 s [Claude]
+};
+function majorWaves() {                     // ondate dei mini-boss maggiori nel livello in corso
+  if (mode === "planet") return MAJ.planet(campLevel);
+  const D = curDiff(), r = MAJ.from.find(([d]) => D >= d); return r ? r[1] : [];
+}
+// quale maggiore [Claude, da rivedere]: con k = ondata ÷ 5 il tipo è (lv + k) % 5 (bossDef) e l’abilità (lv + ⌊lv ÷ 5⌋ + k) % 5: abilità diverse nello stesso livello,
+// e la differenza tra abilità e tipo cambia ogni 5 livelli, così in 25 livelli di fila escono tutte le 25 combinazioni (nei continenti tutte le abilità del tipo)
+const majorOf = (lv, n) => MAJOR_KEYS[(lv + Math.floor(lv / 5) + n / 5) % 5];
+function miniDef(lv, n) {                   // mini-boss dell’ondata n: nave aliena o maggiore
+  const d = bossDef(lv, n); if (mode === "planet") d.type = planetType;
+  if (!majorWaves().includes(n)) return d;
+  const ab = majorOf(lv, n), M = MAJOR_DEF[ab];
+  return Object.assign(d, { major: ab, look: M.look, name: M.name, r: M.r, gl: mode === "planet" ? campLevel : campGiantLv(curDiff()),   // gl: livello del raggio, come i giganti
+    split: ab === "split" ? MAJ.splits : 0, stopAt: ab === "invis" ? H * MAJ.stopAt : 0 });
+}
 // vita base del boss finale, tarata con i bot perché i muri si superino circa nel 30% delle partite (scelta di Marco):
 // 10, 20, 30 sul pool libero; dal 40 con l’albero atteso e le abilità della barriera, 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (cresce in fretta all’inizio, poi piano)
 const FINAL_BOSS_HP = { 10: 400, 20: 2250, 30: 1450 };
@@ -1295,16 +1330,21 @@ function popup(e, v, mult, src) {
 function damage(e, base, type, quiet, src, ignore) {
   if (e.immT > 0) return;                          // speciale energy: immune ai danni, anche da stato (1.18.0)
   if (e.def.absorb && Math.random() < e.def.absorb) { if (!quiet) absorbFx(e); return; }   // disco volante: assorbe il colpo (1.19.0)
-  let mult = e.def.selfRes != null && type === e.def.type ? 1 - e.def.selfRes : RESIST[e.def.type][type];   // nemici della Protezione planetaria: resistenza propria al loro tipo
+  let mult = e.def.selfRes != null && type === e.def.type ? 1 - e.def.selfRes : (e.res || RESIST[e.def.type])[type];   // nemici della Protezione planetaria: resistenza propria al loro tipo; Cristallo maggiore: profilo attivo
+  if (e.adAcc) e.adAcc[type] = (e.adAcc[type] || 0) + base;           // Adattamento: danni contati prima delle resistenze
   if (ignore && mult < 1) mult = ignore === true ? 1 : mult + (1 - mult) * ignore;
   if (type === "fire" && e.fireVulnT > 0) mult *= 1.3;              // Scia combustibile (Firewheel)
   if (e.vulnT > 0 && (e.vulnType === "all" || e.vulnType === type)) mult *= 1 + 0.25 * (1 - (e.statRes || 0));
   if (e.fieldT > 0 && src !== "disr") mult *= e.fieldAmp;
-  const d = base * mult;
+  let d = base * mult;
+  if (e.def.major === "deflect" && src !== "deflect" && !e.dead && deflectTarget(e)) { const k = d * MAJ.deflect; d -= k; e.dfAcc += k; }   // Riflesso maggiore: devia metà del danno
   e.hp -= d; e.flash = 0.06;
   if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
-  else if (e.def.split > 0 && !e.dead && e.hp <= e.maxHp / 2) splitRock(e);   // meteorite: si divide a metà vita
-  else if (e.def.special === "invis" && !e.invisUsed && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) e.invis = e.invisUsed = true;   // speciale force: diventa invisibile (una volta)
+  else if (e.def.split > 0 && !e.dead && e.hp <= e.maxHp / 2) splitRock(e);   // meteorite e Asteroide maggiore: si dividono a metà vita
+  else if ((e.def.special === "invis" || e.def.major === "invis") && !e.invisUsed && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) {   // speciale force e Prisma maggiore: invisibile (una volta)
+    e.invis = e.invisUsed = true; if (e.def.major) e.invisT = MAJ.invisT;
+  }
+  if (e.adAcc && !e.dead) while (e.adN < MAJ.adaptMax && e.hp <= e.maxHp * (1 - MAJ.adaptStep * (e.adN + 1))) adaptShift(e);   // Cristallo maggiore: ogni 10% di vita persa
   if (quiet) {                       // danno continuo: un numero ogni tanto
     e.acc += d;
     if (e.accT > 0) return;
@@ -2906,7 +2946,7 @@ function pick(i) {
 const ALERT_T = 3.5;
 let alerts = [];
 // mini-boss e boss finale si scoprono tipo per tipo; gli altri nemici per aspetto
-const seenKey = (def) => def.look === "ship" || def.look === "mothership" || def.planet ? def.look + ":" + def.type : def.look;   // nemici della Protezione planetaria: per tipo
+const seenKey = (def) => def.look === "ship" || def.look === "mothership" || def.planet || def.major ? def.look + ":" + def.type : def.look;   // nemici della Protezione planetaria e mini-boss maggiori: per tipo
 function markSeen(e) {
   const k = seenKey(e.def); if (!e.def.look || progress.seen.includes(k)) return;
   progress.seen.push(k); saveProgress(); alerts.push({ def: e.def, t: ALERT_T });
@@ -3011,7 +3051,7 @@ function startWave(n) {
       queue.push({ t: g.at + i * g.every, enemy: nw && Math.random() < CAMP_NEW.share ? newOf(g.enemy) : g.enemy, x: 30 + Math.random() * (W - 60) });
   if (nw && n >= 3) for (let i = 0; i < 1 + Math.floor((n - 3) / 5); i++) queue.push({ t: 2 + i * 3, enemy: TYPE_KEYS[Math.floor(Math.random() * 5)] + "_s", x: 30 + Math.random() * (W - 60) });
   if (hasMiniBosses() && CAMPAIGN.bossWaves.includes(n))                       // mini-boss
-    queue.push({ t: 3, enemy: "boss", def: bossDef(campLevel, n), x: W / 2 });
+    queue.push({ t: 3, enemy: "boss", def: miniDef(campLevel, n), x: W / 2 });   // nave aliena o, dalla difficoltà 70, maggiore (1.23.0)
   if (n === N_WAVES && hasFinalBoss())                                         // boss finale (dal 70 alternato con i giganti)
     queue.push({ t: 2, enemy: "boss", def: campFinalDef(campLevel), x: W / 2 });
   queue.sort((a, b) => a.t - b.t);
@@ -3035,7 +3075,7 @@ function planetWave(n) {
   for (const g of waveSpec(n, D).groups)           // solo nemici del tipo del continente (1.18.0): stessa taglia del nemico della campagna
     for (let i = 0; i < g.count; i++) queue.push({ t: t0 + g.at + i * g.every, enemy: t + "_" + PLANET_SIZE[g.enemy], w: n, x: 30 + Math.random() * (W - 60) });
   if (n >= 3) for (let i = 0; i < 1 + Math.floor((n - 3) / 5); i++) queue.push({ t: t0 + 2 + i * 3, enemy: t + "_s", w: n, x: 30 + Math.random() * (W - 60) });
-  if (CAMPAIGN.bossWaves.includes(n)) queue.push({ t: t0 + 3, enemy: "boss", def: Object.assign(bossDef(campLevel, n), { type: planetType }), w: n, x: W / 2 });
+  if (CAMPAIGN.bossWaves.includes(n)) queue.push({ t: t0 + 3, enemy: "boss", def: miniDef(campLevel, n), w: n, x: W / 2 });   // tipo del continente; maggiori dal livello 3
   if (n === PLANET.bossAt) queue.push({ t: t0 + 2, enemy: "boss", def: planetBossDef(), w: N_WAVES, x: W / 2 });
   queue.sort((a, b) => a.t - b.t);
   pw.next = n < N_WAVES ? t0 + planetWaveT(n, D) : Infinity;
@@ -3150,14 +3190,69 @@ function prismRay(e, x) {
     draw() { FX.prismRay(this); } });
 }
 // physical: a metà vita il meteorite si divide in due con la vita rimasta (anche i pezzi, finché restano scissioni)
+// Dalla 1.23.0 vale anche per l’Asteroide maggiore (pezzi più grandi, danno ×0,6 a ogni scissione); grp = pezzi ancora vivi dello stesso boss:
+// ricompensa, contatore dei mini-boss e Sigillo maggiore arrivano solo alla morte dell’ultimo pezzo
 function splitRock(e) {
   e.dead = true; e.rewarded = true;
+  const grp = e.grp || { left: 1 }, mini = !e.def.giant; grp.left++;   // il pezzo diviso esce, ne entrano due
   for (const sg of [-1, 1]) {
-    const d = Object.assign({}, e.def, { r: e.def.r / 2, split: e.def.split - 1 });
-    enemies.push(Object.assign({}, e, { def: d, dead: false, rewarded: false, x: clamp(e.x + sg * e.def.r / 2, d.r * 0.6, W - d.r * 0.6), hp: e.hp / 2, maxHp: e.maxHp / 2,
-      shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34) }));
+    const d = Object.assign({}, e.def, { r: e.def.r * (mini ? MAJ.splitR : 0.5), split: e.def.split - 1 });
+    enemies.push(Object.assign({}, e, { def: d, grp, dead: false, rewarded: false, x: clamp(e.x + sg * e.def.r / 2, d.r * 0.6, W - d.r * 0.6), hp: e.hp / 2, maxHp: e.maxHp / 2,
+      dmg: e.dmg * (mini ? MAJ.splitDmg : 1), shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34) }));
   }
-  ring(e.x, e.y, e.def.r * 0.8, TYPES.physical.color, 0.5);
+  ring(e.x, e.y, e.def.r * 0.8, TYPES[e.def.type].color, 0.5);
+}
+/* ---------- abilità dei mini-boss maggiori (1.23.0) ---------- */
+// Cristallo maggiore: prende il profilo del tipo da cui ha subito più danni nel tratto appena finito (parità o nessun danno: invariato)
+// profilo del tipo T = quello della tabella RESIST per il nemico di tipo T: resiste a T ×0,5, debole a un altro ×1,5 [deciso]
+function adaptShift(e) {
+  e.adN++; let best = null, bv = 0, tie = false;
+  for (const t of TYPE_KEYS) { const v = e.adAcc[t] || 0; if (v > bv) { bv = v; best = t; tie = false; } else if (v > 0 && v === bv) tie = true; }
+  e.adAcc = {};
+  if (!best || tie || best === (e.adT || e.def.type)) return;
+  e.adT = best; e.res = RESIST[best]; ring(e.x, e.y, e.def.r + 12, TYPES[best].color, 0.45);
+}
+// Riflesso maggiore: nemici validi per le sfere (tutti gli altri in campo); la sfera va su quello con più vita
+const deflectTarget = (e) => { let b = null; for (const o of living()) if (o !== e && !o.dead && (!b || o.hp > b.hp)) b = o; return b; };
+function deflectOrb(e, tg, dmg) {
+  const type = e.def.type;
+  spawnEnt({ x: e.x, y: e.y, x0: e.x, y0: e.y, t: 0, tg, dmg, color: TYPES[type].color, dead: false,
+    update(dt) {
+      if (this.tg.dead) { this.tg = deflectTarget(e) || this.tg; if (this.tg.dead) { this.dead = true; return; } }   // bersaglio morto in volo: il più forte rimasto
+      this.t += dt; const k = Math.min(1, this.t / MAJ.orbT), tg = this.tg;
+      this.x = this.x0 + (tg.x - this.x0) * k; this.y = this.y0 + (tg.y - this.y0) * k - 280 * k * (1 - k);   // parabola: 70 px sopra la retta a metà volo
+      if (k >= 1) { this.dead = true; damage(tg, this.dmg, type, false, "deflect"); ring(tg.x, tg.y, tg.def.r + 6, this.color, 0.3); }
+    },
+    draw() { FX.deflectOrb(this); } });
+}
+// a ogni passo: Incremento (cavi e rigenerazione), Invisibilità (durata e raggio), Deviazione (sfere)
+function miniTick(e, dt) {
+  const ab = e.def.major;
+  if (ab === "regen") {
+    e.rgTg = e.rgTg.filter((o) => !o.dead);         // un bersaglio morto si sostituisce; al massimo 4, mai doppi [deciso]
+    if (e.rgTg.length < MAJ.regenN) {
+      const c = living().filter((o) => !o.boss && !e.rgTg.includes(o)).sort((a, b) => dist(a.x, a.y, e.x, e.y) - dist(b.x, b.y, e.x, e.y));
+      e.rgTg.push(...c.slice(0, MAJ.regenN - e.rgTg.length));
+    }
+    if ((e.rgCd -= dt) <= 0) {                      // un solo timer da 2 s: a ogni bersaglio il danno al secondo del guardiano
+      e.rgCd = MAJ.regenEvery; const v = guardDps(player), col = TYPES[e.def.type].color;
+      for (const o of e.rgTg) if (o.hp < o.maxHp) {
+        o.hp = Math.min(o.maxHp, o.hp + v); o.healT = 1; o.healC = col;
+        if (floaters.length < 60) floaters.push({ x: o.x, y: o.y - o.def.r - 6, life: 1, max: 1, size: 14, txt: "+", color: col });
+      }
+    }
+  } else if (ab === "invis") {
+    if (e.invis && (e.invisT -= dt) <= 0) reveal(e);   // dopo 10 s torna visibile (prima, con uno stato da una torretta che lo vede)
+    e.rcd = (e.rcd === undefined ? 3 : e.rcd) - dt;
+    if (e.rcd <= 0) { e.rcd = BOSS_L.rayEvery(e.def.gl); prismRay(e, e.x); }
+  } else if (ab === "deflect") {
+    e.dfCd -= dt;
+    if (e.dfCd <= 0 && e.dfAcc > 0) {
+      const tg = deflectTarget(e), v = e.dfAcc; e.dfAcc = 0; e.dfCd = MAJ.orbEvery;
+      if (tg) deflectOrb(e, tg, v);
+      else { e.hp -= v; if (e.hp <= 0) { e.dead = true; onDeath(e); } }   // nessuno a cui mandarlo (tutti morti nel frattempo): lo subisce lui
+    }
+  }
 }
 const planetResumeWave = () => { let k = 1; while (k < N_WAVES && pw.clr[k]) k++; return k; };   // prima ondata non ripulita
 function planetTick(dt) {
@@ -3194,6 +3289,7 @@ function spawn(q) {
     flash: 0, phase: rnd(0, 6.28), dead: false, acc: 0, accT: 0, atk: 0.3,
     shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34), rot: rnd(0, 6.28), spin: rnd(-0.8, 0.8),
     slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, skyBurnT: 0, skyBurnS: null, fireVulnT: 0, shock: 0, shockCd: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
+    ...(d.major === "adapt" ? { adAcc: {}, adN: 0 } : d.major === "regen" ? { rgTg: [], rgCd: MAJ.regenEvery } : d.major === "deflect" ? { dfAcc: 0, dfCd: 0 } : {}),   // mini-boss maggiori (1.23.0)
   });
 }
 
@@ -3328,6 +3424,8 @@ function update(dt) {
     e.accT = Math.max(0, e.accT - dt); e.flash = Math.max(0, e.flash - dt); e.rot += e.spin * dt;
     e.destrT = Math.max(0, e.destrT - dt); if (e.destrT <= 0) e.destrN = 0;
     e.skyBurnT = Math.max(0, e.skyBurnT - dt); e.fireVulnT = Math.max(0, e.fireVulnT - dt);
+    if (e.healT > 0) e.healT -= dt;                  // bagliore della rigenerazione (Artiglio maggiore)
+    if (e.def.major) { miniTick(e, dt); if (e.dead) continue; }   // abilità dei mini-boss maggiori (1.23.0)
     if (e.def.special === "immune") {               // speciale energy: ogni immEvery s immune per immFor s (fase a caso all’uscita)
       if (e.immCd === undefined) e.immCd = Math.random() * SPECIAL.immEvery;
       if (e.immT > 0) e.immT -= dt; else if ((e.immCd -= dt) <= 0) { e.immT = SPECIAL.immFor; e.immCd = SPECIAL.immEvery; }
@@ -3348,7 +3446,7 @@ function update(dt) {
       if (!(e.def.stopAt && bottomOf(e) >= e.def.stopAt) && e.paraT <= 0) e.y += e.curSpeed * dt;
       giantTick(e, dt);
     } else if (e.paraT <= 0) {
-      e.y += e.curSpeed * dt;
+      e.y += e.curSpeed * dt; if (e.def.stopAt) e.y = Math.min(e.y, e.def.stopAt - e.def.r);   // Prisma maggiore: si ferma con il bordo inferiore al 25% dal basso
       e.x = clamp(e.x + Math.sin(waveTime * 2 + e.phase) * 12 * dt, e.def.r, W - e.def.r);
     }
   }
@@ -3362,7 +3460,8 @@ function update(dt) {
   if (gift && gift.y >= 0) markSeen(gift);
   if (alerts.length) { alerts[0].t -= dt; if (alerts[0].t <= 0) alerts.shift(); }
   for (const e of enemies) if (e.dead && e.boss && !e.rewarded) {
-    e.rewarded = true; if (!e.final) { if (pw) { pw.mb++; pw.choices.unshift("boss"); } else bossBonus++; } ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
+    e.rewarded = true; if (e.grp && --e.grp.left > 0) continue;   // Scissione: tutto alla morte dell’ultimo pezzo (1.23.0)
+    if (!e.final) { if (pw) { pw.mb++; pw.choices.unshift("boss"); } else bossBonus++; } ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
     if (GEAR.heal && healLeft > 0 && domeHp > 0) { healLeft--; domeHp = Math.min(domeMax, domeHp + domeMax * GEAR.heal); }   // Modulo 16 (al massimo 4 volte)
     if (mode === "epic") majorDrop(e);
   }
@@ -3685,7 +3784,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.22.0";
+const APP_VERSION = "1.23.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

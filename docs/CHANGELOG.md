@@ -3,6 +3,41 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.23.0 — Mini-boss maggiori
+
+- **Regole** **[deciso]** (Marco, DESIGN.md § 17 “Mini-boss maggiori”, § 2, § 4): cinque mini-boss con un’abilità, ognuno nei cinque tipi (25 varianti): **Asteroide maggiore** (Scissione),
+  **Cristallo maggiore** (Adattamento: resistenza variabile), **Artiglio maggiore** (Incremento: rigenera fino a 4 nemici), **Prisma maggiore** (Invisibilità, raggio da lontano), **Riflesso maggiore**
+  (Deviazione del 50% del danno). Campagna per difficoltà, uguale in Standard ed Epica: dalla 70 (Epica 40) l’ondata 15, dalla 85 (Epica 55) la 10 e la 15, dalla 100 (Epica 70) tutte e tre;
+  Protezione planetaria per livello del continente: 3-4 la 15, 5-6 la 10 e la 15, dal 7 tutte. Vita, velocità, danno, resistenze a spinte e stati della nave aliena.
+- **Risposte di Marco prima di costruire**: Scissione come oggi (i pezzi nati al 50% della loro vita massima si dividono di nuovo al primo colpo, anche nel Meteorite gigante);
+  il Riflesso subisce il 50% e devia l’altro 50% (senza nemici validi subisce tutto).
+- **Scelte di Claude [da rivedere]** (DESIGN.md § 17 “Costruito (1.23.0)”): formula di scelta (abilità (livello + ⌊livello ÷ 5⌋ + ondata ÷ 5) mod 5, tipo come oggi: 25 combinazioni in 25 livelli),
+  ondate dei livelli 3-6 dei continenti, raggi delle sagome, pezzi ×0,72, raggio del Prisma largo 6 px (primo dopo 3 s), sfere in 0,7 s anche sui boss, nessun accompagnatore, scoperte per aspetto e tipo.
+- **Codice**: `MAJOR_DEF`, `MAJ`, `majorWaves`, `majorOf`, `miniDef` (usata da `startWave`, `planetWave` e dalla scheda Nemici); in `damage()` profilo mutabile `e.res` e accumulo `adAcc`
+  (Adattamento, `adaptShift`), Deviazione (`dfAcc`, `deflectTarget`, `deflectOrb`), Invisibilità del Prisma (`invisT`); `miniTick` per Incremento, Invisibilità e raggio (`prismRay`), Deviazione;
+  `stopAt` anche per i nemici normali; `splitRock` generalizzata (raggio e danno dei pezzi, gruppo `grp` dei pezzi vivi: ricompensa, `pw.mb`, Sigillo maggiore, anello e Modulo 16 solo all’ultimo pezzo);
+  `seenKey` per i maggiori. `draw.js`: sagome `mrock`, `mshard`, `mclaw`, `mprism`, `mirror` in `FOE_LAYERS` con i dettagli in `foeDetails`; colore della resistenza attiva; `FX.regenCables`,
+  `FX.healGlow`, `FX.deflectOrb`; `FX.prismRay` nel colore del boss; avviso “Nuovo mini-boss”, righe dei maggiori nella pausa, voce nella Guida. `draw-hd2d.js`: alone dorato, scia del Cristallo,
+  cavi, bagliore e sfere a pixel, raggio nel colore del boss.
+- Scoperte: 25 chiavi nuove (`mrock:fire`…); tutte le scoperte possibili sono 67, sotto il tetto di 80: nessun `SAVE_VERSION` nuovo.
+
+- **Misura con i bot** (DESIGN.md § 5 “Misura 1.23.0”, misure leggere, stessi semi): campagna nave aliena → maggiori 70 63,3 → 56,7% · 85 66,7 → 61,7% · 100 55,0 → 48,3% · 150 46,7 → 46,7%;
+  ogni abilità da sola al 100 (55,0%): Scissione 65,0 · Adattamento 50,0 · Invisibilità 51,7 · Deviazione 53,3 · **Incremento 31,7%**; Protezione planetaria (5 tipi, 100 partite per livello)
+  3 45 → 44% · 5 36 → 33% · 7 40 → 35% · 10 52 → 43%. Nessun valore ritarato: da decidere con Marco (soprattutto l’Incremento).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/v123.js` (35 controlli): rampa Standard 69/70/84/85/99/100 ed Epica 39/40/54/55/69/70, livello 11 senza maggiori, vita/velocità/danno come la nave aliena,
+Protezione planetaria fire 1-7 e 10 (sempre del tipo del continente), tutte le abilità nei continenti, tre abilità diverse per livello (100-199), 25 combinazioni in 25 livelli; Scissione (2 e 4 pezzi,
+raggio ×0,72, danno ×0,6 e ×0,36, ricompensa e mini-boss sconfitti solo all’ultimo pezzo, anche nei continenti); Adattamento (profilo iniziale, cambio al 90%, moltiplicatori, parità invariata, al massimo 9 cambi);
+Incremento (4 più vicini, +danno al secondo del guardiano, “+” e bagliori, sostituzione, stop alla sconfitta); Invisibilità (a −30%, 10 s, stato), fermata a 480 senza toccare la barriera, raggi con danno ×2,
+raggio da invisibile; Deviazione (50/50 dopo le resistenze, sfera sul più forte con la sua resistenza, senza bersagli niente deviazione); scoperte (25 chiavi, import), avviso, pausa al 100, all’85 e al 69;
+classica e HD-2D senza errori; ondata 15 giocata fino in fondo in Standard 100 ed Epica 70.
+`npm run screenshots`: nuove 114 (i cinque maggiori in campo, classica e HD-2D), 115 (avviso), 116-117 (pausa, sconosciuti e scoperti), 118 (Guida).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): 25 tessere dei maggiori (5 abilità × 5 tipi), tessere di `FX.regenCables`, `FX.healGlow`, `FX.deflectOrb`, scena “Mini-boss maggiori”.
+
+Checklist: aggiornata (versione 49): nuovo gruppo da provare “Mini-boss maggiori (1.23)”; tra i valori di Claude e le interpretazioni le scelte della 1.23.0; tra le decisioni la misura
+(Incremento al 31,7%, muro 100 sotto il 50%) e il Prisma che non tocca la barriera; nei riferimenti le regole dei maggiori.
+
 ## Documentazione — letture della Carta iniziale e della Carta extra confermate (nessuna versione nuova)
 
 - **[deciso]** (Marco): confermate le letture di Claude della 1.22.0 (DESIGN.md § 16 “Carta iniziale e Carta extra”): carte ammesse = standard e voci lv1 delle chain non bloccate,

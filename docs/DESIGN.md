@@ -59,7 +59,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   “scartata” se il browser segnala `document.wasDiscarded`) **[Claude]**, per confermare quando il sistema scarta l’app.
 - **Nemici scoperti** (per tutta la campagna, salvati sul dispositivo): nella scheda Nemici solo quelli già incontrati, gli altri “sconosciuto”;
   al primo incontro compare l’avviso “Nuovo nemico” (3,5 s, uno alla volta, si ferma in pausa).
-  Mini-boss e boss finale si scoprono **tipo per tipo**. **[deciso]**
+  Mini-boss e boss finale si scoprono **tipo per tipo**. Ogni mini-boss maggiore si scopre per abilità e tipo. **[deciso]**
 - **Scelta delle carte**: una carta (o “Continua” della ricompensa) si sceglie rilasciando il dito sulla stessa carta su cui si è premuto; scorrere fuori annulla. Per circa 0,6 s dopo la comparsa della schermata i tocchi sono ignorati (i tasti 1/2/3 restano immediati). **[deciso]** (azione al rilascio e blocco) · 0,6 s **[Claude]**
 
 ## 3. Sistema di potenziamenti
@@ -112,6 +112,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’avviso spiega che l’equipaggiamento cade a ogni vittoria. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
   (schermata di riepilogo). Tipo di danno variabile per ondata e livello. **[deciso]**
+  Dalla difficoltà 70 (livello 70 in Standard, 40 in Epica) e nella Protezione planetaria dal livello 3 i mini-boss diventano via via **maggiori**, con un’abilità (§ 17, “Mini-boss maggiori”). **[deciso]** (Marco)
 - **Boss finale** (nave madre) all’ondata 20 dei livelli multipli di 10, con barra della vita grande in alto; il livello finisce quando muore. **[deciso]**
 - Boss e mini-boss: **sempre immuni** a paralisi, attrazione e teletrasporto; **resistenza variabile** a knockback e stati
   (riduce l’intensità, non la durata). **[deciso]** (valori **[da rivedere]**, § 10)
@@ -164,6 +165,14 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   i muri restano intorno al 30%. Nessun numero della difficoltà cambiato. **[Claude]** (misura)
 - Dopo il disegno nuovo del guardiano (1.9.3: i colpi partono dalla bocca del cannone, 26 px più in alto e 7 px a destra; anche il clone specchia le salve dalla 1.9.2), stessi semi: **10 35,8%** · **20 27,5%** · **30 32,9%** (800 partite; 1.9.0: 32,6% · 29,9% · 29,0%). Scarti di 2-4 punti, al limite del rumore; muri ancora intorno al 30%. Nessun numero della difficoltà cambiato.
 - Con un level up lv1 bloccato in più per torretta (1.9.4), stessi semi: **10 35,8%** · **20 33,0%** · **30 34,9%** (800 partite). Nessun numero della difficoltà cambiato.
+
+- **Misura 1.23.0** (mini-boss maggiori, § 17; misure leggere, stessi semi con e senza maggiori, sostituzione che li spegne in `miniDef`):
+  campagna `EQUIP=1.5 node tests/tools/curva.js 70,85,100,150 30` (60 partite per livello, random + smart), nave aliena → maggiori: **70** 63,3% → 56,7% (1 maggiore) · **85** 66,7% → 61,7% (2) ·
+  **100** 55,0% → 48,3% (3) · **150** 46,7% → 46,7% (3). Ogni abilità da sola alle tre ondate del 100 (60 partite, nave aliena 55,0%): Scissione 65,0% · Adattamento 50,0% · Invisibilità 51,7% ·
+  Deviazione 53,3% · **Incremento 31,7%** (il più duro: rigenera i nemici con il danno al secondo del guardiano, ondata media 14,2). Epica non misurata a parte: la rampa è per difficoltà
+  e il test controlla che coincida. Protezione planetaria `node tests/tools/planet.js 1,3,5,7,10 10` (100 partite per livello, 5 tipi): livello 1 (nessun maggiore) 28% · **3** 45% → 44% ·
+  **5** 36% → 33% · **7** 40% → 35% · **10** 52% → 43% (al 10 l’energy da 10 a 5 su 20). Le differenze fino al 100 sono vicine al rumore (±7-10 punti con questi campioni);
+  il 100 passa da poco sopra a poco sotto il 50%, il 150 era già sotto. Nessun valore ritarato **[da decidere]** (Marco): soprattutto l’Incremento.
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -1288,6 +1297,56 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Valori [Claude] [provvisorio]**: livello delle abilità del gigante 1 + ⌊(difficoltà − 70) / 10⌋ (1 al 70, 14 al 200; nei continenti è il livello del continente);
   vita dei nemici nuovi e degli speciali nella campagna **×0,7** (`CAMP_NEW.hpK`), giganti al 90, 130, 170, 190 **×0,75** (`CAMP_NEW.giantK`): misura in § 5 (“Misura 1.20.0”).
 - **Pausa**: la scheda “Nemici del livello” scorre col dito (dal 70 elenca 15 nemici); le scoperte dei nemici nuovi valgono per tipo, come nei continenti.
+
+### Mini-boss maggiori (cinque abilità, ognuna in tutti i tipi)
+- **Idea** **[deciso]** (Marco): come i boss giganti, anche i mini-boss hanno un’abilità. Cinque mini-boss "maggiori", e **ognuno esiste in tutti e cinque i tipi** (25 varianti): abilità e tipo sono indipendenti. Il tipo decide colore, resistenze e tipo di danno degli effetti del mini-boss; il tipo di ogni mini-boss segue la regola di oggi (`bossDef`: a rotazione nella campagna, quello del continente nella Protezione planetaria). Restano mini-boss a tutti gli effetti (ondate 5, 10, 15; 3 carte alla sconfitta; Sigillo maggiore 10% in Epica; immuni a paralisi, attrazione e teletrasporto; spinte e stati ridotti; Cacciatore di boss).
+- **Dove e quando** **[deciso]** (Marco):
+  - **Campagna** (stessa rampa in Standard ed Epica a pari difficoltà): dalla difficoltà **70** (Standard 70, Epica 40) **1 mini-boss nuovo, all’ondata 15**; dalla **85** (Epica 55) **2, alle ondate 10 e 15**; dalla **100** (Epica 70) **3, alle ondate 5, 10 e 15**. Gli altri restano nave aliena.
+  - **Protezione planetaria**, per il livello L del continente: L 1-2 solo nave aliena; **L 3-4 un mini-boss nuovo**, **L 5-6 due**, **da L 7 tutti e tre**. Quali ondate sono nuove nei livelli 3-6: le più avanzate (L 3-4 la 15; L 5-6 la 10 e la 15), come nella campagna **[Claude] [da rivedere]**.
+- **Quale maggiore esce** **[Claude] [da rivedere]**: scelta deterministica da livello e ondata; i mini-boss nuovi di un livello sono abilità diverse; nella Protezione planetaria il tipo è sempre quello del continente (si vedono tutte le abilità in quel tipo); nella campagna, con il tipo a rotazione, nel tempo escono tutte le 25 combinazioni (l’abbinamento abilità-tipo non deve essere fisso). La formula la sceglie Claude Code.
+- **Valori comuni** **[Claude] [provvisorio]**: vita base 480 e danno 9 come la nave aliena; budget di scelte invariato.
+
+  | Mini-boss | Aspetto **[deciso]** (Marco) | Abilità **[deciso]** (Marco) |
+  |---|---|---|
+  | Asteroide maggiore | asteroide più allungato che tondo, nel colore del tipo | **Scissione**: al 50% di vita si divide in 2, poi al nuovo 50% di ciascun pezzo in altri 2 (al massimo 4 pezzi) |
+  | Cristallo maggiore | wisp grande, il colore segue la resistenza attiva; la resistenza iniziale è quella del suo tipo | **Resistenza variabile**: ogni 10% di vita persa prende la resistenza del tipo da cui ha subito più danni in quel lasso |
+  | Artiglio maggiore | artiglio grande con cavi ondulanti verso i nemici | **Incremento**: rigenera fino a 4 nemici; ogni 2 s ripristina loro il danno al secondo del guardiano, con "+" per 1 s e bagliore, nel colore del tipo |
+  | Prisma maggiore | prisma grande | **Invisibilità** (regole dello speciale force); attacca da lontano come il prisma gigante e si ferma prima della barriera; l’invisibilità finisce con uno stato subito o dopo 10 s |
+  | Riflesso maggiore | gemma a specchio ovale con due anelli energetici incrociati a X, rotanti | **Deviazione danno**: devia il 50% del danno subito verso i nemici in campo, con sfere a parabola sul nemico con più vita |
+
+- **Incremento** (regole **[deciso]**): sconfitto il mini-boss la rigenerazione si interrompe; se muore un bersaglio ne sceglie un altro; i bersagli sono al massimo 4 e mai doppi.
+- **Invisibilità** (regole **[deciso]**): quelle dello speciale force (§ 17, Fase 3), ma finisce dopo 10 s invece che alla barriera.
+- **Deviazione** (accompagnatori) **[deciso]** (Marco): il numero di nemici in più lo stabilisce Claude; resta invariato finché la difficoltà è stabile.
+- **Letture** **[deciso]** (Marco, confermate):
+  - Scissione: `splitRock` con 2 generazioni; pezzi con danno ×0,6 a ogni scissione; ricompensa, contatore dei mini-boss e Sigillo maggiore solo alla morte dell’ultimo pezzo.
+  - Resistenza variabile: profilo del tipo T = resiste a T (×0,5), debole come il nemico di tipo T (×1,5); danni contati prima delle resistenze; parità o nessun danno: invariato; al massimo 9 cambi; il tipo del mini-boss decide solo il profilo iniziale. Nome nel gioco: "Adattamento" (il § 4 usa già "resistenza variabile" per spinte e stati).
+  - Incremento: un solo timer da 2 s; quantità = `guardDps` del guardiano (come il pacco regalo, senza frenesia, Ventaglio e Clone); bersagli = nemici normali più vicini al mini-boss (esclusi boss, pacco, gusci); disegno a cavi ondulanti.
+  - Invisibilità: si attiva una volta a −30% di vita; "stato subito" = qualsiasi stato applicato da una torretta che lo vede, anche ridotto da `statRes`; bordo inferiore a 25% dal basso; raggio di 160 px, avviso 0,7 s, danno ×2 alla cupola, frequenza come `BOSS_L.rayEvery` con lo stesso livello usato per i giganti; avviso del raggio visibile anche a boss invisibile.
+  - Deviazione: dopo resistenze e moltiplicatori; il deviato si accumula e parte come una sfera ogni 0,4 s; senza nemici validi non devia; nessun nemico in più rispetto al mini-boss classico. Tipo e colore delle sfere: quelli del mini-boss **[Claude] [da rivedere]** (il bersaglio applica le sue resistenze).
+- **Scoperte** **[Claude] [da rivedere]**: una per abilità e tipo (25 chiavi), come "tipo per tipo".
+- **Risposte di Marco (20/11/2026)** **[deciso]**: **Scissione come oggi** — `splitRock` dà a ogni pezzo metà vita e metà vita massima, quindi il pezzo nasce al 50% della sua vita massima
+  e si divide di nuovo al primo colpo: in pratica al 50% il mini-boss diventa subito 4 pezzi (vale anche per il Meteorite gigante, che resta com’era). **Deviazione**: il mini-boss subisce
+  il 50% e l’altro 50% parte nelle sfere; senza nemici validi subisce il 100%. Accompagnatori della Deviazione: **nessuno** (lettura sopra).
+- **Costruito (1.23.0)** · scelte **[Claude] [da rivedere]**:
+  - **Quale maggiore**: con k = ondata ÷ 5, tipo (livello + k) mod 5 come oggi (`bossDef`) e abilità (livello + ⌊livello ÷ 5⌋ + k) mod 5 nell’ordine Scissione, Adattamento, Incremento,
+    Invisibilità, Deviazione (`majorOf`, `miniDef` in `index.html`): nello stesso livello le abilità sono diverse; la differenza tra abilità e tipo cambia ogni 5 livelli, quindi in 25 livelli
+    di fila (ondata 15) escono tutte le 25 combinazioni; nei continenti, con il tipo fisso, tutte le abilità nei livelli dal 3 al 7. Nella campagna “livello” è quello della modalità (in Epica il livello di Epica).
+  - **Sagome** (`FOE_LAYERS` in `draw.js`, contorno dorato come la nave aliena; in HD-2D sprite dalle stesse sagome con un alone dorato a pixel): Asteroide maggiore raggio 26, Cristallo 24
+    (scia e nucleo chiaro; il corpo prende il colore della resistenza attiva, con un anello al cambio; barra e scheda della pausa restano del tipo di partenza), Artiglio 26 (l’Artiglio con le luci),
+    Prisma 24 (con l’anello), Riflesso 24 (gemma d’argento con vetro e due anelli del tipo a X che ruotano, con una luce ciascuno).
+  - **Scissione**: pezzi di raggio ×0,72 (il Meteorite gigante ×0,5 come prima); `grp` conta i pezzi vivi: ricompensa, contatore della Protezione planetaria, Sigillo maggiore, anello dorato
+    e Modulo 16 solo all’ultimo pezzo. Per il Meteorite gigante cambia solo che anello e Modulo 16 non scattano più a ogni pezzo.
+  - **Adattamento**: il profilo del tipo T è la riga `RESIST[T]` (la stessa tabella dei nemici di tipo T); una soglia per ogni 10% di vita persa (90%, 80% … 10%): a ogni soglia si confrontano
+    i danni ricevuti dall’ultima, poi si azzerano; un solo colpo che passa più soglie le conta tutte (la seconda trova i danni azzerati: invariato). Contano tutti i danni, anche quelli degli stati.
+  - **Incremento**: bersagli tra i nemici entrati nello schermo; si rigenerano solo quelli feriti (fino alla vita massima), con “+” senza numero; cavi a 5 px di ampiezza nel colore del tipo.
+  - **Invisibilità**: stessa soglia dello speciale force (`SPECIAL.invisAt`); primo raggio 3 s dopo l’ingresso, poi ogni `BOSS_L.rayEvery` (livello 1 + ⌊(difficoltà − 70) ÷ 10⌋ come i giganti
+    nella campagna, il livello del continente nei continenti); raggio dal centro del prisma, nel colore del tipo, largo 6 px (il gigante 9). Raggio e avviso partono anche mentre è invisibile.
+    Si ferma con il bordo inferiore a y 480, 9 px sopra la cima della cupola: non tocca mai la barriera, quindi fa danno solo con il raggio (danno 9 × 2 ogni 9 s al livello 1, contro 9 ogni 1,2 s della nave aliena alla cupola).
+  - **Deviazione**: bersagli validi = tutti gli altri nemici in campo, anche i boss; la sfera vola 0,7 s, 70 px sopra la retta a metà volo; se il bersaglio muore in volo va al più forte rimasto;
+    se quando parte la sfera non c’è più nessuno, il danno accumulato lo subisce il mini-boss. Le sfere non si deviano di nuovo (due Riflessi insieme).
+  - **Scoperte**: chiave aspetto:tipo (`mrock:fire`, `mshard:…`, `mclaw:…`, `mprism:…`, `mirror:…`); tutte le scoperte possibili sono 67, sotto il tetto di 80: tetto e `SAVE_VERSION` invariati.
+    Avviso “Nuovo mini-boss: nome” con tipo, debolezza e abilità; nella pausa una riga per ogni maggiore del livello (“Mini-boss maggiore sconosciuto” finché non scoperto); nella Guida una voce in “Altri effetti”.
+- **Misurato (1.23.0)**: risultati in § 5 (“Misura 1.23.0”), con campioni più piccoli di quelli indicati qui. Indicazione di partenza: effetto di ogni maggiore rispetto alla nave aliena; Protezione planetaria `planet.js 1,3,5,7,10 30` (rampa 0 / 1 / 2 / 3 mini-boss nuovi); campagna `curva.js` alle difficoltà 70, 85, 100, 150 (Standard 70, 85, 100, 150; Epica 40, 55, 70, 120), per vedere l’effetto di ogni gradino della rampa; in particolare rigenerazione dell’electric, deviazione del physical, invisibilità dell’energy, Scissione sulla cupola.
 
 ### Pacco regalo (campagna e Epica)
 - **Dove e quando** **[deciso]** (Marco): in Standard dal **livello 61**, in Epica dal **livello 31** (stessa difficoltà, 61); **non** nella Protezione planetaria.

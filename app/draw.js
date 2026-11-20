@@ -240,7 +240,8 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
 }
 function drawEnemy(e) {
   if (e.def.gift) { FX.gift(e); return; }          // pacco regalo (1.21.0): disegno proprio, anche come icona
-  const c = e.flash > 0 && !e.def.giant ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";   // i giganti non lampeggiano tutti di bianco
+  const c = e.flash > 0 && !e.def.giant ? "#ffffff" : TYPES[e.adT || e.def.type].color, look = e.def.look || "rock";   // i giganti non lampeggiano tutti di bianco; Cristallo maggiore: colore della resistenza attiva
+  if (e.rgTg && e.rgTg.length) FX.regenCables(e);   // Artiglio maggiore (1.23.0): cavi ondulanti verso i nemici che rigenera
   const a0 = ctx.globalAlpha, jit = look === "bigrock" && typeof clock === "number";   // meteorite: leggero tremolio (solo disegno)
   if (e.invis) ctx.globalAlpha = a0 * (0.22 + 0.08 * Math.sin(clock * 6 + e.phase));   // speciale force invisibile: appena un riflesso
   if (jit) { ctx.save(); ctx.translate(Math.sin(clock * 47 + e.phase) * 1.3, Math.cos(clock * 59 + e.phase) * 1); }
@@ -248,6 +249,7 @@ function drawEnemy(e) {
   if (jit) ctx.restore();
   if (e.immT > 0) FX.immune(e);                    // speciale energy: scudo durante l’immunità
   ctx.globalAlpha = a0;
+  if (e.healT > 0) FX.healGlow(e);                 // rigenerato dall’Artiglio maggiore: bagliore per 1 s
   if ((e.hp < e.maxHp || e.boss) && !e.invis && !e.def.giant) enemyBar(e, look);   // i giganti hanno la barra in alto
   if (!e.invis && !e.def.giant) drawStatus(e);
 }
@@ -318,7 +320,23 @@ const FOE_LAYERS = {
   crab: [                                          // Carapace (guscio con zampe nei dettagli)
     { p: [[-1, 0.2], [-0.85, -0.45], [-0.4, -0.85], [0.4, -0.85], [0.85, -0.45], [1, 0.2], [0.6, 0.45], [-0.6, 0.45]], r: "c" }],
   wing: [{ p: [[0, 1], [0.4, 0.3], [1, 0.1], [0.7, -0.3], [0.3, -0.2], [0, -0.7], [-0.3, -0.2], [-0.7, -0.3], [-1, 0.1], [-0.4, 0.3]], r: "c" }],   // alati della nave madre
+  // mini-boss maggiori (1.23.0): aspetto [deciso] (Marco), disegno [Claude, da rivedere]; contorno dorato come la nave aliena
+  mrock: [                                         // Asteroide maggiore: più allungato che tondo, crateri
+    { p: [[0.05, -1.25], [0.45, -1.02], [0.68, -0.48], [0.62, 0.22], [0.52, 0.82], [0.14, 1.22], [-0.34, 1.06], [-0.62, 0.52], [-0.7, -0.18], [-0.5, -0.86]], r: "c", st: "#ffd166" },
+    { p: [[0.05, -1.25], [0.45, -1.02], [0.68, -0.48], [0.62, 0.22], [0.52, 0.82], [0.14, 1.22], [0.2, 0.3], [0.12, -0.6]], r: "c", d: 0.2, s: 0 },
+    { e: [-0.22, -0.52, 0.2, 0.16], r: "c", d: 0.4, s: 0 }, { e: [0.26, 0.08, 0.17, 0.15], r: "c", d: 0.4, s: 0 },
+    { e: [-0.18, 0.64, 0.15, 0.12], r: "c", d: 0.4, s: 0 }, { e: [0.28, -0.8, 0.1, 0.08], r: "c", d: 0.4, s: 0 }],
+  mshard: [                                        // Cristallo maggiore: cristallo-cometa grande, nucleo chiaro
+    { p: [[0, 1.25], [0.78, -0.1], [0, -1.05], [-0.78, -0.1]], r: "c", st: "#ffd166" },
+    { p: [[0, 1.25], [0.78, -0.1], [0, -1.05]], r: "c", d: 0.25, s: 0 },
+    { p: [[0, 0.62], [0.3, -0.05], [0, -0.5], [-0.3, -0.05]], r: "w", a: 0.5, s: 0 }],
+  mirror: [                                        // Riflesso maggiore: gemma a specchio ovale (gli anelli a X nei dettagli)
+    { e: [0, 0, 0.72, 1.05], r: "m3", st: "#ffd166" }, { e: [0, 0, 0.56, 0.86], r: "g", a: 0.55 },
+    { p: [[0, -0.86], [0.4, -0.2], [0, 0.86], [-0.4, -0.2]], r: "w", a: 0.3, s: 0 }, { p: [[0, -0.86], [0.4, -0.2], [0, 0.86]], r: "m2", a: 0.35, s: 0 },
+    { e: [-0.2, -0.45, 0.12, 0.22], r: "w", a: 0.75, s: 0 }],
 };
+FOE_LAYERS.mclaw = FOE_LAYERS.tank.map((L, i) => (i === 3 ? Object.assign({}, L, { st: "#ffd166" }) : L));    // Artiglio maggiore: l’Artiglio grande
+FOE_LAYERS.mprism = FOE_LAYERS.prism.map((L, i) => (i === 0 ? Object.assign({}, L, { st: "#ffd166" }) : L));  // Prisma maggiore: il Prisma grande
 // boss giganti (1.19.0; Nave madre e Disco volante ridisegnati nella 1.19.1) in unità della box: u × semilarghezza, v × semialtezza
 const CARRIER_HULL = [[-0.74, -1], [0.74, -1], [0.95, -0.82], [1, -0.2], [0.88, 0.4], [0.6, 0.78], [0.3, 1], [-0.3, 1], [-0.6, 0.78], [-0.88, 0.4], [-1, -0.2], [-0.95, -0.82]];
 const GIANT_LAYERS = {
@@ -458,7 +476,7 @@ function foeDetails(e, c, look) {                  // dettagli animati comuni a 
     const on = Math.floor(t * 3 + ph) % 2; disc(x - r * 0.55, y - r * 0.42, r * 0.11, "#ff4d6a", on ? 1 : 0.3); disc(x + r * 0.55, y - r * 0.42, r * 0.11, "#3fe08a", on ? 0.3 : 1);
   } else if (look === "gem") {                     // razzo: fiamma di scarico in coda (in alto)
     for (const [dx, k] of [[0, 1], [-0.14, 0.7], [0.14, 0.7]]) flame(x + dx * r, y - r * 0.82, r * k * (0.7 + 0.2 * Math.sin(t * 27 + ph + dx * 9)), r * 0.13, 0.95);
-  } else if (look === "tank") {                    // luci che girano sull’anello e riflesso nella cupola
+  } else if (look === "tank" || look === "mclaw") {   // luci che girano sull’anello e riflesso nella cupola
     for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832 + t * 1.4, s = Math.sin(a); disc(x + Math.cos(a) * r * 0.91, y + s * r * 0.64, r * 0.07, s > -0.3 ? "#fff6b0" : c, 0.4 + 0.5 * Math.max(0, s)); }
   } else if (look === "bomb") {                    // miccia con la scintilla
     ctx.strokeStyle = "#5a4a3a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - r * 0.8); ctx.quadraticCurveTo(x + r * 0.4, y - r * 1.2, x + r * 0.2, y - r * 1.45); ctx.stroke();
@@ -473,7 +491,16 @@ function foeDetails(e, c, look) {                  // dettagli animati comuni a 
       const a = t * 9 + k * 2.1 + ph, d = r * (0.9 + 0.25 * Math.sin(t * 31 + k)); if (Math.sin(t * 17 + k * 3) < 0.2) continue;
       ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6); ctx.lineTo(x + Math.cos(a + 0.3) * d * 0.85, y + Math.sin(a + 0.3) * d * 0.85); ctx.lineTo(x + Math.cos(a - 0.1) * d, y + Math.sin(a - 0.1) * d); ctx.stroke();
     }
-  } else if (look === "prism") {                   // spigoli, nucleo e anello come il Prisma gigante
+  } else if (look === "mshard") {                  // Cristallo maggiore: spigoli chiari come il cristallo-cometa
+    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y - r * 1.05); ctx.lineTo(x, y + r * 1.25); ctx.moveTo(x - r * 0.78, y - r * 0.1); ctx.lineTo(x + r * 0.78, y - r * 0.1); ctx.stroke();
+    disc(x, y + r * 0.05, r * 0.16 * (0.9 + 0.15 * Math.sin(t * 6 + ph)), "#ffffff", 0.8);
+  } else if (look === "mirror") {                  // Riflesso maggiore: due anelli di energia incrociati a X che ruotano
+    const a = t * 1.3 + ph;
+    for (const k of [0.785, -0.785]) {
+      ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.globalAlpha *= 0.85; ctx.beginPath(); ctx.ellipse(x, y, r * 1.45, r * 0.3, a + k, 0, 6.2832); ctx.stroke(); ctx.globalAlpha /= 0.85;
+      const q = t * 3 + k * 2; disc(x + Math.cos(a + k) * Math.cos(q) * r * 1.45 - Math.sin(a + k) * Math.sin(q) * r * 0.3, y + Math.sin(a + k) * Math.cos(q) * r * 1.45 + Math.cos(a + k) * Math.sin(q) * r * 0.3, 2.2, "#ffffff", 0.9);
+    }
+  } else if (look === "prism" || look === "mprism") {   // spigoli, nucleo e anello come il Prisma gigante
     ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - r * 1.05); ctx.lineTo(x, y + r * 1.08); ctx.stroke();
     disc(x, y + r * 0.2, r * 0.2 * (0.9 + 0.15 * Math.sin(t * 5 + ph)), "#ffffff", 0.7);
     orbitRing(x, y - r * 0.05, r * 0.95, r * 0.18, c, t + ph, 1.2);
@@ -481,6 +508,11 @@ function foeDetails(e, c, look) {                  // dettagli animati comuni a 
     crabLegs(x, y, r, c, 1);
     ctx.strokeStyle = "rgba(7,11,22,0.55)"; ctx.lineWidth = 1; for (const u of [-0.35, 0.35]) { ctx.beginPath(); ctx.moveTo(x + u * r, y - r * 0.8); ctx.lineTo(x + u * r * 1.3, y + r * 0.4); ctx.stroke(); }
   }
+}
+function cablePts(e, o, t) {                       // cavo ondulante dall’Artiglio maggiore al nemico o (1.23.0)
+  const dx = o.x - e.x, dy = o.y - e.y, d = Math.hypot(dx, dy) || 1, nx = -dy / d, ny = dx / d, n = Math.max(6, Math.round(d / 10)), pts = [];
+  for (let i = 0; i <= n; i++) { const k = i / n, w = Math.sin(k * Math.PI) * 5 * Math.sin(k * 14 - t * 9); pts.push([e.x + dx * k + nx * w, e.y + dy * k + ny * w]); }
+  return pts;
 }
 function crabLegs(x, y, r, c, dir) {               // zampe del carapace (dir −1: ribaltato, zampe in alto)
   ctx.strokeStyle = c; ctx.lineWidth = 1.6;
@@ -510,6 +542,7 @@ function enemyBody(e, c, look) {
   } else if (FOE_LAYERS[look]) {               // nemici della Protezione planetaria
     if (look === "bomb") tail(e, r, 2.2, "rgba(255,170,80,0.6)");
     if (look === "spark") tail(e, r, 2, "rgba(255,240,140,0.45)");
+    if (look === "mshard") tail(e, r, 2.2, "rgba(120,235,255,0.5)");
     layerBody(look, FOE_LAYERS[look], x, y, r, r, c, 1.2);
     foeDetails(e, c, look);
   } else {                                     // nave aliena (mini-boss) e nave madre (boss finale): contorno dorato
@@ -592,7 +625,8 @@ function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
 const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre",
   dart: "Dardo", gem: "Razzo", tank: "Artiglio", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace", wing: "Alato",
-  flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite", gift: "Pacco regalo" };   // nomi della Protezione planetaria [Claude, da rivedere]
+  flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite", gift: "Pacco regalo",
+  mrock: "Asteroide maggiore", mshard: "Cristallo maggiore", mclaw: "Artiglio maggiore", mprism: "Prisma maggiore", mirror: "Riflesso maggiore" };   // nomi della Protezione planetaria [Claude, da rivedere]
 const MUTED = "#8a9ac0";
 function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
 function tw(str, size, weight) { setFont(size, weight); const m = ctx.measureText(str); return m && typeof m.width === "number" ? m.width : str.length * size * 0.56; }
@@ -625,7 +659,7 @@ function levelEnemies() {                       // chi arriva davvero in questo 
   else if (campNew()) for (const t of TYPE_KEYS) kinds.set(t + "_s", from3);   // campagna dal 70: speciali di tutti i tipi
   return {
     kinds: [...kinds.entries()].sort((a, b) => a[1][0] - b[1][0]),
-    bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: pw ? Object.assign(bossDef(campLevel, n), { type: planetType }) : bossDef(campLevel, n) })) : [],
+    bosses: hasMiniBosses() ? CAMPAIGN.bossWaves.map((n) => ({ n, def: miniDef(campLevel, n) })) : [],   // nave aliena o maggiore (1.23.0)
     fin: pw ? planetBossDef() : hasFinalBoss() ? campFinalDef(campLevel) : null,
   };
 }
@@ -637,11 +671,12 @@ function unknownRow(y, title, sub) {             // riga "incognita" per chi non
   txt(sub, 62, y + 21, 10, "#6f82ad", "left", "500");
 }
 function pauseEnemies() {
-  const { kinds, bosses, fin } = levelEnemies(), seen = (key) => progress.seen.includes(key);
+  const { kinds, bosses: all3, fin } = levelEnemies(), seen = (key) => progress.seen.includes(key);
+  const bosses = all3.filter((b) => !b.def.major), majors = all3.filter((b) => b.def.major);   // navi aliene e mini-boss maggiori (1.23.0, solo dove compaiono)
   const bossTypes = [...new Set(bosses.map((b) => b.def.type))];           // ogni tipo di mini-boss si scopre a parte
-  const all = kinds.length + bossTypes.length + (fin ? 1 : 0) + (giftPlan ? 1 : 0);
+  const all = kinds.length + bossTypes.length + majors.length + (fin ? 1 : 0) + (giftPlan ? 1 : 0);
   const known = kinds.filter(([k]) => seen(seenKey(ENEMY_DEFS[k]))).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen(seenKey(fin)) ? 1 : 0)
-    + (giftPlan && seen("gift") ? 1 : 0);
+    + majors.filter((b) => seen(seenKey(b.def))).length + (giftPlan && seen("gift") ? 1 : 0);
   const top = 100, bottom = 576;                 // l’elenco scorre col dito tra il titolo e i pulsanti (1.20.0)
   let y = top + 6 - pauseScroll;
   ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, bottom - top); ctx.clip();
@@ -678,8 +713,17 @@ function pauseEnemies() {
       if (seen("ship:" + b.def.type)) { bossLine(b.n, b.def, y); y += 30; }
       else { segs([["Ondata " + b.n + ": ", MUTED], ["tipo sconosciuto", "#8a9ac0", 11, "700"]], 62, y, 11); y += 18; }
     }
-    txt("Immuni a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 18;
+    if (!majors.length) { txt("Immuni a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 18; }
   }
+  for (const b of majors) {                       // mini-boss maggiori: uno per riga, si scoprono per abilità e tipo
+    y += 4;
+    if (!seen(seenKey(b.def))) { unknownRow(y, "Mini-boss maggiore sconosciuto", "Ondata " + b.n + " · lo scoprirai quando entra in campo"); y += 40; continue; }
+    enemyIcon(b.def, 34, y + 14, 16);
+    segs([[b.def.name + "  ", "#ffd166", 13, "700"], ["ondata " + b.n, MUTED, 11, "600"]], 62, y + 4, 13); y += 19;
+    txt(MAJOR_DEF[b.def.major].txt, 62, y, 10, "#e8eefc", "left", "500"); y += 14;
+    bossLine(0, b.def, y); y += 30;
+  }
+  if (majors.length) { txt("Mini-boss immuni a paralisi, attrazione e teletrasporto", 62, y, 10, "#ffd166", "left", "500"); y += 18; }
   if (fin && !seen(seenKey(fin))) { unknownRow(y, "Boss finale sconosciuto", "Ondata " + N_WAVES + " · lo scoprirai quando entra in campo"); y += 40; }
   else if (fin) {
     enemyIcon(fin, 34, y + 14, 16);
@@ -701,6 +745,12 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
     segs([["Nuovo nemico: ", "#ffd166", 12, "800"], ["Pacco regalo", GIFT_COLOR, 12, "800"]], x + 52, y + 15, 12);
     txt("Solo il guardiano: tieni premuto e mira", x + 52, y + 31, 11, "#e8eefc", "left", "600");
     txt("Prima che scada il tempo · dettagli nella pausa", x + 52, y + 46, 10, "#6f82ad", "left", "500");
+    return;
+  }
+  if (d.major) {                                  // mini-boss maggiore (1.23.0): nome, tipo e abilità
+    segs([["Nuovo mini-boss: ", "#ffd166", 12, "800"], [d.name, "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
+    segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
+    txt(MAJOR_DEF[d.major].txt, x + 52, y + 46, 10, "#6f82ad", "left", "500");
     return;
   }
   segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.giant ? " (boss)" : d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
@@ -1416,6 +1466,7 @@ const STATUS_EXTRA = [
   ["Scia combustibile", "Nella scia della Firewheel il nemico subisce il 30% in più dal fuoco."],
   ["Scossa continua", "Il Thunderbolt fa danno elettrico ai paralizzati finché dura la paralisi."],
   ["Resistenza dei boss", "Mini-boss e boss subiscono gli stati in parte: dal 25 al 60% in meno."],
+  ["Mini-boss maggiori", "Dalla difficoltà 70 hanno un’abilità: dettagli nella pausa."],
 ];
 function guideScreen() {
   dim(0.94);
@@ -1703,9 +1754,25 @@ const FX = {
   },
   prismRay(o) {                                  // Prisma gigante · raggio verticale: prima una linea sottile di avviso, poi il raggio
     if (o.y0 === undefined) return;
-    if (o.t < BOSS_L.rayWarn) { ctx.globalAlpha = 0.4 + 0.4 * Math.sin(o.t * 30); ctx.strokeStyle = TYPES.energy.color; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+    const col = TYPES[o.boss ? o.boss.def.type : "energy"].color, w = !o.boss || o.boss.def.giant ? 9 : 6;   // Prisma maggiore (1.23.0): nel colore del suo tipo, più sottile
+    if (o.t < BOSS_L.rayWarn) { ctx.globalAlpha = 0.4 + 0.4 * Math.sin(o.t * 30); ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
       ctx.beginPath(); ctx.moveTo(o.x, o.y0); ctx.lineTo(o.x, o.y1); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
-    else glow(o.x, o.y0, o.x, o.y1, TYPES.energy.color, 9, clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1));
+    else glow(o.x, o.y0, o.x, o.y1, col, w, clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1));
+  },
+  regenCables(e) {                               // Artiglio maggiore (1.23.0) · cavi ondulanti verso i nemici rigenerati, nel colore del tipo
+    const c = TYPES[e.def.type].color, t = typeof clock === "number" ? clock : 0;
+    for (const o of e.rgTg) for (const [w, a] of [[3, 0.25], [1.4, 0.8]]) {
+      const pts = cablePts(e, o, t); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.globalAlpha = a; ctx.lineCap = "round";
+      ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  },
+  healGlow(e) {                                  // bagliore della rigenerazione (1 s)
+    const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.def.r * 1.8); g.addColorStop(0, e.healC); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = 0.5 * clamp(e.healT, 0, 1); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e.x, e.y, e.def.r * 1.8, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
+  },
+  deflectOrb(o) {                                // Riflesso maggiore (1.23.0) · sfera del danno deviato, a parabola, nel colore del tipo
+    disc(o.x, o.y, 7, o.color, 0.3); disc(o.x, o.y, 4.5, o.color, 0.9); disc(o.x - 1.2, o.y - 1.2, 1.8, "#ffffff", 0.9);
   },
   immune(e) {                                    // speciale energy · scudo dell’immunità: anello esagonale che pulsa
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12), pts = [];

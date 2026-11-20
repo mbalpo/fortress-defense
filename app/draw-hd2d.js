@@ -894,8 +894,11 @@ function hdFoe(e, c, look) {
   const r = e.def.r, a = ctx.globalAlpha;
   if (look === "bomb") for (const d of [-0.3, 0.3]) pixelFlame(e.x + d * r, e.y - r * 0.7, 8 + 3 * Math.sin(clock * 11 + d * 7), 3, a, d > 0 ? 5 : 2);
   if (look === "spark") for (let k = 1; k <= 3; k++) pxDot(e.x + (k % 2 ? 2 : -2), e.y - r - k * 5, "#fff6b0", 0.6 * a / k);
+  if (look === "mshard") for (let k = 1; k <= 4; k++) pxDot(e.x + (k % 2 ? PX : -PX), e.y - r - k * 6, c, 0.55 * a / k);   // scia del Cristallo maggiore
   ctx.globalAlpha = a;
   layerBody(look, FOE_LAYERS[look], e.x, e.y, r, r, c);
+  if (e.def.major) pxEllipse(e.x, e.y, r * 1.3, r * 1.3, "#ffd166", 0.45 * a, 0, 6.2832, 3);   // mini-boss maggiori (1.23.0): alone dorato a pixel
+  ctx.globalAlpha = a;
   foeDetails(e, c, look);
   light(e.x, e.y, r * 2.2, c, 0.45 * a);
 }
@@ -1162,8 +1165,23 @@ Object.assign(FX, {
   },
   prismRay(o) {                                  // Prisma gigante · raggio verticale; HD-2D: avviso a pixel tratteggiato, poi fascio con alone e luce
     if (o.y0 === undefined) return;
-    if (o.t < BOSS_L.rayWarn) { for (let y = o.y0; y < o.y1; y += PX * 4) pxDot(o.x, y, TYPES.energy.color, 0.4 + 0.4 * Math.sin(o.t * 30)); ctx.globalAlpha = 1; }
-    else { const k = clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1); hdBeam(o.x, o.y0, o.x, o.y1, TYPES.energy.color, 9, k); light(o.x, o.y1, 40, TYPES.energy.color, k); }
+    const col = TYPES[o.boss ? o.boss.def.type : "energy"].color, w = !o.boss || o.boss.def.giant ? 9 : 6;   // Prisma maggiore (1.23.0): nel colore del suo tipo, più sottile
+    if (o.t < BOSS_L.rayWarn) { for (let y = o.y0; y < o.y1; y += PX * 4) pxDot(o.x, y, col, 0.4 + 0.4 * Math.sin(o.t * 30)); ctx.globalAlpha = 1; }
+    else { const k = clamp(1 - (o.t - BOSS_L.rayWarn) / 0.4, 0, 1); hdBeam(o.x, o.y0, o.x, o.y1, col, w, k); light(o.x, o.y1, 40, col, k); }
+  },
+  regenCables(e) {                               // Artiglio maggiore (1.23.0); HD-2D: cavi a pixel con una scintilla che scorre e luce sul bersaglio
+    const c = TYPES[e.def.type].color;
+    for (const o of e.rgTg) {
+      const pts = cablePts(e, o, clock);
+      for (let i = 1; i < pts.length; i++) pxLine(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], c, 0.75);
+      const q = pts[Math.floor((clock * 1.5 % 1) * (pts.length - 1))]; pxDot(q[0], q[1], "#ffffff", 0.9);
+    }
+    ctx.globalAlpha = 1;
+  },
+  healGlow(e) { light(e.x, e.y, e.def.r * 2, e.healC, 0.7 * clamp(e.healT, 0, 1)); ctx.globalAlpha = 1; },   // bagliore della rigenerazione
+  deflectOrb(o) {                                // Riflesso maggiore (1.23.0); HD-2D: sfera a pixel con luce
+    for (const [dx, dy] of [[0, 0], [PX, 0], [0, PX], [PX, PX], [-PX, 0], [0, -PX]]) pxDot(o.x + dx, o.y + dy, dx || dy ? o.color : "#ffffff", 1);
+    ctx.globalAlpha = 1; light(o.x, o.y, 16, o.color, 0.7);
   },
   immune(e) {                                    // speciale energy · scudo dell’immunità; HD-2D: esagono a pixel che pulsa e luce
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12);

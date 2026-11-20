@@ -305,3 +305,22 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   e("treeTab = 'barrier'; barrierTab = 'nodes'"); g.frame(); g.save("112-albero-carta-extra.png");
   e("closeTree(); setSel('standard', 12); startRun('standard'); extraWaves = [1]; queue = []; enemies = []; waveTime = 1; update(0.02); pick(0); cardsAt = -9;"); g.frame(); g.save("113-carta-extra.png");
 }
+{ // 1.23.0: mini-boss maggiori in campo (classica e HD-2D), avviso, scheda Nemici (sconosciuti e scoperti), Guida
+  const hook = (s) => s.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const MJ = (ab, x, y) => `{ const d = miniDef(campLevel, 15); const M = MAJOR_DEF["${ab}"]; Object.assign(d, { major: "${ab}", look: M.look, name: M.name, r: M.r, split: ${ab === "split" ? 2 : 0}, stopAt: 0 }); spawn({ enemy: "boss", def: d, x: ${x} }); Object.assign(enemies[enemies.length - 1], { y: ${y}, speed: 0, hp: 1e6, maxHp: 1e6 }); }`;
+  const SET = "queue = [{ t: 1e9, enemy: 'drone', x: 100 }]; enemies = []; ents = []; floaters = []; alerts = []; waveTime = 1; " + MJ("split", 60, 190) + MJ("adapt", 300, 190) + MJ("regen", 180, 250) + MJ("invis", 70, 350) + MJ("deflect", 290, 330) +
+    " for (const [k, x, y] of [['drone', 130, 160], ['brute', 235, 170], ['spitter', 140, 330], ['shell', 230, 410]]) { spawn({ enemy: k, x }); Object.assign(enemies[enemies.length - 1], { y, speed: 0, hp: 5e5, maxHp: 1e6 }); }" +
+    " const by = (ab) => enemies.find((e) => e.def.major === ab); damage(by('split'), 6e5, 'fire', true); const cr = by('adapt'); cr.adT = 'fire'; cr.res = RESIST.fire; const pr = by('invis'); pr.invis = pr.invisUsed = true; pr.invisT = 99; pr.rcd = 0.6; by('regen').rgCd = 1.4;";
+  const EACH = "domeHp = domeMax; alerts = []; for (const e of enemies) { e.speed = 0; if (!e.boss) e.hp = Math.min(e.hp, e.maxHp * 0.6); } const m = enemies.find((e) => e.def.major === 'deflect'); if (m) damage(m, 30, 'fire');";
+  const KEYS = [];
+  for (const [hd, src] of [["", hook(SRC)], ["-hd2d", hook(require("../src").gameHtml(undefined, "hd2d"))]]) {
+    const g = game({ progress: { cleared: 120, seen: ALL_SEEN }, src, settings: hd ? { graphics: "hd2d" } : null }), e = g.w.__ev;
+    e("setSel('standard', 100); startRun('standard'); " + SET); for (let k = 0; k < 50; k++) { e(EACH); g.frame(); } g.save("114-mini-boss-maggiori" + hd + ".png");
+  }
+  const g = game({ progress: { cleared: 120, seen: ALL_SEEN }, src: hook(SRC) }), e = g.w.__ev;
+  e("setSel('standard', 100); startRun('standard'); queue = []; enemies = []; alerts = []; startWave(10); const q = queue.find((q) => q.def && q.def.major); queue = []; spawn(q); enemies[0].y = 150; enemies[0].speed = 0;");
+  g.frame(12); g.save("115-avviso-mini-boss-maggiore.png");
+  e("progress.seen = progress.seen.filter((k) => !/^m(rock|shard|claw|prism)|^mirror/.test(k)); pauseGame(); pauseTab = 'enemies'; pauseScroll = 5000"); g.frame(2); g.save("116-pausa-maggiori-sconosciuti.png");
+  e("for (const ab of MAJOR_KEYS) for (const t of TYPE_KEYS) progress.seen.push(MAJOR_DEF[ab].look + ':' + t); pauseScroll = 5000"); g.frame(2); g.save("117-pausa-maggiori.png");
+  e("resumeGame(); state = 'menu'; openGuide(); guideTab = 'status'"); g.frame(); g.save("118-guida-mini-boss-maggiori.png");
+}

@@ -235,6 +235,15 @@ function scenes(turretIds) {
         setup: "openPlanet(); startPlanet('" + t + "'); queue = []; enemies = []; for (let k = 1; k < 20; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); wave = 20; pw.next = Infinity; pw.choices = []; waveTime += 2.1; update(0.01);" +
           " const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + extra,
         each: KEEP + " for (const x of enemies) if (x.final) x.speed = 0; player.cd = 1e9;", frames: t === "energy" ? 50 : 20 }, ["giantDetails", "giantBehind", "layerBody", "GIANT_LAYERS", "orbitRing", "FX.prismRay"]);
+  // 1.23.0: mini-boss maggiori (DESIGN.md § 17) in campo con le abilità accese: Asteroide diviso, Cristallo con la resistenza fire, Artiglio con i cavi,
+  // Prisma invisibile con il raggio, Riflesso che manda le sfere
+  const MJ = (ab, x, y) => `{ const d = miniDef(campLevel, 15); Object.assign(d, { major: "${ab}", look: MAJOR_DEF["${ab}"].look, name: MAJOR_DEF["${ab}"].name, r: MAJOR_DEF["${ab}"].r, split: ${ab === "split" ? 2 : 0}, stopAt: 0 }); spawn({ enemy: "boss", def: d, x: ${x} }); Object.assign(enemies[enemies.length - 1], { y: ${y}, speed: 0, hp: 1e6, maxHp: 1e6 }); }`;
+  add(1, "mini-boss-maggiori", "Mini-boss maggiori", "Dalla difficoltà 70: Asteroide maggiore diviso, Cristallo maggiore con la resistenza fire (colore), Artiglio maggiore con i cavi verso i nemici che rigenera (“+” e bagliore), Prisma maggiore invisibile con il raggio, Riflesso maggiore con le sfere del danno deviato.",
+    { progress: Object.assign({}, P1, { cleared: 120 }), setup: START(100) + " " + CLEAR + " " + MJ("split", 60, 190) + MJ("adapt", 300, 190) + MJ("regen", 180, 250) + MJ("invis", 70, 350) + MJ("deflect", 290, 330) +
+        " for (const [k, x, y] of [['drone', 130, 160], ['brute', 235, 170], ['spitter', 140, 330], ['shell', 230, 410]]) { spawn({ enemy: k, x }); Object.assign(enemies[enemies.length - 1], { y, speed: 0, hp: 5e5, maxHp: 1e6 }); }" +
+        " const by = (ab) => enemies.find((e) => e.def.major === ab); damage(by('split'), 6e5, 'fire', true); const cr = by('adapt'); cr.adT = 'fire'; cr.res = RESIST.fire; const pr = by('invis'); pr.invis = pr.invisUsed = true; pr.invisT = 99; pr.rcd = 0.05; by('regen').rgCd = 0.05; alerts = [];",
+      each: KEEP + " for (const e of enemies) { e.speed = 0; if (!e.boss) e.hp = Math.min(e.hp, e.maxHp * 0.6); } const m = enemies.find((e) => e.def.major === 'deflect'); if (m) damage(m, 30, 'fire'); const pr = enemies.find((e) => e.def.major === 'invis'); if (pr && pr.rcd > 1.2) pr.rcd = 1.2; alerts = [];", frames: 40 },
+    ["miniTick", "FOE_LAYERS", "foeDetails", "FX.regenCables", "FX.healGlow", "FX.deflectOrb", "FX.prismRay"]);
   // 1.21.0: pacco regalo (DESIGN.md § 17): in campo con il mirino agganciato, e l’avviso del premio
   const PGF = Object.assign({}, PP, { cleared: 70, seen: PP.seen.concat(["gift"]) });
   add(1, "pacco-regalo", "Pacco regalo", "Drone-corriere che fluttua tra il 25% e il 50% dell’altezza con l’anello del timer; solo il guardiano, tenendo premuto con il mirino entro 45 px, lo colpisce.",
@@ -323,6 +332,9 @@ function tiles(M) {
   for (const k of M.enemyKeys) { const d = M.enemies[k]; add("nemico:" + k, M.lookName[d.look] + " (" + k + ")", foe(`ENEMY_DEFS["${k}"]`), ebox(d.r), 3, false, { look: d.look }); }
   for (const t of M.typeKeys) add("nave:" + t, "Nave aliena · " + M.types[t].name, foe(`Object.assign(bossDef(1, 5), { type: "${t}" })`, { boss: true, hp: 0.7 }), ebox(24, 40), 1.6, false, { look: "ship" });
   for (const t of M.typeKeys) add("madre:" + t, "Nave madre · " + M.types[t].name, foe(`Object.assign(finalBossDef(10), { type: "${t}" })`, { boss: true, hp: 0.7 }), ebox(34, 50), 1.2, false, { look: "mothership" });
+  // 1.23.0: mini-boss maggiori, ognuno nei cinque tipi
+  for (const ab of M.majorKeys) for (const t of M.typeKeys) add("maggiore:" + ab + ":" + t, M.majors[ab].name + " · " + M.types[t].name,
+    foe(`Object.assign(bossDef(1, 5), { type: "${t}", major: "${ab}", look: MAJOR_DEF["${ab}"].look, r: MAJOR_DEF["${ab}"].r })`, { boss: true, hp: 0.7 }), ebox(26, 50), 1.6, false, { look: M.majors[ab].look });
   add("colpito", "Colpito (lampo bianco)", foe('ENEMY_DEFS["shell"]', { flash: 0.1 }), ebox(14), 3);
   add("ferito", "Barra della vita", foe('ENEMY_DEFS["brute"]', { hp: 0.55 }), ebox(16), 3);
   for (const [kind, , color] of M.status) add("stato:" + kind, M.statusName[kind] || kind, `DRAW.statusIcon("${kind}", 0, 0, "${color}", { destrN: 3 });`, [-9, -9, 18, 18], 5);
@@ -371,6 +383,10 @@ function tiles(M) {
     bubble: ["[0, 1, 2].forEach((k) => FX.bubble({ x: -24 + k * 24, y: 0, age: (T + k * 4) % RV.gammaLife, seed: k * 2 }));", [-40, -18, 80, 36], 3],
     fireTrail: [CK + "FX.fireTrail([0, 1, 2, 3, 4].map((k) => ({ x: -48 + k * 24, y: 8 * Math.sin(k + T), t: 1 - k * 0.18 })), 1);" + CK0, [-64, -34, 128, 56], 2],
     hiveBeam: ["[1, 2, 3].forEach((lvl, i) => { const o = { x: -40 + i * 40, y: 18, lvl, ray: { t: 0.3 } }; FX.hiveDrone(o); FX.hiveBeam(o, { x: -40 + i * 40 + 12 * Math.sin(T * 2 + i), y: -22 }); });", [-60, -34, 120, 66], 2],
+    // 1.23.0: mini-boss maggiori · cavi dell’Artiglio, bagliore della rigenerazione, sfere del Riflesso
+    regenCables: [CK + "FX.regenCables({ x: -44, y: 0, def: { type: 'electric' }, rgTg: [{ x: 34, y: -26 }, { x: 40, y: 4 }, { x: 26, y: 30 }] });" + CK0, [-54, -40, 108, 80], 2],
+    healGlow: [CK + "FX.healGlow({ x: 0, y: 0, def: { r: 14 }, healT: 1 - (T % 1.2), healC: TYPES.electric.color });" + CK0, [-30, -30, 60, 60], 3],
+    deflectOrb: ["[0, 1, 2, 3].forEach((i) => { const k = (T * 0.7 + i * 0.25) % 1; FX.deflectOrb({ x: -50 + 100 * k, y: 24 - 200 * k * (1 - k), color: TYPES.physical.color }); });", [-60, -34, 120, 66], 2],
     hiveSparks: [CK + "[1, 2, 3].forEach((lvl, i) => { const o = { x: -36 + i * 36, y: 0, lvl, kami: 0 }; FX.hiveDrone(o); FX.hiveSparks(o); });" + CK0, [-56, -24, 112, 48], 3],
   };
   for (const k of M.fxKeys) { const t = FXT[k] || ["", [-20, -20, 40, 40], 2]; add("fx:" + k, "FX." + k, t[0], t[1], t[2], true, { fx: k, missing: !FXT[k] }); }
@@ -400,7 +416,8 @@ function meta(P) {
     behavDraw: ev("Object.fromEntries(Object.entries(BEHAV).filter(([, b]) => b.draw).map(([k, b]) => [k, b.draw.name]))"),
     base: ev("({ BODY: DRAW.BODY, BODY2: DRAW.BODY2, DARK: DRAW.DARK })"),
     artSrc: ev("Object.fromEntries(Object.entries(DRAW.TURRET_ART).map(([k, f]) => [k, String(f)]))"),
-    pieces: ev("Object.fromEntries(PIECE_IDS.map((k) => [k, PIECES[k].name]))"), rarity: ev("RARITY.map((r) => r.name)"),
+    pieces: ev("Object.fromEntries(PIECE_IDS.map((k) => [k, PIECES[k].name]))"),
+    majors: ev("JSON.parse(JSON.stringify(MAJOR_DEF))"), majorKeys: ev("MAJOR_KEYS"), rarity: ev("RARITY.map((r) => r.name)"),
   };
   M.statusName = { slow: "Rallentamento", para: "Paralisi", weak: "Indebolimento", destr: "Distruzione (pile)", vuln: "Vulnerabilità", burn: "Bruciatura" };
   // dimensioni: si disegna ogni tessera ingrandita ×4 su sfondo trasparente e si misura la parte colorata
@@ -485,9 +502,12 @@ function page(P, M, S, T, H) {
 <td>${sizeTxt("arte:" + id)}</td><td>${sw(M.types[d.type].color, "c = " + M.types[d.type].color)}<br>${cols}</td></tr>`;
   }).join("\n");
   // § 3 tabella nemici
-  const looks = [...new Set([...M.enemyKeys.map((k) => M.enemies[k].look), "ship", "mothership"])];
+  const majLook = Object.fromEntries(M.majorKeys.map((k) => [M.majors[k].look, k]));   // 1.23.0: mini-boss maggiori
+  const looks = [...new Set([...M.enemyKeys.map((k) => M.enemies[k].look), "ship", "mothership", ...Object.keys(majLook)])];
   const enemyRows = looks.map((look) => {
-    const keys = M.enemyKeys.filter((k) => M.enemies[k].look === look), d = keys.length ? M.enemies[keys[0]] : null;
+    const keys = M.enemyKeys.filter((k) => M.enemies[k].look === look), d = keys.length ? M.enemies[keys[0]] : null, mj = majLook[look];
+    if (mj) return `<tr data-voce="aspetto:${look}"><td><b>${esc(M.majors[mj].name)}</b><br><code>look: "${look}"</code></td><td><code>miniDef</code> (mini-boss maggiore, ${esc(M.majors[mj].ab)})</td>
+<td>tutti e 5, a rotazione</td><td>r = ${M.majors[mj].r} · ${sizeTxt("maggiore:" + mj + ":fire")}</td></tr>`;
     const voce = keys.length ? "nemico:" + keys[0] : look === "ship" ? "nave:fire" : "madre:fire";
     return `<tr data-voce="aspetto:${look}">${keys.map((k) => `<td hidden data-voce="nemico-def:${k}"></td>`).join("")}<td><b>${esc(M.lookName[look] || look)}</b><br><code>look: "${look}"</code></td>
 <td>${keys.length ? keys.map((k) => `<code>${k}</code>`).join(" ") : look === "ship" ? "<code>bossDef</code> (mini-boss)" : "<code>finalBossDef</code> (boss finale)"}</td>
