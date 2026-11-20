@@ -574,7 +574,7 @@ function page(P, M, S, T, H) {
     </ul>
   </section>
   <nav><a href="#schermate">1 · Schermate</a><a href="#torrette">2 · Torrette, guardiano, equipaggiamento</a><a href="#nemici">3 · Nemici e stati</a><a href="#effetti">4 · Proiettili ed effetti</a>
-  <a href="#carte">5 · Carte</a><a href="#prova">6 · Scena di prova</a><a href="#palette">7 · Palette</a><a href="#futuro">8 · Da aggiungere</a><a href="#codice">Codice</a></nav>
+  <a href="#carte">5 · Carte</a><a href="#prova">6 · Scena di prova</a><a href="#palette">7 · Palette</a><a href="#codice">Codice</a></nav>
 </header>
 <div class="bar" id="barra"><div>
   <button id="bPlay" class="on">⏸ Pausa</button><button id="bStep">+1 fotogramma</button><button id="bStep10">+10</button>
@@ -662,13 +662,6 @@ ${palette}
 <p data-voce="base">${sw(M.base.BODY, "BODY " + M.base.BODY)} · ${sw(M.base.BODY2, "BODY2 " + M.base.BODY2)} · ${sw(M.base.DARK, "DARK " + M.base.DARK)}</p>
 <h3>Tutti i colori scritti in draw.js (con quante volte compaiono)</h3>
 <p>${hexList}</p>
-</section>
-
-<section id="futuro"><h2>8 · Da aggiungere</h2>
-<p>Posti già previsti per elementi che non hanno ancora un disegno (DESIGN.md § 13 e § 15). Quando arrivano: funzione in <code>draw.js</code>, voce qui, <code>npm run catalog</code>.</p>
-<div class="todo">
-  <div data-voce="futuro:ranger"><b>Ranger</b><br>Nessun disegno ancora (§ 13).</div>
-</div>
 </section>
 
 <section id="codice"><h2>Codice di disegno</h2>

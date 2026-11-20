@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Catalogo — tolta la sezione 8 “Da aggiungere” (nessuna versione nuova)
+
+- `tests/tools/catalog.js`: tolta la sezione 8 (e il suo collegamento nell’indice), che teneva il posto ai ranger: sono costruiti e disegnati (1.17.0-1.19.1).
+  `tests/catalog.js`: tolta la voce fissa `futuro:ranger`.
+
+**Test**: `npm test` (catalog.js): verde.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D).
+
+Checklist: non cambiata.
+
 ## 1.19.1 — Grafica di boss e nemici nuovi, continenti, ranger, intercettori, catalogo
 
 Correzioni chieste da Marco dopo la prova della 1.19.0 (richieste **[deciso]**, disegni **[Claude] [da rivedere]**, DESIGN.md § 17 “Grafica rivista”).

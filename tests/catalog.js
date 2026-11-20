@@ -25,7 +25,7 @@ for (const [name, keys, pre] of groups) {
   const miss = keys.filter((k) => !html.includes('data-voce="' + pre + k + '"'));
   console.log(name + ": " + (keys.length - miss.length) + "/" + keys.length + " nel catalogo", ok(keys.length > 0 && !miss.length) + (miss.length ? " mancano: " + miss.join(", ") : ""));
 }
-const fixed = ["vincoli", "scena:menu", "scena:splash-start", "scena:salvataggio-conferma", "scena:prova", "scena:miniboss", "scena:boss-finale", "guardiano", "base", "icone", "futuro:ranger", "equipaggiamento", "moduli"];
+const fixed = ["vincoli", "scena:menu", "scena:splash-start", "scena:salvataggio-conferma", "scena:prova", "scena:miniboss", "scena:boss-finale", "guardiano", "base", "icone", "equipaggiamento", "moduli"];
 const missF = fixed.filter((v) => !html.includes('data-voce="' + v + '"'));
 console.log("sezioni fisse: " + (fixed.length - missF.length) + "/" + fixed.length, ok(!missF.length) + (missF.length ? " mancano: " + missF.join(", ") : ""));
 dom.window.close();
