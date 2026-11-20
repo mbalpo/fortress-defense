@@ -239,6 +239,7 @@ function tail(e, r, len, col) {            // scia dietro al nemico (sopra, perc
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(e.x - r * 0.75, e.y); ctx.lineTo(e.x, e.y - r * len); ctx.lineTo(e.x + r * 0.75, e.y); ctx.closePath(); ctx.fill();
 }
 function drawEnemy(e) {
+  if (e.def.gift) { FX.gift(e); return; }          // pacco regalo (1.21.0): disegno proprio, anche come icona
   const c = e.flash > 0 && !e.def.giant ? "#ffffff" : TYPES[e.def.type].color, look = e.def.look || "rock";   // i giganti non lampeggiano tutti di bianco
   const a0 = ctx.globalAlpha, jit = look === "bigrock" && typeof clock === "number";   // meteorite: leggero tremolio (solo disegno)
   if (e.invis) ctx.globalAlpha = a0 * (0.22 + 0.08 * Math.sin(clock * 6 + e.phase));   // speciale force invisibile: appena un riflesso
@@ -591,7 +592,7 @@ function dim(a) { ctx.fillStyle = "rgba(7,11,22," + a + ")"; ctx.fillRect(0, 0, 
 /* ---------- PAUSA: riepilogo nemici e costruzione ---------- */
 const ENEMY_NAME = { saucer: "Navicella", shard: "Cristallo-cometa", meteor: "Meteora", rock: "Frammento roccioso", asteroid: "Asteroide", ship: "Nave aliena", mothership: "Nave madre",
   dart: "Dardo", gem: "Razzo", tank: "Artiglio", bomb: "Kamikaze", wraith: "Spettro", spark: "Saetta", prism: "Prisma", crab: "Carapace", wing: "Alato",
-  flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite" };   // nomi della Protezione planetaria [Claude, da rivedere]
+  flagship: "Ammiraglia", carrier: "Nave madre", disc: "Disco volante", bigprism: "Prisma gigante", bigrock: "Meteorite", gift: "Pacco regalo" };   // nomi della Protezione planetaria [Claude, da rivedere]
 const MUTED = "#8a9ac0";
 function setFont(size, weight) { ctx.font = (weight || "600") + " " + size + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; }
 function tw(str, size, weight) { setFont(size, weight); const m = ctx.measureText(str); return m && typeof m.width === "number" ? m.width : str.length * size * 0.56; }
@@ -638,8 +639,9 @@ function unknownRow(y, title, sub) {             // riga "incognita" per chi non
 function pauseEnemies() {
   const { kinds, bosses, fin } = levelEnemies(), seen = (key) => progress.seen.includes(key);
   const bossTypes = [...new Set(bosses.map((b) => b.def.type))];           // ogni tipo di mini-boss si scopre a parte
-  const all = kinds.length + bossTypes.length + (fin ? 1 : 0);
-  const known = kinds.filter(([k]) => seen(seenKey(ENEMY_DEFS[k]))).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen(seenKey(fin)) ? 1 : 0);
+  const all = kinds.length + bossTypes.length + (fin ? 1 : 0) + (giftPlan ? 1 : 0);
+  const known = kinds.filter(([k]) => seen(seenKey(ENEMY_DEFS[k]))).length + bossTypes.filter((t) => seen("ship:" + t)).length + (fin && seen(seenKey(fin)) ? 1 : 0)
+    + (giftPlan && seen("gift") ? 1 : 0);
   const top = 100, bottom = 576;                 // l’elenco scorre col dito tra il titolo e i pulsanti (1.20.0)
   let y = top + 6 - pauseScroll;
   ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, bottom - top); ctx.clip();
@@ -659,6 +661,14 @@ function pauseEnemies() {
     segs([[(n ? "Ondata " + n + ": " : ""), MUTED], [TYPES[d.type].name, TYPES[d.type].color, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], 62, yy, 11);
     segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · spinte " + Math.round(d.kbRes * 100) + "% · stati " + Math.round(d.statRes * 100) + "%", "#6f82ad"]], 62, yy + 14, 10);
   };
+  if (giftPlan && !seen("gift")) { unknownRow(y, "Nemico speciale sconosciuto", "Ondata " + giftPlan.wave + " · lo scoprirai quando entra in campo"); y += 40; }
+  else if (giftPlan) {                           // pacco regalo (1.21.0): solo il guardiano, tenendo premuto
+    enemyIcon(GIFT_DEF, 34, y + 18, 15);
+    segs([["Pacco regalo  ", GIFT_COLOR, 13, "700"], ["ondata " + giftPlan.wave + (giftPlan.done ? " · già risolto" : ""), MUTED, 11, "600"]], 62, y + 4, 13);
+    txt("Solo il guardiano: tieni premuto e mira", 62, y + 21, 11, "#e8eefc", "left", "600");
+    txt("Premio: " + (allRangersMax() ? "equipaggiamento epico o superiore" : (GIFT.frags[mode] || 5) + " frammenti di un ranger") + " · " + GIFT.time + " s", 62, y + 36, 10, "#6f82ad", "left", "500");
+    y += 47;
+  }
   const knownBoss = bosses.find((b) => seen("ship:" + b.def.type));
   if (bosses.length && !knownBoss) { y += 4; unknownRow(y, "Mini-boss sconosciuti", "Ondate " + CAMPAIGN.bossWaves.join(", ") + " · li scoprirai quando entrano in campo"); y += 40; }
   else if (bosses.length) {
@@ -687,9 +697,40 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
   const x = 16, y = 120, w = W - 32, h = 56, d = a.def, r = resOf(d.type), c = TYPES[d.type].color;
   rr(x, y, w, h, 10); ctx.fillStyle = "rgba(10,16,32,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd166"; ctx.stroke();
   enemyIcon(d, x + 26, y + h / 2, 16);
+  if (d.gift) {                                  // pacco regalo (1.21.0): niente tipo, solo come colpirlo
+    segs([["Nuovo nemico: ", "#ffd166", 12, "800"], ["Pacco regalo", GIFT_COLOR, 12, "800"]], x + 52, y + 15, 12);
+    txt("Solo il guardiano: tieni premuto e mira", x + 52, y + 31, 11, "#e8eefc", "left", "600");
+    txt("Prima che scada il tempo · dettagli nella pausa", x + 52, y + 46, 10, "#6f82ad", "left", "500");
+    return;
+  }
   segs([["Nuovo nemico: ", "#ffd166", 12, "800"], [ENEMY_NAME[d.look] + (d.giant ? " (boss)" : d.final ? " (boss finale)" : d.boss ? " (mini-boss)" : ""), "#e8eefc", 12, "800"]], x + 52, y + 15, 12);
   segs([[TYPES[d.type].name, c, 11, "700"], ["  ·  debole a ", MUTED], ...typeList(r.weak)], x + 52, y + 31, 11);
   segs([["Resiste a ", "#6f82ad"], ...typeList(r.res), [" · dettagli nella pausa", "#6f82ad"]], x + 52, y + 46, 10);
+}
+// pezzo di puzzle (frammenti dei ranger, § 17): quadrato con due incastri
+function puzzleIcon(x, y, s, c, bg) {
+  const h = s / 2, k = s * 0.22, b = h - k;           // corpo quadrato, incastri sporgenti sopra e a destra, rientrante a sinistra
+  ctx.fillStyle = c; ctx.fillRect(x - b, y - b, 2 * b, 2 * b);
+  ctx.beginPath(); ctx.arc(x, y - b, k, 0, 6.2832); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + b, y, k, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = bg || "#121e3a"; ctx.beginPath(); ctx.arc(x - b, y, k, 0, 6.2832); ctx.fill();
+}
+function drawGiftNote() {                        // pacco regalo preso: etichetta col nome del ranger e pezzo di puzzle (o l’equipaggiamento in Epica)
+  const n = giftNote; if (!n) return;
+  const g = n.gain, x = 40, y = alerts.length ? 184 : 120, w = W - 80, h = 40;
+  ctx.globalAlpha = clamp(n.t / 0.4, 0, 1);
+  rr(x, y, w, h, 10); ctx.fillStyle = "rgba(10,16,32,0.95)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = GIFT_COLOR; ctx.stroke();
+  txt("Pacco regalo!", x + w / 2, y + 12, 11, GIFT_COLOR, "center", "800");
+  if (g.kind === "frags") {
+    const c = TYPES[RANGER_DEF[g.id].type].color, lab = RANGER_NAME[g.id] + "  +" + g.n + " frammenti", lw = tw(lab, 12, "700") + 30, lx = x + (w - lw) / 2;
+    rr(lx, y + 19, lw, 17, 5); ctx.fillStyle = "rgba(18,30,58,0.95)"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = c; ctx.stroke();
+    puzzleIcon(lx + 12, y + 28, 12, c); txt(lab, lx + 22, y + 28, 12, "#e8eefc", "left", "700");
+  } else {
+    const c = rarColor(g.r), lab = (g.kind === "mods" ? "Modulo " : "") + RARITY[g.r].name.toLowerCase() + ": " + PIECES[g.pc].name.toLowerCase();
+    if (g.kind === "mods") modIcon(g.pc, x + 22, y + 26, 14, c); else pieceIcon(g.pc, x + 22, y + 26, 16, c);
+    txt(lab, x + w / 2 + 8, y + 28, 12, c, "center", "700");
+  }
+  ctx.globalAlpha = 1;
 }
 // pallino della carta col numero o la spunta, e il segno delle chain e dei level up sopra (aggancio HD-2D)
 function cardBadge(o, cx, cy, c, label) {
@@ -1459,10 +1500,11 @@ function drawWorld() {
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
   for (const r of RG.list) FX.ranger(r);           // ranger ai lati del guardiano (DESIGN.md § 17)
-  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
+  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK) || giftAim(press.x, press.y, null));
   for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
   for (const h of shells) FX.husk(h);           // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);
+  if (gift) drawEnemy(gift);                     // pacco regalo (1.21.0)
   for (const o of ents) if (!o.under) o.draw();
   drawDomeEdge(); drawFortress();
 }
@@ -1477,7 +1519,7 @@ function draw() {
     ctx.globalAlpha = 1;
     drawHud();
     drawFps();
-    if (state === "play") drawAlert();
+    if (state === "play") { drawAlert(); drawGiftNote(); }
     if (state === "play" && pw && waveTime >= 0 && pw.banner > 0) {          // Protezione planetaria: scritta delle ondate successive, il gioco non si ferma
       ctx.globalAlpha = clamp(pw.banner / 0.6, 0, 1);
       txt("ONDATA " + wave, W / 2, 230, 30, "#e8eefc", "center", "800");
@@ -1646,6 +1688,32 @@ const FX = {
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12), pts = [];
     for (let i = 0; i < 6; i++) pts.push([e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r]);
     poly(pts, "rgba(127,246,255,0.12)", "rgba(127,246,255," + k + ")", 2);
+  },
+  gift(g) {                                      // pacco regalo (1.21.0) · drone-corriere: pacco col nastro, due eliche sopra, anello del timer
+    const age = g.age !== undefined ? g.age : clock, x = g.x, y = g.y + Math.sin(age * 3) * 2, r = GIFT.r, b = r * 0.62;
+    const body = g.flash > 0 ? "#ffffff" : GIFT_COLOR;
+    ctx.strokeStyle = "#8a94ad"; ctx.lineWidth = 2;
+    for (const sg of [-1, 1]) {                  // bracci ed eliche (ellissi che si stringono: rotazione)
+      const ax = x + sg * r * 0.95, ay = y - r * 0.95;
+      ctx.beginPath(); ctx.moveTo(x + sg * b * 0.7, y - b); ctx.lineTo(ax, ay); ctx.stroke();
+      const sp = Math.abs(Math.sin(age * 38 + sg)) * 0.85 + 0.15;
+      ctx.globalAlpha = 0.55; ctx.fillStyle = "#cfe0ff"; ctx.beginPath(); ctx.ellipse(ax, ay, r * 0.62 * sp, 2.2, 0, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1; disc(ax, ay, 2, "#e8eefc");
+    }
+    rr(x - b, y - b, 2 * b, 2 * b, 3); ctx.fillStyle = body; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = "#7a1d4f"; ctx.stroke();
+    ctx.fillStyle = "#ffd166"; ctx.fillRect(x - 2, y - b, 4, 2 * b); ctx.fillRect(x - b, y - 2, 2 * b, 4);   // nastro
+    ctx.beginPath(); ctx.ellipse(x - 4, y - b - 2, 4, 2.6, -0.5, 0, 6.2832); ctx.ellipse(x + 4, y - b - 2, 4, 2.6, 0.5, 0, 6.2832); ctx.fill();   // fiocco
+    disc(x - b * 0.45, y - b * 0.5, 1.8, "#ffffff", 0.6);
+    if (g.t !== undefined && g.phase !== "out") {   // anello del timer che si svuota: verde → giallo → rosso
+      const k = clamp(g.t / GIFT.time, 0, 1), c = k > 0.5 ? "#3fe0a0" : k > 0.25 ? "#ffd166" : "#ff5a5a";
+      ctx.globalAlpha = 0.25; ctx.strokeStyle = "#e8eefc"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 6.2832); ctx.stroke();
+      ctx.globalAlpha = k < 0.25 ? 0.6 + 0.4 * Math.sin(age * 14) : 1; ctx.strokeStyle = c;
+      ctx.beginPath(); ctx.arc(x, y, r + 6, -Math.PI / 2, -Math.PI / 2 + k * 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    if (g.maxHp && g.hp < g.maxHp) {             // vita, sotto
+      ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, y + r + 10, 2 * r, 3);
+      ctx.fillStyle = GIFT_COLOR; ctx.fillRect(x - r, y + r + 10, 2 * r * clamp(g.hp / g.maxHp, 0, 1), 3);
+    }
   },
   husk(h) {                                      // speciale physical · guscio vuoto e invincibile, ribaltato (zampe in alto), che svanisce alla fine
     const a = Math.min(1, h.t / 0.6), x = h.x, y = h.y, r = h.r;

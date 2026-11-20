@@ -838,9 +838,10 @@ drawWorld = function drawWorld() {
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
   for (const r of RG.list) FX.ranger(r);           // ranger (1.17.0; in HD-2D dalla 1.18.0)
-  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK));
+  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK) || giftAim(press.x, press.y, null));
   for (const h of shells) FX.husk(h);             // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);
+  if (gift) drawEnemy(gift);                       // pacco regalo (1.21.0)
   for (const o of ents) if (!o.under) o.draw();
   drawDomeEdge();
   ctx.fillStyle = "rgba(12,8,34,0.16)"; ctx.fillRect(0, 0, W, GROUND_Y + GROUND_H);   // penombra: le luci risaltano
@@ -1168,6 +1169,28 @@ Object.assign(FX, {
     const r = e.def.r * 1.45, k = 0.6 + 0.3 * Math.sin(clock * 12);
     for (let i = 0; i < 6; i++) pxLine(e.x + Math.cos(i * 1.0472) * r, e.y + Math.sin(i * 1.0472) * r, e.x + Math.cos((i + 1) * 1.0472) * r, e.y + Math.sin((i + 1) * 1.0472) * r, "#7ff6ff", k);
     light(e.x, e.y, r * 1.6, "#7ff6ff", 0.4 * k); ctx.globalAlpha = 1;
+  },
+  gift(g) {                                      // pacco regalo (1.21.0); HD-2D: pacco a pixel col nastro, eliche a pixel che girano, anello del timer a pixel, luce
+    const age = g.age !== undefined ? g.age : clock, x = Math.round(g.x / PX) * PX, y = Math.round((g.y + Math.sin(age * 3) * 2) / PX) * PX, r = GIFT.r, n = 12, m = n / 2;
+    const fl = g.flash > 0, sp = procSprite("gift:" + (fl ? 1 : 0), n, n + 2, (i, j) => {
+      if (j < 2) return (i === m - 2 || i === m + 1) && j === 1 || (i === m - 3 || i === m + 2) && j === 0 ? "#ffd166" : null;   // fiocco
+      const jj = j - 2; if (fl) return "#ffffff";
+      if (i === m - 1 || i === m || jj === m - 1 || jj === m) return jj === 0 || i === 0 ? "#fff0b8" : "#ffd166";               // nastro
+      return i === 0 || jj === 0 ? "#ff9cca" : i === n - 1 || jj === n - 1 ? "#a8306e" : GIFT_COLOR;
+    });
+    blit(sp, x, y, m + 1, m + 2);
+    for (const sg of [-1, 1]) {                    // bracci e eliche
+      const ax = x + sg * r * 0.95, ay = y - r * 0.95, w = r * 0.62 * (Math.abs(Math.sin(age * 38 + sg)) * 0.85 + 0.15);
+      pxLine(x + sg * 7, y - 9, ax, ay, "#8a94ad", 1);
+      pxLine(ax - w, ay, ax + w, ay, "#cfe0ff", 0.6); pxDot(ax, ay, "#e8eefc", 1);
+    }
+    if (g.t !== undefined && g.phase !== "out") {   // anello del timer a pixel: si svuota, verde → giallo → rosso
+      const k = clamp(g.t / GIFT.time, 0, 1), c = k > 0.5 ? "#3fe0a0" : k > 0.25 ? "#ffd166" : "#ff5a5a", N = 40, a = k < 0.25 ? 0.6 + 0.4 * Math.sin(age * 14) : 1;
+      for (let i = 0; i < N; i++) { const t = -Math.PI / 2 + i / N * 6.2832; pxDot(x + Math.cos(t) * (r + 6), y + Math.sin(t) * (r + 6), i / N < k ? c : "#9fb4d9", i / N < k ? a : 0.55); }
+      light(x, y - r - 6, 10, c, 0.5 * a);
+    }
+    if (g.maxHp && g.hp < g.maxHp) { const w = Math.round(2 * r / PX) * PX; ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x - r, y + r + 10, w, PX); ctx.fillStyle = GIFT_COLOR; ctx.fillRect(x - r, y + r + 10, Math.round(w * clamp(g.hp / g.maxHp, 0, 1) / PX) * PX, PX); }
+    ctx.globalAlpha = 1; light(x, y, 30, GIFT_COLOR, 0.45);
   },
   husk(h) {                                      // speciale physical · guscio vuoto, ribaltato con le zampe in alto; HD-2D: carapace a pixel grigio con la crepa
     const a = Math.min(1, h.t / 0.6), n = Math.ceil(h.r * 2.3 / PX), m = n / 2, sh = FOE_LAYERS.crab[0].p;

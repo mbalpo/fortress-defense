@@ -277,3 +277,21 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   g.save("101-campagna-70.png");
   e("for (const k of Object.keys(ENEMY_DEFS)) progress.seen.push(seenKey(ENEMY_DEFS[k])); pauseGame(); pauseTab = 'enemies'"); g.frame(); g.save("102-campagna-70-pausa.png");
 }
+{ // 1.21.0: pacco regalo (DESIGN.md § 17): in campo col mirino agganciato e un nemico in mezzo, avviso “Nuovo nemico”, premio, scheda Nemici; classica e HD-2D
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const SET = "setSel('standard', 61); startRun('standard'); queue = []; enemies = []; giftPlan = { wave: 4, done: false }; startWave(4); queue = [{ t: 999, enemy: 'drone', x: 10 }]; waveTime = 0.5;" +
+    " spawnGift(); giftWait = -1; gift.x = gift.tx = 130; gift.y = gift.ty = 380; gift.phase = 'float'; gift.t = 5; GIFT.speed = 0;" +
+    " for (const [k, x, y] of [['brute', 150, 470], ['drone', 260, 250], ['wisp', 70, 200]]) { spawn({ enemy: k, x }); Object.assign(enemies[enemies.length - 1], { y, speed: 0, hp: 1e9, maxHp: 1e9 }); }" +
+    " player.x = player.targetX = 160; pressing = true; press.x = 136; press.y = 386;";
+  let n = 103;
+  for (const settings of [null, { graphics: "hd2d" }]) {
+    const hd = settings ? "-hd2d" : "";
+    const g = game({ progress: { cleared: 90, seen: ALL_SEEN }, settings, src }), e = g.w.__ev;
+    e(SET); for (let k = 0; k < 30; k++) { e("domeHp = domeMax; pressing = true; if (gift) gift.hp = Math.max(gift.hp, gift.maxHp * 0.5)"); g.frame(); }
+    g.save((n++) + "-pacco-regalo" + hd + ".png");
+    e("pressing = false; enemies[0].dead = true; floaters.length = 0; giftHit(gift.hp + 1); alerts = []"); for (let k = 0; k < 3; k++) g.frame(); g.save((n++) + "-pacco-premio" + hd + ".png");
+  }
+  const g = game({ progress: { cleared: 90, seen: ALL_SEEN }, src }), e = g.w.__ev;
+  e(SET + " gift.y = -2; gift.phase = 'in'; pressing = false;"); for (let k = 0; k < 8; k++) { e("domeHp = domeMax"); g.frame(); } g.save((n++) + "-pacco-avviso.png");
+  e("pauseGame(); pauseTab = 'enemies'"); g.frame(); g.save((n++) + "-pacco-pausa.png");
+}

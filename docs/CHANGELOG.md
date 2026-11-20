@@ -3,6 +3,38 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.21.0 — Pacco regalo
+
+- **Regole** **[deciso]** (Marco, DESIGN.md § 17 “Pacco regalo”, § 2 Guardiano, § 4 sblocchi, § 11): in Standard dal livello 61 e in Epica dal 31, non nella Protezione planetaria; una volta per livello,
+  al 25%, in un’ondata a caso tra la 3 e la 19 (non 5, 10, 15). Fluttua tra il 25% e il 50% dell’altezza con un timer; non fa danni, non conta per l’ondata, il contatore e la frenesia.
+  Solo il guardiano tenendo premuto lo colpisce (mirino entro 45 px, vince il più vicino al mirino); i nemici in mezzo fermano i colpi (servono perforazioni).
+  Premio: 5 frammenti (10 in Epica) a un ranger a caso non al livello 10, subito; con tutti i ranger al 10 in Standard non compare più, in Epica lascia un pezzo o un Modulo epico o superiore.
+- **Codice** (`index.html`, sezione “PACCO REGALO”: `GIFT`, `gift`, `giftPlan`, `giftRoll`, `giftTick`, `giftHit`, `giftReward`, `giftRarity`, `guardDps`): il pacco non sta in `enemies`, quindi torrette,
+  ranger, mira automatica, “Bersaglio”, missili, aree e stati non lo vedono per costruzione. Lo colpiscono i proiettili diretti sparati mentre si preme (`shotManual`: guardiano, Colpo caricato, Clone;
+  non Ventaglio e frammenti), dopo i nemici lungo la strada. Tiro e ondata con un generatore separato (`giftRand`), che non tocca `Math.random`.
+  Partita sospesa: `fortress-run-v1` salva `gift` (ondata ed esito); “Continua” rigioca l’ondata e il pacco ricompare solo se non era risolto. Nessun `SAVE_VERSION` nuovo: i frammenti vanno in
+  `progress.planet.frags` e la scoperta è la chiave `gift` in `progress.seen` (tetto delle scoperte salvate da 50 a 80).
+- **Valori [Claude]** (accettati da Marco come punto di partenza, da provare a mano): timer 12 s (fermo in pausa e nelle carte, scorre con 1,5x / 2x), vita = danno al secondo del guardiano × 5 s
+  (233 di base), circa 50 px/s con cambi di direzione; compare 3 s dopo l’inizio dell’ondata, entra e esce dall’alto a 140 px/s (il timer parte quando arriva nella fascia); raggio 15 px.
+  Equipaggiamento in Epica con tutti i ranger al 10: pezzo o Modulo 50 / 50, tipo a caso, rarità dalla tabella dei drop limitata a epico o superiore e riscalata.
+- **Grafica** **[Claude] [da rivedere]** (`draw.js`: `FX.gift`, `drawGiftNote`, `puzzleIcon`; `draw-hd2d.js`: `FX.gift` a pixel): drone-corriere rosa `#ff5fa8` con nastro e fiocco gialli, due eliche,
+  anello del timer verde → giallo → rosso (lampeggia nell’ultimo quarto), vita sotto quando è ferito; mirino giallo anche sul pacco. Avviso “Nuovo nemico: Pacco regalo” con “Solo il guardiano:
+  tieni premuto e mira”; avviso del premio con l’etichetta col nome del ranger e il pezzo di puzzle (o pezzo / Modulo e rarità); riga nella scheda “Nemici del livello” se il livello ha il pacco.
+- `tests/tools/ranger-tempi.js`: variabili `PACCO` e `PACCO_EPICA` (livelli di campagna al giorno). DESIGN.md: testi di Marco (§ 2, § 4, § 11, § 17) e “Costruito (1.21.0)”, misure.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/pacco.js`: livelli 60 / 61 Standard e 30 / 31 Epica; 8000 tiri al 25% con le sole ondate ammesse; nessuna chiamata a `Math.random`;
+nessun pacco nella Protezione planetaria; Sky Guard, Laser, Thunderbolt, ranger (Epsilon, Sigma), mira automatica e “vita più alta” non lo colpiscono; in manuale sì entro 45 px, non a 62;
+pacco e nemico vicini al mirino; asteroide in mezzo che ferma i colpi (con una perforazione passano); esplosioni e aree senza effetto; timer fermo in pausa e nelle carte, ×1,5 e ×2 con la velocità;
+timer scaduto e ondata finita prima; vita da 5 s di fuoco; premio Standard 5 ed Epica 10; ranger al 10 esclusi; tutti al 10 (Standard senza pacco, Epica 180 pacchi: solo epico o superiore,
+pezzi e Moduli); frammenti salvati anche perdendo; sospensione e “Continua” (pacco di nuovo in campo, non ricompare se preso, ondata non valida scartata); avvisi e scheda Nemici; livelli 61,
+Epica 31 in HD-2D e 120 giocati fino in fondo senza errori. Bot: `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` uguale alla 1.20.0 a parità di semi, anche con il pacco in ogni livello;
+tempi dei ranger con il pacco in DESIGN.md § 17. `npm run screenshots`: nuove 103-108 (pacco col mirino e un asteroide in mezzo, premio, classica e HD-2D; avviso; pausa).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): tessera `FX.gift`, scene “Pacco regalo” e “Pacco regalo · premio”.
+
+Checklist: aggiornata (versione 45): nuovo gruppo da provare “Pacco regalo (1.21)”; tra i valori di Claude timer 12 s, vita da 5 s di fuoco, 50 px/s, tabella dell’equipaggiamento in Epica;
+tra le cose da decidere i frammenti in Epica 31 prima del 60 di Standard e la misura con i bot; tra le interpretazioni i colpi che lo feriscono; nei riferimenti sblocco al 61, mirino e regole del pacco.
+
 ## 1.20.0 — Nemici nuovi e boss giganti nella campagna dal 70
 
 - **Regola** **[deciso]** (Marco, DESIGN.md § 17 “Nemici nuovi nella campagna”): dalla difficoltà 70 (Standard 70, Epica 40) ogni nemico è per metà il classico e per metà

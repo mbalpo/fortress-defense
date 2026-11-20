@@ -235,6 +235,15 @@ function scenes(turretIds) {
         setup: "openPlanet(); startPlanet('" + t + "'); queue = []; enemies = []; for (let k = 1; k < 20; k++) pw.clr[k] = true; planetWave(18); queue = queue.filter((q) => q.def); wave = 20; pw.next = Infinity; pw.choices = []; waveTime += 2.1; update(0.01);" +
           " const b = enemies.find((x) => x.final); b.y += 320 - bottomOf(b); b.speed = 0;" + extra,
         each: KEEP + " for (const x of enemies) if (x.final) x.speed = 0; player.cd = 1e9;", frames: t === "energy" ? 50 : 20 }, ["giantDetails", "giantBehind", "layerBody", "GIANT_LAYERS", "orbitRing", "FX.prismRay"]);
+  // 1.21.0: pacco regalo (DESIGN.md § 17): in campo con il mirino agganciato, e l’avviso del premio
+  const PGF = Object.assign({}, PP, { cleared: 70, seen: PP.seen.concat(["gift"]) });
+  add(1, "pacco-regalo", "Pacco regalo", "Drone-corriere che fluttua tra il 25% e il 50% dell’altezza con l’anello del timer; solo il guardiano, tenendo premuto con il mirino entro 45 px, lo colpisce.",
+    { progress: PGF, setup: START(61) + " queue = []; enemies.length = 0; startWave(4); queue = []; waveTime = 0; spawnGift(); gift.y = gift.ty = 400; gift.x = gift.tx = 120; gift.phase = 'float'; gift.t = 7;" +
+        " for (const [k, x, y] of [['drone', 90, 250], ['brute', 260, 300]]) { spawn({ enemy: k, x }); Object.assign(enemies[enemies.length - 1], { y, speed: 0, hp: 1e9, maxHp: 1e9 }); } pressing = true; press.x = 124; press.y = 404; player.targetX = 120;",
+      each: KEEP + " pressing = true; press.x = gift ? gift.x + 4 : 124; press.y = gift ? gift.y + 4 : 404; if (gift) gift.hp = Math.max(gift.hp, gift.maxHp * 0.4);", frames: 40 }, ["FX.gift", "giftTick", "drawCrosshair"]);
+  add(1, "pacco-premio", "Pacco regalo · premio", "Alla sconfitta: frammenti di un ranger non al livello 10, con l’etichetta col nome del ranger e il pezzo di puzzle (in Epica con tutti i ranger al 10: un pezzo o un Modulo epico o superiore).",
+    { progress: PGF, setup: START(61) + " queue = []; enemies.length = 0; startWave(4); queue = []; waveTime = 0; giftRand = () => 0.05; spawnGift(); gift.y = 400; gift.phase = 'float'; giftHit(gift.hp + 1); alerts = [];",
+      each: KEEP + " if (giftNote) giftNote.t = 3;", frames: 4 }, ["drawGiftNote", "puzzleIcon", "giftReward"]);
   // schermate HTML (stesso markup e CSS di index.html)
   add(1, "splash-controllo", "Schermata iniziale · controllo", "Appena aperta: controlla gli aggiornamenti (al massimo 3 s), nessuna scritta.", { splash: { msg: "" } }, ["#splash"]);
   add(1, "splash-aggiornamento", "Schermata iniziale · aggiornamento", "C’è una versione nuova: scarica, attiva e ricarica.", { splash: { msg: "Aggiornamento in corso…" } }, ["#splash"]);
@@ -356,6 +365,8 @@ function tiles(M) {
     prismRay: ["FX.prismRay({ x: 0, y0: -60, y1: 60, t: T % 1.6 });", [-20, -64, 40, 128], 1.5],
     immune: [CK + "const e = { x: 0, y: 0, def: { r: 14 } }; FX.immune(e);" + CK0, [-24, -24, 48, 48], 3],
     husk: ["FX.husk({ x: 0, y: 0, r: 17, t: 3 - (T % 3.6) });", [-24, -24, 48, 48], 3],
+    // 1.21.0: pacco regalo con il timer pieno, a metà e quasi scaduto (lampeggia), ferito
+    gift: [CK + "[[12, 1], [6, 0.6], [2, 0.25]].forEach(([t, h], i) => FX.gift({ x: -48 + i * 48, y: 0, t: GIFT.time - ((GIFT.time - t + T) % GIFT.time), hp: h, maxHp: 1, age: T + i, phase: 'float', flash: 0 }));" + CK0, [-74, -34, 148, 70], 2.5],
     rangerFlame: [CK + "FX.rangerFlame({ len: 110, ang: -Math.PI / 2 + 0.5 * Math.sin(T), t: 0.4 }, { x: 0, y: 60 });" + CK0, [-70, -70, 140, 140], 1.5],
     bubble: ["[0, 1, 2].forEach((k) => FX.bubble({ x: -24 + k * 24, y: 0, age: (T + k * 4) % RV.gammaLife, seed: k * 2 }));", [-40, -18, 80, 36], 3],
     fireTrail: [CK + "FX.fireTrail([0, 1, 2, 3, 4].map((k) => ({ x: -48 + k * 24, y: 8 * Math.sin(k + T), t: 1 - k * 0.18 })), 1);" + CK0, [-64, -34, 128, 56], 2],

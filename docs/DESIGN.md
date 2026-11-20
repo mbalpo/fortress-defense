@@ -25,7 +25,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
 - Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). Dal livello 31, le torrette sbloccate con i Sigilli si possono equipaggiare prima dell’ondata 1 (§ 16). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
-- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; nel punto premuto c’è un **mirino**: se un nemico è entro 45 px dal mirino i colpi lo inseguono (è il bersaglio, quindi valgono anche le combo legate al bersaglio, come la Mira amplificata), altrimenti vanno **dritti in alto**. Al rilascio torna la mira automatica. **[deciso]** (mirino che assegna un bersaglio, rev. 4) · 45 px e comportamento “insegue se vicino” **[deciso]** (scelto da Marco tra le proposte di Claude)
+- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; nel punto premuto c’è un **mirino**: se un nemico è entro 45 px dal mirino i colpi lo inseguono (è il bersaglio, quindi valgono anche le combo legate al bersaglio, come la Mira amplificata), altrimenti vanno **dritti in alto**. Al rilascio torna la mira automatica. **[deciso]** (mirino che assegna un bersaglio, rev. 4) · 45 px e comportamento “insegue se vicino” **[deciso]** (scelto da Marco tra le proposte di Claude) Il mirino può assegnare come bersaglio anche il **pacco regalo** (§ 17), l’unico nemico che solo il guardiano in manuale può colpire. **[deciso]**
 - **Mira**: nel menu non c’è più la scelta; senza premere è automatica, premendo vale il mirino (punto sopra). Il mirino è tornato anche perché il cambio di modalità sia evidente. Le torrette sparano sempre da sole. **[deciso]**
 - **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”; il guardiano lo usa quando non si preme. **[deciso]**
 - **Portata delle torrette** **[deciso]** (Marco, 1.14.2): si misura sempre dal **centro in basso**, dove parte il guardiano (x 180, y = suolo − 30), anche per le torrette
@@ -107,7 +107,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Tetto di livello** di torri e guardiano, in base ai livelli completati: lv1 fino al 10, **lv2 dopo il 10**, **lv3 dopo il 20**. **[deciso]**
 - Sblocchi a fine livello: 10 → lv2, 20 → lv3, **30 → equipaggiamento** (testa, armatura, guanti, stivali, arma, nucleo),
   **31 → cominciano a cadere i Sigilli e si apre l’albero dei potenziamenti** (§ 16), **40 → abilità della barriera** (fino a 3; ramo abilità dell’albero, con la scheda Abilità bloccata da un overlay fino a quel livello),
-  **50 → Epica**, **60 → Ranger e Protezione planetaria** (§ 17) **[deciso]**. Equipaggiamento (1.10.0, § 15), albero e abilità della barriera (fasi 1-3, § 16) sono costruiti. **[deciso]**
+  **50 → Epica**, **60 → Ranger e Protezione planetaria** (§ 17) **[deciso]**. **Pacco regalo** da **Standard 61 ed Epica 31** (§ 17) **[deciso]**. Equipaggiamento (1.10.0, § 15), albero e abilità della barriera (fasi 1-3, § 16) sono costruiti. **[deciso]**
 - **Avviso di sblocco**: al primo completamento in Standard dei livelli 10, 20, 30, 31, 40 e 50 compare, sopra la schermata di vittoria, un avviso con ciò che si è sbloccato;
   si chiude solo a mano (“Ho capito”, Invio o Esc) e finché è aperto i pulsanti della vittoria non rispondono. Al 30 l’avviso spiega che l’equipaggiamento cade a ogni vittoria. **[deciso]** · testi degli avvisi **[Claude]**
 - **Mini-boss** (nave aliena) alle ondate 5, 10, 15: dal livello 11 in Standard, sempre in Epica. Sconfitto, dà **3 carte a caso applicate subito**
@@ -539,6 +539,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   Conferma: escono molto meno di una volta a partita. Nessun valore cambiato; se vanno rese più frequenti, le leve sono il peso delle carte combo (0,4) e le condizioni. **(aperto)**
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: danni, portate e valori intermedi dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
+- **Pacco regalo** (§ 17): timer, vita, velocità e tabella della ricompensa di equipaggiamento in Epica sono **[Claude]**, accettati e da provare a mano; probabilità 25% e ritmo dei frammenti da misurare con i bot. **(aperto)**
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
@@ -1009,7 +1010,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
   - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).
 
-## 17. Ranger e Protezione planetaria (costruiti: 1.16.0-1.20.0)
+## 17. Ranger e Protezione planetaria (costruiti: 1.16.0-1.21.0)
 
 ### Ranger
 - Sblocco al completamento del **livello 60** di Standard. **[deciso]**
@@ -1260,3 +1261,44 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Valori [Claude] [provvisorio]**: livello delle abilità del gigante 1 + ⌊(difficoltà − 70) / 10⌋ (1 al 70, 14 al 200; nei continenti è il livello del continente);
   vita dei nemici nuovi e degli speciali nella campagna **×0,7** (`CAMP_NEW.hpK`), giganti al 90, 130, 170, 190 **×0,75** (`CAMP_NEW.giantK`): misura in § 5 (“Misura 1.20.0”).
 - **Pausa**: la scheda “Nemici del livello” scorre col dito (dal 70 elenca 15 nemici); le scoperte dei nemici nuovi valgono per tipo, come nei continenti.
+
+### Pacco regalo (campagna e Epica)
+- **Dove e quando** **[deciso]** (Marco): in Standard dal **livello 61**, in Epica dal **livello 31** (stessa difficoltà, 61); **non** nella Protezione planetaria.
+  Una volta per livello, **probabilità 25% per livello** (uguale in Standard ed Epica); l’ondata si estrae a caso tra la **3 e la 19, escluse 5, 10 e 15**.
+  Si tira a inizio livello. Se il pacco è già stato risolto (preso o scaduto), non ricompare rigiocando l’ondata dopo “Continua”. **[Claude]**
+- **Nemico speciale** **[deciso]** (Marco): non infligge danni e non arriva alla cupola; **fluttua tra il 25% e il 50% dell’altezza dello schermo** (misurata dal basso, y da 480 a 320),
+  ha un **timer**. **Solo il guardiano in modalità manuale può colpirlo**: torrette, ranger e mira automatica non lo considerano bersaglio, e il “Bersaglio” (più vicino / vita più alta) lo ignora.
+  Non conta nel contatore “Nemici” né per finire l’ondata, né per la frenesia (come il guscio). Se l’ondata finisce prima del timer, o scade il timer, **se ne va e il premio sfuma**. **[deciso]** (Marco)
+- **Ricompensa** **[deciso]** (Marco): **5 frammenti** (Standard) o **10** (Epica) di un **ranger a caso tra quelli non al livello 10** (etichetta col nome e pezzo di puzzle, come i frammenti del § 17).
+  Se **tutti i ranger sono al livello 10**: in Standard il pacco **non compare più**; in Epica lascia **un pezzo di equipaggiamento o un Modulo di rarità epica o superiore**.
+  Frammenti medi per livello giocato: 1,25 in Standard, 2,5 in Epica.
+- **Danni** **[deciso]** (Marco): i colpi del guardiano colpiscono **anche i nemici che trovano lungo la strada**; per raggiungere il pacco serve quindi una traiettoria libera
+  oppure abbastanza perforazioni da superare i nemici in mezzo. **[Claude]** (lettura): lo ferisce solo il proiettile diretto del guardiano e del Clone, con resistenze neutre (×1);
+  aree, raggi, fulmini, mine, schegge e stati lo attraversano senza contare come perforazione né attivare effetti; è immune a attrazione, spinta e teletrasporto.
+  Se pacco e nemico sono entrambi entro 45 px dal mirino, il bersaglio è il più vicino al mirino.
+- **Equipaggiamento in Epica con tutti i ranger al 10** **[Claude]**: pezzo o Modulo 50% / 50%, tipo a caso, rarità dalla tabella dei drop del § 15 per la difficoltà, limitata a epico o superiore e riscalata al 100%.
+- **Valori** **[Claude]** (accettati da Marco come punto di partenza, da provare a mano): timer **12 s** (fermo in pausa e nella scelta delle carte, scorre con la velocità 1,5x / 2x come la logica);
+  vita calcolata all’apparizione come **danno al secondo del guardiano × 5 s di fuoco**; movimento morbido, circa **50 px/s**, con cambi di direzione; entra dall’alto e, alla fine, esce verso l’alto.
+- **Salvataggio** **[Claude]**: la partita sospesa (§ 2) salva l’ondata estratta e l’esito del pacco; “Continua” rigioca l’ondata dall’inizio e il pacco ricompare solo se non era già risolto.
+  I frammenti si accreditano **subito** alla sconfitta del pacco, anche se il livello poi si perde; vanno in `progress.planet.frags` (nessun campo nuovo di progresso per i frammenti).
+- **Grafica e avvisi** **[Claude] [da rivedere]**: pacco regalo con **eliche** (drone-corriere con nastro), colore diverso dai cinque tipi, anello del timer che si svuota; avviso “Nuovo nemico” al primo incontro
+  e voce nella scheda “Nemici del livello” con il suggerimento “tieni premuto e mira”. Disegno classico e HD-2D.
+- **Da misurare con i bot**: bot che sappia mirare il pacco; effetto sui muri (il guardiano non spara ai nemici mentre lo insegue); tempi di sblocco con `tests/tools/ranger-tempi.js`
+  includendo il pacco (stima: +30% di frammenti per 3 livelli al giorno in Standard). Vita e timer li prova Marco a mano.
+- **Costruito (1.21.0)** · dettagli **[Claude] [da rivedere]**: il pacco non sta tra i nemici (`gift`, `GIFT` in `index.html`), quindi torrette, ranger, mira automatica, “Bersaglio”, missili, aree e stati
+  non lo vedono per costruzione; lo colpiscono solo i proiettili sparati **mentre si preme** (guardiano, Colpo caricato e Clone; non il Ventaglio né i frammenti della combo Railgun), anche se non era il bersaglio,
+  dopo i nemici lungo la strada (una perforazione per superarne uno, una per il pacco). Con la mira automatica i colpi gli passano attraverso, così la partita dei bot non cambia.
+  Tiro e ondata con un generatore separato (`giftRand`), che non tocca `Math.random`: a parità di semi le calibrazioni danno gli stessi numeri (verificato con `curva.js`, sotto).
+  Compare **3 s** dopo l’inizio della sua ondata, entra dall’alto a 140 px/s fino a un punto a caso della fascia, dove parte il timer; scaduto, esce verso l’alto alla stessa velocità.
+  Vita: danno di una salva × proiettili ÷ intervallo, con carte, albero ed equipaggiamento del guardiano, senza frenesia, Ventaglio e Clone (base 7 ÷ 0,15 × 5 = 233).
+  Sagoma: raggio 15 px; colore rosa `#ff5fa8` con nastro giallo. Nella scheda “Nemici del livello” c’è solo se il pacco è stato estratto per quel livello (con l’ondata e il premio).
+  Scoperta: chiave `gift` in `progress.seen` (le scoperte accettano già chiavi nuove: nessun `SAVE_VERSION` nuovo; tetto delle scoperte salvate portato da 50 a 80).
+  Avviso del premio per 3,5 s sotto l’avviso dei nemici. In Epica 31 un giocatore che non ha ancora completato il 60 di Standard riceve frammenti di ranger non ancora visibili:
+  restano salvati per quando si aprono **[Claude] [da confermare]**.
+- **Misura 1.21.0** (bot che ignorano il pacco): `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` dà **gli stessi numeri** partita per partita sulla 1.20.0 e sulla 1.21.0,
+  anche con il pacco forzato in ogni livello (probabilità 100%): 61 8/15 e 5/15, 70 12/15 e 5/15, 100 9/15 e 7/15 (random / smart). L’effetto sui muri di un giocatore che insegue il pacco
+  resta da misurare con un bot che lo miri **[da misurare]**.
+- **Tempi di sblocco con il pacco** (`PACCO=<livelli di Standard al giorno> PACCO_EPICA=<livelli di Epica al giorno> node tests/tools/ranger-tempi.js`, stessi giorni di gioco, pacco sempre preso;
+  quote dei continenti della 1.18.0: fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti e 10 sbloccati **14,8 mesi senza pacco → 9,5 con 3 livelli di Standard al giorno
+  → 7,3 con 2 di Standard e 2 di Epica (o 3 di Epica)**; tutti al 10: oltre 6 anni → 35,7 → 25,6 mesi. Il pacco va a un ranger qualsiasi non al 10, quindi aiuta soprattutto i tipi più lenti
+  (physical da 14,8 a 9,5 mesi, force da 10,1 a 7,4) e poco i veloci (electric da 3,0 a 2,7). Con le quote della 1.16.0: 10,9 → 7,9 mesi. **[Claude]** (misura)

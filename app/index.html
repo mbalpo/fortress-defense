@@ -833,7 +833,7 @@ try {
   const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "null");
   if (p && Number.isFinite(p.cleared)) progress.cleared = clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel);
   progress.clearedEpic = cleanEpic(p);
-  if (p && Array.isArray(p.seen)) progress.seen = p.seen.filter((k) => typeof k === "string" && k !== "ship" && k !== "mothership").slice(0, 50);   // vecchie scoperte generiche dei boss, non più valide
+  if (p && Array.isArray(p.seen)) progress.seen = p.seen.filter((k) => typeof k === "string" && k !== "ship" && k !== "mothership").slice(0, 80);   // vecchie scoperte generiche dei boss, non più valide
   Object.assign(progress, cleanSeals(p));
   progress.gear = cleanGear(p);
   progress.planet = cleanPlanet(p);
@@ -2382,12 +2382,16 @@ function playerTick(p, dt) {
   p.cd -= dt; if (p.cd > 0) return;
   const cnt = 1 + N(p, "proj") + GEAR.proj, pos = { x: p.x + GUN.dx, y: GROUND_Y + GUN.dy };
   let t = null, ang = -Math.PI / 2;
-  if (pressing) t = nearestTo(press.x, press.y, PRESS_PICK);   // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
+  if (pressing) {                            // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
+    t = nearestTo(press.x, press.y, PRESS_PICK);
+    if (giftAim(press.x, press.y, t)) t = gift;   // pacco regalo: bersaglio se è il più vicino al mirino (1.21.0)
+  }
   else {
     t = pickTargets(pos, PLAYER.range, 1)[0];
     if (!t) { p.cd = 0; return; }
   }
   const f = frenzyOn(p);
+  shotManual = pressing;                         // pacco regalo: i colpi di questa salva lo possono colpire solo se si sta premendo
   p.gm = gearMul();
   const raw = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * (f ? frenzyK(p.frzL || 0) : 1) * p.gm;    // senza Colpo pesante
   const dmg0 = raw * (has(p, "punch") ? 1.6 : 1);
@@ -2409,6 +2413,7 @@ function playerTick(p, dt) {
     for (let k = 0; k < cnt; k++) playerBullet(p, cx + (k - (cnt - 1) / 2) * 7, pos.y, null, dmg0 * 0.5, ca, { clone: true });
     if (has(p, "fan")) for (const d of fanOffsets(p)) playerBullet(p, cx, pos.y, null, dmg0 * 0.5 * fanK(p.fanX || 0), ca - d, { clone: true, fan: true });
   }
+  shotManual = false;
   const cd0 = p.cd;
   p.cd += PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) / (f ? (has(p, "fspd") ? FRENZY.rateFast : FRENZY.rate) : 1);   // += conserva il resto del fotogramma: la cadenza media è esatta
   if (GEAR.rate) p.cd -= (p.cd - cd0) * GEAR.rate;   // Modulo 7: intervallo tra le salve più breve
@@ -2535,8 +2540,84 @@ const SUPPORT = {
     }
   },
 };
+/* ---------- PACCO REGALO (1.21.0, DESIGN.md § 17) ----------
+   In Standard dal livello 61, in Epica dal 31 (non nella Protezione planetaria): una volta per livello, al 25%, in un’ondata a caso tra la 3 e la 19 (non 5, 10, 15) [deciso].
+   Non è un nemico per torrette, ranger, mira automatica e “Bersaglio” (non sta in enemies): solo i colpi sparati dal guardiano tenendo premuto (anche il Clone)
+   lo feriscono, con il mirino entro 45 px; i nemici lungo la strada fermano i colpi come sempre. Non conta per l’ondata né per la frenesia; non fa danni.
+   Fluttua tra il 25% e il 50% dell’altezza (dal basso), con un timer; se scade o l’ondata finisce se ne va. Premio: frammenti di un ranger non al 10 (5 Standard, 10 Epica);
+   con tutti i ranger al 10 in Standard non compare più, in Epica lascia un pezzo o un Modulo epico o superiore [deciso].
+   Valori [Claude] (accettati, da provare a mano): timer 12 s, vita = danno al secondo del guardiano × 5 s, 50 px/s; entrata e uscita, ritardo e dimensioni [Claude].
+   Tiro e ondata con un generatore separato (giftRand): Math.random e le calibrazioni a semi fissi non cambiano. */
+const GIFT = { stdFrom: 61, epicFrom: 31, chance: 0.25, waves: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19], time: 12, fireSec: 5, speed: 50,
+  enter: 140, yTop: H * 0.5, yBot: H * 0.75, r: 15, delay: 3, frags: { standard: 5, epic: 10 }, epicPiece: 0.5 };
+const GIFT_DEF = { look: "gift", gift: true, r: GIFT.r, type: "physical" };   // per scoperte e avvisi; type solo per non rompere i disegni generici
+const GIFT_COLOR = "#ff5fa8";                       // diverso dai cinque tipi
+let giftRand = (() => { let s = (Date.now() ^ 0x5f3759df) >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
+let giftPlan = null, gift = null, giftWait = -1, giftNote = null, shotManual = false;   // giftPlan: { wave, done } del livello; gift: il pacco in campo; giftNote: avviso del premio
+const allRangersMax = () => Object.keys(RANGER_DEF).every((id) => rangerLv(id) >= RANGER.maxLv);
+const giftOn = () => (mode === "standard" && campLevel >= GIFT.stdFrom && !allRangersMax()) || (mode === "epic" && campLevel >= GIFT.epicFrom);
+function giftRoll() {                              // a inizio livello (non con “Continua”, che riprende il piano salvato)
+  giftPlan = giftOn() && giftRand() < GIFT.chance ? { wave: GIFT.waves[Math.floor(giftRand() * GIFT.waves.length)], done: false } : null;
+}
+function giftLoad(g) { giftPlan = g && GIFT.waves.includes(g.wave) ? { wave: g.wave, done: !!g.done } : null; }
+function giftDone() {                              // preso o scaduto: rigiocando l’ondata dopo “Continua” non ricompare
+  if (giftPlan) giftPlan.done = true;
+  if (suspended && state !== "menu") { suspended.gift = giftPlan; writeRun(); }
+}
+// danno al secondo del guardiano senza frenesia, ventaglio e Clone: la vita del pacco è questo × 5 s [Claude]
+function guardDps(p) {
+  const cnt = 1 + N(p, "proj") + GEAR.proj, per = PLAYER.dmg * dmgM(p) * Math.pow(stdM(p, "proj", 0.85), N(p, "proj")) * gearMul() * (has(p, "punch") ? 1.6 : 1);
+  return per * cnt / (PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) * (1 - (GEAR.rate || 0)));
+}
+function spawnGift() {
+  if (mode === "standard" && allRangersMax()) { giftDone(); return; }
+  const hp = guardDps(player) * GIFT.fireSec, x = 40 + giftRand() * (W - 80);
+  gift = { def: GIFT_DEF, x, y: -GIFT.r - 4, hp, maxHp: hp, t: GIFT.time, phase: "in", ty: GIFT.yTop + giftRand() * (GIFT.yBot - GIFT.yTop), tx: x, vx: 0, vy: 0,
+    flash: 0, dead: false, acc: 0, accT: 0, age: 0 };
+}
+const giftLive = () => gift && !gift.dead && gift.phase !== "out" && gift.y >= 0;   // colpibile
+// mirino: il pacco entro 45 px, se è più vicino al mirino del nemico agganciato
+const giftAim = (x, y, e) => giftLive() && dist(gift.x, gift.y, x, y) - GIFT.r < Math.min(PRESS_PICK, e ? edist(e, x, y) : Infinity);
+function giftTick(dt) {
+  if (giftWait >= 0 && waveTime >= giftWait) { giftWait = -1; spawnGift(); }
+  if (giftNote && (giftNote.t -= dt) <= 0) giftNote = null;
+  const g = gift; if (!g) return;
+  g.age += dt; g.flash = Math.max(0, g.flash - dt); g.accT = Math.max(0, g.accT - dt);
+  if (g.phase === "in") { g.y += GIFT.enter * dt; if (g.y >= g.ty) { g.y = g.ty; g.phase = "float"; } return; }
+  if (g.phase === "out") { g.y -= GIFT.enter * dt; if (g.y < -GIFT.r * 3) gift = null; return; }
+  g.t -= dt;
+  if (g.t <= 0) { g.phase = "out"; giftDone(); floaters.push({ x: clamp(g.x, 70, W - 70), y: g.y - 24, life: 1.4, max: 1.4, txt: "Il pacco se ne va", color: "#9fb4d9" }); return; }
+  if (dist(g.x, g.y, g.tx, g.ty) < 8) { g.tx = 30 + giftRand() * (W - 60); g.ty = GIFT.yTop + giftRand() * (GIFT.yBot - GIFT.yTop); }   // nuovo punto: cambi di direzione
+  const d = dist(g.x, g.y, g.tx, g.ty) || 1, k = Math.min(1, dt * 2.5);              // movimento morbido verso il punto, circa 50 px/s
+  g.vx += ((g.tx - g.x) / d * GIFT.speed - g.vx) * k; g.vy += ((g.ty - g.y) / d * GIFT.speed - g.vy) * k;
+  g.x = clamp(g.x + g.vx * dt, GIFT.r, W - GIFT.r); g.y = clamp(g.y + g.vy * dt, GIFT.yTop, GIFT.yBot);
+}
+function giftHit(dmg) {                            // resistenze neutre (×1), nessun effetto
+  const g = gift; g.hp -= dmg; g.flash = 0.06; popup(g, dmg, 1, "player");
+  if (g.hp > 0) return;
+  g.dead = true; gift = null; ring(g.x, g.y, 34, GIFT_COLOR, 0.5); giftDone();
+  const gain = giftReward(); if (gain) giftNote = { t: 3.5, gain };
+}
+// frammenti a un ranger a caso tra quelli non al livello 10, subito; con tutti al 10 (solo Epica) un pezzo o un Modulo epico o superiore
+function giftReward() {
+  const open = Object.keys(RANGER_DEF).filter((id) => rangerLv(id) < RANGER.maxLv);
+  if (open.length) {
+    const id = open[Math.floor(giftRand() * open.length)], n = GIFT.frags[mode] || GIFT.frags.standard;
+    progress.planet.frags[id] += n; saveProgress(); return { kind: "frags", id, n };
+  }
+  if (mode !== "epic") return null;
+  const g = progress.gear, pc = PIECE_IDS[Math.floor(giftRand() * PIECE_IDS.length)], r = giftRarity(curDiff());
+  if (giftRand() < GIFT.epicPiece) { bump(g.pcs, pcKey(pc, r), 1); saveProgress(); return { kind: "pcs", pc, r }; }
+  const fx = rollModFx(pc, r); bump(g.mods, modKey(pc, r, fx), 1); saveProgress(); return { kind: "mods", pc, r, fx };
+}
+function giftRarity(D) {                           // tabella dei drop (§ 15) per la difficoltà, solo epico o superiore, riscalata al 100% [Claude]
+  const t = DROP_RARITY.reduce((a, [d, w]) => D >= d ? w : a, DROP_RARITY[0][1]).map((w, r) => r >= 2 ? w : 0), tot = t.reduce((a, b) => a + b, 0);
+  let x = giftRand() * tot; for (let r = 2; r < 5; r++) if ((x -= t[r]) < 0) return r;
+  return 2;
+}
 function playerBullet(p, x, y, t, dmg, ang, o) {
   o = o || {};
+  const manual = shotManual && !o.frag && !o.fan;   // pacco regalo: solo i proiettili diretti sparati tenendo premuto (guardiano e Clone), non ventaglio e frammenti
   const fan = !!o.fan, clone = !!o.clone, frag = !!o.frag, charged = o.charged != null;
   let pierce = fan || frag ? 0 : N(p, "pierce") + (has(p, "pen2") ? 2 : 0) + GEAR.pierce;
   let maxHp = !!o.first && GEAR.maxHp > 0;      // Modulo 20: un colpo per salva, sul primo nemico colpito
@@ -2588,6 +2669,10 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
           if (nx) { bounces--; this.t = nx; this.reb = true; this.out = domeK(this.x, this.y, 0) > 1; this.life = Math.max(this.life, 1.5); } else this.dead = true;
         } else this.dead = true;
         break;
+      }
+      if (manual && !this.dead && !this.gHit && giftLive() && dist(gift.x, gift.y, this.x, this.y) <= GIFT.r + 3) {   // pacco regalo: dopo i nemici lungo la strada
+        this.gHit = true; giftHit(dmg);
+        if (pierce > 0) { pierce--; this.t = null; } else { this.dead = true; return; }
       }
       if (edge) {                                // riflessione sui bordi come trace() del Laser: angolo di uscita = angolo di entrata
         let b = false;
@@ -2805,7 +2890,7 @@ function runCounters() { return { counterLeft, lowImmUsed, domeImmT, healLeft, r
 function writeRun() { try { localStorage.setItem(RUN_KEY, JSON.stringify(suspended)); } catch (e) {} }
 function saveRun() {
   suspended = { v: 1, app: APP_VERSION, lv: campLevel, mode, wave, cards: runCards.slice(), t2: turretsLv2, p2: runP2, dome: domeHp,
-    frz: { charge: player.st.charge || 0, frenzyT: player.st.frenzyT || 0 }, c: runCounters(), ab: AB, shield: domeShield, power: powerBonus };
+    frz: { charge: player.st.charge || 0, frenzyT: player.st.frenzyT || 0 }, c: runCounters(), ab: AB, shield: domeShield, power: powerBonus, gift: giftPlan };   // gift: ondata ed esito del pacco regalo (1.21.0)
   if (pw) Object.assign(suspended, { wave: planetResumeWave(), pt: planetType, mb: pw.mb, pq: pw.choices.slice() });   // Protezione planetaria: si riparte dall’ondata dopo l’ultima ripulita
   writeRun();
 }
@@ -2836,6 +2921,7 @@ function resumeRun(r) {                          // dopo startRun: rigioca le ca
   refreshLeft = +c.refreshLeft || 0; runPicks = +c.runPicks || 0; miniMajor = !!c.miniMajor; finalMajor = !!c.finalMajor; majorGain = +c.majorGain || 0;
   if (r.ab && Array.isArray(r.ab.list) && r.ab.list.every((a) => a && ABILITIES[a.id])) AB = r.ab;
   domeShield = +r.shield || 0; powerBonus = +r.power || 0;
+  if (!pw) giftLoad(r.gift);                     // pacco regalo: stessa ondata; non ricompare se era già preso o scaduto
   if (pw) { pw.mb = clamp(+r.mb || 0, 0, 3); pw.choices = r.pq.slice(); }
   startWave(r.wave); pauseGame();
 }
@@ -2855,7 +2941,7 @@ function startRun(m, resume) {
   rangeShow = null; tapPend = null;
   mode = m; campLevel = m === "planet" ? planetLv(planetType) : selOf(m); bossBonus = 0; bonusLeft = 0; bonusMode = false;
   pw = m === "planet" ? { next: 0, clr: [], mb: 0, choices: [], banner: 0, started: false, paid: false } : null; planetGain = null;
-  enemies = []; ents = []; floaters = []; shells = [];
+  enemies = []; ents = []; floaters = []; shells = []; gift = null; giftWait = -1; giftNote = null; giftPlan = null;
   GEAR = gearStats(progress.gear); gearRun(); if (resume) turretsLv2 = !!resume.t2;
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan"); player.frzL = treeLv("player:frenzy");
@@ -2873,13 +2959,14 @@ function startRun(m, resume) {
     if (f < 0 || !TURRETS[id] || slots.some((t) => t && t.id === id)) continue;
     slots[f] = newTurret(id, f);
   }
-  if (resume) resumeRun(resume); else startWave(1);
+  if (resume) resumeRun(resume); else { giftRoll(); startWave(1); }
 }
 
 // tra un’ondata e l’altra la frenesia attiva resta in pausa e continua nell’ondata successiva
 function startWave(n) {
   if (pw) { planetWave(n); return; }
   wave = n; waveTime = -1.2; ents = []; upBuild = false;
+  gift = null; giftWait = giftPlan && !giftPlan.done && giftPlan.wave === n ? GIFT.delay : -1;   // pacco regalo: 3 s dopo l’inizio della sua ondata
   for (const s of [player, ...slots]) if (s) { s.st = s.id === "player" ? { charge: s.st.charge, frenzyT: s.st.frenzyT || 0 } : {}; s.busy = 0; s.cd = Math.min(s.cd, 0.8); }
   queue = [];
   const nw = campNew();                            // dalla difficoltà 70: metà nemici nuovi e gli speciali (1.20.0)
@@ -3231,10 +3318,12 @@ function update(dt) {
   }
 
   for (const h of shells) h.t -= dt; shells = shells.filter((h) => h.t > 0);   // gusci (speciale physical)
+  if (!pw) giftTick(dt);                                                      // pacco regalo (1.21.0)
   domeSince += dt; domeFlash = Math.max(0, domeFlash - dt); domeImmT = Math.max(0, domeImmT - dt);
   abilityTick(dt);
 
   for (const e of enemies) if (!e.dead && onScreen(e)) markSeen(e);                 // entrato nella schermata
+  if (gift && gift.y >= 0) markSeen(gift);
   if (alerts.length) { alerts[0].t -= dt; if (alerts[0].t <= 0) alerts.shift(); }
   for (const e of enemies) if (e.dead && e.boss && !e.rewarded) {
     e.rewarded = true; if (!e.final) { if (pw) { pw.mb++; pw.choices.unshift("boss"); } else bossBonus++; } ring(e.x, e.y, e.final ? 110 : 70, "#ffd166", 0.6);
@@ -3267,6 +3356,8 @@ function winLevel() {
   setSel(mode, campLevel + 1);
 }
 function endWave() {
+  if (giftWait >= 0 || (gift && gift.phase !== "out")) giftDone();   // l’ondata finisce prima del timer: il pacco se ne va e il premio sfuma
+  gift = null; giftWait = -1;
   if (wave >= N_WAVES) { winLevel(); return; }
   bonusLeft = bossBonus; bossBonus = 0; bonusMode = false; rewards = null;
   cardsN = GEAR.four && Math.random() < GEAR.four ? 4 : 3;                       // Modulo 22: a volte 4 carte (la scelta resta una)
@@ -3545,7 +3636,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.20.0";
+const APP_VERSION = "1.21.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 8, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
@@ -3575,7 +3666,7 @@ function parseSave(text) {                      // controlla tutto prima di tocc
   return {
     cleared: clamp(Math.floor(p.cleared), 0, CAMPAIGN.maxLevel),
     clearedEpic: cleanEpic(p),                   // versioni 1-5: dalle chiavi “e<N>” dei premi riscossi
-    seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 50) : [],
+    seen: Array.isArray(p.seen) ? [...new Set(p.seen.filter((k) => typeof k === "string" && k.length < 40 && k !== "ship" && k !== "mothership"))].slice(0, 80) : [],
     ...cleanSeals(p),                            // versione 1: niente Sigilli, si parte da zero
     gear: cleanGear(p),                          // versioni 1 e 2: niente equipaggiamento, inventario vuoto
     planet: cleanPlanet(p),                      // versioni 1-6: Protezione planetaria da zero
