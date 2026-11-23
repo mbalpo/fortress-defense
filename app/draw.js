@@ -951,10 +951,20 @@ function menuScreen() {
   button(60, 562, 154, 36, "Salvataggio", openSave, { size: 13, stroke: "#7fa0e0" });
   button(220, 562, 80, 36, "Guida", openGuide, { size: 13, stroke: "#3fe0a0" });
   // grafica (1.13.0): solo qui nel menu principale, perché vale dal caricamento successivo (la pagina si ricarica da sola)
-  button(60, 603, 240, 22, "Grafica: " + (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + "  ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
+  button(60, 603, 116, 22, (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + "  ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
+  volumeSlider(184, 603, 116, 22);
   txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 634, 10, "#5f7299", "center", "500");
   txt("v" + APP_VERSION + (LAUNCH ? " · " + LAUNCH : "") + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");   // LAUNCH: tipo di avvio
   buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
+}
+// cursore del volume (1.25.0): si tocca o si trascina; riempimento = volume, “Muto” a 0
+function volumeSlider(x, y, w, h) {
+  const v = settings.volume / 100;
+  buttons.push({ x, y, w, h, onTap() {}, drag: (p) => setVolume((p.x - x - 6) / (w - 12) * 100) });
+  rr(x, y, w, h, 8); ctx.fillStyle = "rgba(18,30,58,0.92)"; ctx.fill();
+  if (v > 0) { rr(x, y, Math.max(16, w * v), h, 8); ctx.fillStyle = "rgba(63,224,160,0.28)"; ctx.fill(); }
+  rr(x, y, w, h, 8); ctx.lineWidth = 1.5; ctx.strokeStyle = "#3fe0a0"; ctx.stroke();
+  txt(v > 0 ? "Volume " + settings.volume + "%" : "Volume: muto", x + w / 2, y + h / 2 + 1, 11, "#e8eefc", "center");
 }
 /* ---------- PROTEZIONE PLANETARIA (1.16.0): griglia dei continenti ---------- */
 // sagome dei continenti sul globo (1.19.1): contorni geografici semplificati, proiezione ortografica centrata sul continente, coordinate da −1 a 1

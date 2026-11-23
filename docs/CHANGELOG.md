@@ -3,6 +3,32 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.0 — Sonoro
+
+- **Richiesta di Marco** (DESIGN.md § 18, scritto prima del codice; § 13 aggiornato): suoni generati dal codice con Web Audio, nessun file; un solo cursore del volume; il gioco emette solo eventi.
+- **Modulo** `app/audio.js` (nuovo, in `ASSETS` di `sw.js`), caricato prima del gioco: 34 eventi (guardiano, 11 spari delle torrette, esplosioni piccola e grande, cupola con tre pesi, pacco all’arrivo e al premio,
+  ingresso di mini-boss e boss, 8 abilità dei maggiori, 7 dei giganti), timbri a strati (oscillatori e rumore filtrato), priorità, voci per categoria e in tutto (14), soglie, raggruppamenti
+  di esplosioni e colpi alla cupola, spari abbassati sotto le minacce. Intonazione variata con un generatore proprio (mai `Math.random`); senza `AudioContext` non fa nulla.
+  Nel gioco solo `sfx(evento, peso)` nei punti della logica (sparo riuscito, salva del guardiano, esplosioni, colpo che toglie vita alla cupola, ingresso dei boss, abilità). Scelte **[Claude] [da rivedere]** in § 18.
+- **Sblocco e sospensione** **[Claude]**: il contesto si crea al tocco su “Start” (e ogni tocco sul gioco ripete lo sblocco); gira solo durante l’ondata e in primo piano: fermo in pausa, nelle carte, nei menu e in secondo piano.
+- **Volume** (`fortress-proto-v1`, campo `volume`, intero 0-100, non valido = 70; fuori dall’esportazione): cursore nel menu principale accanto a “Grafica”, che si accorcia in “Classica ⇄” / “HD-2D ⇄”;
+  tocco o trascinamento a passi del 5%, salvato al rilascio, “Volume: muto” a 0. Curva quadratica (70% → 0,49).
+- Fuori dal perimetro, nessun suono: musica, morte dei nemici, interfaccia, frenesia, vittoria e sconfitta, sibilo del kamikaze.
+- `APP_VERSION` e `sw.js` 1.25.0. `tests/src.js` incorpora anche `audio.js`.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/sonoro.js`: i 34 eventi esistono e ogni `sfx` del gioco ne usa uno (nessuno mai chiamato), nessun errore senza `AudioContext`, tutti gli eventi con un `AudioContext` finto
+(che rifiuta rampe esponenziali a zero), soglia, voci per torretta e del guardiano, raggruppamento della cupola (un suono con il peso più alto) e delle esplosioni a catena, priorità a voci piene, muto,
+volume letto e validato, cursore (tocco, trascinamento, salvataggio al rilascio, muto), volume non esportato, sospensione in pausa, nelle carte e in secondo piano;
+tre partite intere al livello 30 con e senza audio danno gli stessi esiti e le stesse carte.
+**Logica invariata** (stessi semi, 1.24.1 contro 1.25.0, riga per riga): `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` identico (61 8/15 e 5/15, 70 10/15 e 5/15, 100 10/15 e 6/15, random / smart);
+`node tests/tools/planet.js 1,5,10 30` identico ai livelli 1 e 5 per tutti e cinque i continenti. Il livello 10 è stato fermato a metà, d’accordo con Marco: richiedeva ore e non aggiungeva punti di codice non coperti
+(nei test non c’è `AudioContext`, quindi la verifica riguarda solo le righe della logica in cui sono state inserite le chiamate `sfx`).
+`npm run screenshots`: menu con il cursore controllato (dentro i 360 px, nessuna sovrapposizione). `tests/swtest.js`: i file in cache passano da 9 a 10 (con `audio.js`, ora controllato per nome).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): menu con il cursore del volume.
+
+Checklist: aggiornata (versione 54): gruppo “Sonoro (1.25)” con 8 voci da provare sul telefono; valori di Claude del sonoro; domanda sui suoni fuori dal perimetro; riferimento “Partita” con il sonoro; “Audio e altre impostazioni” diventa “Altre impostazioni”.
+
 ## 1.24.1 — Tiro in colonna tenendo premuto
 
 - **Segnalazione di Marco**: con il pacco regalo sopra il guardiano i colpi non lo ferivano se il mirino non era sul pacco. Causa: tenendo premuto, un nemico entro 45 px dal dito

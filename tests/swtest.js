@@ -27,8 +27,8 @@ const get = (url, mode) => fire("fetch", { request: { method: "GET", url: new UR
   console.log("versione in sw.js:", VERSION, "| APP_VERSION:", appVersion, ok(VERSION && VERSION === appVersion));
   await fire("install");
   const cached = [...store.get(CACHE).keys()].map((u) => u.replace(BASE, "") || "./");
-  console.log("installazione → file in cache:", cached.join(", "), ok(cached.length === 9 && cached.includes("draw-hd2d.js")));
-  console.log("installazione → file chiesti al sito saltando la cache HTTP:", reloadReqs.filter((r) => r.cache === "reload").length, ok(reloadReqs.length === 9 && reloadReqs.every((r) => r.cache === "reload")));
+  console.log("installazione → file in cache:", cached.join(", "), ok(cached.length === 10 && cached.includes("draw-hd2d.js") && cached.includes("audio.js")));
+  console.log("installazione → file chiesti al sito saltando la cache HTTP:", reloadReqs.filter((r) => r.cache === "reload").length, ok(reloadReqs.length === 10 && reloadReqs.every((r) => r.cache === "reload")));
   await fire("activate");
   console.log("attivazione → cache rimaste:", [...store.keys()].join(", "), ok(store.size === 1 && store.has(CACHE)));
   skips = 0; handlers.message({ data: { type: "skipWaiting" } }); handlers.message({ data: { type: "altro" } }); handlers.message({ data: null });

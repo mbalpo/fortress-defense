@@ -54,6 +54,7 @@
 </head>
 <body>
 <canvas id="c" aria-label="Campo di battaglia"></canvas>
+<script src="audio.js"></script>
 <script src="draw-hd2d.js"></script>
 <script src="draw.js"></script>
 <div id="splash" role="button" aria-label="Planet Defense">
@@ -778,15 +779,29 @@ const TARGET_LABEL = { closest: "Più vicino", highest: "Vita più alta" };
 // graphics: "classic" o "hd2d" (1.13.0, la legge anche draw.js al caricamento); fps: contatore dei fotogrammi acceso
 // speed: velocità della partita (1.14.1, Marco): 1, 1,5 o 2, scelta con il tasto accanto a “Nemici” e tenuta per le ondate e le partite seguenti
 const SPEEDS = [1, 1.5, 2];
-const settings = { targeting: "closest", graphics: "classic", fps: false, speed: 1 };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
+// volume (1.25.0, DESIGN.md § 18): un solo cursore per tutti i suoni, da 0 (muto) a 100, di partenza 70; non entra nell’esportazione
+const VOLUME0 = 70;
+const settings = { targeting: "closest", graphics: "classic", fps: false, speed: 1, volume: VOLUME0 };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
 try {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
   if (s && (s.targeting === "closest" || s.targeting === "highest")) settings.targeting = s.targeting;
   if (s && (s.graphics === "classic" || s.graphics === "hd2d")) settings.graphics = s.graphics;
   if (s && s.fps === true) settings.fps = true;
   if (s && SPEEDS.includes(s.speed)) settings.speed = s.speed;
+  if (s && Number.isInteger(s.volume) && s.volume >= 0 && s.volume <= 100) settings.volume = s.volume;   // valore non valido: 70
 } catch (e) { /* storage non disponibile: si gioca lo stesso */ }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
+// SONORO (1.25.0): il gioco emette solo eventi; timbri, mix e Web Audio stanno tutti in audio.js (DESIGN.md § 18).
+// Senza il modulo (catalogo grafico) o senza AudioContext (test) non succede nulla. L’audio non legge né cambia valori di gioco.
+const SOUND = window.FORTRESS_SOUND || null;
+const sfx = (ev, w) => { if (SOUND) SOUND.play(ev, w); };
+if (SOUND) SOUND.setVolume(settings.volume / 100);
+// cursore del volume nel menu principale: passi del 5%; si salva al rilascio
+function setVolume(v, save) {
+  settings.volume = clamp(Math.round(v / 5) * 5, 0, 100);
+  if (SOUND) SOUND.setVolume(settings.volume / 100);
+  if (save) saveSettings();
+}
 // grafica classica o HD-2D: si cambia solo dal menu principale e vale ricaricando la pagina (il disegno si sceglie al caricamento)
 const reloadPage = () => location.reload();
 function toggleGraphics() {
@@ -1262,7 +1277,7 @@ const living = () => enemies.filter((e) => !e.dead && onScreen(e));
 let seeInvis = false;                              // vero solo mentre spara una torretta di SEE_INVIS o il guardiano con la conversione energy
 const canSee = (e) => !e.invis || seeInvis;
 // torna visibile (e bersaglio di tutti) quando tocca la barriera o subisce uno stato da una torretta che lo vede [deciso] (Marco, 1.18.1); non ridiventa invisibile
-const reveal = (e) => { if (e.invis) { e.invis = false; ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.35); } };
+const reveal = (e) => { if (e.invis) { e.invis = false; ring(e.x, e.y, e.def.r + 10, TYPES.force.color, 0.35); if (e.def.major === "invis") sfx("maggiore.visibile"); } };
 const randEnemy = () => { const l = living().filter(canSee); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
 // gusci (speciale physical): invincibili per qualche secondo, non sono nemici né bersagli; bloccano i colpi di guardiano, Sky Guard, Aeroblast, Railgun e Teslacoil
 let shells = [];
@@ -1342,7 +1357,7 @@ function damage(e, base, type, quiet, src, ignore) {
   if (e.hp <= 0 && !e.dead) { e.dead = true; onDeath(e); }
   else if (e.def.split > 0 && !e.dead && e.hp <= e.maxHp / 2) splitRock(e);   // meteorite e Asteroide maggiore: si dividono a metà vita
   else if ((e.def.special === "invis" || e.def.major === "invis") && !e.invisUsed && e.hp <= (1 - SPECIAL.invisAt) * e.maxHp) {   // speciale force e Prisma maggiore: invisibile (una volta)
-    e.invis = e.invisUsed = true; if (e.def.major) e.invisT = MAJ.invisT;
+    e.invis = e.invisUsed = true; if (e.def.major) { e.invisT = MAJ.invisT; sfx("maggiore.invisibile"); }
   }
   if (e.adAcc && !e.dead) while (e.adN < MAJ.adaptMax && e.hp <= e.maxHp * (1 - MAJ.adaptStep * (e.adN + 1))) adaptShift(e);   // Cristallo maggiore: ogni 10% di vita persa
   if (quiet) {                       // danno continuo: un numero ogni tanto
@@ -1355,7 +1370,7 @@ function damage(e, base, type, quiet, src, ignore) {
 // effetti alla morte di un nemico (tutte le morti passano da damage)
 function absorbFx(e) {                          // lampo di assorbimento in un punto del disco (al massimo uno ogni 0,15 s)
   if ((e.absT || 0) > clock) return; e.absT = clock + 0.15;
-  ring(e.x + rnd(-0.7, 0.7) * e.def.box[0], e.y + rnd(-0.3, 0.3) * e.def.box[1], 16, "#fffbea", 0.3);
+  ring(e.x + rnd(-0.7, 0.7) * e.def.box[0], e.y + rnd(-0.3, 0.3) * e.def.box[1], 16, "#fffbea", 0.3); sfx("gigante.assorbe");
 }
 function onDeath(e) {
   if (e.def.special === "husk") shells.push({ x: e.x, y: e.y, r: e.def.r + 3, t: SPECIAL.husk, max: SPECIAL.husk });   // speciale physical: guscio invincibile
@@ -1499,7 +1514,7 @@ function skyImpact(s, x, y, mini, echo) {
     if (!mini && !echo && !e.dead && has(s, "burn1")) skyBurn(s, e, 3, 6 * dmgM(s));
     if (tp && !e.dead) teleportRoll(tp, e);
   }
-  ring(x, y, rad, TYPES.fire.color, big || echo ? 0.4 : 0.3);
+  ring(x, y, rad, TYPES.fire.color, big || echo ? 0.4 : 0.3); sfx(mini || echo ? "esplosione.piccola" : "esplosione.grande");
   if (mini || echo) return;
   const a = kOn(s, "kAero"); if (a) kShards(s, a, x, y);
   const splits = has(s, "split3") ? 9 : has(s, "split2") ? 6 : has(s, "split1") ? 3 : 0;
@@ -1516,7 +1531,7 @@ function skyBurn(s, e, t, dps) {
 function skyCombust(s, x, y) {                 // Combustione: chi muore bruciato dalla Sky Guard esplode
   const rad = 40;
   for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, skyStats(s).dmg * 0.6, "fire", false, "sky");
-  ring(x, y, rad, "#ffb347", 0.4);
+  ring(x, y, rad, "#ffb347", 0.4); sfx("esplosione.piccola");
 }
 
 // ---------- 2. LASER (energy) ----------
@@ -1671,7 +1686,7 @@ function aeroFire(s) {
 function aeroBoom(s, x, y, echo) {
   const st = aeroStats(s), f = echo ? 0.6 : 1, hit = [];
   for (const e of living()) if (edist(e, x, y) <= st.rad + e.def.r) { hit.push(e); damage(e, st.dmg * f, "physical", false, "aero"); knock(e, st.knock * f); }
-  ring(x, y, st.rad, TYPES.physical.color, 0.35);
+  ring(x, y, st.rad, TYPES.physical.color, 0.35); sfx("esplosione.piccola");
   if (echo) return;
   // combo (solo se il colpo prende qualcuno): Esplosioni a raggi (laser rotante), Colpi singolari (buco nero statico), Colpi fulminanti
   if (hit.length) {
@@ -1714,7 +1729,7 @@ function mine(s, x, y) {
     update(dt) {
       this.age += dt; if (this.age > 25) { this.dead = true; return; }
       for (const e of living()) if (edist(e, this.x, this.y) <= e.def.r + 16) {
-        this.dead = true; ring(this.x, this.y, 34, TYPES.physical.color, 0.3);
+        this.dead = true; ring(this.x, this.y, 34, TYPES.physical.color, 0.3); sfx("esplosione.piccola");
         for (const f of living()) if (edist(f, this.x, this.y) <= 34 + f.def.r) {
           damage(f, st.dmg * 0.9 * mul, "physical", false, "aero"); if (has(s, "mineK")) knock(f, 14);
         }
@@ -1886,7 +1901,7 @@ function beamFire(s) {
         this.boomT = 0.5;
         for (const p of prim) if (p) {
           for (const e of living()) if (edist(e, p.x, p.y) <= 40 + e.def.r) damage(e, dps * 0.5, "energy", false, "beam");
-          ring(p.x, p.y, 40, TYPES.energy.color, 0.3);
+          ring(p.x, p.y, 40, TYPES.energy.color, 0.3); sfx("esplosione.piccola");
         }
       }
     },
@@ -2071,7 +2086,7 @@ function hiveDrone(s, x, y, lvl, gen) {
     },
     boom() {                                              // Droni kamikaze: esplosione ad area al doppio del danno di un colpo
       for (const e of living()) if (edist(e, this.x, this.y) <= 40 + e.def.r) damage(e, dmg * 2, "force", false, "hive");
-      ring(this.x, this.y, 40, TYPES.force.color, 0.35); this.die();
+      ring(this.x, this.y, 40, TYPES.force.color, 0.35); sfx("esplosione.grande"); this.die();
     },
     update(dt) {
       if (this.ray && (this.ray.t -= dt) <= 0) this.ray = null;
@@ -2160,7 +2175,7 @@ function railShot(s, x, y, a, st) {
 function railBoom(s, x, y, avail, dmg0) {
   const rad = 30 * (has(s, "boomR") ? 1 + 0.1 * avail : 1), d = dmg0 * 0.5 * (has(s, "boomD") ? 1 + 0.15 * avail : 1);
   for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
-  ring(x, y, rad, TYPES.physical.color, 0.3);
+  ring(x, y, rad, TYPES.physical.color, 0.3); sfx("esplosione.piccola");
 }
 
 // ---------- 10. TESLACOIL (electric) ----------
@@ -2209,7 +2224,7 @@ function teslaBoom(s, x, y, bounces, hitSet) {
     hitSet.add(e); first.push(e); damage(e, dmg, "electric", false, "tesla");
     if (has(s, "stun") && Math.random() < 0.3) para(e, 1);          // Esplosioni paralizzanti: come la paralisi del Thunderbolt
   }
-  ring(x, y, rad, TYPES.electric.color, 0.3);
+  ring(x, y, rad, TYPES.electric.color, 0.3); sfx("esplosione.piccola");
   if (has(s, "chain")) {
     const near = living().filter((e) => !hitSet.has(e) && canSee(e) && edist(e, x, y) <= 100).sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)).slice(0, 5);
     for (const e of near) { hitSet.add(e); damage(e, dmg * 0.4, "electric", false, "tesla"); bolt(zigzag(x, y, e.x, e.y, 4), TYPES.electric.color, 0.15, 1.5); }
@@ -2285,7 +2300,7 @@ function vortex(s, pos, a, tg) {
         this.done.add(t);
         if (has(kB, "forkX")) { const bd = 24 * dmgM(kB) * (has(kB, "pace") ? 1.4 : 1) * 0.5;
           for (const e of living()) if (edist(e, t.x, t.y) <= 40 + e.def.r) damage(e, bd, "energy", false, "beam");
-          ring(t.x, t.y, 40, TYPES.energy.color, 0.3); }
+          ring(t.x, t.y, 40, TYPES.energy.color, 0.3); sfx("esplosione.piccola"); }
       }
       this.tg = null;
       if (this.more <= 0) return;
@@ -2327,7 +2342,7 @@ const kTag = (o, tag) => { if (o) o.kc = tag; return o; };
 function kBoom(r, x, y) {
   const rad = 30 * (has(r, "boomR") ? 1.1 : 1), d = railDmg(r) * (has(r, "boom3") ? 0.8 : has(r, "boomD") ? 0.65 : 0.5);
   for (const e of living()) if (edist(e, x, y) <= rad + e.def.r) damage(e, d, "physical", false, "rail");
-  ring(x, y, rad, TYPES.physical.color, 0.3);
+  ring(x, y, rad, TYPES.physical.color, 0.3); sfx("esplosione.piccola");
 }
 // fulmine ramificato attirato da un bersaglio (Raggio fulminante, Colpi fulminanti): parte dalla sfera del Thunderbolt più vicina, anche obliquo;
 // è una ramificazione (50%, 75% e indebolimento con Ramificazioni debilitanti, paralisi con Paralisi totale); colpisce 2 volte con Ramificazione II
@@ -2421,7 +2436,7 @@ function runTurret0(s, dt) {
   if (b.tick) b.tick(s, dt);
   if (s.busy > 0) return;
   s.cd -= dt; if (s.cd > 0) return;
-  if (b.fire(s)) { if (!(s.busy > 0)) s.cd = cdOf(s); } else s.cd = 0;
+  if (b.fire(s)) { sfx("sparo." + s.id); if (!(s.busy > 0)) s.cd = cdOf(s); } else s.cd = 0;
 }
 
 /* ---------- GUARDIANO: cadenza alta, nessun cooldown, frenesia ---------- */
@@ -2469,6 +2484,7 @@ function playerTick(p, dt) {
     aero: comboOn(p, "kAero") && Math.random() < 0.05, thunder: comboOn(p, "kThunder") && Math.random() < 0.05 };
   const any = proc.laser || proc.disr || proc.aero || proc.thunder;
   for (let k = 0; k < cnt; k++) playerBullet(p, pos.x + (k - (cnt - 1) / 2) * 7, pos.y, t, dmg, ang, k === 0 ? { proc: any ? proc : null, first: true } : null);
+  sfx("guardiano");
   const aim0 = t ? Math.atan2(t.y - pos.y, t.x - pos.x) : ang;     // direzione della salva (il clone la specchia)
   if (has(p, "fan"))                         // proiettili secondari a ventaglio, danno minore
     for (const d of fanOffsets(p)) playerBullet(p, pos.x, pos.y, null, dmg * fanK(p.fanX || 0), aim0 + d, { fan: true });   // Ventaglio potenziato: 30% → 80%
@@ -2587,7 +2603,7 @@ const SUPPORT = {
           if (!living().some((e) => edist(e, this.x, this.y) <= e.def.r + 9)) return;
           this.dead = true;
           for (const e of living()) if (edist(e, this.x, this.y) <= RV.gammaRad + e.def.r) damage(e, RV.gammaDmg * m, "energy", false, "ranger");
-          ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35);
+          ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35); sfx("esplosione.piccola");
         },
         draw() { FX.bubble(this); } });
     }
@@ -2640,6 +2656,7 @@ function guardDps(p) {
 function spawnGift() {
   if (mode === "standard" && allRangersMax()) { giftDone(); return; }
   const hp = guardDps(player) * GIFT.fireSec, x = 40 + giftRand() * (W - 80);
+  sfx("pacco.arrivo");
   gift = { def: GIFT_DEF, x, y: -GIFT.r - 4, hp, maxHp: hp, t: GIFT.time, phase: "in", ty: GIFT.yTop + giftRand() * (GIFT.yBot - GIFT.yTop), tx: x, vx: 0, vy: 0,
     flash: 0, dead: false, acc: 0, accT: 0, age: 0 };
 }
@@ -2669,7 +2686,7 @@ function giftTick(dt) {
 function giftHit(dmg) {                            // resistenze neutre (×1), nessun effetto
   const g = gift; g.hp -= dmg; g.flash = 0.06; popup(g, dmg, 1, "player");
   if (g.hp > 0) return;
-  g.dead = true; gift = null; ring(g.x, g.y, 34, GIFT_COLOR, 0.5); giftDone();
+  g.dead = true; gift = null; ring(g.x, g.y, 34, GIFT_COLOR, 0.5); giftDone(); sfx("pacco.premio");
   const gain = giftReward(); if (gain) giftNote = { t: 3.5, gain };
 }
 // frammenti a un ranger a caso tra quelli non al livello 10, subito; con tutti al 10 (solo Epica) un pezzo o un Modulo epico o superiore
@@ -2735,7 +2752,7 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
         if (canFrag && Math.random() < 0.10) { canFrag = false; guardFrag(p, this, dmg); }
         if (prob && Math.random() < prob) {
           for (const f of living()) if (f !== e && edist(f, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), "physical", false, "player");   // Modulo 19
-          ring(e.x, e.y, rad, TYPES.physical.color, 0.3);
+          ring(e.x, e.y, rad, TYPES.physical.color, 0.3); sfx("esplosione.piccola");
         }
         if (pierce > 0) { pierce--; this.t = null; }
         else if (bounces > 0) {
@@ -3146,13 +3163,13 @@ function giantTick(e, dt) {
     e.icd = (e.icd === undefined ? 2 : e.icd) - dt;
     if (e.icd <= 0) {                              // salva solo con colpi delle torrette in volo (1.19.1), altrimenti riprova tra poco
       if (!ents.some((o) => o.proj && !o.dead)) e.icd = 0.4;
-      else { e.icd = BOSS_L.interceptEvery(L); for (let i = 0; i < BOSS_L.interceptN(L); i++) interceptor(e.x + rnd(-0.7, 0.7) * e.def.box[0], b - 10); }
+      else { e.icd = BOSS_L.interceptEvery(L); for (let i = 0; i < BOSS_L.interceptN(L); i++) interceptor(e.x + rnd(-0.7, 0.7) * e.def.box[0], b - 10); sfx("gigante.intercettori"); }
     }
   } else if (e.def.look === "carrier") {
     e.rel = e.rel || []; e.wingsOut = b >= H * (1 - BOSS_L.wingsAt[0]);   // le ali compaiono al 75% di altezza [deciso]
     BOSS_L.wingsAt.forEach((k, i) => {
       if (e.rel[i] || b < H * (1 - k)) return;
-      e.rel[i] = true;
+      e.rel[i] = true; sfx("gigante.alati");
       for (let j = 0, n = BOSS_L.wings(L); j < n; j++) {
         spawn({ enemy: "force_w", w: N_WAVES, x: clamp(e.x + (j - (n - 1) / 2) * 34, 14, W - 14) });
         const w = enemies[enemies.length - 1]; w.y = clamp(e.y + rnd(-0.4, 0.4) * e.def.box[1], 10, H);
@@ -3186,19 +3203,20 @@ function interceptor(x, y) {
       }
       const v = tg || this.age > 0.3 ? sp : 60;    // senza bersaglio esce piano dallo scafo
       this.x += Math.cos(this.a) * v * dt; this.y += Math.sin(this.a) * v * dt;
-      if (tg && dist(tg.x, tg.y, this.x, this.y) < 12) { tg.dead = true; this.dead = true; ring(this.x, this.y, 12, "#ff4d6a", 0.25); }
+      if (tg && dist(tg.x, tg.y, this.x, this.y) < 12) { tg.dead = true; this.dead = true; ring(this.x, this.y, 12, "#ff4d6a", 0.25); sfx("gigante.intercetta"); }
       if (this.y > GROUND_Y || this.y < -40 || this.x < -20 || this.x > W + 20) this.dead = true;
     },
     draw() { FX.missile(this, true); } });
 }
 // energy: raggio verticale lungo il 25% dello schermo dal bordo inferiore del prisma; prima un avviso, poi colpisce la cupola se la raggiunge
 function prismRay(e, x) {
+  const who = e.def.giant ? "gigante" : "maggiore"; sfx(who + ".raggio.avviso");
   spawnEnt({ x, t: 0, dead: false, hit: false, boss: e,
     update(dt) {
       this.t += dt; const y0 = bottomOf(e), y1 = y0 + BOSS_L.rayLen; this.y0 = y0; this.y1 = y1;
       if (e.dead || this.t > BOSS_L.rayWarn + 0.4) { this.dead = true; return; }
       if (!this.hit && this.t >= BOSS_L.rayWarn) {
-        this.hit = true;
+        this.hit = true; sfx(who + ".raggio");
         if (domeK(this.x, y1, 0) <= 1 || y1 >= GROUND_Y) { const d0 = e.dmg; e.dmg = d0 * BOSS_L.rayDmg; domeHit(e); e.dmg = d0; }
       }
     },
@@ -3215,7 +3233,7 @@ function splitRock(e) {
     enemies.push(Object.assign({}, e, { def: d, grp, dead: false, rewarded: false, x: clamp(e.x + sg * e.def.r / 2, d.r * 0.6, W - d.r * 0.6), hp: e.hp / 2, maxHp: e.maxHp / 2,
       dmg: e.dmg * (mini ? MAJ.splitDmg : 1), shape: Array.from({ length: 9 }, () => 0.74 + Math.random() * 0.34) }));
   }
-  ring(e.x, e.y, e.def.r * 0.8, TYPES[e.def.type].color, 0.5);
+  ring(e.x, e.y, e.def.r * 0.8, TYPES[e.def.type].color, 0.5); sfx(mini ? "maggiore.scissione" : "gigante.scissione");
 }
 /* ---------- abilità dei mini-boss maggiori (1.23.0) ---------- */
 // Cristallo maggiore: prende il profilo del tipo da cui ha subito più danni nel tratto appena finito (parità o nessun danno: invariato)
@@ -3225,7 +3243,7 @@ function adaptShift(e) {
   for (const t of TYPE_KEYS) { const v = e.adAcc[t] || 0; if (v > bv) { bv = v; best = t; tie = false; } else if (v > 0 && v === bv) tie = true; }
   e.adAcc = {};
   if (!best || tie || best === (e.adT || e.def.type)) return;
-  e.adT = best; e.res = RESIST[best]; ring(e.x, e.y, e.def.r + 12, TYPES[best].color, 0.45);
+  e.adT = best; e.res = RESIST[best]; ring(e.x, e.y, e.def.r + 12, TYPES[best].color, 0.45); sfx("maggiore.adattamento");
 }
 // Riflesso maggiore: nemici validi per le sfere (tutti gli altri in campo); la sfera va su quello con più vita
 const deflectTarget = (e) => { let b = null; for (const o of living()) if (o !== e && !o.dead && (!b || o.hp > b.hp)) b = o; return b; };
@@ -3251,6 +3269,7 @@ function miniTick(e, dt) {
     }
     if ((e.rgCd -= dt) <= 0) {                      // un solo timer da 2 s: a ogni bersaglio il danno al secondo del guardiano
       e.rgCd = MAJ.regenEvery; const v = guardDps(player) * (pw ? 1 : MAJ.regenCamp), col = TYPES[e.def.type].color;
+      if (e.rgTg.some((o) => o.hp < o.maxHp)) sfx("maggiore.incremento");
       for (const o of e.rgTg) if (o.hp < o.maxHp) {
         o.hp = Math.min(o.maxHp, o.hp + v); o.healT = 1; o.healC = col;
         if (floaters.length < 60) floaters.push({ x: o.x, y: o.y - o.def.r - 6, life: 1, max: 1, size: 14, txt: "+", color: col });
@@ -3264,7 +3283,7 @@ function miniTick(e, dt) {
     e.dfCd -= dt;
     if (e.dfCd <= 0 && e.dfAcc > 0) {
       const tg = deflectTarget(e), v = e.dfAcc; e.dfAcc = 0; e.dfCd = MAJ.orbEvery;
-      if (tg) deflectOrb(e, tg, v);
+      if (tg) { deflectOrb(e, tg, v); sfx("maggiore.deviazione"); }
       else { e.hp -= v; if (e.hp <= 0) { e.dead = true; onDeath(e); } }   // nessuno a cui mandarlo (tutti morti nel frattempo): lo subisce lui
     }
   }
@@ -3306,13 +3325,14 @@ function spawn(q) {
     slowT: 0, destrN: 0, destrT: 0, burnT: 0, burnDps: 0, skyBurnT: 0, skyBurnS: null, fireVulnT: 0, shock: 0, shockCd: 0, weakT: 0, vulnT: 0, vulnType: "all", paraT: 0, fieldT: 0, fieldAmp: 1, tpCd: 0,
     ...(d.major === "adapt" ? { adAcc: {}, adN: 0 } : d.major === "regen" ? { rgTg: [], rgCd: MAJ.regenEvery } : d.major === "deflect" ? { dfAcc: 0, dfCd: 0 } : {}),   // mini-boss maggiori (1.23.0)
   });
+  if (d.boss) sfx(d.final ? "boss.arrivo" : "miniboss.arrivo");
 }
 
 // speciale fire (kamikaze): alla cupola un colpo da danno × (1 + kamiK × vita rimasta ÷ vita massima), poi muore (senza ricompense)
 function kamikaze(e) {
   const k = 1 + SPECIAL.kamiK * clamp(e.hp / e.maxHp, 0, 1), d0 = e.dmg;
   e.dmg = d0 * k; domeHit(e); e.dmg = d0;
-  e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5);
+  e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5); sfx("esplosione.grande");
 }
 const bottomOf = (e) => e.y + (e.def.box ? e.def.box[1] : e.def.r);   // bordo inferiore (boss giganti: della sagoma)
 function touchesDome(e) {
@@ -3412,7 +3432,7 @@ function domeHit(e) {
   if (Math.random() < TREE_VAL.ignore * treeLv("barrier:ignore")) { ring(e.x, Math.min(e.y, GROUND_Y), 18, "#c9a2ff", 0.3); return; }   // colpo ignorato (albero)
   if (AB.reflectT > 0) damage(e, dmg * AB.reflectK, "force", false, "dome");    // Barriera riflettente
   if (domeImmT > 0) { ring(e.x, Math.min(e.y, GROUND_Y), 20, "#e8eefc", 0.35); return; }   // Modulo 14: immunità sotto il 20%
-  domeHp -= dmg; domeFlash = 0.25; domeSince = 0;
+  domeHp -= dmg; domeFlash = 0.25; domeSince = 0; sfx("cupola", e.boss ? 3 : e.def.special === "kami" ? 2 : 1);
   if (GEAR.lowImm && !lowImmUsed && domeHp > 0 && domeHp < 0.2 * domeMax) { lowImmUsed = true; domeImmT = GEAR.lowImm; ring(DOME.cx, DOME.cy, DOME.ry, "#e8eefc", 0.8); }
   ring(e.x, Math.min(e.y, GROUND_Y), 22, "#7fe8ff", 0.3);
 }
@@ -3699,7 +3719,9 @@ function tapTick() {                            // pressione oltre 0,3 s su una 
 cv.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   const p = toLogical(e);
+  if (SOUND) SOUND.unlock();                     // sonoro: alcuni browser chiedono un gesto anche dopo “Start”
   for (const b of buttons) if (inBtn(p, b)) {
+    if (b.drag) { volDrag = b; b.drag(p); return; }   // cursore del volume: segue il dito finché non si alza
     if (b.release) { if (clock - cardsAt >= CARD_LOCK) cardPress = b; return; }   // carte: si sceglie al rilascio (e non subito dopo la comparsa)
     b.onTap(); return;
   }
@@ -3719,7 +3741,9 @@ cv.addEventListener("pointerdown", (e) => {
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
+let volDrag = null;
 cv.addEventListener("pointermove", (e) => {
+  if (volDrag) { if (state === "menu") volDrag.drag(toLogical(e)); return; }
   if (state === "guide" && guideDrag) { guideScroll = Math.max(0, guideDrag.s - (toLogical(e).y - guideDrag.y)); return; }
   if (state === "pause" && pauseDrag) { pauseScroll = Math.max(0, pauseDrag.s - (toLogical(e).y - pauseDrag.y)); return; }
   if (tapPend) {
@@ -3736,6 +3760,7 @@ const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b
 const stopDrag = () => { dragging = false; pressing = false; };
 cv.addEventListener("pointerup", (e) => {
   stopDrag(); guideDrag = null; pauseDrag = null;
+  if (volDrag) { volDrag = null; saveSettings(); }
   const q = tapPend; tapPend = null;
   if (q && rtime - q.t < RANGE_TAP.ms && (state === "play" || state === "pause") && slots[q.i]) rangeShow = { i: q.i, t0: rtime };   // un solo raggio: sostituisce il precedente
   const c = cardPress; cardPress = null;
@@ -3745,7 +3770,7 @@ cv.addEventListener("pointerup", (e) => {
   if (b && inBtn(p, b)) b.onTap();
 });
 cv.addEventListener("wheel", (e) => { if (state === "guide") { e.preventDefault(); guideScroll = Math.max(0, guideScroll + e.deltaY * 0.5); } }, { passive: false });
-cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; tapPend = null; });
+cv.addEventListener("pointercancel", () => { stopDrag(); cardPress = null; tapPend = null; if (volDrag) { volDrag = null; saveSettings(); } });
 window.addEventListener("keydown", (e) => {
   if (!document.getElementById("splash").hidden) return;              // schermata iniziale: il gioco non parte finché non si entra
   const k = e.key.toLowerCase();
@@ -3792,14 +3817,14 @@ function resize() {
   ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
 }
 window.addEventListener("resize", resize);
-document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });   // se cambi app, il gioco si mette in pausa
+document.addEventListener("visibilitychange", () => { if (document.hidden) { pauseGame(); if (SOUND) SOUND.setActive(false); } });   // se cambi app, il gioco si mette in pausa (e il sonoro si sospende subito)
 resize();
 
 /* =====================================================================
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.24.1";
+const APP_VERSION = "1.25.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
@@ -3917,6 +3942,7 @@ let last = 0;
 function frame(t) {
   const dt = Math.min(0.05, (t - last) / 1000 || 0);
   last = t; rtime = t; tapTick();
+  if (SOUND) SOUND.setActive(state === "play" && !document.hidden);   // sospeso in pausa, nelle carte, nei menu e in secondo piano
   // velocità 1,5x e 2x: la logica avanza in passi da al massimo 0,05 s (come a 1x), così danni, collisioni e bilanciamento non cambiano;
   // anche clock è tempo di gioco (lo usano la rampa dell’Amplificatore e le animazioni). Ci si ferma appena la partita cambia stato.
   if (state === "play") {
@@ -3946,7 +3972,7 @@ requestAnimationFrame(frame);
     if (ready || reloading) return;
     ready = true; splash.classList.add("ready"); msg.textContent = "Start";
   }
-  function enter() { if (!ready || splash.hidden) return; splash.hidden = true; keepAwake(true); }
+  function enter() { if (!ready || splash.hidden) return; splash.hidden = true; keepAwake(true); if (window.FORTRESS_SOUND) window.FORTRESS_SOUND.unlock(); }   // il tocco su “Start” sblocca anche il sonoro
   splash.addEventListener("click", enter);
 
   // SCHERMO SEMPRE ACCESO (Screen Wake Lock): richiesto dopo il tocco su “Start” (serve un gesto), rilasciato quando la pagina

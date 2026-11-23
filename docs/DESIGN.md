@@ -597,7 +597,7 @@ Obiettivo § 3: per ogni torre e per il guardiano una chain da 1 lv1, 2 lv2, 1 l
 Schermata degli sblocchi permanenti ·
 ricompense e valute fuori dalla battaglia · livelli con un’identità propria (oggi i 50 livelli seguono la stessa regola di ondate) ·
 difesa planetaria con aree da sbloccare · boss a tempo ·
-audio e altre impostazioni · bilanciamento tarato da un giocatore vero.
+altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocatore vero.
 
 ## 14. Strumenti di lavoro
 
@@ -1407,3 +1407,49 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   quote dei continenti della 1.18.0: fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti e 10 sbloccati **14,8 mesi senza pacco → 9,5 con 3 livelli di Standard al giorno
   → 7,3 con 2 di Standard e 2 di Epica (o 3 di Epica)**; tutti al 10: oltre 6 anni → 35,7 → 25,6 mesi. Il pacco va a un ranger qualsiasi non al 10, quindi aiuta soprattutto i tipi più lenti
   (physical da 14,8 a 9,5 mesi, force da 10,1 a 7,4) e poco i veloci (electric da 3,0 a 2,7). Con le quote della 1.16.0: 10,9 → 7,9 mesi. **[Claude]** (misura)
+
+## 18. Sonoro (costruito nella 1.25.0, da provare sul telefono)
+
+- **Scelte** **[deciso]** (Marco, 23/11/2026): suoni **generati dal codice con Web Audio**, nessun file audio (il gioco si usa quasi solo su Android).
+  **Un solo cursore del volume** per tutti i suoni, nelle impostazioni (`fortress-proto-v1`, campo `volume`). Il gioco non sa come nasce un suono:
+  chiede un **evento** (“sparo del guardiano”, “esplosione grande”…) a un solo modulo audio, che decide timbro e mix. Così i suoni si cambiano dopo senza toccare la logica,
+  e un domani si può passare ai file audio, per tutti gli eventi o solo per alcuni, cambiando solo quel modulo (nuovi file in `ASSETS` di `sw.js`, versione alzata).
+- **Eventi** **[deciso]** (Marco: guardiano, torrette, esplosioni, kamikaze, pacco regalo, mini-boss, boss, colpo alla cupola, abilità dei nemici e dei boss giganti) · carattere e raggruppamenti **[Claude] [da rivedere]**:
+  - **Guardiano**: sparo breve e secco, il più discreto (è il più frequente).
+  - **Torrette** (le 11 del § 8): sparo di ogni torretta; timbro di famiglia per tipo di danno (force, energy, electric, fire, physical) con variazioni leggere tra le torrette dello stesso tipo.
+  - **Esplosioni**: due taglie. Piccola (Colpi esplosivi del guardiano, mini-missili, esplosioni ad area minori); grande (impatto di Sky Guard e **kamikaze**, cioè l’esplosione dei Droni kamikaze dell’Hive e del nemico speciale fire). Le esplosioni a catena si raggruppano in un suono solo.
+  - **Colpo alla cupola**: un unico suono, raggruppato (contatto di più nemici = un solo colpo sonoro per intervallo), con peso e volume legati al danno (leggero / medio / pesante: nemici normali, kamikaze, boss).
+  - **Pacco regalo**: suono all’ingresso (avviso); suono a parte quando viene sconfitto e dà il premio **[Claude] [da rivedere]**.
+  - **Mini-boss**: avviso breve all’ingresso, più discreto di quello del boss. Abilità dei maggiori, un suono per categoria: Scissione, Adattamento (cambio di resistenza), Incremento (rigenerazione dei nemici), Invisibilità (inizio e fine, più il raggio con il suo avviso), Deviazione (partenza delle sfere).
+  - **Boss**: ingresso lungo e grave. Boss giganti, un suono per abilità: Ammiraglia (lancio degli intercettori e intercettazione del colpo), Nave madre (rilascio degli alati), Disco volante (assorbimento del colpo), Prisma gigante (avviso e raggio verticale), Meteorite (scissione).
+- **Mix** **[Claude] [da rivedere]**: priorità, dalla più alta: boss e pacco → colpo alla cupola ed esplosioni grandi → torrette → guardiano; gli eventi che minacciano la cupola si sentono sempre sopra gli spari.
+  Numero massimo di voci contemporanee per categoria (valori iniziali: guardiano 2, ogni torretta 1) e soglia minima tra due suoni uguali: valori da **provare a mano su Android**, a 2x e con molte esplosioni a catena, non da calcolare a tavolino.
+- **Regole tecniche** **[Claude]**: `AudioContext` creato e sbloccato con il tocco su “Start” (già usato per lo schermo sempre acceso); sospeso in pausa, nella scelta delle carte e quando l’app va in secondo piano.
+  Volume di partenza 70% (0 = muto). Le variazioni di intonazione usano un generatore proprio, **mai `Math.random`**, e l’audio non cambia nessun valore di gioco: calibrazioni e bot restano identici.
+  Senza `AudioContext` (test in Node) il modulo non fa nulla e non dà errori. A 1,5x e 2x gli eventi seguono la logica, a intonazione invariata. Il volume non entra nell’esportazione del salvataggio (§ 7).
+- **Costruito (1.25.0)** · scelte **[Claude] [da rivedere]**:
+  - **Modulo**: `app/audio.js` (in `ASSETS` di `sw.js`), caricato prima del gioco; il gioco chiama solo `sfx(evento, peso)`. Nomi degli eventi: `guardiano`; `sparo.<torretta>` (11, `sparo.sky`…`sparo.vortex`);
+    `esplosione.piccola`, `esplosione.grande`; `cupola` (peso 1 / 2 / 3); `pacco.arrivo`, `pacco.premio`; `miniboss.arrivo`, `boss.arrivo`; `maggiore.scissione`, `maggiore.adattamento`, `maggiore.incremento`,
+    `maggiore.invisibile`, `maggiore.visibile`, `maggiore.raggio.avviso`, `maggiore.raggio`, `maggiore.deviazione`; `gigante.intercettori`, `gigante.intercetta`, `gigante.alati`, `gigante.assorbe`,
+    `gigante.raggio.avviso`, `gigante.raggio`, `gigante.scissione` (34 in tutto). Ogni suono è una somma di strati (oscillatore o rumore filtrato, con glissando e inviluppo).
+  - **Dove nascono**: torrette a ogni sparo riuscito (`runTurret0`: per Laser e Beam all’accensione del raggio, per Hive e Firewheel al lancio); guardiano a ogni salva (non a ogni proiettile).
+    Esplosione grande: impatto del missile della Sky Guard, Droni kamikaze dell’Hive, kamikaze sulla cupola. Esplosione piccola: mini-missili e Doppio impatto della Sky Guard, Combustione, bombe e mine dell’Aeroblast,
+    esplosioni del Railgun e dei Proiettili esplosivi, sfere della Teslacoil, Base esplosiva del Beam, Colpi esplosivi del guardiano, bolle di Gamma.
+    Cupola: solo i colpi che tolgono vita (non quelli parati da scudo, immunità o “ignorato”); peso 3 per mini-boss e boss, 2 per il kamikaze, 1 per gli altri; il raggio del Prisma colpisce come boss.
+    Invisibilità del maggiore: “fine” sia allo scadere dei 10 s sia quando uno stato lo rivela. Incremento: un suono per ciclo di cura, solo se cura qualcuno. Disco volante: un suono per lampo di assorbimento (già al massimo uno ogni 0,15 s).
+  - **Timbri per famiglia**: fire = soffio di rumore che sale più un tonfo (Sky Guard con sibilo di lancio, Firewheel con un giro che sale); energy = dente di sega che scende e un fischio che sale
+    (Beam più grave con una nota tenuta); electric = crepitio di rumore e ronzio grave (Thunderbolt con tuono, Teslacoil con carica che sale); force = colpo sordo che scende (Disruption più acuto,
+    Hive con trilli dei droni, Vortex grave con un brontolio); physical = tonfo e schiocco (Aeroblast con soffio della bomba, Railgun secco e metallico). Guardiano: clic acuto di 45 ms.
+    Cupola: suono vetroso (due sinusoidi) e un colpo: più grave, lungo e forte col peso. Pacco: due note che salgono (arrivo), arpeggio di quattro note (premio). Mini-boss: due impulsi gravi;
+    boss: bordone grave di oltre 2 s con tre colpi. Raggio: tre bip di avviso (acuti per il maggiore, più gravi per il gigante), poi una scarica.
+  - **Mix iniziale**: volumi per evento da 0,16 (guardiano) a 0,6 (scissione del meteorite); priorità 4 boss e pacco, 3 cupola, esplosioni grandi e abilità, 2 torrette ed esplosioni piccole, 1 guardiano.
+    Voci: guardiano 2, ogni torretta 1, esplosioni piccole 3, grandi 2, cupola 1, pacco 1, boss e mini-boss 2, abilità 2, al massimo **14** in tutto (oltre, la nuova toglie la più vecchia di priorità più bassa, altrimenti rinuncia).
+    Soglie: guardiano 55 ms, torrette 80 ms, esplosioni piccole 70 ms e grandi 110 ms, cupola 90 ms, abilità 150-400 ms. **Raggruppamenti**: esplosioni piccole in finestre di 50 ms, grandi 60 ms, cupola 90 ms:
+    un suono solo con il peso più alto. Gli eventi di priorità 3-4 abbassano gli spari al 50% per 0,3 s. Intonazione: ±6% guardiano, ±4% torrette, ±5-8% esplosioni, fissa per avvisi e boss. Soglie e voci si contano in tempo reale.
+  - **Volume**: curva quadratica (70% → guadagno 0,49); cursore accanto a “Grafica” nel menu principale (tocco o trascinamento, passi del 5%, si salva al rilascio, “Volume: muto” a 0);
+    valori validi interi 0-100, altrimenti 70. Nessun suono di prova al tocco del cursore (l’interfaccia è fuori dal perimetro).
+  - **Sospensione**: il contesto gira solo con lo stato “play” e la pagina in primo piano (controllato a ogni fotogramma e subito al cambio di app); fuori, i suoni chiesti sono ignorati (non si accodano).
+    Un tocco qualsiasi sul gioco ripete lo sblocco, per i browser che lo chiedono di nuovo.
+  - **Verifica**: con gli stessi semi della 1.24.1, `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` dà gli stessi numeri e `node tests/tools/planet.js 1,5,10 30` anche, ai livelli 1 e 5 (il 10 è stato fermato perché troppo lungo, d’accordo con Marco);
+    `tests/sonoro.js` confronta partite intere con e senza audio (stessi esiti e stesse carte).
+- **Fuori dal perimetro** (non deciso): musica, morte dei nemici, interfaccia (menu, carte, avvisi), frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
