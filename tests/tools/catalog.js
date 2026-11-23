@@ -246,7 +246,7 @@ function scenes(turretIds) {
     ["miniTick", "FOE_LAYERS", "foeDetails", "FX.regenCables", "FX.healGlow", "FX.deflectOrb", "FX.prismRay"]);
   // 1.21.0: pacco regalo (DESIGN.md § 17): in campo con il mirino agganciato, e l’avviso del premio
   const PGF = Object.assign({}, PP, { cleared: 70, seen: PP.seen.concat(["gift"]) });
-  add(1, "pacco-regalo", "Pacco regalo", "Drone-corriere che fluttua tra il 25% e il 50% dell’altezza con l’anello del timer; solo il guardiano, tenendo premuto con il mirino entro 45 px, lo colpisce.",
+  add(1, "pacco-regalo", "Pacco regalo", "Drone-corriere che fluttua tra il 25% e il 50% dell’altezza con l’anello del timer; solo il guardiano, tenendo premuto con il pacco nella sua colonna, lo colpisce.",
     { progress: PGF, setup: START(61) + " queue = []; enemies.length = 0; startWave(4); queue = []; waveTime = 0; spawnGift(); gift.y = gift.ty = 400; gift.x = gift.tx = 120; gift.phase = 'float'; gift.t = 7;" +
         " for (const [k, x, y] of [['drone', 90, 250], ['brute', 260, 300]]) { spawn({ enemy: k, x }); Object.assign(enemies[enemies.length - 1], { y, speed: 0, hp: 1e9, maxHp: 1e9 }); } pressing = true; press.x = 124; press.y = 404; player.targetX = 120;",
       each: KEEP + " pressing = true; press.x = gift ? gift.x + 4 : 124; press.y = gift ? gift.y + 4 : 404; if (gift) gift.hp = Math.max(gift.hp, gift.maxHp * 0.4);", frames: 40 }, ["FX.gift", "giftTick", "drawCrosshair"]);

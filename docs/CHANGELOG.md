@@ -3,6 +3,23 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.24.1 — Tiro in colonna tenendo premuto
+
+- **Segnalazione di Marco**: con il pacco regalo sopra il guardiano i colpi non lo ferivano se il mirino non era sul pacco. Causa: tenendo premuto, un nemico entro 45 px dal dito
+  diventava il bersaglio e i colpi lo inseguivano, lasciando la colonna del pacco. **[deciso]** (Marco, tra tre proposte di Claude): **tiro in colonna**, i colpi vanno sempre dritti in alto
+  e colpiscono il primo nemico visibile o il pacco nella colonna del guardiano (perforazioni come sempre); niente più aggancio entro 45 px (`PRESS_PICK` e `giftAim` tolti).
+- **[Claude]**: il mirino sta sulla colonna del cannone all’altezza del dito e diventa giallo quando nella colonna c’è qualcosa da colpire (`colTarget`); la Mira amplificata non cresce tenendo premuto
+  (nessun bersaglio). Testi: menu “spara dritto in alto e colpisce chi è sopra di lui”, scheda Nemici “Solo il guardiano: tieni premuto sotto il pacco”, avviso “Solo il guardiano, premendo sotto di lui”.
+- DESIGN.md § 2, § 8 (generato), § 10, § 17 aggiornati. Bilanciamento: i bot giocano in automatico (tocchi brevi), quindi nessuna misura da rifare.
+
+**Test**: `npm test`: tutti verdi. `tests/tiro.js`: con il dito vicino a un nemico i colpi restano verticali senza bersaglio, il clone li specchia, il nemico sopra il guardiano viene colpito.
+`tests/pacco.js`: pacco nella colonna colpito con il dito in basso, non colpito con il guardiano a lato anche con il dito sul pacco, il caso segnalato (nemico vicino al dito, pacco sopra) e il mirino giallo.
+`npm run screenshots`: menu, avviso e scheda Nemici controllati (l’avviso accorciato per stare nel riquadro).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): descrizione del pacco regalo.
+
+Checklist: aggiornata (versione 53): voce del mirino sostituita dal tiro in colonna; pacco regalo e riferimento del guardiano riscritti; domanda sulla Mira amplificata.
+
 ## 1.24.0 — Chain alternativa dimezzata e rinnovo senza carte ripetute
 
 - **Chain alternativa dimezzata** **[deciso]** (Marco, DESIGN.md § 3): per il guardiano e per ogni torretta, finché ha la voce lv1 di una sola delle sue due chain, la lv1 dell’altra pesa **0,2** invece di 0,4.

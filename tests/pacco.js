@@ -57,16 +57,22 @@ console.log("— Chi lo colpisce —");
 }
 {
   const { ev } = game();
-  ev(START("standard", 61) + READY(250, 400) + " player.x = player.targetX = 180; pressing = true; press.x = 250 + 40; press.y = 400;");
+  // tiro in colonna (1.24.1): conta solo la colonna del cannone (x del guardiano + 7), non il punto premuto
+  ev(START("standard", 61) + READY(250, 400) + " player.x = player.targetX = 243; pressing = true; press.x = 243; press.y = 560;");
   step(ev, 1.5);
   const hit = ev("gift ? 1 - gift.hp / gift.maxHp : 1");
-  ev(START("standard", 61) + READY(250, 400) + " player.x = player.targetX = 180; pressing = true; press.x = 250 + 62; press.y = 400;");
+  ev(START("standard", 61) + READY(250, 400) + " player.x = player.targetX = 180; pressing = true; press.x = 250; press.y = 400;");
   step(ev, 1.5);
   const miss = ev("1 - gift.hp / gift.maxHp");
-  console.log("in manuale, mirino a 40 px: vita persa", Math.round(hit * 100) + "% · a 62 px (oltre 45 + raggio): ", Math.round(miss * 100) + "%", ok(hit > 0.05 && miss === 0));
-  const sel = J(ev, `(() => { ${START("standard", 61)} ${READY(200, 400)} ${foe("drone", 160, 400)} const e = enemies[0];
-    const a = giftAim(190, 400, nearestTo(190, 400, PRESS_PICK)), b = giftAim(172, 400, nearestTo(172, 400, PRESS_PICK)); return { a, b }; })()`);
-  console.log("pacco e nemico entro 45 px: vince il più vicino al mirino (vicino al pacco →", sel.a, "· vicino al nemico →", sel.b + ")", ok(sel.a === true && sel.b === false));
+  console.log("in manuale, pacco nella colonna del guardiano (dito in basso): vita persa", Math.round(hit * 100) + "% · guardiano 63 px a lato (dito sul pacco):", Math.round(miss * 100) + "%", ok(hit > 0.05 && miss === 0));
+  // il caso segnalato da Marco: un nemico vicino al dito non devia più i colpi dal pacco sopra il guardiano
+  ev(START("standard", 61) + READY(200, 400) + foe("drone", 230, 540) + " player.x = player.targetX = 193; pressing = true; press.x = 200; press.y = 560;");
+  step(ev, 1.5);
+  const side = J(ev, "({ g: gift ? 1 - gift.hp / gift.maxHp : 1, e: enemies[0].hp < enemies[0].maxHp })");
+  console.log("nemico vicino al dito e fuori dalla colonna: pacco", Math.round(side.g * 100) + "% · nemico colpito", side.e, ok(side.g > 0.05 && !side.e));
+  const col = J(ev, `(() => { ${START("standard", 61)} ${READY(200, 400)} ${foe("drone", 200, 300)} player.x = player.targetX = 193; const a = colTarget() === gift;
+    enemies[0].y = 480; const b = colTarget() === enemies[0]; player.x = 120; const c = colTarget() === null; return { a, b, c }; })()`);
+  console.log("mirino giallo: il primo nella colonna dal basso (pacco sotto il nemico →", col.a, "· nemico sotto il pacco →", col.b, "· colonna vuota →", col.c + ")", ok(col.a && col.b && col.c));
   // mira automatica: anche passando sul pacco, i colpi non lo feriscono
   ev(START("standard", 61) + READY(187, 300) + foe("brute", 187, 120) + " player.x = player.targetX = 180; pressing = false;");
   step(ev, 1.5);
@@ -167,8 +173,8 @@ console.log("— Scoperta e pausa —");
   const al = J(ev, "({ seen: progress.seen.includes('gift'), a: alerts.length && alerts[0].def.gift })");
   ev("state = 'play'"); g.texts.length = 0; g.frame(); const t1 = g.texts.join("|");
   ev("pauseGame(); pauseTab = 'enemies'"); g.texts.length = 0; g.frame(); const t2 = g.texts.join("|");
-  console.log("avviso “Nuovo nemico: Pacco regalo”:", al.seen && !!al.a && t1.includes("Pacco regalo") && t1.includes("tieni premuto e mira"), "· scheda Nemici:", t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto e mira"),
-    ok(al.seen && al.a && t1.includes("Pacco regalo") && t1.includes("Solo il guardiano: tieni premuto e mira") && t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto e mira")));
+  console.log("avviso “Nuovo nemico: Pacco regalo”:", al.seen && !!al.a && t1.includes("Pacco regalo") && t1.includes("Solo il guardiano, premendo sotto di lui"), "· scheda Nemici:", t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto sotto il pacco"),
+    ok(al.seen && al.a && t1.includes("Pacco regalo") && t1.includes("Solo il guardiano, premendo sotto di lui") && t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto sotto il pacco")));
   ev("state = 'play'; giftHit(1e9); alerts = []"); g.texts.length = 0; g.frame(); const t3 = g.texts.join("|");
   console.log("avviso del premio con il nome del ranger:", t3.includes("Pacco regalo!") && /frammenti/.test(t3), ok(t3.includes("Pacco regalo!") && /(Alfa|Prometeo|Omega|Mnemosine|Sigma|Ceo|Gamma|Iperione|Epsilon|Atlante)  \+5 frammenti/.test(t3)));
 }

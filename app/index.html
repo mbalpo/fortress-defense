@@ -797,8 +797,7 @@ function toggleGraphics() {
 function toggleFps() { if (state === "menu") { settings.fps = !settings.fps; saveSettings(); } }
 // tiro verticale: mentre il dito è premuto sul campo il guardiano lo segue e spara dritto in alto, senza bersaglio
 let pressing = false;
-const press = { x: W / 2, y: 300 };              // mirino: il punto premuto (non più in basso di 50 px sopra il suolo)
-const PRESS_PICK = 45;                           // un nemico entro questa distanza dal mirino diventa il bersaglio dei colpi
+const press = { x: W / 2, y: 300 };              // il punto premuto (non più in basso di 50 px sopra il suolo): altezza del mirino
 // scelta delle carte: si sceglie al rilascio sulla stessa carta; i tocchi sono ignorati per CARD_LOCK s dalla comparsa della schermata
 const CARD_LOCK = 0.6;
 let cardsAt = -1e9, cardPress = null;
@@ -2455,11 +2454,7 @@ function playerTick(p, dt) {
   p.cd -= dt; if (p.cd > 0) return;
   const cnt = 1 + N(p, "proj") + GEAR.proj, pos = { x: p.x + GUN.dx, y: GROUND_Y + GUN.dy };
   let t = null, ang = -Math.PI / 2;
-  if (pressing) {                            // premendo: il nemico nel mirino è il bersaglio; senza, i colpi vanno dritti in alto (−90°)
-    t = nearestTo(press.x, press.y, PRESS_PICK);
-    if (giftAim(press.x, press.y, t)) t = gift;   // pacco regalo: bersaglio se è il più vicino al mirino (1.21.0)
-  }
-  else {
+  if (!pressing) {                           // premendo: colpi sempre dritti in alto (−90°), senza bersaglio; colpiscono chi sta nella colonna (1.24.1)
     t = pickTargets(pos, PLAYER.range, 1)[0];
     if (!t) { p.cd = 0; return; }
   }
@@ -2616,7 +2611,7 @@ const SUPPORT = {
 /* ---------- PACCO REGALO (1.21.0, DESIGN.md § 17) ----------
    In Standard dal livello 61, in Epica dal 31 (non nella Protezione planetaria): una volta per livello, al 25%, in un’ondata a caso tra la 3 e la 19 (non 5, 10, 15) [deciso].
    Non è un nemico per torrette, ranger, mira automatica e “Bersaglio” (non sta in enemies): solo i colpi sparati dal guardiano tenendo premuto (anche il Clone)
-   lo feriscono, con il mirino entro 45 px; i nemici lungo la strada fermano i colpi come sempre. Non conta per l’ondata né per la frenesia; non fa danni.
+   lo feriscono, quando passa nella colonna del guardiano (1.24.1); i nemici lungo la strada fermano i colpi come sempre. Non conta per l’ondata né per la frenesia; non fa danni.
    Fluttua tra il 25% e il 50% dell’altezza (dal basso), con un timer; se scade o l’ondata finisce se ne va. Premio: frammenti di un ranger non al 10 (5 Standard, 10 Epica);
    con tutti i ranger al 10 in Standard non compare più, in Epica lascia un pezzo o un Modulo epico o superiore [deciso].
    Valori [Claude] (accettati, da provare a mano): timer 12 s, vita = danno al secondo del guardiano × 5 s, 50 px/s; entrata e uscita, ritardo e dimensioni [Claude].
@@ -2650,7 +2645,13 @@ function spawnGift() {
 }
 const giftLive = () => gift && !gift.dead && gift.phase !== "out" && gift.y >= 0;   // colpibile
 // mirino: il pacco entro 45 px, se è più vicino al mirino del nemico agganciato
-const giftAim = (x, y, e) => giftLive() && dist(gift.x, gift.y, x, y) - GIFT.r < Math.min(PRESS_PICK, e ? edist(e, x, y) : Infinity);
+// tiro in colonna (1.24.1): il primo nemico visibile o il pacco nella colonna della bocca del cannone, sopra il guardiano; serve solo al mirino (giallo)
+function colTarget() {
+  const x = player.x + GUN.dx, y0 = GROUND_Y + GUN.dy; let best = null, by = -Infinity;
+  for (const e of living()) if (!(e.invis && !(RG.conv && RG.conv.type === "energy")) && e.y < y0 && e.y > by && edist(e, x, e.y) <= e.def.r + 3) { best = e; by = e.y; }
+  if (giftLive() && gift.y < y0 && gift.y > by && Math.abs(gift.x - x) <= GIFT.r + 3) best = gift;
+  return best;
+}
 function giftTick(dt) {
   if (giftWait >= 0 && waveTime >= giftWait) { giftWait = -1; spawnGift(); }
   if (giftNote && (giftNote.t -= dt) <= 0) giftNote = null;
@@ -3685,7 +3686,7 @@ function turretAt(p) {
   return -1;
 }
 const rangeReach = (s) => s.id === "vortex" ? vortexReach(s) : rangeOf(s);   // Vortex: raggio reale di partenza
-function beginDrag(p) {                         // pressione sul campo: il guardiano segue il dito, il mirino aggancia
+function beginDrag(p) {                         // pressione sul campo: il guardiano segue il dito e spara in verticale
   dragging = true; pressing = true; player.targetX = p.x; setPress(p);
 }
 function tapTick() {                            // pressione oltre 0,3 s su una torretta: diventa una pressione normale
@@ -3714,7 +3715,7 @@ cv.addEventListener("pointerdown", (e) => {
   }
   if (state === "pause" && pauseTab === "enemies" && p.y > 96 && p.y < 578) { pauseDrag = { y: p.y, s: pauseScroll }; return; }   // trascinare scorre i nemici in pausa (non sulle torrette)
   if (state === "play") {
-    beginDrag(p);                                // il guardiano segue il dito; i colpi vanno sul nemico nel mirino, o in verticale
+    beginDrag(p);                                // il guardiano segue il dito; i colpi vanno in verticale
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
   }
 });
@@ -3798,7 +3799,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.24.0";
+const APP_VERSION = "1.24.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

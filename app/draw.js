@@ -742,7 +742,7 @@ function pauseEnemies() {
   else if (giftPlan) {                           // pacco regalo (1.21.0): solo il guardiano, tenendo premuto
     enemyIcon(GIFT_DEF, 34, y + 18, 15);
     segs([["Pacco regalo  ", GIFT_COLOR, 13, "700"], ["ondata " + giftPlan.wave + (giftPlan.done ? " · già risolto" : ""), MUTED, 11, "600"]], 62, y + 4, 13);
-    txt("Solo il guardiano: tieni premuto e mira", 62, y + 21, 11, "#e8eefc", "left", "600");
+    txt("Solo il guardiano: tieni premuto sotto il pacco", 62, y + 21, 11, "#e8eefc", "left", "600");
     txt("Premio: " + (allRangersMax() ? "equipaggiamento epico o superiore" : (GIFT.frags[mode] || 5) + " frammenti di un ranger") + " · " + GIFT.time + " s", 62, y + 36, 10, "#6f82ad", "left", "500");
     y += 47;
   }
@@ -785,7 +785,7 @@ function drawAlert() {                           // avviso "nuovo nemico" sotto 
   enemyIcon(d, x + 26, y + h / 2, 16);
   if (d.gift) {                                  // pacco regalo (1.21.0): niente tipo, solo come colpirlo
     segs([["Nuovo nemico: ", "#ffd166", 12, "800"], ["Pacco regalo", GIFT_COLOR, 12, "800"]], x + 52, y + 15, 12);
-    txt("Solo il guardiano: tieni premuto e mira", x + 52, y + 31, 11, "#e8eefc", "left", "600");
+    txt("Solo il guardiano, premendo sotto di lui", x + 52, y + 31, 11, "#e8eefc", "left", "600");
     txt("Prima che scada il tempo · dettagli nella pausa", x + 52, y + 46, 10, "#6f82ad", "left", "500");
     return;
   }
@@ -920,7 +920,7 @@ function menuScreen() {
     txt((r.mode === "planet" ? PLANET.land[r.pt] + " · livello " + r.lv : "Livello " + r.lv + " · " + (r.mode === "epic" ? "Epica" : "Standard")) + " · ondata " + r.wave + "/" + N_WAVES, W / 2, 233, 11, "#e8eefc", "center", "600");
   } else {
     txt("Il guardiano spara da solo. Tenendo premuto segue il dito:", W / 2, 208, 11, "#6f82ad", "center", "500");
-    txt("colpisce il nemico nel mirino, altrimenti spara in alto", W / 2, 224, 11, "#6f82ad", "center", "500");
+    txt("spara dritto in alto e colpisce chi è sopra di lui", W / 2, 224, 11, "#6f82ad", "center", "500");
   }
   const ask = (m) => r && runArm === m;          // secondo tocco: sostituisce la partita in sospeso
   button(60, 254, 240, 46, ask("standard") ? "Sostituire la partita in sospeso?" : eu ? "Standard · livello " + selLevel : "Standard", () => startOrArm("standard"),
@@ -1580,7 +1580,7 @@ function guideCards() {
   if (content > bottom - top) txt(guideScroll > 0 ? "▲ ▼ trascina per scorrere" : "▼ trascina in su per vedere le altre carte", W / 2, 633, 10, "#8a9ac0", "center", "500");
 }
 
-function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
+function drawCrosshair(x, y, locked) {         // mirino sulla colonna del tiro, all’altezza del dito; giallo quando nella colonna c’è un nemico o il pacco
   ctx.strokeStyle = locked ? "#ffd166" : "#e8eefc"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
   ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.moveTo(x - 18, y); ctx.lineTo(x - 6, y); ctx.moveTo(x + 6, y); ctx.lineTo(x + 18, y);
   ctx.moveTo(x, y - 18); ctx.lineTo(x, y - 6); ctx.moveTo(x, y + 6); ctx.lineTo(x, y + 18); ctx.stroke(); ctx.globalAlpha = 1;
@@ -1616,7 +1616,7 @@ function drawWorld() {
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
   for (const r of RG.list) FX.ranger(r);           // ranger ai lati del guardiano (DESIGN.md § 17)
-  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK) || giftAim(press.x, press.y, null));
+  if (pressing && state === "play") drawCrosshair(player.x + GUN.dx, press.y, !!colTarget());   // mirino sulla colonna del cannone, giallo se c’è qualcosa da colpire (1.24.1)
   for (const o of ents) if (o.under) o.draw();   // aree a terra (Area infuocata) sotto i nemici
   for (const h of shells) FX.husk(h);           // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);

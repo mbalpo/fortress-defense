@@ -796,7 +796,7 @@ drawFloater = function drawFloater(f) {                       // numero del dann
   ctx.font = "800 " + (f.size || 12) + "px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = OUTLINE; ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = f.color; ctx.fillText(f.txt, f.x, f.y);
 };
-drawCrosshair = function drawCrosshair(x, y, locked) {         // mirino nel punto premuto; giallo quando c’è un nemico agganciato
+drawCrosshair = function drawCrosshair(x, y, locked) {         // mirino sulla colonna del tiro; giallo quando nella colonna c’è un nemico o il pacco
   const c = locked ? "#ffd166" : "#e8eefc", sp = locked ? 0 : Math.sin(clock * 6);   // HD-2D: anello e tacche a pixel; agganciato si stringe e illumina
   pxEllipse(x, y, 12 - (locked ? 2 : 0), 12 - (locked ? 2 : 0), c, 0.9, clock * (locked ? 2 : 0.5), clock * (locked ? 2 : 0.5) + 6.2832, 4);
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) pxLine(x + dx * (17 + sp), y + dy * (17 + sp), x + dx * 7, y + dy * 7, c, 0.9);
@@ -838,7 +838,7 @@ drawWorld = function drawWorld() {
   slots.forEach((s) => { if (s) drawTurret(s); });
   drawPlayer();
   for (const r of RG.list) FX.ranger(r);           // ranger (1.17.0; in HD-2D dalla 1.18.0)
-  if (pressing && state === "play") drawCrosshair(press.x, press.y, !!nearestTo(press.x, press.y, PRESS_PICK) || giftAim(press.x, press.y, null));
+  if (pressing && state === "play") drawCrosshair(player.x + GUN.dx, press.y, !!colTarget());   // mirino sulla colonna del cannone, giallo se c’è qualcosa da colpire (1.24.1)
   for (const h of shells) FX.husk(h);             // gusci (speciale physical), sotto i nemici
   enemies.forEach(drawEnemy);
   if (gift) drawEnemy(gift);                       // pacco regalo (1.21.0)

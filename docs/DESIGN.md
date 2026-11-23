@@ -25,8 +25,8 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **20 ondate** per livello. Dopo ogni ondata, tranne l’ultima, si sceglie **1 carta tra 3** pescate a caso: **19 scelte per partita**. **[deciso]**
 - Si parte **senza torrette**: le torrette escono come carte e vanno nel **primo dei 4 slot fissi** liberi (al massimo 4 torrette). Dal livello 31, le torrette sbloccate con i Sigilli si possono equipaggiare prima dell’ondata 1 (§ 16). **[deciso]**
 - I nemici scendono dall’alto; a contatto con la cupola si fermano e la colpiscono ogni 1,2 s. Cupola a 0 = partita persa. **[Claude]**
-- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; nel punto premuto c’è un **mirino**: se un nemico è entro 45 px dal mirino i colpi lo inseguono (è il bersaglio, quindi valgono anche le combo legate al bersaglio, come la Mira amplificata), altrimenti vanno **dritti in alto**. Al rilascio torna la mira automatica. **[deciso]** (mirino che assegna un bersaglio, rev. 4) · 45 px e comportamento “insegue se vicino” **[deciso]** (scelto da Marco tra le proposte di Claude) Il mirino può assegnare come bersaglio anche il **pacco regalo** (§ 17), l’unico nemico che solo il guardiano in manuale può colpire. **[deciso]**
-- **Mira**: nel menu non c’è più la scelta; senza premere è automatica, premendo vale il mirino (punto sopra). Il mirino è tornato anche perché il cambio di modalità sia evidente. Le torrette sparano sempre da sole. **[deciso]**
+- **Guardiano** (prima chiamato “personaggio”): si muove sul suolo trascinando e spara da solo. Mentre si tiene premuto in un punto qualsiasi dello schermo (esclusi i pulsanti in alto, pausa e bersaglio) segue il dito in orizzontale; i colpi vanno sempre **dritti in alto** e colpiscono chi trovano nella **colonna** del guardiano (nemici e pacco regalo, § 17), senza bersaglio. **[deciso]** (Marco, 1.24.1: prima il mirino agganciava un nemico entro 45 px e i colpi lo inseguivano, così un nemico vicino al dito deviava i colpi dal pacco sopra il guardiano). Il **mirino** sta sulla colonna del cannone all’altezza del dito e diventa giallo quando nella colonna c’è un nemico visibile o il pacco **[Claude]**. Senza bersaglio, le combo legate al bersaglio (Mira amplificata) non crescono premendo **[Claude]**. Al rilascio torna la mira automatica. **[deciso]**
+- **Mira**: nel menu non c’è più la scelta; senza premere è automatica, premendo si spara in colonna (punto sopra). Il mirino è tornato anche perché il cambio di modalità sia evidente. Le torrette sparano sempre da sole. **[deciso]**
 - **Bersaglio** (torrette e guardiano): “più vicino” o “vita più alta”; il guardiano lo usa quando non si preme. **[deciso]**
 - **Portata delle torrette** **[deciso]** (Marco, 1.14.2): si misura sempre dal **centro in basso**, dove parte il guardiano (x 180, y = suolo − 30), anche per le torrette
   laterali; prima era un cerchio intorno a ogni torretta. I colpi partono comunque dalla torretta e “più vicino” resta la distanza dalla torretta **[Claude]**.
@@ -236,7 +236,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ### Guardiano
 
-Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto insegue il nemico nel mirino (entro 45 px) o spara in verticale.
+Physical. Spara da solo, cadenza alta senza ricarica, portata totale, tutti i proiettili di una salva sullo stesso bersaglio; mentre si tiene premuto spara in verticale e colpisce chi è nella sua colonna (anche il pacco regalo).
 - **Standard** (max 3 pile): +1 perforazione (I colpi trapassano un nemico in più); Danno maggiorato (Danno +25%); +1 proiettile (+1 proiettile, danno −15%).
 - **Chain · Frenesia** — lv1 Frenesia: Ogni 30 s: 8 s di fuoco ×1,8, danno ×1,35 · lv2 Carica rapida: Carica in 25 s invece di 30 · lv2 Frenesia furiosa: Cadenza in frenesia ×2 (da ×1,8) · lv3 Frenesia prolungata: La frenesia dura 12 s invece di 8
 - **Chain · Colpi esplosivi** — lv1 Colpi esplosivi: 10% di esplosione ad area sul colpo · lv2 Più esplosioni: Probabilità di esplosione: dal 10% al 20% · lv3 Esplosioni potenziate: Esplosione al 30% e raggio +30%
@@ -461,7 +461,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
   non ancora colpiti (entro 200 px, altrimenti a ±20°), senza perforazione né rimbalzo;
   Colpo caricato = un proiettile in più ogni 40 salve, danno ×2 (×3 in tutto con Colpo pesante, scelta di Marco); eredita i “+1 rimbalzo” della
   Teslacoil (senza il −15%), di nemico in nemico (dalla 1.14.4 il Rimbalzo del guardiano è sui bordi e vale anche per lui); disegnato più grande e giallo  **[da rivedere]**
-- Tiro premendo (revisione 4, prima “tiro verticale”): se il mirino aggancia un nemico entro 45 px i proiettili lo inseguono, altrimenti partono in verticale e proseguono fino al bordo dello schermo; il mirino diventa giallo quando aggancia. Ventaglio e combo come in automatico (il Ventaglio si apre attorno alla direzione della salva). Il Clone speculare specchia la salva. **[deciso]** · colore del mirino **[Claude]**
+- Tiro premendo (dalla 1.24.1 di nuovo in colonna, § 2): i proiettili partono in verticale e proseguono fino al bordo dello schermo, colpendo chi è nella colonna; il mirino diventa giallo quando nella colonna c’è qualcosa da colpire (nella revisione 4 agganciava un nemico entro 45 px). Ventaglio e combo come in automatico (il Ventaglio si apre attorno alla direzione della salva). Il Clone speculare specchia la salva. **[deciso]** · colore del mirino **[Claude]**
 - **Rimbalzo del guardiano e del Clone (1.14.4)** **[deciso]** (Marco): come il raggio del Laser, un proiettile che tocca un bordo dello schermo (lati e alto) rimbalza indietro
   con la traiettoria riflessa (angolo di uscita uguale a quello di entrata, come `trace()`), senza limite di rimbalzi, e prosegue finché non esaurisce le perforazioni
   (con 0 perforazioni si ferma al primo nemico colpito). Dopo un rimbalzo smette di inseguire il bersaglio. Non vale per Ventaglio e frammenti.
@@ -1380,14 +1380,14 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Danni** **[deciso]** (Marco): i colpi del guardiano colpiscono **anche i nemici che trovano lungo la strada**; per raggiungere il pacco serve quindi una traiettoria libera
   oppure abbastanza perforazioni da superare i nemici in mezzo. **[Claude]** (lettura): lo ferisce solo il proiettile diretto del guardiano e del Clone, con resistenze neutre (×1);
   aree, raggi, fulmini, mine, schegge e stati lo attraversano senza contare come perforazione né attivare effetti; è immune a attrazione, spinta e teletrasporto.
-  Se pacco e nemico sono entrambi entro 45 px dal mirino, il bersaglio è il più vicino al mirino.
+  Dalla 1.24.1 il tiro premendo è in colonna (§ 2): il pacco si colpisce tenendo il guardiano sotto di lui, ovunque sia il dito in verticale. **[deciso]** (Marco)
 - **Equipaggiamento in Epica con tutti i ranger al 10** **[Claude]**: pezzo o Modulo 50% / 50%, tipo a caso, rarità dalla tabella dei drop del § 15 per la difficoltà, limitata a epico o superiore e riscalata al 100%.
 - **Valori** **[Claude]** (accettati da Marco come punto di partenza, da provare a mano): timer **12 s** (fermo in pausa e nella scelta delle carte, scorre con la velocità 1,5x / 2x come la logica);
   vita calcolata all’apparizione come **danno al secondo del guardiano × 5 s di fuoco**; movimento morbido, circa **50 px/s**, con cambi di direzione; entra dall’alto e, alla fine, esce verso l’alto.
 - **Salvataggio** **[Claude]**: la partita sospesa (§ 2) salva l’ondata estratta e l’esito del pacco; “Continua” rigioca l’ondata dall’inizio e il pacco ricompare solo se non era già risolto.
   I frammenti si accreditano **subito** alla sconfitta del pacco, anche se il livello poi si perde; vanno in `progress.planet.frags` (nessun campo nuovo di progresso per i frammenti).
 - **Grafica e avvisi** **[Claude] [da rivedere]**: pacco regalo con **eliche** (drone-corriere con nastro), colore diverso dai cinque tipi, anello del timer che si svuota; avviso “Nuovo nemico” al primo incontro
-  e voce nella scheda “Nemici del livello” con il suggerimento “tieni premuto e mira”. Disegno classico e HD-2D.
+  e voce nella scheda “Nemici del livello” con il suggerimento “tieni premuto sotto il pacco” (nell’avviso “premendo sotto di lui”, 1.24.1). Disegno classico e HD-2D.
 - **Da misurare con i bot**: bot che sappia mirare il pacco; effetto sui muri (il guardiano non spara ai nemici mentre lo insegue); tempi di sblocco con `tests/tools/ranger-tempi.js`
   includendo il pacco (stima: +30% di frammenti per 3 livelli al giorno in Standard). Vita e timer li prova Marco a mano.
 - **Costruito (1.21.0)** · dettagli **[Claude] [da rivedere]**: il pacco non sta tra i nemici (`gift`, `GIFT` in `index.html`), quindi torrette, ranger, mira automatica, “Bersaglio”, missili, aree e stati

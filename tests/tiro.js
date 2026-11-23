@@ -19,20 +19,20 @@ console.log("— tiro verticale —");
   X.clearAll();
   const s = X.makeShooter(X.TURRETS.hive, X.SLOT_X[0], X.GROUND_Y - 14); s.level = 2; X.slots()[0] = s;     // Clone speculare: Hive al livello 2
   p.up.kHive = 1;
-  frozen(g, 300, 150); frozen(g, 40, 250);                // nemici di lato: in automatico il guardiano li punterebbe
+  const E = frozen(g, 300, 150); frozen(g, 40, 250);                // nemici di lato: in automatico il guardiano li punterebbe
   run(g, 60); const auto0 = (g.win.__b || []).filter((b) => !b.clone);
   console.log("senza premere (vecchio aim: manual ignorato) → colpi con bersaglio:", auto0.filter((b) => b.t).length, "di", auto0.length, ok(auto0.length > 3 && auto0.every((b) => b.t)));
   g.win.__b = []; g.click(90, 400); run(g, 90);
   const B = g.win.__b, main = B.filter((b) => !b.clone), cl = B.filter((b) => b.clone);
   console.log("premendo a x 90 → il guardiano va a x", Math.round(p.x), "| colpi del guardiano:", main.length, "tutti a −90° senza bersaglio:", main.every((b) => !b.t && vertical(b)),
     "| del clone:", cl.length, "tutti a −90°:", cl.every((b) => !b.t && vertical(b)), ok(Math.abs(p.x - 90) < 1 && main.length > 5 && cl.length > 5 && main.every((b) => !b.t && vertical(b)) && cl.every((b) => !b.t && vertical(b))));
-  // mirino: premendo vicino a un nemico (entro 45 px) i colpi lo inseguono; il clone specchia la salva (direzione riflessa, senza bersaglio)
-  g.win.__b = []; g.move(290, 165); run(g, 60);
+  // tiro in colonna (1.24.1): anche con il dito vicino a un nemico i colpi vanno dritti in alto, senza bersaglio; il clone specchia la salva
+  g.win.__b = []; g.move(250, 165); run(g, 60);
   const M = g.win.__b.filter((b) => !b.clone), C = g.win.__b.filter((b) => b.clone);
-  const mirr = C.length === M.length && C.every((c, i) => { const m = M[i], a = Math.atan2(m.ty - m.y, m.tx - m.x);   // una salva del clone per ogni salva del guardiano, in ordine
-    return Math.abs(c.x - (360 - m.x)) < 1e-9 && Math.abs(Math.cos(c.ang) + Math.cos(a)) < 1e-9 && Math.abs(Math.sin(c.ang) - Math.sin(a)) < 1e-9; });
-  console.log("mirino sul nemico (300, 150) → colpi del guardiano con bersaglio:", M.filter((b) => b.t && b.ty === 150).length, "di", M.length,
-    "| colpi del clone senza bersaglio e con direzione specchiata:", C.length > 0 && C.every((b) => !b.t) && mirr, ok(M.length > 5 && M.every((b) => b.t && b.ty === 150) && C.length > 5 && C.every((b) => !b.t) && mirr));
+  const mirr = C.length === M.length && C.every((c, i) => Math.abs(c.x - (360 - M[i].x)) < 1e-9 && vertical(c));   // una salva del clone per ogni salva del guardiano, in ordine
+  const hp0 = E.hp; g.move(293, 165); run(g, 60); const hitCol = E.hp < hp0;
+  console.log("dito vicino al nemico (300, 150), guardiano a x 250 → colpi del guardiano in verticale senza bersaglio:", M.every((b) => !b.t && vertical(b)), "di", M.length,
+    "| clone specchiato:", mirr, "| guardiano sotto il nemico → colpito:", hitCol, ok(M.length > 5 && M.every((b) => !b.t && vertical(b)) && C.length > 5 && mirr && hitCol));
   g.move(250, 400); run(g, 30);
   console.log("spostando il dito a x 250 → il guardiano va a x", Math.round(p.x), ok(Math.abs(p.x - 250) < 1));
   g.up(250, 400); g.win.__b = []; run(g, 60); const after = g.win.__b.filter((b) => !b.clone);
