@@ -95,6 +95,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   chain = una catena verticale per livello della chain (due affiancate al lv2, tre al lv3); level up = una freccia ^ per livello, una sotto l’altra.
   Standard, combo e nuova torretta senza segno. Disegno **[Claude]**.
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
+- **Chain alternativa dimezzata** **[deciso]** (Marco): per il guardiano e per ogni torretta, finché ha preso la voce lv1 di una sola delle sue due chain, la voce lv1 dell’altra chain pesa **0,2 invece di 0,4** (es.: scelta Frammentazione per la Sky Guard, Missili incendiari pesa 0,2). Letture **[deciso]** (Marco, tra le proposte di Claude): (1) il dimezzamento riguarda solo la lv1 dell’altra chain, perché le sue voci successive non sono raggiungibili senza di essa; (2) se si prende comunque anche l’altra chain, nessun ulteriore dimezzamento e le sue voci successive tornano a 0,4; (3) la Carta iniziale (§ 16) conta come chain scelta; (4) le combo che richiedono la lv1 della chain meno probabile escono di conseguenza più di rado (§ 11, combo, aperto). Il peso vale in ogni estrazione che usa `rollOptions` (carte dopo l’ondata, ricompensa dei mini-boss, rinnovo) **[Claude]**. Da misurare con i bot (§ 11).
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
 
 ## 4. Campagna e progressione
@@ -176,6 +177,11 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - **Misura 1.23.1** (Incremento ritarato **solo nella campagna** **[deciso]** (Marco, 20/11/2026: nei continenti va bene vincere meno)): rigenerazione = danno al secondo del guardiano × `MAJ.regenCamp`.
   Incremento da solo alle tre ondate del 100 (60 partite, stessi semi): ×1 31,7% · ×0,5 35,0% · ×0,35 36,7% · ×0,3 45,0% · **×0,25 46,7%** · ×0,2 58,3% (nave aliena 55,0%, le altre abilità 50-65%):
   scelto **×0,25** **[Claude] [provvisorio]**. Rampa con i maggiori: **70** 55,0% · **85** 61,7% · **100** 50,0% (prima 48,3%) · **150** 45,0% (senza maggiori 46,7%: già sotto il 50%, nel rumore).
+
+- **Misura 1.24.0** (chain alternativa dimezzata e rinnovo senza ripetute, § 3; stessi semi prima → dopo, sostituzioni che rimettono il sorteggio di prima):
+  muri 10/20/30 (`node tests/tools/calib2.js 10,20,30`, 120 partite per livello, pool libero): **identici** (10 37,5% · 20 37,5% · 30 40,8%): con il pool libero una delle due chain di ogni entità
+  è bloccata dall’albero, quindi la regola non scatta mai. Curva con albero ed equipaggiamento attesi (`EQUIP=1.5 node tests/tools/curva.js`, 60 partite per livello): **100** 50,0% → 53,3% ·
+  **150** 45,0% → 48,3%; **50** 50,0% → 40,0% sui semi 1-30, rimisurato su 180 partite (semi 1-90): **52,2% → 50,0%**. Tutto dentro il rumore: nessun numero della difficoltà cambiato.
 
 ## 6. Nemici, stati e interfaccia dei nemici
 
@@ -551,6 +557,14 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   Prima misura leggera (1.15.0, 10 partite per bot, random / smart; carte offerte dopo le ondate, prese anche dai mini-boss): livello 15 pool libero 0,3 / 0,1 offerte a partita
   (prese 0,2 / 0,1); livello 25 pool libero 0 / 0; livello 25 pool completo 0,1 / 0,3 (prese 0 / 0,1). Per confronto, combo del guardiano offerte 0,1-0,5 a partita.
   Conferma: escono molto meno di una volta a partita. Nessun valore cambiato; se vanno rese più frequenti, le leve sono il peso delle carte combo (0,4) e le condizioni. **(aperto)**
+- **Chain alternativa dimezzata e rinnovo senza ripetute** (§ 3, § 15; 1.24.0) **[da misurare]**: chain offerte per offerta e prese per partita, prima e dopo (divise per fase della partita); combo offerte e prese;
+  ripetute dopo il rinnovo (stima illustrativa di Claude, non misurata: 24–37% di almeno una ripetuta con pool di 26–44 carte). I bot non usano il rinnovo (senza Modulo 21 non ne hanno):
+  nella misura è forzato. Prima misura leggera (`tests/tools/carte-stat.js`, 60 partite per livello, random + smart, stessi semi prima → dopo):
+  pool libero (15 e 25) **nessuna differenza**: la lv1 alternativa non è mai sceglibile (l’altra chain è bloccata dall’albero). Pool completo, livello 25 / 30 (fasi ondate 1-6, 7-13, 14-20):
+  chain per offerta 0,46 → 0,44 / 0,42 → 0,39 (al 25 per fase 0,33/0,48/0,62 → 0,35/0,46/0,52), di cui lv1 alternativa 0,07 → 0,04 / 0,06 → 0,04; chain prese per partita 4,87 → 4,50 / 4,27 → 3,80,
+  lv1 alternativa prese 0,85 → 0,47 / 0,72 → 0,38; combo offerte per partita 0,67 → 0,70 / 0,60 → 0,68, prese 0,20 → 0,28 / 0,08 → 0,20 (poche, nel rumore); carte dei mini-boss chain 16,9% → 14,9% / 15,5% → 13,7%.
+  Rinnovo forzato a ogni offerta: prima **54,8%** dei rinnovi con almeno una ripetuta al 15 (pool libero; 21,4% delle carte) e **41,3%** al 25 (pool completo; 15,8% delle carte), più della stima di Claude
+  (pool piccoli a inizio partita); dopo **0%**. **(aperto)**: con il pool libero la regola non cambia nulla fino a quando l’albero sblocca la seconda chain.
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: danni, portate e valori intermedi dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
 - **Pacco regalo** (§ 17): timer, vita, velocità e tabella della ricompensa di equipaggiamento in Epica sono **[Claude]**, accettati e da provare a mano; probabilità 25% e ritmo dei frammenti da misurare con i bot. **(aperto)**
@@ -794,7 +808,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
     Numeri del contrattacco: ciano #7fe8ff, 16 px invece di 12, durata 1,2 s invece di 0,7 (stesso limite di 60 numeri).
   - 14: una volta per partita, quando la vita scende sotto il 20%. 16: anche il boss finale, al massimo 4 volte.
   - 19: esplosioni dei Colpi esplosivi del guardiano. 20: il primo proiettile di ogni salva, sul primo nemico che colpisce (senza probabilità), al massimo 2× il danno del colpo.
-  - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero. 22: a ogni ondata, 4 carte più basse; tasto 4.
+  - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero, **diverse da quelle appena offerte** **[deciso]** (Marco): se nel pool restano almeno n carte oltre a quelle appena viste, il nuovo sorteggio le esclude; altrimenti si prendono tutte le carte rimaste e si completa con quelle già viste, estratte a peso **[Claude]**. Il rinnovo si consuma come oggi, anche quando il pool è piccolo **(aperto)**. 22: a ogni ondata, 4 carte più basse; tasto 4.
   - 29 e 30: un tiro a inizio partita; 30 vale per le torrette equipaggiate e per quelle che arrivano dopo. Senza questi Moduli non si consuma nessun tiro casuale (le misure dei bot restano confrontabili).
   - Riduzione del danno (11) e del cooldown (15) si sommano all’albero, con i tetti del § 16 (40% e 60%).
 - **Salvataggio**: versione 3 (§ 7). **Taratura** (1.11.0): muri dal 40 al 200 in media al 59,8% con l’equipaggiamento atteso (numeri in § 16, “Taratura 1.11.0”).

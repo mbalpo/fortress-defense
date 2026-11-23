@@ -2855,22 +2855,35 @@ function applyUp(s, u) {
 }
 
 let cardsN = 3;                                  // carte offerte dopo l’ondata (4 con il Modulo 22)
-function rollOptions(n) {
+// chain alternativa dimezzata (1.24.0): la lv1 di una chain pesa la metà se l’entità ha già la lv1 di un’altra sua chain (anche dalla Carta iniziale)
+const CHAIN_ALT = 0.5;
+function upWeight(who, u) {
+  let w = UP_W[u.cat];
+  if (u.cat === "chain" && u.lv === 1 && !has(who, u.id) &&
+      who.def.ups.some((v) => v.cat === "chain" && v.lv === 1 && v.chain !== u.chain && has(who, v.id))) w *= CHAIN_ALT;
+  return w;
+}
+const sameOpt = (a, b) => a.kind === b.kind && (a.kind === "new" ? a.id === b.id : a.who.id === b.who.id && a.up.id === b.up.id);
+// excl: carte appena offerte da non ripetere (rinnovo, 1.24.0); se non bastano le altre, si completa con quelle a peso
+function rollOptions(n, excl) {
   n = n || cardsN;
   const cands = [], owned = slots.filter(Boolean);
   if (slots.indexOf(null) >= 0)
     for (const id of TURRET_ORDER)
       if (!owned.some((s) => s.id === id)) cands.push({ w: owned.length < 2 ? 3 : 1.5, opt: { kind: "new", id } });
   for (const who of [player, ...owned])
-    for (const u of eligible(who)) cands.push({ w: UP_W[u.cat], opt: { kind: "up", who, up: u } });
+    for (const u of eligible(who)) cands.push({ w: upWeight(who, u), opt: { kind: "up", who, up: u } });
+  const seen = [];
+  if (excl && excl.length) for (let j = cands.length - 1; j >= 0; j--) if (excl.some((o) => sameOpt(o, cands[j].opt))) seen.unshift(cands.splice(j, 1)[0]);
   const out = [];
-  while (out.length < n && cands.length) {
-    let r = Math.random() * cands.reduce((a, c) => a + c.w, 0), i = 0;
-    while (i < cands.length - 1 && (r -= cands[i].w) > 0) i++;
-    const o = cands.splice(i, 1)[0].opt; out.push(o);
-    // un solo level up per entità in ogni offerta (1.14.2, torrette e guardiano)
-    if (o.kind === "up" && o.up.cat === "lu") for (let j = cands.length - 1; j >= 0; j--) { const c = cands[j].opt; if (c.kind === "up" && c.who === o.who && c.up.cat === "lu") cands.splice(j, 1); }
-  }
+  for (const pool of [cands, seen])
+    while (out.length < n && pool.length) {
+      let r = Math.random() * pool.reduce((a, c) => a + c.w, 0), i = 0;
+      while (i < pool.length - 1 && (r -= pool[i].w) > 0) i++;
+      const o = pool.splice(i, 1)[0].opt; out.push(o);
+      // un solo level up per entità in ogni offerta (1.14.2, torrette e guardiano)
+      if (o.kind === "up" && o.up.cat === "lu") for (const q of [cands, seen]) for (let j = q.length - 1; j >= 0; j--) { const c = q[j].opt; if (c.kind === "up" && c.who === o.who && c.up.cat === "lu") q.splice(j, 1); }
+    }
   return out;
 }
 
@@ -2916,9 +2929,9 @@ function giveBossRewards() {                  // il mini-boss dà carte a caso, 
   }
   bonusLeft = 0;
 }
-function refreshCards() {                        // Modulo 21: nuove carte al posto di quelle offerte (stesso numero)
+function refreshCards() {                        // Modulo 21: nuove carte al posto di quelle offerte (stesso numero, diverse se il pool basta)
   if (state !== "upgrade" || rewards || refreshLeft <= 0 || !options.length) return false;
-  refreshLeft--; options = rollOptions(options.length); cardsShown(); return true;
+  refreshLeft--; options = rollOptions(options.length, options); cardsShown(); return true;   // senza ripetere le carte appena viste (1.24.0)
 }
 function pick(i) {
   if (state !== "upgrade") return;
@@ -3785,7 +3798,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.23.2";
+const APP_VERSION = "1.24.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

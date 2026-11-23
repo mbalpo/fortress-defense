@@ -3,6 +3,25 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.24.0 — Chain alternativa dimezzata e rinnovo senza carte ripetute
+
+- **Chain alternativa dimezzata** **[deciso]** (Marco, DESIGN.md § 3): per il guardiano e per ogni torretta, finché ha la voce lv1 di una sola delle sue due chain, la lv1 dell’altra pesa **0,2** invece di 0,4.
+  Letture **[deciso]**: solo la lv1 dell’altra chain; prese entrambe, nessun dimezzamento; la Carta iniziale conta; le combo che richiedono la chain meno probabile escono più di rado.
+  Vale in ogni estrazione di `rollOptions` (carte dopo l’ondata, ricompensa dei mini-boss, rinnovo) **[Claude]**. Codice: `upWeight` e `CHAIN_ALT` accanto a `rollOptions`.
+- **Rinnovo senza ripetute** **[deciso]** (Marco, § 15 Modulo 21): `refreshCards` passa a `rollOptions` le carte appena offerte; se fuori da quelle restano almeno n carte il sorteggio le esclude,
+  altrimenti prende tutte le rimaste e completa con quelle già viste, a peso **[Claude]**. Il rinnovo si consuma come prima, anche con il pool piccolo **(aperto)**.
+- Testi di Guida e Moduli invariati (non citano i pesi).
+- **Misure** (DESIGN.md § 5 “Misura 1.24.0” e § 11): con il pool libero (fino al 30) la regola non scatta mai (l’altra chain è bloccata dall’albero): muri 10/20/30 identici.
+  Curva con l’albero: 50 52,2% → 50,0% (180 partite), 100 50,0% → 53,3%, 150 45,0% → 48,3%: nel rumore, nessun numero cambiato. Pool completo al 25/30: lv1 alternativa presa 0,85 → 0,47 e 0,72 → 0,38 a partita.
+  Rinnovo forzato: prima 41-55% dei rinnovi con almeno una ripetuta, dopo 0%. Strumento nuovo: `tests/tools/carte-stat.js` (chain e combo offerte e prese per fase, rinnovo forzato, prima/dopo).
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/v124.js`: peso 0,2 solo per la lv1 dell’altra chain (Sky Guard e guardiano), entrambe prese → 0,4, Carta iniziale, frequenza nel sorteggio
+dopo l’ondata e nella ricompensa del mini-boss (60 000 estrazioni), rinnovo senza ripetute con pool ampio, completamento con pool piccolo (a peso), consumo invariato.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo la versione, nessun disegno nuovo.
+
+Checklist: aggiornata (versione 52): gruppo “Chain alternativa e rinnovo (1.24)” con la voce da provare sul telefono; nel riferimento “Potenziamenti” due voci sulla chain alternativa e sul rinnovo.
+
 ## 1.23.2 — Ammiraglia ridisegnata
 
 - **Richiesta di Marco**: l’Ammiraglia (boss gigante fire) era sottotono rispetto agli altri boss. Disegno **[Claude] [da rivedere]** (DESIGN.md § 17, “Grafica rivista”): stessa sagoma e collisioni,
