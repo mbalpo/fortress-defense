@@ -113,3 +113,10 @@ function battle(extra) {
     options = [find((u) => u.cat === "chain" && u.lv === 2), find((u) => u.cat === "chain" && u.lv === 3), find((u) => u.cat === "lu" && u.lv === 1), find((u) => u.cat === "lu" && u.lv === 3)].filter(Boolean);
     state = "upgrade"; alerts.length = 0;`);
   g.frame(2); g.save("carte-segni.png"); }
+// segno delle combo (1.25.1): coppie di simboli dei tipi, guardiano e tra torrette, con i cinque tipi
+{ const g = battle(); g.frame(5);
+  g.ev(`const P = (s, id) => ({ kind: "up", who: s, up: s.def.ups.find((u) => u.id === id) });
+    const T = (id) => makeShooter(TURRETS[id], SLOT_X[0], GROUND_Y - 14);
+    options = [P(player, "kVortex"), P(T("thunder"), "kRail"), P(T("aero"), "kLaser"), P(T("wheel"), "kTesla")];
+    state = "upgrade"; alerts.length = 0;`);
+  g.frame(2); g.save("carte-combo.png"); }

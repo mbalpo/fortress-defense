@@ -302,6 +302,9 @@ function scenes(turretIds) {
     { progress: P1, setup: CARDS(TOWERS([["sky", 1], ["rail", 2]]) + " const U = (s, f) => s.def.ups.find(f); options = [{ kind: 'up', who: slots[0], up: U(slots[0], (u) => u.id === 'dmg') }, { kind: 'up', who: slots[1], up: U(slots[1], (u) => u.cat === 'chain' && u.lv === 1) }, { kind: 'up', who: player, up: U(player, (u) => u.cat === 'lu' && u.lv === 2) }];"), frames: 1 }, ["upgradeScreen", "button"]);
   add(5, "carte-combo", "Carte · Combo", "Combo del guardiano con una torretta in campo.",
     { progress: P1, setup: CARDS(TOWERS([["hive", 2], ["laser", 2, { multi1: 1 }], ["wheel", 2, { mini1: 1 }], ["vortex", 2]]) + " player.level = 2; options = ['kVortex', 'kBeam', 'kWheel'].map((id) => ({ kind: 'up', who: player, up: player.def.ups.find((u) => u.id === id) }));"), frames: 1 }, ["upgradeScreen"]);
+  // 1.25.1: segno delle combo (coppia di simboli dei tipi) anche tra due torrette; i tipi a sinistra e a destra coprono tutti e cinque
+  add(5, "carte-combo-torrette", "Carte · Combo tra due torrette", "Sopra il pallino: a sinistra il simbolo del tipo della principale, a destra quello della secondaria.",
+    { progress: P1, setup: CARDS(TOWERS([["thunder", 2], ["aero", 2], ["vortex", 2]]) + " options = [[0, 'kRail'], [1, 'kLaser'], [2, 'kSky']].map(([i, id]) => ({ kind: 'up', who: slots[i], up: slots[i].def.ups.find((u) => u.id === id) }));"), frames: 1 }, ["upgradeScreen", "cardMark"]);
   add(5, "carte-nuova", "Carte · Nuova torretta", "Con slot liberi escono anche le torrette nuove.",
     { progress: P1, setup: CARDS("options = [{ kind: 'new', id: 'tesla' }, { kind: 'new', id: 'beam' }, { kind: 'up', who: player, up: player.def.ups.find((u) => u.id === 'pierce') }];"), frames: 1 }, ["upgradeScreen"]);
   add(5, "ricompensa", "Ricompensa del mini-boss", "Carte estratte e già applicate, poi “Continua”.",
@@ -339,6 +342,14 @@ function tiles(M) {
   add("ferito", "Barra della vita", foe('ENEMY_DEFS["brute"]', { hp: 0.55 }), ebox(16), 3);
   for (const [kind, , color] of M.status) add("stato:" + kind, M.statusName[kind] || kind, `DRAW.statusIcon("${kind}", 0, 0, "${color}", { destrN: 3 });`, [-9, -9, 18, 18], 5);
   for (const n of [1, 2, 3, 4, 5]) add("pile:" + n, "Distruzione · " + n + (n > 1 ? " pile" : " pila"), `DRAW.statusIcon("destr", 0, 0, "#8aa0c8", { destrN: ${n} });`, [-9, -9, 18, 18], 5);
+  // 1.25.1: segno delle carte combo (DESIGN.md § 3): coppie di simboli dei tipi sul fondo della carta, al 1× e ingrandite; per confronto la scintilla in due colori (ripiego)
+  const TT = JSON.stringify(M.typeKeys), CARD_BG = "ctx.fillStyle = 'rgba(18,30,58,0.92)'; ctx.fillRect(-400, -400, 800, 800); ";
+  add("combo:tutte", "Tutte le coppie al 1× (righe: principale · colonne: secondaria; sulla diagonale solo physical, per il guardiano con Aeroblast e Railgun)",
+    CARD_BG + TT + ".forEach((a, i) => " + TT + ".forEach((b, j) => DRAW.cardBadge({ cat: 'combo', type: a, type2: b }, j * 40, i * 50, TYPES[a].color, String(j + 1))));", [-24, -34, 208, 248], 1);
+  M.typeKeys.forEach((t, i) => { const t2 = M.typeKeys[(i + 1) % M.typeKeys.length];
+    add("combo:" + t, M.types[t].name + " + " + M.types[t2].name + " (ingrandita)", CARD_BG + `DRAW.cardBadge({ cat: "combo", type: "${t}", type2: "${t2}" }, 0, 0, TYPES["${t}"].color, "1");`, [-24, -34, 48, 50], 4); });
+  add("combo:simboli", "I cinque simboli dei tipi (ingranditi)", CARD_BG + TT + ".forEach((t, i) => DRAW.typeSymbol(t, -36 + i * 18, 7, TYPES[t].color));", [-46, -10, 92, 20], 4);
+  add("combo:scintilla", "Ripiego: scintilla in due colori (1× e ingrandita)", CARD_BG + "DRAW.comboSpark(-16, 7, TYPES.fire.color, TYPES.energy.color); ctx.save(); ctx.translate(14, 0); ctx.scale(2, 2); DRAW.comboSpark(0, 7, TYPES.force.color, TYPES.electric.color); ctx.restore();", [-30, -24, 60, 34], 3);
   add("tutti-gli-stati", "Tutti gli stati insieme", foe('ENEMY_DEFS["brute"]', { slowT: 1, paraT: 1, weakT: 1, vulnT: 1, burnT: 1, destrN: 3, destrT: 1 }), [-46, -42, 92, 66], 3);
   // effetti: una tessera per funzione di FX, più le parti delle torrette e dell’HUD
   const CK = "const c0 = clock; clock = T; try { ", CK0 = " } finally { clock = c0; }";
@@ -676,6 +687,9 @@ ${effectScenes}
 <div class="grid" data-voce="carte:Standard carte:Chain carte:Level up carte:Combo">
 ${scenesOf(5)}
 </div>
+<h3>Segno delle combo</h3>
+<p>Coppia di simboli dei tipi sopra il pallino (<code>cardMark</code>, <code>typeSymbol</code>): physical roccia, fire fiamma, electric fulmine, energy cristallo, force spirale. A sinistra la principale (o il guardiano), a destra la secondaria. In fondo il ripiego (<code>comboSpark</code>).</p>
+<div class="grid">${tilesOf(/^combo:/)}</div>
 </section>
 
 <section id="prova"><h2>6 · Scena di prova</h2>

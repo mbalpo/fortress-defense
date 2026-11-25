@@ -256,6 +256,14 @@ const STATUS_GRID = {
   vuln: ["...w...", "..www..", ".w.w.w.", "wwwwwww", ".w.w.w.", "..www..", "...w..."],
   burn: ["...w...", "..ww...", "..ww.w.", ".wwwww.", ".wwYww.", ".wYYYw.", "..www.."],
 };
+// HD-2D: simboli dei tipi per il segno delle combo (1.25.1), 7×7 come STATUS_GRID: c colore del tipo, d più scuro, h più chiaro, y cuore della fiamma
+const TYPE_GRID = {
+  physical: [".hhhc..", "hhhccc.", "hhcccdd", "hcccddd", ".ccdddd", ".cdddd.", "...dd.."],     // roccia sfaccettata e spigolosa: luce in alto a sinistra, ombra in basso a destra
+  fire:     ["...c...", "..cc...", "..cc.c.", ".ccycc.", ".cyyyc.", ".cyyyc.", "..ccc.."],     // fiamma col cuore chiaro
+  electric: ["....cc.", "...cc..", "..cc...", ".ccccc.", "...cc..", "..cc...", ".cc...."],     // fulmine
+  energy:   ["...c...", "..ccd..", ".cccdd.", ".cccdd.", ".cccdd.", "..ccd..", "...c..."],     // cristallo: due facce, la destra più scura
+  force:    [".cccc..", "c....c.", "c.cc..c", "c.c.c.c", "c.c..c.", "c..cc..", ".c....."],     // spirale: un tratto, circa 1,6 giri dal centro verso fuori
+};
 // HD-2D: rocce che ruotano (16 pose, luce fissa), navicella con le luci a turno; la meteora ha la coda di fiamme a pixel
 const HD_SHAPE_ID = new WeakMap();
 
@@ -767,7 +775,18 @@ statusIcon = function statusIcon(kind, x, y, c, e) {
 };
 // segno sopra il pallino della carta (1.12.5): chain = catene verticali affiancate (una per livello della chain),
 // level up = frecce ^ una sotto l’altra (una per livello); HD-2D: a pixel, con la luce del tipo
+// simbolo del tipo a pixel (base in (x, bot)), col contorno scuro come le altre figure HD-2D
+typeSymbol = function typeSymbol(type, x, bot, c) {
+  const pal = { c, d: mix(c, "#171338", 0.45), h: mix(c, "#fffbea", 0.5), y: "#fff6b0" };
+  blit(procSprite("typeSym:" + type + ":" + c, 7, 7, (i, j) => pal[TYPE_GRID[type][j][i]] || null), x, bot - 1, 4.5, 8);
+};
+// combo (1.25.1): coppia di simboli, a sinistra la principale (o il guardiano) e a destra la secondaria, con le due luci dei tipi
 cardMark = function cardMark(o, cx, bot, c) {
+  if (o.cat === "combo" && o.type2) {
+    const c2 = TYPES[o.type2].color;
+    typeSymbol(o.type, cx - 8, bot - 2, c); typeSymbol(o.type2, cx + 8, bot - 2, c2);
+    light(cx - 8, bot - 9, 14, c, 0.3); light(cx + 8, bot - 9, 14, c2, 0.3); return;
+  }
   const n = o.lv || 0; if (!n || (o.cat !== "chain" && o.cat !== "lu")) return;
   const pal = { c, h: mix(c, "#fffbea", 0.5), d: mix(c, "#171338", 0.45) };
   bot -= 3;

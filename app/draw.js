@@ -832,7 +832,9 @@ function cardBadge(o, cx, cy, c, label) {
 }
 // segno sopra il pallino della carta (1.12.5): chain = catene verticali affiancate (una per livello della chain),
 // level up = frecce ^ una sotto l’altra (una per livello); cx = centro del pallino, bot = sopra il pallino, c = colore del tipo
+// combo (1.25.1) = coppia di simboli dei tipi: a sinistra la principale (o il guardiano), a destra la secondaria, ognuno nel suo colore
 function cardMark(o, cx, bot, c) {
+  if (o.cat === "combo" && o.type2) { typeSymbol(o.type, cx - 7, bot, c); typeSymbol(o.type2, cx + 7, bot, TYPES[o.type2].color); return; }
   const n = o.lv || 0; if (!n || (o.cat !== "chain" && o.cat !== "lu")) return;
   ctx.strokeStyle = c; ctx.lineCap = "round"; ctx.lineJoin = "round";
   if (o.cat === "chain") {
@@ -847,6 +849,47 @@ function cardMark(o, cx, bot, c) {
     ctx.lineWidth = 2;
     for (let i = 0; i < n; i++) { const y = bot - 1.5 - i * 5.5; ctx.beginPath(); ctx.moveTo(cx - 5, y); ctx.lineTo(cx, y - 4); ctx.lineTo(cx + 5, y); ctx.stroke(); }
   }
+}
+// simbolo pieno di un tipo di danno (1.25.1, segno delle combo), alto circa 13 px con la base in (x, bot): physical = roccia sfaccettata,
+// fire = fiamma, electric = fulmine, energy = cristallo (esagono allungato a due facce, la destra più scura), force = spirale (un tratto, 1,6 giri)
+function typeSymbol(type, x, bot, c) {
+  const P = (pts) => { ctx.beginPath(); pts.forEach(([u, v], i) => (i ? ctx.lineTo(x + u, bot - v) : ctx.moveTo(x + u, bot - v))); ctx.closePath(); };
+  const edge = () => { ctx.lineWidth = 1; ctx.strokeStyle = "rgba(7,11,22,0.85)"; ctx.stroke(); };
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (type === "physical") {
+    const out = [[-5.5, 2.5], [-6, 7.5], [-2.5, 12], [3, 12.5], [6, 8], [5, 2], [0.5, 0.5]];
+    P(out); ctx.fillStyle = c; ctx.fill();
+    P([[0.5, 0.5], [5, 2], [6, 8], [1.5, 6]]); ctx.fillStyle = "rgba(7,11,22,0.4)"; ctx.fill();          // faccia in ombra
+    P([[-6, 7.5], [-2.5, 12], [3, 12.5], [1.5, 6]]); ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.fill(); // faccia in luce
+    P(out); edge();
+  } else if (type === "fire") {
+    const flame = (k, dy) => { ctx.beginPath(); ctx.moveTo(x, bot - dy - 0.5 * k);
+      ctx.quadraticCurveTo(x - 6 * k, bot - dy - 1 * k, x - 4.5 * k, bot - dy - 6.5 * k); ctx.quadraticCurveTo(x - 3 * k, bot - dy - 9 * k, x - 1.5 * k, bot - dy - 9.5 * k);
+      ctx.quadraticCurveTo(x - 1.5 * k, bot - dy - 7.5 * k, x - 0.5 * k, bot - dy - 7 * k); ctx.quadraticCurveTo(x + 0.5 * k, bot - dy - 11 * k, x + 1.5 * k, bot - dy - 13.5 * k);
+      ctx.quadraticCurveTo(x + 6.5 * k, bot - dy - 8 * k, x + 5 * k, bot - dy - 3 * k); ctx.quadraticCurveTo(x + 3.5 * k, bot - dy - 0.5 * k, x, bot - dy - 0.5 * k); ctx.closePath(); };
+    flame(1, 0); ctx.fillStyle = c; ctx.fill(); edge();
+    flame(0.45, 0.6); ctx.fillStyle = "rgba(255,246,200,0.8)"; ctx.fill();                                // cuore chiaro
+  } else if (type === "electric") {
+    P([[0.5, 13.5], [-4.8, 6.2], [-0.6, 6.2], [-2.4, 0], [5, 8], [0.9, 8], [4.2, 13.5]]); ctx.fillStyle = c; ctx.fill(); edge();
+  } else if (type === "energy") {
+    const out = [[0, 13.5], [4.5, 10], [4.5, 3.5], [0, 0], [-4.5, 3.5], [-4.5, 10]];
+    P(out); ctx.fillStyle = c; ctx.fill();
+    P([[0, 13.5], [4.5, 10], [4.5, 3.5], [0, 0]]); ctx.fillStyle = "rgba(7,11,22,0.42)"; ctx.fill();      // faccia destra più scura
+    P(out); edge();
+  } else if (type === "force") {
+    const cy = bot - 6.6, turns = 1.6, R = 6, r0 = 0.6, n = 40;
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) { const t = i / n, a = -Math.PI / 2 + t * turns * 6.2832, r = r0 + (R - r0) * t; (i ? ctx.lineTo : ctx.moveTo).call(ctx, x + r * Math.cos(a), cy + r * Math.sin(a)); }
+    ctx.lineWidth = 3.4; ctx.strokeStyle = "rgba(7,11,22,0.85)"; ctx.stroke();                            // contorno scuro sotto il tratto
+    ctx.lineWidth = 1.9; ctx.strokeStyle = c; ctx.stroke();
+  }
+}
+// ripiego (DESIGN.md § 3): scintilla a quattro punte, metà sinistra nel colore della principale e metà destra in quello della secondaria
+function comboSpark(cx, bot, c1, c2) {
+  const cy = bot - 7, star = () => { ctx.beginPath(); ctx.moveTo(cx, cy - 7); ctx.quadraticCurveTo(cx + 1, cy - 1, cx + 7, cy); ctx.quadraticCurveTo(cx + 1, cy + 1, cx, cy + 7);
+    ctx.quadraticCurveTo(cx - 1, cy + 1, cx - 7, cy); ctx.quadraticCurveTo(cx - 1, cy - 1, cx, cy - 7); ctx.closePath(); };
+  for (const [c, x0] of [[c1, cx - 8], [c2, cx]]) { ctx.save(); ctx.beginPath(); ctx.rect(x0, cy - 8, 8, 16); ctx.clip(); star(); ctx.fillStyle = c; ctx.fill(); ctx.restore(); }
+  star(); ctx.lineWidth = 1; ctx.strokeStyle = "rgba(7,11,22,0.85)"; ctx.stroke();
 }
 function upText(s) {
   const parts = [];
@@ -2050,5 +2093,5 @@ if (GFX_ON === "hd2d") eval("(" + FORTRESS_DRAW_HD + ")")();
 return { draw, FX, thunderDraw, teslaDraw, TURRET_ART, BODY, BODY2, DARK, STATUS_ICONS, statusIcon, drawStatus, drawEnemy, enemyIcon,
   drawTurret, drawPlayer, guardianShape, drawCrosshair, levelEnemies, unlockScreen, drawFloater, ICON_SHAPE, drawDomeFill, drawDomeEdge, drawGround, drawFortress, drawHud, drawAlert, ballLightning,
   menuScreen, upgradeScreen, rewardScreen, pauseScreen, wonScreen, lostScreen, ENEMY_NAME, txt, segs, rr, disc, glow, poly, button,
-  PIECE_ART, pieceIcon, modIcon, rarColor, cardMark, GFX_ON, GFX_INFO };
+  PIECE_ART, pieceIcon, modIcon, rarColor, cardMark, cardBadge, typeSymbol, comboSpark, drawSky, GFX_ON, GFX_INFO };
 }

@@ -93,7 +93,22 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   (pool libero) sono raggiungibili solo le altre 15. **[deciso]** (Marco)
 - **Segno delle carte chain e level up** (1.12.5) **[deciso]** (Marco): sopra il pallino col numero (o la spunta della ricompensa), nel colore del tipo:
   chain = una catena verticale per livello della chain (due affiancate al lv2, tre al lv3); level up = una freccia ^ per livello, una sotto l’altra.
-  Standard, combo e nuova torretta senza segno. Disegno **[Claude]**.
+  Standard e nuova torretta senza segno; le combo hanno il segno del punto seguente. Disegno **[Claude]**.
+- **Segno delle carte combo** **[deciso]** (Marco, 25/11/2026): sopra il pallino, come chain e level up, una **coppia di simboli dei tipi** delle due entità della combo, ognuno nel colore del proprio tipo.
+  Simboli **[deciso]** (Marco) per energy e force: **energy = cristallo** (la sagoma del Prisma, senza anello e con pochi dettagli: esagono allungato a due facce, la sinistra nel colore del tipo e la destra più scura **[Claude]**; niente spigolo centrale né nucleo); **force = spirale** (un solo tratto, circa 1,6 giri).
+  Se a scala reale serve semplificare ancora, si può togliere altro, purché il cristallo resti riconoscibile e diverso dagli altri quattro simboli **[Claude]**.
+  Gli altri tre **[Claude] [da rivedere]**: **physical = roccia sfaccettata**, **fire = fiamma**, **electric = fulmine**. Ordine **[Claude]**: a sinistra il tipo della principale, a destra quello della secondaria
+  (combo del guardiano: physical a sinistra, poi il tipo della torretta; con due tipi uguali, lo stesso simbolo due volte). Simboli pieni (chain e level up sono a tratto), così il segno non si confonde con le catene.
+  Scartata la coppia di cerchi (ricorda un logo); la scintilla a quattro punte in due colori resta come ripiego **[Claude]** se a scala reale i simboli non si leggono.
+  Fiamma e fulmine somigliano alle icone di stato bruciatura e paralisi: da giudicare a scala reale. I simboli dei tipi non si riusano altrove (Guida, pausa) finché Marco non lo chiede.
+  Misure **[Claude]**: altezza circa 12-14 px, coppia larga circa 26 px, nella stessa posizione del segno della chain. Classica in `draw.js` (`cardMark`), HD-2D in `draw-hd2d.js` con griglia a pixel come `STATUS_GRID` (il cristallo in 7×7 a due tonalità).
+  **Costruito (1.25.1)** · forme **[Claude] [da rivedere]**: la carta riceve da `describe` anche `type2` (tipo della torretta indicata da `needs`). Classica (`typeSymbol`, base sopra il pallino, centri a ±7 px, coppia larga 25 px e alta 12,5 px):
+  roccia = poligono irregolare a sette lati con una faccia in ombra (in basso a destra) e una in luce (in alto a sinistra); fiamma = lingua a punta storta con una seconda punta a sinistra e un cuore chiaro;
+  fulmine = zigzag pieno a tre tratti; cristallo = esagono allungato (9 × 13,5 px), faccia destra scurita del 42%; spirale = un tratto di 1,6 giri (raggio da 0,6 a 6 px) spesso 1,9 px con un contorno scuro sotto.
+  Tutti hanno un contorno scuro di 1 px, per staccarsi dal fondo della carta. HD-2D: griglie 7×7 (`TYPE_GRID`: c colore del tipo, d più scuro, h più chiaro, y cuore della fiamma) con il contorno scuro
+  automatico (`procSprite`), centri a ±8 px (coppia larga circa 29 px, alta 16 con il contorno) e una luce del tipo sotto ciascun simbolo; la spirale a pixel è squadrata.
+  Ripiego pronto ma non usato: `comboSpark` (scintilla a quattro punte, metà sinistra nel colore della principale e metà destra in quello della secondaria). Catalogo grafico § 5: scena “Combo tra due torrette”,
+  tutte le coppie al 1×, una coppia per tipo ingrandita, i cinque simboli e la scintilla. Verifica: `tests/segno-combo.js` (44 combo, due grafiche, 3 e 4 carte: dentro la carta, lontano dal pallino e dal testo, colori al loro posto).
 - **Probabilità** delle carte (pesi): standard 1, chain 0,4, combo 0,4, level up 2, nuova torretta 3 (1,5 con già 2 torrette). **[deciso]** (numeri **[Claude]**)
 - **Chain alternativa dimezzata** **[deciso]** (Marco): per il guardiano e per ogni torretta, finché ha preso la voce lv1 di una sola delle sue due chain, la voce lv1 dell’altra chain pesa **0,2 invece di 0,4** (es.: scelta Frammentazione per la Sky Guard, Missili incendiari pesa 0,2). Letture **[deciso]** (Marco, tra le proposte di Claude): (1) il dimezzamento riguarda solo la lv1 dell’altra chain, perché le sue voci successive non sono raggiungibili senza di essa; (2) se si prende comunque anche l’altra chain, nessun ulteriore dimezzamento e le sue voci successive tornano a 0,4; (3) la Carta iniziale (§ 16) conta come chain scelta; (4) le combo che richiedono la lv1 della chain meno probabile escono di conseguenza più di rado (§ 11, combo, aperto). Il peso vale in ogni estrazione che usa `rollOptions` (carte dopo l’ondata, ricompensa dei mini-boss, rinnovo) **[Claude]**. Da misurare con i bot (§ 11).
 - Le carte “+1 proiettile/sfera/drone/rimbalzo” tolgono il 15% (o il 20%) di danno per pila. **[deciso]**
@@ -230,6 +245,14 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   e scelte in coda (`pq`), e `wave` è la prima ondata non ripulita.
 - PWA: `manifest.json`, `sw.js`, icone. Schermata iniziale (nome del gioco in alto, icona ingrandita sotto): all’avvio, se online, controlla se c’è un nuovo `sw.js` (attesa massima 3 s). Se c’è, mostra “Aggiornamento in corso…”, scarica, attiva e ricarica la pagina. A controllo concluso (nessun aggiornamento, offline, tempo scaduto o ricarico già fatto) compare la scritta “Start” e si entra nel gioco con un tocco. Il ricarico avviene solo in questa schermata, mai durante una partita. **[deciso]**
   Serve HTTPS. Ad ogni pubblicazione alzare `APP_VERSION` (in index.html) e la versione dentro `sw.js`. `sw.js` deve cambiare ad ogni pubblicazione, altrimenti il browser non rileva l’aggiornamento. Se cambia l’elenco dei file, aggiornare anche `ASSETS`.
+- **Icona del gioco** **[deciso]** (Marco, 25/11/2026): quella attuale non è più coerente con la grafica. Nuova: un **meteorite gigante che scende dall’alto, minaccioso, verso la barriera**, senza il guardiano.
+  Dettagli **[Claude] [da rivedere]**: meteorite grande in alto e tagliato dal bordo, in diagonale, con scia di fuoco e bordo anteriore arroventato (lo stesso disegno del Meteorite gigante, § 17); in basso l’arco della barriera con il lampo del primo contatto; stelle. Pochi elementi e contrasto forte, per leggersi a 48 px.
+  Versione maskable: il soggetto sta nel cerchio centrale (80% del lato). File: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `icon-180.png` (stessi nomi, `ASSETS` invariato). Due varianti, classica e HD-2D; Marco sceglie.
+  **Anteprima (1.25.1, PNG di `app/` non ancora cambiati)** · composizione **[Claude] [da rivedere]**: `tests/tools/icona.js` disegna con il codice del gioco (`drawSky`, `drawDomeFill`/`drawDomeEdge` con il bordo acceso
+  del colpo, `drawEnemy` del Meteorite) un riquadro di 360 unità: Meteorite di raggio 120 ruotato di 0,6 rad (scia in alto a destra, tagliato dal bordo destro), accostato alla barriera nel punto più vicino
+  al suo centro fino a toccarla, con un lampo radiale (bianco, crema, arancio) in quel punto; base della barriera appena sotto il bordo dell’icona. Maskable: soggetto ridotto all’80% attorno al centro, cielo fino ai bordi.
+  Pagina: `docs/anteprima-icona.html` (quattro misure, maskable col ritaglio circolare e arrotondato, lettura a 48 px, icona attuale per confronto). Dopo la scelta: `node tests/tools/icona.js --usa classica` (o `hd2d`)
+  scrive i quattro PNG; in quel momento si alza la versione.
 - **Schermo sempre acceso**: finché il gioco è aperto in primo piano lo schermo non si spegne, anche in automatico senza tocchi (Screen Wake Lock, richiesto dopo il tocco su “Start”, rilasciato in secondo piano e richiesto di nuovo al ritorno; se il browser non lo supporta il gioco funziona lo stesso). **[deciso]** (il comportamento) · modalità **[Claude]**
 
 ## 8. Guardiano e torrette *(generato)*
@@ -608,6 +631,10 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
   un test fallisce se è indietro rispetto ai file del gioco. Ogni voce del CHANGELOG riporta se è stato rigenerato. **[deciso]**
   (percorso, comando e test **[Claude]**)
   Il disegno sta in `app/draw.js`, modulo condiviso dal gioco e dal catalogo **[Claude]**.
+- **Catalogo sonoro** (`docs/catalogo-sonoro.html`, 1.25.1): un tasto per ogni evento del modulo audio e tre per la cupola (pesi 1, 2, 3), suonati con lo stesso `app/audio.js` del gioco;
+  serve ad ascoltare i timbri dal computer (il giudizio finale resta sul telefono, § 18). Si apre direttamente nel browser dalla cartella del progetto **[Claude]**.
+  Non è generato: carica `../app/audio.js`, quindi è sempre al passo; `tests/sonoro.js` controlla che ci sia un tasto per ogni evento.
+- **Anteprima dell’icona** (`docs/anteprima-icona.html`, generata da `node tests/tools/icona.js`, § 7) **[Claude]**.
 
 ## 15. Equipaggiamento e chip (costruito nella 1.10.0, da tarare)
 
@@ -1434,7 +1461,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     `gigante.raggio.avviso`, `gigante.raggio`, `gigante.scissione` (34 in tutto). Ogni suono è una somma di strati (oscillatore o rumore filtrato, con glissando e inviluppo).
   - **Dove nascono**: torrette a ogni sparo riuscito (`runTurret0`: per Laser e Beam all’accensione del raggio, per Hive e Firewheel al lancio); guardiano a ogni salva (non a ogni proiettile).
     Esplosione grande: impatto del missile della Sky Guard, Droni kamikaze dell’Hive, kamikaze sulla cupola. Esplosione piccola: mini-missili e Doppio impatto della Sky Guard, Combustione, bombe e mine dell’Aeroblast,
-    esplosioni del Railgun e dei Proiettili esplosivi, sfere della Teslacoil, Base esplosiva del Beam, Colpi esplosivi del guardiano, bolle di Gamma.
+    esplosioni del Railgun e dei Proiettili esplosivi, sfere della Teslacoil, Base esplosiva del Beam, Colpi esplosivi del guardiano (le bolle di Gamma dalla 1.25.1 hanno `bolla.scoppia`).
     Cupola: solo i colpi che tolgono vita (non quelli parati da scudo, immunità o “ignorato”); peso 3 per mini-boss e boss, 2 per il kamikaze, 1 per gli altri; il raggio del Prisma colpisce come boss.
     Invisibilità del maggiore: “fine” sia allo scadere dei 10 s sia quando uno stato lo rivela. Incremento: un suono per ciclo di cura, solo se cura qualcuno. Disco volante: un suono per lampo di assorbimento (già al massimo uno ogni 0,15 s).
   - **Timbri per famiglia**: fire = soffio di rumore che sale più un tonfo (Sky Guard con sibilo di lancio, Firewheel con un giro che sale); energy = dente di sega che scende e un fischio che sale
@@ -1452,4 +1479,27 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     Un tocco qualsiasi sul gioco ripete lo sblocco, per i browser che lo chiedono di nuovo.
   - **Verifica**: con gli stessi semi della 1.24.1, `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` dà gli stessi numeri e `node tests/tools/planet.js 1,5,10 30` anche, ai livelli 1 e 5 (il 10 è stato fermato perché troppo lungo, d’accordo con Marco);
     `tests/sonoro.js` confronta partite intere con e senza audio (stessi esiti e stesse carte).
+- **Revisione dei timbri** **[deciso]** (Marco, 25/11/2026, dopo le prove su Android: l’imbastitura funziona, non è invasiva né troppa, ma i timbri vanno migliorati) · rimedi **[Claude] [da rivedere]**:
+  - **Guardiano**: troppo acuto e poco da arma → clic più basso e un po’ più lungo (80-90 ms) con un colpo grave brevissimo sotto (filtrato, volume basso: a 6-7 salve al secondo il grave si impasta); resta il più discreto.
+  - **Ingressi di mini-boss e boss**: troppo corti, e il mini-boss suona come la notifica di un messaggio → suoni non melodici (nessuna nota riconoscibile, niente ritmo da “ding”): rombo di rumore filtrato in crescendo e un colpo profondo; circa 2 s il mini-boss e 4-5 s il boss (entra lento dall’alto). Volume e priorità invariati. Un suono per tutta la discesa (evento con durata) non è previsto.
+  - **Esplosioni**: sembrano bolle che scoppiano (il seno che scende in 0,2 s) → attacco istantaneo, schiocco di rumore a banda larga, colpo grave che parte più in basso e dura di più, un po’ di saturazione; la grande con una coda di detriti. Il timbro attuale di `esplosione.piccola` passa al nuovo evento **`bolla.scoppia`**, usato dalle bolle di Gamma (che oggi usano `esplosione.piccola`): gli eventi diventano 35.
+  - **Elettricità**: non ricorda il ronzio → tono grave quasi fisso con armoniche (circa 100-120 Hz), modulato in ampiezza, e pochi scoppiettii di rumore (5-10 ms) a istanti irregolari.
+  - **Fuoco**: non ricorda il crepitio → “fwoomp” morbido (rumore basso, attacco lento) e tanti grani di rumore brevissimi (3-15 ms, banda 1,5-4 kHz) a istanti e volumi irregolari.
+  - Istanti e volumi irregolari con il generatore proprio del modulo, mai `Math.random`. Gli ingredienti nuovi (modulazione d’ampiezza, grani, saturazione) sono nuovi strati del modulo; nessun valore di gioco cambia.
+  - Strumento **[Claude]**: `docs/catalogo-sonoro.html` (come il catalogo grafico): un tasto per evento e tre per la cupola (pesi 1, 2, 3), con lo stesso `audio.js`; si ascolta dal computer, il giudizio finale resta sul telefono.
+- **Costruito (1.25.1)** · valori e strati **[Claude] [da rivedere]** (volumi, priorità, voci, soglie e raggruppamenti degli eventi non cambiano; 35 eventi):
+  - **Strati nuovi del modulo**: `am` = modulazione d’ampiezza (un oscillatore lento fa variare il volume tra 1 − profondità e 1); `sat` = saturazione (curva tanh, quantità 1,5-3); **grani** = tanti strati di rumore
+    brevissimi a istanti, durate, frequenze e volumi presi dal generatore del modulo; ogni strato di rumore parte da un punto diverso del rumore (così i grani non sono tutti uguali).
+    `make(peso, r)` riceve il generatore. Un suono la cui costruzione fallisce non ferma il gioco ed è contato in `stats.failed` (i test lo vogliono vuoto).
+  - **Guardiano**: onda quadra 760 → 360 Hz in 85 ms (passabanda 1050 Hz), soffio di rumore 2600 → 1100 Hz in 50 ms, colpo grave sinusoidale 150 → 70 Hz in 35 ms passato a 320 Hz, volume dello strato 0,28; volume dell’evento 0,16 come prima.
+  - **Mini-boss** (circa 2,2 s): rumore passabasso che si apre da 160 a 900 Hz crescendo per 1,5 s, sotto una sinusoide grave che scivola 52 → 38 Hz; a 1,5 s il colpo profondo
+    (sinusoide 50 → 18 Hz e rumore 880 → 70 Hz, saturati). **Boss** (circa 4,6 s): rombo passabasso 110 → 750 Hz in crescendo per 3,5 s, fruscio passabanda 300 → 1600 Hz che sale, sottofondo 44 → 31 Hz
+    modulato a 5 Hz; a 3,5 s il colpo profondo (74 → 26 Hz, più lungo). Nessuna nota tenuta né ritmo.
+  - **Esplosione piccola**: schiocco di rumore passabasso 9000 → 2500 Hz in 50 ms, corpo di rumore 1500 → 180 Hz in 0,34 s saturato (2), colpo grave 78 → 30 Hz in 0,34 s saturato (1,5); attacco 1 ms.
+    **Grande**: schiocco 11 → 3 kHz in 80 ms, corpo 2200 → 80 Hz in 1 s (saturazione 3), colpo 56 → 20 Hz in 0,95 s, rombo 380 → 160 Hz in 1,4 s e coda di 10 detriti (grani da 10-40 ms, 0,7-3 kHz, tra 0,15 e 1 s, sempre più piani).
+    **`bolla.scoppia`**: il timbro della vecchia esplosione piccola (rumore 1800 → 280 Hz e seno 120 → 45 Hz in 0,2 s), stessi volume, voci, soglia e raggruppamento.
+  - **Elettricità** (Thunderbolt e Teslacoil, intonazione ×1 e ×1,25): dente di sega 110 → 104 Hz passato a 1600 Hz e onda quadra 220 → 208 Hz, entrambi modulati a 32 Hz (profondità 0,7), per 0,24 s;
+    da 2 a 4 scoppiettii di rumore passaalto (5-10 ms, 2,5-6 kHz) nei primi 0,2 s. Restano i tratti propri (tuono, carica che sale).
+  - **Fuoco** (Sky Guard e Firewheel): “fwoomp” di rumore passabasso che si apre da 260 a 900 Hz in 0,3 s con attacco di 60 ms, una sinusoide morbida 95 → 70 Hz, e 12 grani di crepitio (3-15 ms, 1,5-4 kHz) nei primi 0,3 s. Restano i tratti propri.
+  - Il carico cresce poco: al massimo 15 sorgenti per uno sparo di fuoco (con il tratto proprio) e 14 per l’esplosione grande, che durano pochi millisecondi; il limite di 14 voci conta gli eventi, non gli strati. Da controllare sul telefono a 2x con molte esplosioni.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, interfaccia (menu, carte, avvisi), frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.

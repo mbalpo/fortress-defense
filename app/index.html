@@ -2603,7 +2603,7 @@ const SUPPORT = {
           if (!living().some((e) => edist(e, this.x, this.y) <= e.def.r + 9)) return;
           this.dead = true;
           for (const e of living()) if (edist(e, this.x, this.y) <= RV.gammaRad + e.def.r) damage(e, RV.gammaDmg * m, "energy", false, "ranger");
-          ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35); sfx("esplosione.piccola");
+          ring(this.x, this.y, RV.gammaRad, TYPES.energy.color, 0.35); sfx("bolla.scoppia");
         },
         draw() { FX.bubble(this); } });
     }
@@ -2932,7 +2932,9 @@ function describe(opt) {
   else note = s.level < 3 ? "Porta al livello " + (s.level + 1) : "Potenziamento finale";
   if (u.prov) note += " · provvisorio";
   const lab = u.cat === "chain" ? "Chain " + u.lv : u.cat === "lu" ? "Level up " + u.lv : CAT_LABEL[u.cat];
-  return { head: d.name + " · " + lab, title: u.name, desc: u.cat === "std" ? stdDesc(s, u) : u.desc, note, type: d.type, cat: u.cat, lv: u.lv };   // cat e lv: segno sopra il pallino (1.12.5)
+  // cat e lv: segno sopra il pallino (1.12.5); type2: tipo della secondaria delle combo, per la coppia di simboli (1.25.1)
+  return { head: d.name + " · " + lab, title: u.name, desc: u.cat === "std" ? stdDesc(s, u) : u.desc, note, type: d.type, cat: u.cat, lv: u.lv,
+    type2: u.cat === "combo" ? TURRETS[u.needs].type : undefined };
 }
 function applyOption(opt) {
   runCards.push(opt.kind === "new" ? ["n", opt.id] : ["u", opt.who.id, opt.up.id]);   // carte prese, per la partita in sospeso
@@ -3824,7 +3826,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.25.0";
+const APP_VERSION = "1.25.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

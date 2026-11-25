@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore), nessun file. Per passare a file audio basta cambiare voice() per gli eventi interessati
@@ -12,13 +12,26 @@
   // ---- strati di un suono ----
   // o: forma d’onda ("sine", "square", "sawtooth", "triangle") o "noise"; f: [frequenza iniziale, finale] (Hz; per il rumore è il filtro);
   // d: durata (s); a: attacco (s); g: volume; flt: [tipo di filtro, frequenza, q] (per il rumore il tipo, la frequenza la dà f); at: ritardo (s)
+  // strati nuovi (1.25.1): am: [frequenza (Hz), profondità 0-1] = modulazione d’ampiezza (ronzio); sat: saturazione (1 leggera … 4 forte)
   const L = (o, f0, f1, d, g, extra) => Object.assign({ o, f: [f0, f1 == null ? f0 : f1], d, g, a: 0.004, at: 0 }, extra || {});
+  // grani: n colpetti di rumore brevissimi a istanti, durate, frequenze e volumi irregolari (dal generatore r del modulo, mai Math.random)
+  // t: [da, a] (s) · fr: [Hz min, max] · d: [s min, max] · g: [min, max] · fade: i volumi calano verso la fine (coda di detriti)
+  const span = (r, ab) => ab[0] + r() * (ab[1] - ab[0]);
+  const grains = (r, n, o) => Array.from({ length: n }, () => {
+    const at = span(r, o.t), f = span(r, o.fr), fade = o.fade ? 1 - 0.75 * (at - o.t[0]) / (o.t[1] - o.t[0] || 1) : 1;
+    return L("noise", f, f * 0.85, span(r, o.d), span(r, o.g) * fade, { flt: [o.type || "bandpass", 0, o.q || 1.4], a: 0.001, at });
+  });
 
   // ---- famiglie delle torrette (tipo di danno) e le loro varianti ----
   const FAMILY = {
-    fire: (k) => [L("noise", 700 * k, 2600 * k, 0.26, 0.55, { flt: ["bandpass", 0, 1.2], a: 0.02 }), L("sine", 190 * k, 85 * k, 0.14, 0.45)],
+    // fuoco (1.25.1): “fwoomp” morbido (rumore basso che si apre, attacco lento) e crepitio di grani brevissimi a 1,5-4 kHz
+    fire: (k, r) => [L("noise", 260 * k, 900 * k, 0.3, 0.75, { flt: ["lowpass", 0, 0.9], a: 0.06 }), L("sine", 95 * k, 70 * k, 0.22, 0.22, { a: 0.05 })]
+      .concat(grains(r, 12, { t: [0.01, 0.3], fr: [1500, 4000], d: [0.003, 0.015], g: [0.15, 0.75] })),
     energy: (k) => [L("sawtooth", 1700 * k, 480 * k, 0.17, 0.22, { flt: ["lowpass", 3800, 1] }), L("sine", 900 * k, 1800 * k, 0.12, 0.18)],
-    electric: (k) => [L("noise", 3200 * k, 2200 * k, 0.13, 0.5, { flt: ["bandpass", 0, 2.5] }), L("square", 130 * k, 60 * k, 0.14, 0.16, { flt: ["lowpass", 1400, 1] })],
+    // elettricità (1.25.1): ronzio grave quasi fisso con armoniche (dente di sega), modulato in ampiezza, e pochi scoppiettii di 5-10 ms a istanti irregolari
+    electric: (k, r) => [L("sawtooth", 110 * k, 104 * k, 0.24, 0.42, { flt: ["lowpass", 1600, 1.5], a: 0.01, am: [32, 0.7] }),
+      L("square", 220 * k, 208 * k, 0.2, 0.1, { flt: ["bandpass", 900, 2], am: [32, 0.7] })]
+      .concat(grains(r, 2 + Math.floor(r() * 3), { t: [0, 0.2], fr: [2500, 6000], d: [0.005, 0.01], g: [0.4, 0.9], type: "highpass", q: 0.7 })),
     force: (k) => [L("sine", 320 * k, 75 * k, 0.24, 0.6), L("noise", 600 * k, 250 * k, 0.15, 0.3, { flt: ["lowpass", 0, 0.8] })],
     physical: (k) => [L("sine", 150 * k, 48 * k, 0.17, 0.75), L("noise", 1600 * k, 600 * k, 0.07, 0.45, { flt: ["lowpass", 0, 0.7] })],
   };
@@ -44,16 +57,25 @@
   const EVENTS = {};
   const ev = (name, o) => { EVENTS[name] = Object.assign({ cat: name, max: 1, prio: 2, gain: 0.5, gap: 60, vary: 0 }, o); };
 
+  // guardiano (1.25.1): clic più basso e più lungo (85 ms) con un colpo grave brevissimo sotto (filtrato e piano, perché a 6-7 salve al secondo non si impasti)
   ev("guardiano", { cat: "guardiano", max: 2, prio: 1, gain: 0.16, gap: 55, vary: 0.06,
-    make: () => [L("square", 1500, 700, 0.045, 0.35, { flt: ["bandpass", 1900, 1.5], a: 0.002 }), L("noise", 4500, 3000, 0.03, 0.35, { flt: ["highpass", 0, 0.7], a: 0.002 })] });
+    make: () => [L("square", 760, 360, 0.085, 0.32, { flt: ["bandpass", 1050, 1.3], a: 0.002 }), L("noise", 2600, 1100, 0.05, 0.3, { flt: ["bandpass", 0, 0.9], a: 0.001 }),
+      L("sine", 150, 70, 0.035, 0.28, { flt: ["lowpass", 320, 0.7], a: 0.001 })] });
   for (const id in TURRET) {
     const [fam, k, own] = TURRET[id];
-    ev("sparo." + id, { prio: 2, gain: 0.3, gap: 80, vary: 0.04, family: fam, make: () => FAMILY[fam](k).concat(own) });
+    ev("sparo." + id, { prio: 2, gain: 0.3, gap: 80, vary: 0.04, family: fam, make: (w, r) => FAMILY[fam](k, r).concat(own) });
   }
+  // esplosioni (1.25.1): attacco istantaneo, schiocco di rumore a banda larga, corpo saturato e colpo grave più basso e più lungo; la grande con una coda di detriti
   ev("esplosione.piccola", { prio: 2, max: 3, gain: 0.32, group: 50, gap: 70, vary: 0.08,
-    make: () => [L("noise", 1800, 280, 0.26, 0.8, { flt: ["lowpass", 0, 0.8] }), L("sine", 120, 45, 0.2, 0.55)] });
+    make: () => [L("noise", 9000, 2500, 0.05, 0.7, { flt: ["lowpass", 0, 0.5], a: 0.001 }), L("noise", 1500, 180, 0.34, 0.75, { flt: ["lowpass", 0, 0.8], a: 0.001, sat: 2 }),
+      L("sine", 78, 30, 0.34, 0.7, { a: 0.001, sat: 1.5 })] });
   ev("esplosione.grande", { prio: 3, max: 2, gain: 0.55, group: 60, gap: 110, vary: 0.05,
-    make: () => [L("noise", 2600, 140, 0.7, 0.9, { flt: ["lowpass", 0, 0.9] }), L("sine", 85, 28, 0.6, 0.9), L("noise", 420, 300, 0.9, 0.35, { flt: ["bandpass", 0, 0.8], a: 0.05 })] });
+    make: (w, r) => [L("noise", 11000, 3000, 0.08, 0.85, { flt: ["lowpass", 0, 0.5], a: 0.001 }), L("noise", 2200, 80, 1.0, 0.9, { flt: ["lowpass", 0, 0.9], a: 0.001, sat: 3 }),
+      L("sine", 56, 20, 0.95, 0.95, { a: 0.001, sat: 2 }), L("noise", 380, 160, 1.4, 0.35, { flt: ["lowpass", 0, 0.7], a: 0.06 })]
+      .concat(grains(r, 10, { t: [0.15, 1.0], fr: [700, 3000], d: [0.01, 0.04], g: [0.25, 0.6], fade: true })) });
+  // bolle di Gamma: il timbro della vecchia esplosione piccola (1.25.0), che “scoppia come una bolla”
+  ev("bolla.scoppia", { prio: 2, max: 3, gain: 0.32, group: 50, gap: 70, vary: 0.08,
+    make: () => [L("noise", 1800, 280, 0.26, 0.8, { flt: ["lowpass", 0, 0.8] }), L("sine", 120, 45, 0.2, 0.55)] });
   // colpo alla cupola: peso 1 leggero (nemici normali), 2 medio (kamikaze), 3 pesante (boss): più grave, lungo e forte
   ev("cupola", { prio: 3, max: 1, gain: 0.42, group: 90, gap: 90,
     make: (w) => { const k = [1, 0.8, 0.62][w - 1] || 1, d = [1, 1.3, 1.7][w - 1] || 1;
@@ -64,11 +86,14 @@
     make: () => [L("sine", 880, 880, 0.16, 0.6), L("triangle", 1320, 1320, 0.3, 0.45, { at: 0.12 }), L("sine", 1760, 1760, 0.3, 0.2, { at: 0.12 })] });
   ev("pacco.premio", { cat: "pacco", prio: 4, gain: 0.42, gap: 500,
     make: () => [660, 880, 1100, 1320].map((f, i) => L("triangle", f, f, 0.26, 0.5, { at: i * 0.07 })).concat([L("sine", 2640, 2640, 0.4, 0.12, { at: 0.21 })]) });
+  // ingressi (1.25.1): niente note né ritmo da notifica; rombo di rumore filtrato in crescendo (il filtro si apre) e un colpo profondo alla fine
+  // mini-boss circa 2 s; boss circa 4,5 s, con un sottofondo grave che scivola e un fruscio che sale (entra lento dall’alto)
+  const impact = (at, k) => [L("sine", 62 * k, 22 * k, 0.9 * k, 1, { at, a: 0.002, sat: 2 }), L("noise", 1100 * k, 70, 0.8 * k, 0.85, { at, flt: ["lowpass", 0, 0.9], a: 0.002, sat: 3 })];
   ev("miniboss.arrivo", { cat: "boss", max: 2, prio: 4, gain: 0.32, gap: 400,
-    make: () => [0, 0.22].map((t) => L("square", 220, 196, 0.18, 0.45, { at: t, flt: ["lowpass", 1100, 1], a: 0.01 })) });
+    make: () => [L("noise", 160, 900, 1.75, 0.75, { flt: ["lowpass", 0, 1.2], a: 1.5 }), L("sine", 52, 38, 1.75, 0.45, { a: 1.3 })].concat(impact(1.5, 0.8)) });
   ev("boss.arrivo", { cat: "boss", max: 2, prio: 4, gain: 0.5, gap: 1500,
-    make: () => [L("sawtooth", 55, 46, 2.3, 0.5, { flt: ["lowpass", 420, 2], a: 0.25 }), L("sine", 110, 92, 2.1, 0.45, { a: 0.4 })]
-      .concat([0, 0.7, 1.4].map((t) => L("square", 82, 78, 0.45, 0.25, { at: t, flt: ["lowpass", 600, 1], a: 0.02 }))) });
+    make: () => [L("noise", 110, 750, 4.0, 0.8, { flt: ["lowpass", 0, 1.3], a: 3.5 }), L("noise", 300, 1600, 3.8, 0.22, { flt: ["bandpass", 0, 1.5], a: 3.3 }),
+      L("sine", 44, 31, 4.4, 0.55, { a: 2.2, am: [5, 0.35] })].concat(impact(3.5, 1.2)) });
   // abilità dei mini-boss maggiori
   ev("maggiore.scissione", { cat: "abilita", max: 2, prio: 3, gain: 0.42, gap: 150,
     make: () => [L("noise", 950, 200, 0.4, 0.7, { flt: ["lowpass", 0, 1] }), L("sine", 170, 60, 0.35, 0.6), L("square", 320, 110, 0.1, 0.15)] });
@@ -118,7 +143,10 @@
     let ctx = null, master = null, low = null, high = null, noise = null;
     let volume = 0.7, active = false;
     const lastAt = {}, groups = {}, voices = [];        // voices: { name, cat, prio, end (ms), nodes }
-    const stats = { played: {}, dropped: {}, grouped: {} };
+    const stats = { played: {}, dropped: {}, grouped: {}, failed: {} };
+    const curves = {};                                 // curve di saturazione per quantità (tanh normalizzata)
+    const curve = (k) => curves[k] || (curves[k] = (() => { const n = 1024, c = new Float32Array(n), m = Math.tanh(k);
+      for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(k * x) / m; } return c; })());
     const count = (o, k) => { o[k] = (o[k] || 0) + 1; };
 
     function setup() {
@@ -142,24 +170,31 @@
       const t0 = ctx.currentTime + 0.005, pitch = def.vary ? 1 + (rand() * 2 - 1) * def.vary : 1, srcs = [];
       let dur = 0;
       const out = ctx.createGain(); out.gain.value = def.gain * gainMul; out.connect(bus);
-      for (const l of def.make(w)) {
+      for (const l of def.make(w, rand)) {
         const t = t0 + l.at, f0 = l.f[0] * pitch, f1 = l.f[1] * pitch;
         const env = ctx.createGain();
         env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(l.g, t + l.a); env.gain.exponentialRampToValueAtTime(0.0001, t + l.d);
-        let src, node;
+        let src, last, off = 0;
         if (l.o === "noise") {
-          src = ctx.createBufferSource(); src.buffer = noise; src.loop = true;
-          node = ctx.createBiquadFilter(); node.type = (l.flt && l.flt[0]) || "lowpass"; node.Q.value = (l.flt && l.flt[2]) || 0.7;
+          src = ctx.createBufferSource(); src.buffer = noise; src.loop = true; off = rand() * 0.9;   // punto di partenza diverso nel rumore: i grani non sono tutti uguali
+          const node = ctx.createBiquadFilter(); node.type = (l.flt && l.flt[0]) || "lowpass"; node.Q.value = (l.flt && l.flt[2]) || 0.7;
           node.frequency.setValueAtTime(f0, t); node.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + l.d);
-          src.connect(node); node.connect(env);
+          src.connect(node); last = node;
         } else {
           src = ctx.createOscillator(); src.type = l.o;
           src.frequency.setValueAtTime(f0, t); src.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + l.d);
-          if (l.flt) { node = ctx.createBiquadFilter(); node.type = l.flt[0]; node.frequency.value = l.flt[1]; node.Q.value = l.flt[2]; src.connect(node); node.connect(env); }
-          else src.connect(env);
+          last = src;
+          if (l.flt) { const node = ctx.createBiquadFilter(); node.type = l.flt[0]; node.frequency.value = l.flt[1]; node.Q.value = l.flt[2]; last.connect(node); last = node; }
         }
-        env.connect(out);
-        src.start(t); src.stop(t + l.d + 0.02); srcs.push(src);
+        if (l.sat && ctx.createWaveShaper) { const sh = ctx.createWaveShaper(); sh.curve = curve(l.sat); last.connect(sh); last = sh; }   // saturazione
+        last.connect(env);
+        if (l.am) {                                    // modulazione d’ampiezza: un oscillatore lento fa oscillare il volume tra 1 − profondità e 1
+          const amg = ctx.createGain(), dep = ctx.createGain(), lfo = ctx.createOscillator();
+          amg.gain.value = 1 - l.am[1] / 2; dep.gain.value = l.am[1] / 2; lfo.type = "sine"; lfo.frequency.value = l.am[0];
+          lfo.connect(dep); dep.connect(amg.gain); env.connect(amg); amg.connect(out);
+          lfo.start(t); lfo.stop(t + l.d + 0.02); srcs.push(lfo);
+        } else env.connect(out);
+        src.start(t, off); src.stop(t + l.d + 0.02); srcs.push(src);
         dur = Math.max(dur, l.at + l.d + 0.02);
       }
       return { srcs, dur };
@@ -188,7 +223,7 @@
           if (def.prio >= 3) duck();
           const lv = def.level ? def.level(w) : 1;
           ({ srcs, dur } = voice(def, w, def.prio >= 3 ? high : low, lv));
-        } catch (e) { /* un suono non riuscito non ferma il gioco */ }
+        } catch (e) { count(stats.failed, name); /* un suono non riuscito non ferma il gioco */ }
       }
       voices.push({ name, cat: def.cat, prio: def.prio, end: t + dur * 1000, srcs });
       return true;

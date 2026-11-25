@@ -3,6 +3,35 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.1 — Timbri rivisti, segno delle combo, anteprima dell’icona
+
+- **Richieste di Marco** (25/11/2026), scritte prima del codice in DESIGN.md: § 3 “Segno delle carte combo”, § 18 “Revisione dei timbri”, § 14 catalogo sonoro, § 7 “Icona del gioco”. La logica di gioco non cambia.
+- **Timbri** (`app/audio.js`, § 18 “Costruito (1.25.1)”, valori **[Claude] [da rivedere]**): guardiano più basso e lungo (85 ms) con un colpo grave brevissimo sotto; ingressi di mini-boss (circa 2,2 s) e boss (circa 4,6 s)
+  senza note: rombo di rumore che si apre in crescendo e un colpo profondo; esplosioni con attacco istantaneo, schiocco a banda larga, corpo saturato e colpo grave più basso e lungo, la grande con la coda di detriti;
+  elettricità come ronzio grave modulato in ampiezza con scoppiettii irregolari; fuoco come “fwoomp” morbido con crepitio di grani. Strati nuovi del modulo: modulazione d’ampiezza, saturazione, grani
+  (istanti e volumi dal generatore del modulo, mai `Math.random`). Nuovo evento **`bolla.scoppia`** (il vecchio timbro dell’esplosione piccola) per le bolle di Gamma: **35 eventi**. Volumi, priorità, voci e soglie invariati.
+  Un suono che non si riesce a costruire è contato in `stats.failed` (prima l’errore spariva senza traccia).
+- **Catalogo sonoro** `docs/catalogo-sonoro.html` (nuovo): un tasto per evento e tre per la cupola, con il cursore del volume e “Suona tutti in fila”; carica `../app/audio.js`, quindi va aperto dalla cartella del progetto.
+- **Segno delle carte combo** (§ 3, forme **[Claude] [da rivedere]**): sopra il pallino la coppia di simboli dei tipi (roccia, fiamma, fulmine, cristallo, spirale), a sinistra la principale (o il guardiano, physical),
+  a destra la secondaria; `describe` passa `type2` (dal `needs` della combo). Classica: `typeSymbol` vettoriale in `draw.js`; HD-2D: griglie 7×7 (`TYPE_GRID`) in `draw-hd2d.js`. Ripiego pronto: `comboSpark`.
+  `draw.js` esporta anche `cardBadge`, `typeSymbol`, `comboSpark` e `drawSky` (per catalogo e icona).
+- **Icona** (§ 7): **i PNG di `app/` non cambiano**. Nuovo `tests/tools/icona.js` disegna le due varianti (classica e HD-2D) con il codice del gioco e scrive `docs/anteprima-icona.html`
+  (quattro misure, maskable con ritaglio circolare e arrotondato, lettura a 48 px, icona attuale per confronto). Dopo la scelta: `node tests/tools/icona.js --usa classica|hd2d`, poi versione alzata.
+- `APP_VERSION` e `sw.js` 1.25.1 (`ASSETS` invariato: il catalogo sonoro e l’anteprima stanno in `docs/`).
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: 35 eventi; ogni `sfx` del gioco usa un evento esistente e nessun evento resta inutilizzato; le bolle di Gamma usano `bolla.scoppia`;
+nessun errore senza `AudioContext`; tutti gli eventi con i pesi 1-3 con l’`AudioContext` finto (che rifiuta rampe esponenziali a zero, ora con `createWaveShaper`) e **nessun suono non costruito** (controllo nuovo);
+durate e strati nuovi (guardiano 85 ms, mini-boss 2,2 s, boss 4,6 s, ronzio modulato, 12 grani del fuoco, saturazione, ingressi senza onde a note); stesse partite con e senza audio al livello 30;
+il catalogo sonoro carica `app/audio.js` e ha 37 tasti. Nuovo `tests/segno-combo.js`: per le 44 combo (11 del guardiano e 33 tra torrette), nelle due grafiche e con 3 e 4 carte (616 carte), il segno
+sta nella carta, non tocca pallino né testo, e a sinistra ha il colore della principale, a destra quello della secondaria; i cinque tipi compaiono.
+**Logica invariata** (stessi semi, 1.25.0 in una copia separata contro 1.25.1): `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` identico riga per riga (61 8/15 e 5/15, 70 10/15 e 5/15, 100 10/15 e 6/15);
+`node tests/tools/planet.js 1,5 30` (livelli 1 e 5, come nella 1.25.0) identico riga per riga per tutti e cinque i continenti (random e smart: 1 fire 13/30 e 6/30; 1 force 7/30 e 2/30; 1 electric 19/30 e 15/30; 1 energy 9/30 e 4/30; 1 physical 0/30 e 0/30; 5 fire 14/30 e 11/30; 5 force 6/30 e 5/30; 5 electric 20/30 e 19/30; 5 energy 5/30 e 9/30; 5 physical 0/30 e 0/30).
+`npm run screenshots` e `node tests/tools/hd2d-shots.js` (nuova `hd2d-carte-combo.png`): coppie di simboli dentro la carta, sopra il pallino, staccate dal testo, in classica (guardiano e tra torrette) e in HD-2D (con i cinque tipi).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): § 5 nuova scena “Combo tra due torrette” e sezione “Segno delle combo” (tutte le coppie al 1×, una per tipo ingrandita, i cinque simboli, la scintilla di ripiego).
+
+Checklist: aggiornata (versione 55): gruppo “Timbri rivisti e segno delle combo (1.25.1)” con 8 voci da provare sul telefono; da decidere: scelta dell’icona e simboli o scintilla; valori di Claude dei timbri, del segno delle combo e dell’icona; voce del Sonoro con 35 eventi e riferimento “Potenziamenti” con il segno delle combo (vecchie chiavi in `RENAMED`).
+
 ## 1.25.0 — Sonoro
 
 - **Richiesta di Marco** (DESIGN.md § 18, scritto prima del codice; § 13 aggiornato): suoni generati dal codice con Web Audio, nessun file; un solo cursore del volume; il gioco emette solo eventi.

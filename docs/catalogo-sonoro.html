@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planet Defense · catalogo sonoro</title>
+<style>
+  :root { color-scheme: dark; --bg: #0b1020; --card: #151c33; --line: #2a3557; --text: #e8ecf8; --dim: #95a0c0; --acc: #5fd3ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 22px 0 8px; color: var(--acc); }
+  p { margin: 4px 0; color: var(--dim); max-width: 760px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  button { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font: inherit; text-align: left; cursor: pointer; }
+  button:hover { border-color: var(--acc); }
+  button.on { border-color: var(--acc); background: #1d2a4d; }
+  button small { display: block; color: var(--dim); font-size: 12px; }
+  code { color: var(--acc); }
+  #log { color: var(--dim); font-size: 13px; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<h1>Planet Defense · catalogo sonoro</h1>
+<p>Un tasto per ogni evento del modulo audio del gioco (<code>app/audio.js</code>, lo stesso file del gioco) e tre per la cupola (pesi 1, 2, 3).
+Si ascolta dal computer per confrontare i timbri; il giudizio finale resta sul telefono (DESIGN.md § 18). Tasti ripetuti molto in fretta possono essere scartati dalle soglie e dai limiti di voci, come nel gioco.</p>
+<div class="bar">
+  <label>Volume <input id="vol" type="range" min="0" max="100" step="5" value="70"> <span id="volv">70%</span></label>
+  <button id="all">Suona tutti in fila</button>
+  <span id="log"></span>
+</div>
+<div id="groups"></div>
+
+<script src="../app/audio.js"></script>
+<script>
+"use strict";
+const S = window.FORTRESS_SOUND;
+const NAMES = { sky: "Sky Guard", wheel: "Firewheel Drone", laser: "Laser", beam: "Beam", thunder: "Thunderbolt", tesla: "Teslacoil", disr: "Disruption Drone",
+  hive: "Hive", vortex: "Gravity Vortex Gun", aero: "Aeroblast", rail: "Railgun" };
+const GROUPS = [
+  ["Guardiano", (n) => n === "guardiano"],
+  ["Torrette", (n) => n.startsWith("sparo.")],
+  ["Esplosioni e bolle", (n) => n.startsWith("esplosione.") || n === "bolla.scoppia"],
+  ["Cupola", (n) => n === "cupola"],
+  ["Pacco regalo", (n) => n.startsWith("pacco.")],
+  ["Ingressi di mini-boss e boss", (n) => n.endsWith(".arrivo") && !n.startsWith("pacco")],
+  ["Abilità dei mini-boss maggiori", (n) => n.startsWith("maggiore.")],
+  ["Abilità dei boss giganti", (n) => n.startsWith("gigante.")],
+];
+const NOTE = { "guardiano": "clic con colpo grave sotto", "esplosione.piccola": "schiocco, corpo saturato", "esplosione.grande": "con coda di detriti",
+  "bolla.scoppia": "bolle di Gamma", "miniboss.arrivo": "rombo in crescendo, circa 2 s", "boss.arrivo": "rombo lungo, circa 4,5 s" };
+const FAM = { fire: "fuoco: fwoomp e crepitio", electric: "elettricità: ronzio e scoppiettii", energy: "energia", force: "forza", physical: "fisico" };
+function label(n) {
+  if (n.startsWith("sparo.")) { const id = n.slice(6); return [NAMES[id] || id, FAM[S.def(n).family] || ""]; }
+  return [n, NOTE[n] || ""];
+}
+function ensure() { S.unlock(); S.setActive(true); }
+function hit(n, w, btn) {
+  ensure();
+  const r = S.play(n, w);
+  document.getElementById("log").textContent = (r ? "▶ " : "· scartato (soglia o voci): ") + n + (w ? " peso " + w : "");
+  if (btn) { btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), 250); }
+}
+const root = document.getElementById("groups"), queue = [];
+for (const [title, test] of GROUPS) {
+  const h = document.createElement("h2"); h.textContent = title; root.appendChild(h);
+  const grid = document.createElement("div"); grid.className = "grid"; root.appendChild(grid);
+  for (const n of S.EVENTS.filter(test)) {
+    const weights = n === "cupola" ? [1, 2, 3] : [0];
+    for (const w of weights) {
+      const b = document.createElement("button"), [main, sub] = label(n);
+      b.innerHTML = "";
+      b.append(n === "cupola" ? "cupola · peso " + w : main);
+      const sm = document.createElement("small"); sm.textContent = n === "cupola" ? ["", "nemici normali", "kamikaze", "boss e mini-boss"][w] : (main === n ? sub : n + (sub ? " · " + sub : "")); b.appendChild(sm);
+      b.addEventListener("click", () => hit(n, w || undefined, b));
+      grid.appendChild(b); queue.push([n, w || undefined, b]);
+    }
+  }
+}
+const vol = document.getElementById("vol");
+vol.addEventListener("input", () => { S.setVolume(vol.value / 100); document.getElementById("volv").textContent = vol.value === "0" ? "muto" : vol.value + "%"; });
+document.getElementById("all").addEventListener("click", () => {
+  ensure(); let t = 0;
+  for (const [n, w, b] of queue) { const d = /boss\.arrivo/.test(n) ? 5000 : /miniboss|gigante\.scissione|esplosione\.grande/.test(n) ? 2600 : 1100; setTimeout(() => hit(n, w, b), t); t += d; }
+});
+</script>
+</body>

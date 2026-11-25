@@ -18,6 +18,7 @@ const FAKE = `(function () {
     createGain() { return Object.assign(node(), { gain: param() }); }
     createBiquadFilter() { return Object.assign(node(), { type: "", frequency: param(), Q: param() }); }
     createOscillator() { const ac = this; return Object.assign(node(), { type: "", frequency: param(), start() { ac.log.started++; }, stop() {} }); }
+    createWaveShaper() { return Object.assign(node(), { curve: null }); }
     createBufferSource() { const ac = this; return Object.assign(node(), { buffer: null, loop: false, start() { ac.log.started++; }, stop() {} }); }
     createBuffer(c, n) { const d = new Float32Array(n); return { getChannelData() { return d; } }; }
   }
@@ -34,7 +35,7 @@ function loadModule(withAC) {
 
 console.log("— Modulo da solo —");
 const EXPECT = ["guardiano", "sparo.sky", "sparo.wheel", "sparo.laser", "sparo.beam", "sparo.thunder", "sparo.tesla", "sparo.disr", "sparo.hive", "sparo.vortex", "sparo.aero", "sparo.rail",
-  "esplosione.piccola", "esplosione.grande", "cupola", "pacco.arrivo", "pacco.premio", "miniboss.arrivo", "boss.arrivo",
+  "esplosione.piccola", "esplosione.grande", "bolla.scoppia", "cupola", "pacco.arrivo", "pacco.premio", "miniboss.arrivo", "boss.arrivo",
   "maggiore.scissione", "maggiore.adattamento", "maggiore.incremento", "maggiore.invisibile", "maggiore.visibile", "maggiore.raggio.avviso", "maggiore.raggio", "maggiore.deviazione",
   "gigante.intercettori", "gigante.intercetta", "gigante.alati", "gigante.assorbe", "gigante.raggio.avviso", "gigante.raggio", "gigante.scissione"];
 {
@@ -54,6 +55,8 @@ const EXPECT = ["guardiano", "sparo.sky", "sparo.wheel", "sparo.laser", "sparo.b
   const unused = S.EVENTS.filter((n) => !names.includes(n) && !dyn.includes(n));
   console.log("eventi chiamati dal gioco:", names.length, "fissi +", dyn.length, "composti (torrette " + turrets.length + ") | mancanti nel modulo:", miss.join(", ") || "nessuno",
     "| mai chiamati:", unused.join(", ") || "nessuno", ok(!miss.length && !unused.length && turrets.length === 11));
+  const gam = GAME.slice(GAME.indexOf("  gamma(r) {"), GAME.indexOf("\n  }", GAME.indexOf("  gamma(r) {")));
+  console.log("bolle di Gamma → bolla.scoppia:", /sfx\("bolla\.scoppia"\)/.test(gam) && !/esplosione/.test(gam), ok(/sfx\("bolla\.scoppia"\)/.test(gam) && !/esplosione/.test(gam)));
 }
 {
   // con AudioContext finto, tempo e timer a mano
@@ -64,9 +67,19 @@ const EXPECT = ["guardiano", "sparo.sky", "sparo.wheel", "sparo.laser", "sparo.b
   console.log("prima di “Start”: suono ignorato:", S.play("guardiano") === false, "| sbloccato e in ondata:", (S.unlock(), S.setActive(true), S.ready()), ok(S.ready()));
   const ac = sb.__acs[0];
   console.log("contesto ripreso entrando in ondata:", ac.state, ok(ac.state === "running"));
-  let err = null; try { for (const n of S.EVENTS) { t += 5000; S.play(n, 3); t += 200; flush(); } } catch (e) { err = e.message; }
-  console.log("tutti gli eventi con Web Audio (finto): errori", err || "nessuno", "| suonati", Object.keys(S.stats.played).length + "/" + S.EVENTS.length, "| sorgenti avviate", ac.log.started,
-    ok(!err && Object.keys(S.stats.played).length === S.EVENTS.length && ac.log.started > S.EVENTS.length));
+  let err = null; try { for (const n of S.EVENTS) for (const w of [1, 2, 3]) { t += 5000; S.play(n, w); t += 200; flush(); } } catch (e) { err = e.message; }
+  // stats.failed conta i suoni la cui costruzione ha dato errore (il modulo li ingoia per non fermare il gioco): qui deve restare vuoto
+  const failed = Object.keys(S.stats.failed);
+  console.log("tutti gli eventi con Web Audio (finto, pesi 1-3): errori", err || "nessuno", "| suoni non costruiti:", failed.join(", ") || "nessuno",
+    "| suonati", Object.keys(S.stats.played).length + "/" + S.EVENTS.length, "| sorgenti avviate", ac.log.started,
+    ok(!err && !failed.length && Object.keys(S.stats.played).length === S.EVENTS.length && ac.log.started > S.EVENTS.length));
+  // timbri rivisti (1.25.1, DESIGN.md § 18): durate e strati nuovi
+  const dur = (n) => Math.max(...S.def(n).make(1, () => 0.5).map((l) => l.at + l.d)), layers = (n) => S.def(n).make(1, () => 0.5);
+  const gd0 = dur("guardiano"), mb = dur("miniboss.arrivo"), bs = dur("boss.arrivo");
+  const amOn = layers("sparo.thunder").some((l) => l.am), grainsF = layers("sparo.sky").filter((l) => l.d <= 0.015).length, satE = layers("esplosione.grande").some((l) => l.sat);
+  const noTone = ["miniboss.arrivo", "boss.arrivo"].every((n) => layers(n).every((l) => l.o === "noise" || l.o === "sine"));
+  console.log("guardiano", Math.round(gd0 * 1000), "ms · mini-boss", mb.toFixed(1), "s · boss", bs.toFixed(1), "s · ronzio modulato", amOn, "· grani del fuoco", grainsF, "· saturazione", satE, "· ingressi senza onde a note:", noTone,
+    ok(gd0 >= 0.08 && gd0 <= 0.09 && mb >= 1.8 && mb <= 2.6 && bs >= 4 && bs <= 5.2 && amOn && grainsF >= 8 && satE && noTone));
   // soglia minima tra due suoni uguali
   t += 5000; const a = S.play("sparo.sky"); t += 40; const b = S.play("sparo.sky"); t += 1000; const c = S.play("sparo.sky");
   console.log("soglia (Sky Guard, " + S.def("sparo.sky").gap + " ms): 0 ms suona", a, "· +40 ms", b, "· +1 s", c, ok(a && !b && c));
@@ -139,4 +152,17 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
   console.log("ondata", inPlay, "→ pausa", inPause, "→ ripresa", back, "→ secondo piano", acg.state, ok(inPlay === "running" && inPause === "suspended" && back === "running" && acg.state === "suspended"));
   const errs = out.flatMap((o) => o.err).concat(g.errors);
   console.log("errori JS:", errs.length ? errs[0] : "nessuno", ok(!errs.length));
+}
+
+console.log("— Catalogo sonoro —");
+{
+  // docs/catalogo-sonoro.html carica lo stesso app/audio.js: un tasto per evento, tre per la cupola
+  const { JSDOM } = require("jsdom");
+  const html = fs.readFileSync(path.join(__dirname, "..", "docs", "catalogo-sonoro.html"), "utf8");
+  const usesFile = html.includes('<script src="../app/audio.js"></script>');
+  const d = new JSDOM(html.replace('<script src="../app/audio.js"></script>', "<script>" + SRC + "</script>"), { runScripts: "dangerously" });
+  const btn = [...d.window.document.querySelectorAll(".grid button")], S = d.window.FORTRESS_SOUND;
+  const covered = S.EVENTS.every((n) => btn.some((b) => b.textContent.includes(n) || (n.startsWith("sparo.") && b.textContent.includes(n))));
+  console.log("usa app/audio.js:", usesFile, "· tasti", btn.length, "(attesi " + (S.EVENTS.length + 2) + ") · ogni evento ha il suo tasto:", covered,
+    ok(usesFile && btn.length === S.EVENTS.length + 2 && covered));
 }
