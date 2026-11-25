@@ -3,6 +3,19 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.2 — Icona nuova (variante HD-2D)
+
+- **Scelta di Marco** (DESIGN.md § 7): variante **HD-2D** dell’anteprima della 1.25.1. `node tests/tools/icona.js --usa hd2d` ha riscritto `icon-512.png`, `icon-192.png`, `icon-180.png`
+  e `icon-maskable-512.png` (stessi nomi, `ASSETS` invariato); `docs/anteprima-icona.html` rigenerata (ora l’“icona attuale” è quella nuova).
+- `APP_VERSION` e `sw.js` 1.25.2: il service worker cambia, quindi le icone nuove arrivano con l’aggiornamento. Sul telefono l’icona della PWA installata può restare la vecchia finché non si reinstalla
+  (dipende dal launcher di Android).
+
+**Test**: `npm test`: tutti verdi. Icone controllate: 512, 192, 180 e maskable 512, piene fino ai bordi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): incorpora le icone nuove (schermata iniziale).
+
+Checklist: aggiornata (versione 56): tolta la domanda sulla scelta dell’icona; aggiunta la prova dell’icona nuova sul telefono; valore di Claude dell’icona aggiornato.
+
 ## 1.25.1 — Timbri rivisti, segno delle combo, anteprima dell’icona
 
 - **Richieste di Marco** (25/11/2026), scritte prima del codice in DESIGN.md: § 3 “Segno delle carte combo”, § 18 “Revisione dei timbri”, § 14 catalogo sonoro, § 7 “Icona del gioco”. La logica di gioco non cambia.
