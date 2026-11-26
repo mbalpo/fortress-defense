@@ -3,6 +3,22 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione del 26/11/2026 (2) — Ranger dal livello 11 al 20 (nessuna versione nuova)
+
+- **Decisioni di Marco** (26/11/2026, sulle opzioni di Claude; DESIGN.md § 17 “Livello massimo 20”, con la tabella dei livelli 11-20; § 11 aggiornato):
+  Alfa bruciatura da 3 a 5 s, fiammata ferma a 10 s · Omega stato da 3 a 5 s e due stati per onda dal 15 · Sigma paralisi fino al 100%, bersagli fermi a 5 ·
+  Gamma danno +7% per livello come oggi, al massimo 15 bolle, raggio fermo a 40 px · Epsilon danno ogni 2 livelli, missili ai livelli 12, 15, 18, portata nei livelli rimanenti ·
+  conversioni +5% di danno del guardiano per livello dall’11, **anche Atlante**. Danno dei supporti (tranne Gamma ed Epsilon) +15% per livello come già deciso.
+- **Dettagli decisi dopo** (Marco): bolle di Gamma ai livelli 12, 15, 18 (13, 14, 15; proposta di Claude); Epsilon con il danno ai livelli dispari (11-19), +15% del valore base ogni volta (×2,65 al 20),
+  e la portata ai livelli 14, 16, 20, +39 px (494 px al 20); raffica 228 → 477 (×2,1).
+- Nessun codice del gioco toccato: l’implementazione verrà con il resto delle decisioni del 26/11.
+
+**Test**: nessuno (solo documenti).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 63): tolta la domanda “Ranger dopo il 10” (deciso tutto; nella versione 62 c’erano due letture da confermare).
+
 ## 1.25.5 — Pendenza 0,8 oltre la difficoltà 200
 
 - **Decisione di Marco** (26/11/2026, DESIGN.md § 5, § 11, § 16): oltre la difficoltà 200 la difficoltà effettiva sale di **0,8** per livello invece di 1,2.

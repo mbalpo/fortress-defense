@@ -619,7 +619,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   da 5 a 10 livelli (+10 ◆ per nodo, nessun ✦; 22 nodi = +220 ◆) **[Claude]** (conti).
 - **Riduzione del danno subito oltre il 65%** **[aperto]** (§ 16, “Tetti”).
 - **Moduli ancestrali nuovi** **[aperto]** (§ 15, “Ancestrale+N”; Marco: “in un secondo momento”).
-- **Supporti senza danno dopo il livello 10** **[aperto]**: come cresce ciò che non è danno (durate, bersagli, probabilità) dal livello 11 al 20; opzioni di Claude in § 17, “Livello massimo 20”.
+- **Supporti dopo il livello 10**: **[deciso]** (Marco, 26/11/2026; § 17, “Livello massimo 20”).
 - **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
 ## 12. Contenuti mancanti (da definire con Marco)
@@ -1187,15 +1187,36 @@ Regole di calcolo **[Claude] [da rivedere]**:
   (livello 10 = 5,5 T = 1100); tutti e 10 al 20 richiedono 21.000 frammenti (11.000 al 10: circa ×1,9).
   - Dopo il livello 10 **sia i supporti sia le conversioni aumentano il danno** **[deciso]** (Marco, 26/11/2026). Valori **[deciso]** (Marco, 26/11/2026, su proposta di Claude): supporti, per i ranger il cui effetto infligge danno,
     **+15% di danno per livello** (lineare come oggi, circa ×3,85 al 20), ciclo fermo a 20 s; conversioni **+5% di danno del guardiano per livello** da 11 a 20 (+50% al 20), come bonus percentuale.
-  - Alfa Z (100%) e Omega (120°) sono già al limite al livello 10 e non cambiano. Per ciò che non è danno (stati, statistiche) come si traduce l’aumento dopo il 10: **[aperto]**.
-    Che cosa ha oggi ogni ranger per livello (tabella sotto) e opzioni **[Claude]** (da scegliere, nessuna decisa):
-    - **Alfa**: danno +15%, durata Y 4 → 10 s, bruciatura Z 10% → 100% (al limite). Opzioni: (a) solo il danno; (b) durata Y che continua (+0,67 s per livello, 16,7 s al 20: col ciclo di 20 s la fiammata copre quasi tutto il ciclo); (c) bruciatura più lunga (3 → 5 s).
-    - **Omega**: danno +15%, ampiezza 20° → 120° (al limite), stato a caso di 3 s. Opzioni: (a) solo il danno; (b) stato più lungo (3 → 5 s al 20); (c) due stati diversi per onda dal livello 15.
-    - **Sigma**: danno +15%, bersagli 1 → 5 (+1 ogni due livelli), paralisi 5% → 50%. Opzioni: (a) solo il danno; (b) bersagli che continuano (+1 ogni due livelli, 10 al 20); (c) paralisi che continua (+5% per livello, 100% al 20; boss e mini-boss restano immuni).
-    - **Gamma**: danno +7% per livello (non +15%), bolle 2 → 12. Da chiarire anche il danno dopo il 10: +7% come oggi o +15% come gli altri supporti **[aperto]**. Opzioni per le bolle: (a) ferme a 12; (b) +1 per livello (22 al 20); (c) raggio dell’esplosione che cresce.
-    - **Epsilon**: missili 2 → 6, danno a gradini (×1,9 dal lv8), portata 260 → 377 px, a turno danno / missile / portata. Da chiarire anche il danno: +15% lineare o il turno a gradini **[aperto]**.
-      Opzioni: (a) danno lineare +15% e missili e portata fermi; (b) il turno continua (danno, missile, portata: 9 missili e 494 px al 20); (c) solo missili (+1 ogni due livelli).
-    - **Atlante** (conversione physical): resistenza ignorata e attraversamento dei gusci al 100% al 10 (al limite). Lettura **[Claude]**: dopo il 10 vale per lui il +5% di danno del guardiano come per le altre conversioni.
+  - Alfa Z (100%) e Omega (120°) sono già al limite al livello 10 e non cambiano. Ciò che non è danno, dal livello 11 al 20 **[deciso]** (Marco, 26/11/2026, sulle opzioni di Claude); ciclo fermo a 20 s:
+    - **Alfa**: danno +15% per livello; **bruciatura da 3 a 5 s** (+0,2 s per livello); la **durata della fiammata resta 10 s**.
+    - **Omega**: danno +15% per livello; **stato da 3 a 5 s** (+0,2 s per livello); **due stati diversi per onda dal livello 15**.
+    - **Sigma**: danno +15% per livello; **paralisi da 50% a 100%** (+5% per livello; boss e mini-boss restano immuni); **bersagli fermi a 5**.
+    - **Gamma**: danno **+7% per livello come oggi** (×2,33 al 20); **bolle al massimo 15**; **raggio dell’esplosione fermo a 40 px**.
+      Una bolla in più ai livelli **12, 15 e 18** (13, 14, 15) **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
+    - **Epsilon**: il **danno sale ogni 2 livelli**, i **missili ai livelli 12, 15 e 18** (9 al 20), la **portata nei livelli rimanenti**.
+      Danno ai livelli **dispari** (11, 13, 15, 17, 19), **+15% del valore base** ogni volta (×2,65 al 20); portata nei livelli senza danno né missile (**14, 16, 20**),
+      **+39 px** ciascuno (494 px al 20) **[deciso]** (Marco, 26/11/2026).
+    - **Conversioni** (Prometeo, Mnemosine, Ceo, Iperione e **anche Atlante**): **+5% di danno del guardiano per livello** dall’11 (+50% al 20), oltre alla conversione al 100%
+      (per Atlante: resistenza ignorata e attraversamento dei gusci restano al 100%) **[deciso]** (Marco, 26/11/2026).
+
+| Livello | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Danno dei supporti (tranne Gamma ed Epsilon) | ×2,5 | ×2,65 | ×2,8 | ×2,95 | ×3,1 | ×3,25 | ×3,4 | ×3,55 | ×3,7 | ×3,85 |
+| Alfa: fiammata (danni/s) | 10 | 10,6 | 11,2 | 11,8 | 12,4 | 13 | 13,6 | 14,2 | 14,8 | 15,4 |
+| Alfa: bruciatura (s) | 3,2 | 3,4 | 3,6 | 3,8 | 4 | 4,2 | 4,4 | 4,6 | 4,8 | 5 |
+| Omega: danno per onda | 50 | 53 | 56 | 59 | 62 | 65 | 68 | 71 | 74 | 77 |
+| Omega: stato (s) | 3,2 | 3,4 | 3,6 | 3,8 | 4 | 4,2 | 4,4 | 4,6 | 4,8 | 5 |
+| Omega: stati per onda | 1 | 1 | 1 | 1 | 2 | 2 | 2 | 2 | 2 | 2 |
+| Sigma: danno per bersaglio | 35 | 37,1 | 39,2 | 41,3 | 43,4 | 45,5 | 47,6 | 49,7 | 51,8 | 53,9 |
+| Sigma: paralisi | 55% | 60% | 65% | 70% | 75% | 80% | 85% | 90% | 95% | 100% |
+| Gamma: danno per bolla | 34 (×1,7) | 35,4 | 36,8 | 38,2 | 39,6 | 41 | 42,4 | 43,8 | 45,2 | 46,6 (×2,33) |
+| Gamma: bolle | 12 | 13 | 13 | 13 | 14 | 14 | 14 | 15 | 15 | 15 |
+| Epsilon: danno (×) | ×2,05 | ×2,05 | ×2,2 | ×2,2 | ×2,35 | ×2,35 | ×2,5 | ×2,5 | ×2,65 | ×2,65 |
+| Epsilon: missili | 6 | 7 | 7 | 7 | 8 | 8 | 8 | 9 | 9 | 9 |
+| Epsilon: portata (px) | 377 | 377 | 377 | 416 | 416 | 455 | 455 | 455 | 455 | 494 |
+| Conversioni: danno del guardiano | +5% | +10% | +15% | +20% | +25% | +30% | +35% | +40% | +45% | +50% |
+
+  Raffica di Epsilon (missili × danno, base 20): 228 al 10 → 477 al 20 (×2,1). Danni prima dei bonus di albero e Moduli.
 
 ### Nomi e supporti dei ranger
 **[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,
