@@ -143,7 +143,8 @@ const LV = { hp0: 0.42, hpSlope: 0.08, hpSlopeHi: 0.02, dmg: 0.01, speed: 0.002,
 // difficoltà effettiva: tra il 20 e il 30 sale piano (la potenza del giocatore è ferma fino al boss del 30); dal 31 sale di 0,2 per livello,
 // tarata con i bot che spendono i Sigilli attesi nell’albero (1,5 per livello dal 31) perché i livelli tra un muro e l’altro restino intorno al 60-80%
 const EFF_SLOPE_31 = 1.2, EFF_JUMP_31 = 3;   // 1.12.0: pendenza 1,2 e scalino di 3 dal 31 (1.11.0: 0,8 e 2), con albero, equipaggiamento e un po’ di Epica attesi (muri dal 40 al 50-70%)
-const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (D - 30);
+const EFF_SLOPE_200 = 0.8;                   // 1.25.5 [deciso] (Marco, 26/11/2026): oltre la difficoltà 200 la pendenza scende a 0,8 (Epica dal 171, campagna a 400)
+const effD = (D) => D <= 20 ? D : D <= 30 ? 20 + 0.3 * (D - 20) : 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (Math.min(D, 200) - 30) + EFF_SLOPE_200 * Math.max(0, D - 200);
 const levelHp    = (D) => { D = effD(D); return D <= 10 ? LV.hp0 + LV.hpSlope * (D - 1) : LV.hp0 + LV.hpSlope * 9 + LV.hpSlopeHi * (D - 10); };
 const levelDmg   = (D) => 1 + LV.dmg * (effD(D) - 1);
 const levelSpeed = (D) => 1 + LV.speed * (effD(D) - 1);
@@ -3839,7 +3840,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.25.4";
+const APP_VERSION = "1.25.5";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

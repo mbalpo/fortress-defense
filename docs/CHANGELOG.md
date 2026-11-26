@@ -3,6 +3,23 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.5 — Pendenza 0,8 oltre la difficoltà 200
+
+- **Decisione di Marco** (26/11/2026, DESIGN.md § 5, § 11, § 16): oltre la difficoltà 200 la difficoltà effettiva sale di **0,8** per livello invece di 1,2.
+  Nuova costante `EFF_SLOPE_200 = 0.8`; `effD` = 23 + 3 + 1,2 × (min(D, 200) − 30) + 0,8 × max(0, D − 200): al 300 effD 310 (prima 350), al 400 390 (prima 470).
+- **Effetto già oggi**: con la campagna ancora a 200 livelli (`CAMPAIGN.maxLevel`) cambia solo l’**Epica dal livello 171** (difficoltà 201-230), un po’ più facile (Epica 200: effD 254 invece di 266).
+  Fino alla difficoltà 200 nulla cambia.
+- Al 400 rispetto al 200: vita ×1,58, danno ×1,49, numero ×1,37, velocità ×1,22, combinato ×3,2 (con 1,2 era ×5,0).
+- `tests/tools/curva.js`: `PENDENZA=<s>` ora sostituisce `EFF_SLOPE_200`.
+- `APP_VERSION` e `sw.js` 1.25.5.
+
+**Test**: `npm test`: tutti verdi. **Logica invariata fino al 200** (stessi semi, 1.25.4 in una copia separata contro 1.25.5): `EQUIP=1.5 node tests/tools/curva.js 100,200 15`
+identico riga per riga (100 10/15 e 6/15, 200 9/15 e 12/15).
+
+Catalogo grafico: non cambiato (rigenerato da `npm test` solo per la versione).
+
+Checklist: aggiornata (versione 61): tolta la domanda sulla pendenza oltre il 200 (decisa).
+
 ## Documentazione del 26/11/2026 — Ancestrale+N, ranger fino al 20, pacco nuovo, campagna a 400 (nessuna versione nuova)
 
 **Nessun codice del gioco toccato** (`app/` invariata, `APP_VERSION` resta 1.25.4): decisioni di Marco in DESIGN.md e misure con strumenti in `tests/tools/`. L’implementazione verrà dopo.

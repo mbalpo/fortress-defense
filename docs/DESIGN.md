@@ -145,7 +145,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - Formule (in `app/index.html`, sezione CAMPAGNA):
   - vita dei nemici: `levelHp(D)` = 0,42 + 0,08·(D−1) fino a D=10, poi +0,02 per livello (valori in `LV`);
   - difficoltà effettiva `effD`: piena fino a 20, al **30%** tra 20 e 30 (la potenza del giocatore è ferma fino al boss del 30),
-    dal 31 sale di **1,2 per livello con uno scalino di 3** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.12.1; al 200 effD = 230; 1.11.0: 0,8 e 2, effD 161; prima 0,2 senza scalino, effD 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
+    dal 31 sale di **1,2 per livello con uno scalino di 3** (`EFF_SLOPE_31`, `EFF_JUMP_31`, dalla 1.12.1; al 200 effD = 230); **oltre la difficoltà 200 sale di 0,8** (`EFF_SLOPE_200`, 1.25.5, **[deciso]** (Marco, 26/11/2026): al 300 effD 310, al 400 390; vale già per l’Epica dal 171, D 201-230; 1.11.0: 0,8 e 2, effD 161; prima 0,2 senza scalino, effD 57). Prima era piena dal 31: con l’albero dei Sigilli che dà 1-2 Sigilli per livello
     i bot vincevano il 3% al 40. Tarata con `tests/tools/curva.js` (vedi sotto) **[Claude]**;
   - danno, velocità e numero dei nemici salgono piano con `effD`; dentro il livello ogni ondata aggiunge +9% di vita;
   - mini-boss: vita 480, danno 9; boss finale: vita base 400 al 10, 2250 al 20, 1450 al 30; dal 40 1450 × (1 + 1,5 · n^0,35) con n = decine dopo il 40 (1450 al 40, 3625 al 50, 5522 al 100, 7190 al 200; coefficiente 1,1 nella 1.7.0, 1,5 dalla 1.8.0 con le abilità), per un fattore del singolo muro (`FINAL_BOSS_K`, dalla 1.12.1: 40 ×1,2, 60 ×0,6, 80 ×1,3, 90 ×0,6, 100 ×0,65 (dalla 1.14.2; era ×0,75), 120 ×1,15, 130 ×1,15, 170 ×1,5, 190 ×0,75) **[Claude] [provvisorio]**, danno 8 (`FINAL_BOSS_HP`, `finalBossHp`);
@@ -613,7 +613,7 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
 - **Equipaggiamento** (§ 15, costruito nella 1.10.0): aperti i valori provvisori (tabella delle rarità, colori), la schermata e le letture degli effetti di Claude (§ 15, “Costruito”), la misura con i bot dell’equipaggiamento atteso (muri al 50%).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
-- **Pendenza della difficoltà oltre il 200** **[aperto]**: tenere 1,2 o addolcirla (misure con 0,8 e 0,6 in § 16, “Campagna a 400 livelli”: col profilo atteso al 400 3,3% / 15,0% / 41,7%; tutto al massimo sempre 100%); con essa `FINAL_BOSS_K` oltre il 200,
+- **Pendenza della difficoltà oltre il 200**: **0,8** **[deciso]** (Marco, 26/11/2026; nel codice dalla 1.25.5, `EFF_SLOPE_200`; misure con 1,2, 0,8 e 0,6 in § 16, “Campagna a 400 livelli”). Restano **[aperto]**, da rivedere con le misure: `FINAL_BOSS_K` oltre il 200,
   livello dei giganti oltre il 200, tabella dei drop oltre il 180, validazione di `cleared` e `clearedEpic` e testi che citano il 200.
 - **Nodi dell’albero oltre il livello 20** **[aperto]**: estendere i nodi da 20 livelli (per nodo: a 30 +55 ◆ e +2 ✦, a 40 +130 ◆ e +4 ✦, a 50 +225 ◆ e +6 ✦) e le carte standard
   da 5 a 10 livelli (+10 ◆ per nodo, nessun ✦; 22 nodi = +220 ◆) **[Claude]** (conti).
@@ -1145,6 +1145,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, oggi 200 nel codice). Da rivedere con le misure **[aperto]**: `FINAL_BOSS_K` per i muri oltre il 200;
   livello dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400); tabella dei drop oltre il 180; salvataggio (`cleared`, `clearedEpic` e la loro validazione) e testi che citano il 200.
 - Dati **[Claude]** (pendenza 1,2 dal 30, rispetto al 200, da `effD` e `LV`): al 400 vita ×1,87, danno ×1,73, numero ×1,56, velocità ×1,33, combinato (vita × danno × numero) ×5,0; in Epica 400 (difficoltà 430) ×6,0.
+  Con la pendenza **0,8 oltre il 200** (decisa: effD 390 al 400 invece di 470): al 400 vita ×1,58, danno ×1,49, numero ×1,37, velocità ×1,22, combinato ×3,2; in Epica 400 ×3,7 **[Claude]**.
 - **◆ massimi** (cupola sempre al 100%): Standard 31-400 = 740, Epica 400 livelli = 1600, totale 2340; con l’albero a 1907 restano circa 433 ◆ **[Claude]**.
 - **✦ attesi** in Epica a 400: circa 148 in un passaggio (40 boss finali + circa 108 dai mini-boss) più circa 8,5 dal pacco al 60% con tasso di presa 100%, contro 188 necessari:
   mancano circa 30, cioè circa 25 rigiocate di un boss **[Claude]**.
@@ -1161,7 +1162,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
     | 0,6 | 41,7% | 53,3% | 53,3% | 41,7% |
 
     Al 250 le differenze sono nel rumore (±7-10 punti con 60 partite). Con 1,2 i muri crollano dal 300 per il giocatore atteso; 0,6 resta vicino alla soglia del 50%. I bot non hanno
-    ancestrale+N, nodi finali né ranger, che oltre il 200 alzano la potenza: decide Marco (§ 11).
+    ancestrale+N, nodi finali né ranger, che oltre il 200 alzano la potenza. Scelta: **0,8** **[deciso]** (Marco, 26/11/2026), nel codice dalla 1.25.5 (`EFF_SLOPE_200`).
 - **Misura delle valute** **[Claude]** (26/11/2026, `node tests/tools/pacco-stima.js`): ✦ in Epica a 400, un passaggio: 40 + 108,4 = **148,4**, mancano 39,6; con il pacco (Standard ed Epica)
   preso al 100% **156,9** (mancano 31,1, circa 25 rigiocate di un boss finale con i suoi mini-boss, 1,27 ✦ l’una), al 50% 152,7 (mancano 35,3, circa 28).
   ◆ con la cupola al 100% / 75% / 50% dei livelli: **2340 / 2047,5 / 1755** (Standard 740 / 647,5 / 555 + Epica 1600 / 1400 / 1200); col pacco preso al 100% +170, al 50% +85.
