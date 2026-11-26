@@ -2758,13 +2758,14 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
         this.hit.add(e); guardHit(e, dmg, false); knock(e, kb);
         dmg = dmg1;
         if (maxHp && !e.dead) { maxHp = false; guardHit(e, Math.min(GEAR.maxHp * e.maxHp, 2 * dmg), true); }
-        if (fire) damage(e, dmg * 0.2, "fire", true, "player");
-        if (force) damage(e, dmg * 0.2, "force", true, "player");
+        if (fire && !e.invis) damage(e, dmg * 0.2, "fire", true, "player");     // extra fuori dalla conversione, mai sugli invisibili [deciso, 26/11/2026]
+        if (force && !e.invis) damage(e, dmg * 0.2, "force", true, "player");
         if (proc) { guardProc(p, proc, e); proc = null; }
         if (canFrag && Math.random() < 0.10) { canFrag = false; guardFrag(p, this, dmg); }
         if (prob && Math.random() < prob) {
-          for (const f of living()) if (f !== e && edist(f, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), "physical", false, "player");   // Modulo 19
-          ring(e.x, e.y, rad, TYPES.physical.color, 0.3); sfx("esplosione.piccola");
+          const xt = RG.conv && RG.conv.k > 0.5 ? RG.conv.type : "physical";   // tipo con la quota maggiore del colpo; a 50/50 vince physical [deciso, 26/11/2026]
+          for (const f of living()) if (f !== e && edist(f, e.x, e.y) <= rad + f.def.r) damage(f, dmg * 0.7 * (1 + GEAR.explo), xt, false, "player");   // Modulo 19
+          ring(e.x, e.y, rad, TYPES[xt].color, 0.3); sfx("esplosione.piccola");
         }
         if (pierce > 0) { pierce--; this.t = null; }
         else if (bounces > 0) {
@@ -3838,7 +3839,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.25.3";
+const APP_VERSION = "1.25.4";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

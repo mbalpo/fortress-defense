@@ -193,6 +193,11 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
   Incremento da solo alle tre ondate del 100 (60 partite, stessi semi): ×1 31,7% · ×0,5 35,0% · ×0,35 36,7% · ×0,3 45,0% · **×0,25 46,7%** · ×0,2 58,3% (nave aliena 55,0%, le altre abilità 50-65%):
   scelto **×0,25** **[Claude] [provvisorio]**. Rampa con i maggiori: **70** 55,0% · **85** 61,7% · **100** 50,0% (prima 48,3%) · **150** 45,0% (senza maggiori 46,7%: già sotto il 50%, nel rumore).
 
+- **Misura 1.25.4** (esplosione dei Colpi esplosivi nel tipo con la quota maggiore ed extra fuoco/force non sugli invisibili, § 17; `EQUIP=1.5 RANGERS=… node tests/tools/curva.js`,
+  200 partite per muro, stessi semi prima → dopo, chain Colpi esplosivi lv3 data al guardiano dall’inizio): **Prometeo al 10** 60 45,0% → 42,0% · 80 26,0% → 23,0% · 140 50,5% → 49,0%;
+  **Mnemosine al 10** 60 36,5% → **27,0%** · 80 8,5% → 7,5% · 140 51,5% → 47,5%. Prometeo al 10 con le carte dei bot: 60 40,0% → 39,5% · 80 19,5% → 22,0%. Senza ranger: 60 e 140 identici,
+  80 31,7% → 28,3% per la sola regola degli invisibili (60 partite). Fuori dal rumore solo Mnemosine al 60: nessun valore ritarato, decide Marco.
+
 - **Misura 1.24.0** (chain alternativa dimezzata e rinnovo senza ripetute, § 3; stessi semi prima → dopo, sostituzioni che rimettono il sorteggio di prima):
   muri 10/20/30 (`node tests/tools/calib2.js 10,20,30`, 120 partite per livello, pool libero): **identici** (10 37,5% · 20 37,5% · 30 40,8%): con il pool libero una delle due chain di ogni entità
   è bloccata dall’albero, quindi la regola non scatta mai. Curva con albero ed equipaggiamento attesi (`EQUIP=1.5 node tests/tools/curva.js`, 60 partite per livello): **100** 50,0% → 53,3% ·
@@ -467,7 +472,7 @@ Accettati: tutti tranne quelli segnati **[da rivedere]**.
 - Beam (revisione 2): Ramificazione estesa = 3 ramificazioni invece di 2  **[Claude]**
 - Guardiano: intervallo 0,15 s e danno 7 per colpo; ventaglio 4 proiettili al 30%, esplosioni al 70% raggio 30 (39 con la chain lv3; tolta “Esplosioni ampie”), rimbalzo sui bordi (sotto), colpo pesante ×1,6 con knockback 1,5 px per colpo (4,5 in frenesia)  **[da rivedere]**
 - Combo del guardiano (Marco ha deciso effetti e condizioni; numeri e dettagli di Claude):
-  Proiettili incendiari e Proiettili gravitazionali = ogni proiettile (anche del Ventaglio) fa in più il 20% del suo danno come fuoco / force, senza bruciatura;
+  Proiettili incendiari e Proiettili gravitazionali = ogni proiettile (anche del Ventaglio) fa in più il 20% del suo danno come fuoco / force, senza bruciatura (con un ranger di conversione non cambia, né vale sugli invisibili: § 17);
   Laser rotante = 3% per salva; segmento di 110 px centrato sul bersaglio colpito, che lo segue finché vive; 2 giri in 3 s; uno alla volta;
   danno, larghezza, Raggi debilitanti, Sfruttare i debuff, Debuff prolungati e Raggi penetranti come la torretta; con Raggi multipli 2 mini-raggi
   a ±60° (danno dei mini-raggi della torretta); niente rimbalzi né spazzata;
@@ -1098,6 +1103,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - Sblocco al completamento del **livello 60** di Standard. **[deciso]**
 - **Due ranger per tipo di danno, 10 in tutto** **[deciso]** (Marco): uno di **supporto** (stati o statistiche, effetti sotto, “Nomi e supporti”) e uno di **conversione**. Aiutanti equipaggiabili, **al massimo 2**, ai lati del guardiano, si muovono con lui **[ipotesi di Marco] [da confermare]**; quando il guardiano è vicino al bordo, il ranger che uscirebbe dallo schermo si sposta **davanti al guardiano** (in alternativa accanto al ranger del lato opposto) **[deciso]** (Marco; fattibile, verifica di Claude); **un solo ranger di conversione** alla volta, i supporti anche due insieme (quindi nessun tetto alla conversione) **[deciso]**.
 - **Conversione** **[deciso]**: **10% per livello** del danno del guardiano nel proprio tipo (100% al livello 10), come **quota del danno di ogni colpo**. Contro i nemici invisibili conta solo la parte energy. **[deciso]** (approvato da Marco)
+- **Conversione e danni extra** **[deciso]** (Marco, 26/11/2026):
+  - I danni extra di **Proiettili incendiari** (fuoco) e **Proiettili gravitazionali** (force), il 20% del danno del proiettile, si **sommano** al colpo e **non passano dalla conversione**: restano nel loro tipo, calcolati sul colpo intero, qualunque sia il ranger di conversione (totale ×1,2).
+  - **Contro i nemici invisibili** l'extra non si applica: vale solo la parte energy della conversione.
+  - **Esplosione dei Colpi esplosivi**: segue il tipo con la **quota maggiore** del colpo. Se la quota convertita supera il 50% (conversione dal livello 6) è nel tipo del ranger; sotto il 50% è physical; **a pari quota (50/50, livello 5) vince physical**. Senza ranger di conversione o con Atlante è physical. L'intera esplosione è in un solo tipo, 70% del danno del colpo come prima **[deciso]** (Marco, 26/11/2026, su lettura di Claude). Come tutti gli effetti ad area colpisce anche gli invisibili (“Nemici della Protezione planetaria”, speciale force).
 - **Physical** **[deciso]**: ignora il X% della resistenza del nemico, X = 10% per livello (100% al livello 10: il ×0,5 diventa ×1,0); le debolezze non cambiano. Lo stesso coefficiente è la **probabilità che i proiettili del guardiano attraversino i gusci** dei nemici physical.
 - **Frammenti**: ogni ranger ha i propri, esclusivi; raggiunta la soglia si sblocca e si può equipaggiare; con altri frammenti sale di livello (**livello massimo 10, per ora**). **[deciso]** I frammenti di ogni partita si dividono tra i due ranger del tipo in **proporzioni casuali**, senza scelta del giocatore; proporzione uniforme tra 0 e 100% a ogni partita, e se uno è al livello massimo vanno tutti all’altro. **[deciso]** (approvato da Marco)
 - **Aspetto dei frammenti** **[deciso]** (Marco): etichetta con il **nome del ranger** e icona a forma di **pezzo di puzzle**.
@@ -1235,7 +1244,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Costruito**: livelli dai frammenti (soglia T, totale T × (1 + 0,5 × (L − 1)), massimo 10); frammenti tutti all’altro ranger del tipo quando uno è al 10; schermata **Ranger**
   (dal menu, sotto “Protezione planetaria”, e dalla griglia dei continenti): 10 schede con livello, frammenti verso il prossimo, “in campo”; tocco = scelta (sotto l’effetto al livello attuale),
   secondo tocco = equipaggia o toglie, con i messaggi “Servono 200 frammenti…”, “Al massimo 2 ranger…”, “Un solo ranger di conversione…”. In campo ai lati del guardiano (34 px),
-  davanti a lui (46 px sopra) quando il lato esce dallo schermo; sfere e cubi con la lettera greca in classica e HD-2D. Conversione (quota del colpo del guardiano, anche esplosioni del colpo e
+  davanti a lui (46 px sopra) quando il lato esce dallo schermo; sfere e cubi con la lettera greca in classica e HD-2D. Conversione (quota del colpo del guardiano, l'esplosione dei Colpi esplosivi segue il tipo con la quota maggiore, vedi “Conversione e danni extra”, e
   Modulo 20), Atlante (quota di resistenza ignorata, debolezze invariate), i 5 supporti con la tabella dei livelli e i bonus decisi (Moduli e nodi Tipi del loro tipo, durata degli stati).
   Salvataggio versione 8 (§ 7).
 - **Letture e valori di Claude** **[Claude] [da confermare]**:

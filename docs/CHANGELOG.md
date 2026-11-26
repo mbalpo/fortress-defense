@@ -3,6 +3,33 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.4 — Conversione, danni extra ed esplosioni del guardiano
+
+- **Decisioni di Marco** (26/11/2026), scritte in DESIGN.md § 17 “Conversione e danni extra” (con i rimandi in § 10 e in “Fase 2 costruita”):
+  - **Danni extra** di Proiettili incendiari (fuoco) e Proiettili gravitazionali (force): restano additivi e fuori dalla conversione, 20% del colpo intero nel loro tipo, con qualunque ranger (totale ×1,2). Era già così: nessun cambio.
+  - **Invisibili**: l’extra fuoco/force non li colpisce più (prima con Iperione li colpiva, contro la regola “contro gli invisibili conta solo la parte energy”). `playerBullet`: extra saltato se `e.invis`.
+  - **Esplosione dei Colpi esplosivi**: segue il tipo con la quota maggiore del colpo. Con un ranger di conversione oltre il 50% (dal livello 6) è nel tipo del ranger (anche l’anello è del suo colore); fino al 50% (livello 5, 50/50) physical; senza ranger o con Atlante physical. Il tipo si sceglie una volta per esplosione (`RG.conv.k > 0.5`).
+  - Tutta l’esplosione in un solo tipo (70% del colpo, raggio e Modulo 19 invariati), non divisa in due quote: lettura di Claude confermata da Marco **[deciso]**.
+- **Esplosione e invisibili** (nessun cambio): il ciclo dell’esplosione usa `living()` senza controllo, quindi colpisce anche gli invisibili vicini, con qualunque ranger o senza. È già la regola decisa in § 17 (gli effetti ad area, esplosioni comprese, colpiscono gli invisibili).
+- `APP_VERSION` e `sw.js` 1.25.4.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/conv-extra.js` (13 controlli): Iperione al 5 e al 10 con Proiettili incendiari e gravitazionali contro un invisibile → solo energy, nessun extra;
+Prometeo al 10 + Proiettili incendiari → solo fire (colpo convertito al 100% più l’extra al 20%), nessuna quota physical; esplosione senza ranger, con Atlante al 10, Prometeo al 4 e al 5 → physical,
+Prometeo al 6 → fire, Mnemosine al 6 → force, Ceo al 10 → electric, Iperione al 7 → energy, sempre il 70% del colpo intero e mai sul colpito.
+
+**Misura** (`EQUIP=1.5 RANGERS=… node tests/tools/curva.js`, stessi semi, 1.25.3 in una copia separata contro 1.25.4; 200 partite per muro, random + smart; “con Colpi esplosivi” = chain lv3 data al guardiano dall’inizio con una sostituzione):
+- Prometeo al 10 con Colpi esplosivi: 60 45,0 → 42,0% · 80 26,0 → 23,0% · 140 50,5 → 49,0%.
+- Mnemosine al 10 con Colpi esplosivi: 60 36,5 → **27,0%** · 80 8,5 → 7,5% · 140 51,5 → 47,5%.
+- Prometeo al 10 senza imporre la chain: 60 40,0 → 39,5% · 80 19,5 → 22,0% (rumore).
+- Senza ranger, con Colpi esplosivi (60 partite per muro): 60 e 140 identici partita per partita; l’80 31,7 → 28,3% solo per la regola degli invisibili (dal 70 ci sono gli Spettri): rigiocando la 1.25.4 senza quella correzione l’80 torna identico riga per riga.
+- Il 140 con i ranger è stato misurato a blocchi di 20 semi in processi separati: le serie lunghe in un solo processo rallentavano fino a fermarsi (oltre 2 ore), senza partite incastrate (tutti i blocchi finiti in pochi minuti).
+- Effetto: dal livello 6 di conversione l’esplosione entra nelle resistenze fire/force dei nemici; con Mnemosine al 60 il calo è fuori dal rumore. Nessun valore ritarato.
+
+Catalogo grafico: non cambiato (rigenerato da `npm test` solo per la versione: disegni invariati).
+
+Checklist: aggiornata (versione 59): aggiunte “Conversione ed esplosioni (1.25.4)” (Ranger) e il riferimento “Conversione e danni extra” nel § 17. La versione 58 aveva anche una domanda
+sull’esplosione contro gli invisibili (già decisa in § 17) e la lettura “un solo tipo” (confermata da Marco): tolte nella 59.
+
 ## 1.25.3 — Il laser e i colpi del guardiano rimbalzano sulla cupola
 
 - **Bug segnalato da Marco** (26/11/2026): il raggio del Laser rimbalzava sui bordi dello schermo ma, quando un tratto tornava sulla cupola, si fermava lì e perdeva i rimbalzi rimasti
