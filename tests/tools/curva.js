@@ -4,12 +4,30 @@
 // Uso: node tests/tools/curva.js <livelli> [partite per bot, default 20] [primo seme, default 1] [Sigilli per livello, default 1.5] [sostituzioni JSON]
 // Con EQUIP=<vittorie per livello> (es. EQUIP=1.5) i bot hanno anche l’equipaggiamento atteso (tests/tools/equip-atteso.js), uguale per tutte le partite del livello.
 // Con RANGERS=<id:livello,…> (es. RANGERS=atlante:5,epsilon:5) i bot hanno quei ranger equipaggiati (DESIGN.md § 17, 1.17.0).
+// Profilo “tutto al massimo” (26/11/2026, § 16 “Campagna a 400 livelli”), solo nelle misure (sostituzioni nel sorgente, il gioco non cambia):
+//   MASSIMO=<N> → albero pieno, nodi finali (danno di guardiano e torrette ×1,83), tetto della riduzione del danno al 65%, equipaggiamento ancestrale+N
+//   con i Moduli ancestrali migliori (6, 7, 8 slot a +1, +5, +10), ranger al “20” (default RANGERS=atlante:10,epsilon:10 con supporti ×3,85 / 2,35 e +50% al danno del guardiano).
+//   PENDENZA=<s> → pendenza della difficoltà oltre il 200 (fino al 200 resta 1,2). Livelli oltre il 200: CAMPAIGN.maxLevel portato a 400.
 const { play, makeGame } = require("../bot.js");
-const { gearFor } = require("./equip-atteso.js");
+const { gearFor, gearMax, patchAncestrale, slotsAt } = require("./equip-atteso.js");
 const EQUIP = +(process.env.EQUIP || 0);
 const LVS = process.argv[2].split(",").map(Number), N = +(process.argv[3] || 20), S0 = +(process.argv[4] || 1), PER = +(process.argv[5] || 1.5);
 const reps = JSON.parse(process.argv[6] || "[]");
-const patch = (h) => reps.reduce((a, [x, y]) => { if (!a.includes(x)) throw new Error("manca " + x); return a.replace(x, y); }, h);
+const MASSIMO = process.env.MASSIMO === undefined ? null : +process.env.MASSIMO, PEND = process.env.PENDENZA === undefined ? null : +process.env.PENDENZA;
+if (MASSIMO !== null && !process.env.RANGERS) process.env.RANGERS = "atlante:10,epsilon:10";
+const sub = (h, x, y) => { if (!h.includes(x)) throw new Error("manca " + x); return h.replace(x, y); };
+function extra(h) {
+  if (MASSIMO !== null || LVS.some((L) => L > 200)) h = sub(h, "maxLevel: 200,", "maxLevel: 400,");
+  if (PEND !== null) h = sub(h, ": 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (D - 30);", `: 23 + EFF_JUMP_31 + EFF_SLOPE_31 * (Math.min(D, 200) - 30) + ${PEND} * Math.max(0, D - 200);`);
+  if (MASSIMO === null) return h;
+  h = patchAncestrale(h, MASSIMO);
+  h = sub(h, "const TREE_CAP = { red: 0.5,", "const TREE_CAP = { red: 0.65,");
+  h = sub(h, "let d = base * mult;", "let d = base * mult * (src === \"ranger\" || src === \"deflect\" ? 1 : 1 + 5 / 6);");
+  h = sub(h, "const rangerBonus = (t) => 1 + TREE_VAL.typeDmg * treeLv(\"types:dmg:\" + t) + (GEAR.type[t] || 0);",
+    "const rangerBonus = (t) => (1 + 0.15 * 19) / (1 + 0.15 * 9) * (1 + TREE_VAL.typeDmg * treeLv(\"types:dmg:\" + t) + (GEAR.type[t] || 0));");
+  return sub(h, "function guardHit(e, dmg, quiet) {", "function guardHit(e, dmg, quiet) { dmg *= 1.5;");
+}
+const patch = (h) => extra(reps.reduce((a, [x, y]) => { if (!a.includes(x)) throw new Error("manca " + x); return a.replace(x, y); }, h));
 const EV = (h) => patch(h).replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
 
 // Sigilli attesi prima di giocare il livello L (presi completando i livelli dal 31 a L − 1)
@@ -37,11 +55,12 @@ const SPEND = `(() => {
 // abilità d’ingresso: dal 40 completato i bot le hanno, come nella taratura 1.8.0 (dalla 1.12.0 costano 1 Sigillo: le diamo senza spesa)
 const grandfather = (L) => L - 1 >= 40 ? { "ab:regen": 1, "ab:repulse": 1, "ab:burn": 1 } : {};
 function treeFor(L) {
-  const g = makeGame({ patch: EV, cleared: L - 1, level: L, storage: { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], seals: sealsAt(L), majors: majorsAt(L), tree: grandfather(L) }) } });
+  const seals = MASSIMO !== null ? 1e5 : sealsAt(L), majors = MASSIMO !== null ? 1e4 : majorsAt(L);   // profilo al massimo: albero pieno
+  const g = makeGame({ patch: EV, cleared: L - 1, level: L, storage: { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], seals, majors, tree: grandfather(L) }) } });
   return JSON.parse(g.win.__ev(SPEND));
 }
 for (const L of LVS) {
-  const tree = treeFor(L), gear = EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined;
+  const tree = treeFor(L), gear = MASSIMO !== null ? gearMax(slotsAt(MASSIMO)) : EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined;
   const rg = (process.env.RANGERS || "").split(",").filter(Boolean).map((x) => x.split(":")), frags = {};
   for (const [id, lv] of rg) frags[id] = 200 * (1 + 0.5 * (+lv - 1));
   const planet = rg.length ? { lv: {}, frags, day: { d: "", n: 0 }, eq: rg.map((x) => x[0]) } : undefined;

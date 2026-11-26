@@ -115,7 +115,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ## 4. Campagna e progressione
 
-- La campagna arriva **almeno al livello 200** (Marco; oggi `CAMPAIGN.maxLevel` = 200, si può allungare); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello in Standard. **Epica**: numerazione e avanzamento propri, indipendenti da Standard. Si apre dopo il 50 di Standard;
+- La campagna arriva al **livello 400** **[deciso]** (Marco, 26/11/2026) (prima “almeno 200”; nel codice `CAMPAIGN.maxLevel` è ancora 200, vedi “Campagna a 400 livelli” in fondo al § 16); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello in Standard. **Epica**: numerazione e avanzamento propri, indipendenti da Standard. Si apre dopo il 50 di Standard;
   il **livello 1 di Epica ha difficoltà 31** (D = livello di Epica + 30) e si selezionano i livelli di Epica fino a “Epica completati + 1”. **[deciso]** (Marco)
   Salvataggio: nuovo campo `clearedEpic`, `SAVE_VERSION` +1; in migrazione, i livelli di Epica già fatti si ricavano dalle chiavi `e…` dei premi riscossi. **[Claude]**
   Menu (1.14.2) **[Claude]**: il selettore (−/+, frecce, griglia) vale per la **modalità attiva**, che si cambia con la striscia “Standard ⇄ Epica” in fondo al riquadro del livello
@@ -597,12 +597,13 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
   (pool piccoli a inizio partita); dopo **0%**. **(aperto)**: con il pool libero la regola non cambia nulla fino a quando l’albero sblocca la seconda chain.
 - **Sigilli**: flusso e albero decisi in § 16. Aperti: costi e livelli massimi dei nodi, valori dei tetti, dettagli dei nodi della barriera (elenco in fondo al § 16). Valori della fase 2 tutti provvisori (§ 16); curva dal 31 tarata con l’albero atteso (§ 5): va rifatta quando arriva l’equipaggiamento. Letture di Claude nella fase 1 da confermare (§ 16): Sblocco permanente dopo tutti gli altri nodi, torrette equipaggiate e carte sbloccate valide in tutti i livelli. **Moduli** (§ 15): vedi sotto.
 - **Ranger e Protezione planetaria** (§ 17): sblocco al livello 60 **[deciso]**. Aperti: danni, portate e valori intermedi dei supporti, valore F e sua crescita con la scala, difficoltà dei livelli, numero e valori dei nemici, X e Y delle abilità, formule dei boss per livello, punti vita e velocità dei boss, formula del kamikaze.
-- **Pacco regalo** (§ 17): timer, vita, velocità e tabella della ricompensa di equipaggiamento in Epica sono **[Claude]**, accettati e da provare a mano; probabilità 25% e ritmo dei frammenti da misurare con i bot. **(aperto)**
+- **Pacco regalo** (§ 17): probabilità **60%** per livello e ricompense (frammenti, pezzi, Moduli, ◆, ✦) **[deciso]** (Marco, 26/11/2026); timer, vita e velocità sono **[Claude]**, accettati e da provare a mano.
+  Resta **(aperto)** l’effetto sui muri del guardiano che insegue il pacco (mai misurato: i bot lo ignorano).
 - **Boss finale**: abilità speciali o solo tanta vita? (ora solo tanta vita)
 - **Mini-boss dal livello 11** (non dal 21): a tetto lv2 il budget è 28 su 39 necessari, quindi nessun surplus; da confermare.
 - **Difficoltà dal livello 31**: ritarata nella 1.12.1 con albero, equipaggiamento e un po’ di Epica attesi (pendenza 1,2, scalino 3, fattori del boss per muro, § 5 e § 16):
   muri dal 40 al 200 in media al 59,3%, dentro la fascia 50-70% (§ 15, **[deciso]**). Nella 1.15.1 (rarità dei drop ridotte) media 50,9%, con 60, 80, 90, 140, 150 e 190 sotto il 50%: lasciati così in attesa dei ranger **[deciso]** (Marco; misura in § 16). Vita, danno, numero e velocità crescono tutti in modo lineare con `effD`: dal 30 al 200
-  vita ×2,97, danno ×2,13, numero ×1,62, velocità ×1,26 (prima ×1,49, ×1,28, ×1,15). Senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%): **va bene così** **[deciso]** (Marco, dopo la 1.11.0). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
+  vita ×3,96, danno ×2,70, numero ×1,93, velocità ×1,40 (verificato con `effD`, pendenza 1,2 e scalino 3: effD 23 → 230; con la 1.11.0, effD 161: ×2,97, ×2,13, ×1,62, ×1,26; prima ×1,49, ×1,28, ×1,15). Senza equipaggiamento i muri dal 40 diventano quasi impossibili (40 17%, 100 3%): **va bene così** **[deciso]** (Marco, dopo la 1.11.0). Indicazione di Marco **[deciso]**: oltre il 30 i nemici devono diventare **sia più numerosi sia più forti di base**,
   con una curva di incremento; forma della curva da decidere con i bot e l’equipaggiamento.
 - **Boss Physical**: con l’albero i muri con boss Physical (90, 140, 190) misurano 13-27%, quelli Electric 43-48%: il guardiano è Physical e il boss gli resiste
   (tabella delle resistenze segnaposto, § 6). Da rivedere con le resistenze vere.
@@ -612,6 +613,13 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
 - **Equipaggiamento** (§ 15, costruito nella 1.10.0): aperti i valori provvisori (tabella delle rarità, colori), la schermata e le letture degli effetti di Claude (§ 15, “Costruito”), la misura con i bot dell’equipaggiamento atteso (muri al 50%).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
+- **Pendenza della difficoltà oltre il 200** **[aperto]**: tenere 1,2 o addolcirla (misure con 0,8 e 0,6 in § 16, “Campagna a 400 livelli”: col profilo atteso al 400 3,3% / 15,0% / 41,7%; tutto al massimo sempre 100%); con essa `FINAL_BOSS_K` oltre il 200,
+  livello dei giganti oltre il 200, tabella dei drop oltre il 180, validazione di `cleared` e `clearedEpic` e testi che citano il 200.
+- **Nodi dell’albero oltre il livello 20** **[aperto]**: estendere i nodi da 20 livelli (per nodo: a 30 +55 ◆ e +2 ✦, a 40 +130 ◆ e +4 ✦, a 50 +225 ◆ e +6 ✦) e le carte standard
+  da 5 a 10 livelli (+10 ◆ per nodo, nessun ✦; 22 nodi = +220 ◆) **[Claude]** (conti).
+- **Riduzione del danno subito oltre il 65%** **[aperto]** (§ 16, “Tetti”).
+- **Moduli ancestrali nuovi** **[aperto]** (§ 15, “Ancestrale+N”; Marco: “in un secondo momento”).
+- **Supporti senza danno dopo il livello 10** **[aperto]**: come cresce ciò che non è danno (durate, bersagli, probabilità) dal livello 11 al 20; opzioni di Claude in § 17, “Livello massimo 20”.
 - **Barriera minata e cupola larga**: con la cupola larga 215 px il bordo esce dallo schermo, quindi le mine dell’abilità possono nascere fuori vista o in punti bassi ai lati. Proposta di Claude: le mine compaiono solo sulla parte visibile del bordo (x da 0 a 360). **(aperto)**
 
 ## 12. Contenuti mancanti (da definire con Marco)
@@ -677,13 +685,36 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
   Installare, togliere ed equipaggiare restano possibili. Letture **[deciso]**: sui pezzi equipaggiati e sui Moduli installati il lucchetto si vede e si tocca allo stesso modo,
   e il blocco segue l’esemplare quando torna in inventario (cambio di pezzo, sostituzione di un Modulo, “Togli”); toccando una riga si usa l’esemplare di quella riga, bloccato o no.
 - **Moduli installati** **[deciso]**: si tolgono **gratis e senza perdite**, tornano in inventario e si possono installare in un altro pezzo dello stesso tipo.
-- **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire)
+- **Rarità** di equip e Moduli: comune, raro, epico, leggendario, ancestrale. Slot per rarità dell’equip: **1, 2, 3, 4, 5**. **[deciso]** (bonus base per rarità: da definire); ancestrale+1, +5, +10: 6, 7, 8 (vedi Ancestrale+N)
 - **Moduli**: stesse 5 rarità; il tipo indica in quale pezzo entrano (6 tipi). Ogni Modulo ha **un effetto**, preso dal pool del suo pezzo
   (catalogo e pool sotto); la rarità decide il valore X. **[deciso]**
 - **Fusione**: si fondono sia gli equip sia i Moduli, **per tutte le rarità**, e il risultato è della rarità successiva. **[deciso]**
   - Equip: **5 pezzi uguali** (stesso tipo e rarità).
   - Moduli: **5 Moduli dello stesso pezzo e della stessa rarità**, anche con effetti diversi; l’effetto del risultato si **estrae a caso dal pool
     del pezzo**, con i pesi sotto.
+- **Ancestrale+N** **[deciso]** (Marco, 26/11/2026): i pezzi ancestrali (non i Moduli) si fondono ancora. Un pezzo +N si ottiene da un pezzo +(N−1) dello stesso tipo più **N pezzi ancestrali base**
+  dello stesso tipo, non bloccati: +1 = ancestrale + 1 ancestrale; +2 = +1 + 2 ancestrali; +3 = +2 + 3 ancestrali; fino a **+10**. Ancestrali base per un pezzo: +1 2 · +2 4 · +3 7 · +5 16 · +10 56
+  (1 + N(N+1)/2). Solo per fusione, non esce dai drop.
+  - **+20% a passo** **[deciso]** (Marco, 26/11/2026): ogni passo aggiunge il 20% del valore ancestrale base alla statistica base, in somma lineare: +10 = +200%, cioè ×3,0 il valore ancestrale.
+    Verificato su `PIECES.base` (ancestrale: arma 28, guanti 20, testa 20, armatura 28, stivali 28, nucleo 20): **guardiano** 68% → +1 81,6% · +5 136% · +10 **204%**;
+    **barriera** 56% → 67,2% · 112% · **168%**; **torrette** 20% → 24% · 40% · **60%** (set di 6 pezzi tutti allo stesso passo, prima dei Moduli).
+  - **Slot** **[deciso]** (Marco, 26/11/2026): un nuovo slot per Moduli a +1, +5 e +10 (6, 7 e 8 slot), che accettano Moduli di **ogni rarità** **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
+  - **Moduli ancestrali nuovi** **[aperto]** (Marco: “in un secondo momento”).
+  - Stime **[Claude]** (tabella dei drop 180+, fusione ideale, da simulare): set di 6 pezzi ancestrale 37 vittorie · +1 74 · +2 150 · +3 260 · +5 600 · +10 2100.
+  - **Misura** **[Claude]** (26/11/2026, `node tests/tools/equip-atteso.js --ancestrale 400`: drop veri, 2 pezzi a vittoria, fusione ideale appena possibile, mediane di 400 simulazioni), vittorie:
+
+    | Difficoltà | Obiettivo | ancestrale | +1 | +2 | +3 | +5 | +10 |
+    |---|---|---|---|---|---|---|---|
+    | 100-139 | un pezzo | 140 | 239 | 461 | 790 | 1806 | 6178 |
+    | 100-139 | set di 6 | 222 | 372 | 634 | 1023 | 2141 | 6836 |
+    | 140-179 | un pezzo | 65 | 117 | 216 | 371 | 816 | 2839 |
+    | 140-179 | set di 6 | 120 | 188 | 310 | 489 | 1013 | 3183 |
+    | 180 e oltre | un pezzo | 45 | 80 | 158 | 274 | 609 | 2088 |
+    | 180 e oltre | set di 6 | 88 | 139 | 233 | 363 | 746 | 2346 |
+
+    La stima di 37 vittorie per il set ancestrale corrisponde a un pezzo solo (45 misurate): il set ne chiede circa 88, perché serve l’ultimo dei 6 tipi e la fusione va a gruppi di 5.
+    Ai passi alti le due stime si avvicinano (+10: 2346 misurate contro 2100). Potenza: guardiano 68 / 81,6 / 95,2 / 108,8 / 136 / 204%, barriera 56 / 67,2 / 78,4 / 89,6 / 112 / 168%,
+    torrette 20 / 24 / 28 / 32 / 40 / 60% (ancestrale, +1, +2, +3, +5, +10), slot 5 / 6 / 6 / 6 / 7 / 8.
 - **Doppioni**: nello stesso pezzo non si installano due Moduli con lo stesso effetto, di qualsiasi rarità; su pezzi diversi gli effetti si sommano
   (probabilità con tetto 100%). **[deciso]** **Sostituzione** **[deciso]** (Marco): un Modulo con lo stesso effetto e rarità maggiore di quello installato lo sostituisce direttamente,
   anche con slot pieni; il vecchio torna in inventario, senza perdite. A rarità uguale o minore l’installazione è rifiutata, con messaggio. Nel codice dalla 1.14.0 (`installCheck`; prima c’era solo il rifiuto dei doppioni); test in `tests/v114.js`.
@@ -799,7 +830,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
   i primi N colpi nemici ricevono il contrattacco, una volta per battaglia. I numeri del contrattacco sono ciano.
   **[deciso]** (Marco: riduzione permanente a ogni colpo, non un pool; tetto 50%) · percentuale al posto del valore fisso, stessi X, tetto condiviso, numeri ciano **[Claude]** (da misurare)
 - Barriera (11): vita e riduzione in **percentuale**, così restano utili anche quando i nemici fanno più danno. Sta su armatura e stivali: con
-  due ancestrali la vita raddoppia (100 → 200 oggi) e il danno subito scende del 30%. Prima proposta (+5…+30 di vita, −0,1…−0,5 per colpo)
+  due ancestrali la vita raddoppia (100 → 200 oggi) e il danno subito scende del 30% (con il Modulo 10 ancestrale sull’armatura il massimo dell’equipaggiamento è −50%, dalla 1.14.2). Prima proposta (+5…+30 di vita, −0,1…−0,5 per colpo)
   scartata: al livello 50 un asteroide all’ondata 20 fa circa 15 di danno e −0,5 era quasi nulla.
 - Immunità sotto il 20% (14): una volta per battaglia.
 - Vita ripristinata (16): al massimo 4 volte per battaglia (3 mini-boss e il boss), quindi il tetto per partita è implicito.
@@ -844,13 +875,13 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - 19: esplosioni dei Colpi esplosivi del guardiano. 20: il primo proiettile di ogni salva, sul primo nemico che colpisce (senza probabilità), al massimo 2× il danno del colpo.
   - 21: pulsante “Rinnova le carte (n)” sotto le carte (o tasto R): nuove carte, stesso numero, **diverse da quelle appena offerte** **[deciso]** (Marco): se nel pool restano almeno n carte oltre a quelle appena viste, il nuovo sorteggio le esclude; altrimenti si prendono tutte le carte rimaste e si completa con quelle già viste, estratte a peso **[Claude]**. Il rinnovo si consuma come oggi, anche quando il pool è piccolo **(aperto)**. 22: a ogni ondata, 4 carte più basse; tasto 4.
   - 29 e 30: un tiro a inizio partita; 30 vale per le torrette equipaggiate e per quelle che arrivano dopo. Senza questi Moduli non si consuma nessun tiro casuale (le misure dei bot restano confrontabili).
-  - Riduzione del danno (11) e del cooldown (15) si sommano all’albero, con i tetti del § 16 (40% e 60%).
+  - Riduzione del danno (11) e del cooldown (15) si sommano all’albero, con i tetti del § 16 (danno 50% dalla 1.14.2, prima 40%; cooldown 60%). Massimo dall’equipaggiamento: danno −50% (Modulo 10 ancestrale −20% sull’armatura, Modulo 11 ancestrale −15% su armatura e stivali), cooldown −50% (Modulo 15 ancestrale −25% su armatura e stivali).
 - **Salvataggio**: versione 3 (§ 7). **Taratura** (1.11.0): muri dal 40 al 200 in media al 59,8% con l’equipaggiamento atteso (numeri in § 16, “Taratura 1.11.0”).
 
 ## 16. Sigilli e albero dei potenziamenti (da costruire)
 
 - **Valuta**: i Sigilli (◆) si spendono in tutte le sezioni dell’albero. **[deciso]**
-- **Sigilli maggiori** (✦, dalla 1.12.0) **[deciso]** (Marco): seconda valuta, per ora solo dai boss in **Epica**: il **boss finale** e, con bassa probabilità, i **mini-boss**,
+- **Sigilli maggiori** (✦, dalla 1.12.0) **[deciso]** (Marco): seconda valuta, per ora solo dai boss in **Epica**: il **boss finale** e, con bassa probabilità, i **mini-boss** (e dal pacco regalo, 2%, Standard ed Epica: § 17, **[deciso]** (Marco, 26/11/2026)),
   ma mai più di 1 per livello dai mini-boss (a parte il boss finale). Valori **[Claude] [provvisorio]**: boss finale 1 a ogni vittoria su di lui (anche rigiocando),
   mini-boss 10% ciascuno; il maggiore si prende subito alla sconfitta del boss (anche se poi la partita è persa). Mostrato a schermo e nella vittoria.
 - **Costi dalla 1.12.0** **[deciso]** (Marco; barriera dalla 1.14.0):
@@ -871,8 +902,13 @@ Regole di calcolo **[Claude] [da rivedere]**:
   Dalla 1.14.1 **[deciso]** (Marco): se il **primo completamento è già con la cupola al 100%**, i due premi si prendono **subito insieme**, senza rigiocare. Un solo premio ciascuno, della stessa entità.
 - **Struttura** **[deciso]**: una schermata con tre sezioni: **Barriera**, **Guardiano**, **Torrette** (con una sezione condivisa per tipo). Regola dei livelli (proposta di Marco): un nodo non supera il livello del nodo da cui dipende.
 - **Tetti** **[deciso]** il principio, valori **[Claude] [da rivedere]**: hanno un tetto sul totale (equip + albero) solo la **riduzione del cooldown delle abilità** e la **riduzione del danno subito**.
-  Il tetto sta sopra il massimo dell’equipaggiamento (cooldown −50%, danno −30%), così i nodi dell’albero servono anche a chi ha l’equip massimo. Nessuna abilità dura quanto il suo cooldown minimo. Gli altri bonus (danni di tipo, ecc.) non hanno tetto.
+  Il tetto sta sopra il massimo dell’equipaggiamento (cooldown −50%, danno −50% dalla 1.14.2: Modulo 10 ancestrale −20% sull’armatura, Modulo 11 ancestrale −15% su armatura e stivali; prima −30%), così i nodi dell’albero servono anche a chi ha l’equip massimo. Nessuna abilità dura quanto il suo cooldown minimo. Gli altri bonus (danni di tipo, ecc.) non hanno tetto.
   Tetto sul totale della riduzione del danno subito: **50%** **[deciso]** (Marco; prima 40%, `TREE_CAP.red`). Il tetto del cooldown delle abilità resta com’è.
+- **Cooldown delle abilità** **[deciso]** (Marco, 26/11/2026): la regola “nessuna abilità dura quanto il suo cooldown minimo” è confermata e il **tetto del cooldown resta 60%** (16 s su 40 s).
+  Le abilità si scalano con equip, carte e Moduli, non con il tetto. Limite teorico della regola: sotto il 75% (Potenziante 10 s al livello 5).
+- **Riduzione del danno subito oltre il 50%** **[deciso]** (Marco, 26/11/2026, su proposta di Claude): nuovo nodo della barriera che porta il **tetto sul totale dal 50% al 65%**, senza bonus propri; **un livello**, **15 ◆**,
+  sbloccato dal **livello 200 di Standard completato**. Massimo teorico con tutto al massimo: albero 15% (Riduzione danno, 5 livelli da 3%) + equipaggiamento 50% = 65% (META 0%);
+  il danno subito passa da ×0,5 a ×0,35. Oltre il 65%: **[aperto]** (§ 11).
 
 ### Barriera
 - **Spina** **[deciso]** (schema): Vita % → Riduzione danno. Da lì due rami.
@@ -976,8 +1012,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
   **Più carte, più danno** **[deciso]** (Marco, al posto di “più carte (+cadenza)”): la torretta o il guardiano con più carte scelte nella partita ha danno
   +5/10/15/20/25% (5 livelli, dopo Riduzione danno). Letture **[Claude] [da rivedere]**: “carte” = pile di potenziamenti prese (anche quelle dei mini-boss);
   a parità hanno il bonus tutti quelli in testa; con zero carte nessuno; si ricalcola a ogni carta presa.
-- Costo dell’albero intero (1.7.0): sblocchi 117, carte standard 660 (torrette) + 56 (guardiano), Tipi 305, Barriera 75: **1213 Sigilli** (1.9.4: +11 per i level up lv1). In Standard fino al 200
+- Costo dell’albero intero (1.7.0): sblocchi 117, carte standard 660 (torrette) + 56 (guardiano), Tipi 305, Barriera 75: 1213 Sigilli (1.9.4: +11 per i level up lv1). In Standard fino al 200
   se ne prendono al massimo 340 (circa 255 con metà dei premi della cupola), in Epica fino a 800 (200 livelli × 4): l’albero dura ben oltre il 200.
+  **Dal codice (verificato 26/11/2026, `TREE`, costi e maggiori)**: **1292 ◆ e 188 ✦** (guardiano 70 / 16, 11 torrette 71 / 12 ciascuna, Tipi 305 / 25, barriera 79 / 15, abilità 57 / 0);
+  con i nodi finali e il nodo del tetto al 65% (sotto e “Tetti”): **1907 ◆** (1292 + 600 + 15) e 188 ✦ **[Claude]** (conti, da verificare con `seals` quando i nodi saranno nel codice).
 - **Misura con i bot** (1.6.0, prima della taratura, curva piena dal 31): livello 40 / 50 senza albero 3,0% / 0,5%; solo sblocchi 9,0% / 2,0%;
   nodi a livelli al 3 63,5% / 42,5%; albero pieno 88,0% / 72,0%.
 - **Taratura 1.7.0** (`node tests/tools/curva.js`): i bot partono con l’**albero atteso**, cioè i Sigilli presi dal 31 al livello prima (1,5 per livello:
@@ -1097,6 +1135,38 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - Il bonus della Potenziante si somma a quelli dell’albero (tipo, tutte le torrette, Più carte): per questo anche “Più carte, più danno” ora si somma invece di moltiplicare.
   - Fase 3 **costruita** nella 1.8.0 (vedi CHANGELOG); i vecchi segnaposto di rigenerazione e repulsione in `META` sono stati tolti (`META.domeAbilities` ora prende gli id delle nuove abilità).
 
+### Nodi finali (specializzazione)
+- **[deciso]** (Marco, 26/11/2026): il guardiano e ogni torretta (12 entità) hanno un nodo finale che alza il **danno base** con un **valore fisso** (non percentuale), sommato al danno base;
+  poi si sommano ad esso tutti i bonus percentuali (effetto: moltiplica il danno). **Sblocco: livello 200 di Standard completato.** Costo in **◆**, non in ✦.
+- **5 livelli**, ciascuno **+1/6 del danno base** dell’entità al livello 1 (totale 5/6, +83%: ×1,83 effettivo), **10 ◆ a livello**: 50 ◆ per entità, 600 ◆ in tutto **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
+- Totali **[Claude]** (da verificare con `seals` quando i nodi saranno nel codice): albero intero 1907 ◆ (1292 + 600 + 15) e 188 ✦ (invariato).
+
+### Campagna a 400 livelli
+- **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, oggi 200 nel codice). Da rivedere con le misure **[aperto]**: `FINAL_BOSS_K` per i muri oltre il 200;
+  livello dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400); tabella dei drop oltre il 180; salvataggio (`cleared`, `clearedEpic` e la loro validazione) e testi che citano il 200.
+- Dati **[Claude]** (pendenza 1,2 dal 30, rispetto al 200, da `effD` e `LV`): al 400 vita ×1,87, danno ×1,73, numero ×1,56, velocità ×1,33, combinato (vita × danno × numero) ×5,0; in Epica 400 (difficoltà 430) ×6,0.
+- **◆ massimi** (cupola sempre al 100%): Standard 31-400 = 740, Epica 400 livelli = 1600, totale 2340; con l’albero a 1907 restano circa 433 ◆ **[Claude]**.
+- **✦ attesi** in Epica a 400: circa 148 in un passaggio (40 boss finali + circa 108 dai mini-boss) più circa 8,5 dal pacco al 60% con tasso di presa 100%, contro 188 necessari:
+  mancano circa 30, cioè circa 25 rigiocate di un boss **[Claude]**.
+- **Muri oltre il 200** **[Claude]** (26/11/2026, `tests/tools/curva.js` con `MASSIMO` e `PENDENZA`, sostituzioni solo nella misura; 60 partite per punto, random + smart, semi 1-30):
+  - **Tutto al massimo** (`MASSIMO=5` e `MASSIMO=10`: albero pieno, nodi finali ×1,83 su guardiano e torrette, tetto della riduzione al 65%, equipaggiamento ancestrale+5 / +10 con i Moduli
+    ancestrali migliori in 7 / 8 slot, Atlante ed Epsilon “al 20”: supporto ×3,85 / 2,35, +50% al danno del guardiano): **100% delle vittorie** a 200, 250, 300, 350 e 400, con pendenza 1,2, 0,8 e 0,6
+    (26 punti, 1560 partite). Al 400 il guardiano ha +411% dall’equipaggiamento; la vita del boss finale cresce poco oltre il 200 (7190 al 200, 9074 al 400). Con tutto al massimo la pendenza non decide nulla.
+  - **Profilo atteso** (`EQUIP=1.5`, albero ed equipaggiamento attesi come nella taratura: niente ancestrale+N, nodi finali, nodo del 65% né ranger), per informare la pendenza oltre il 200:
+
+    | Pendenza oltre il 200 | 250 | 300 | 350 | 400 |
+    |---|---|---|---|---|
+    | 1,2 (attuale) | 38,3% | 15,0% | 1,7% | 3,3% |
+    | 0,8 | 50,0% | 40,0% | 21,7% | 15,0% |
+    | 0,6 | 41,7% | 53,3% | 53,3% | 41,7% |
+
+    Al 250 le differenze sono nel rumore (±7-10 punti con 60 partite). Con 1,2 i muri crollano dal 300 per il giocatore atteso; 0,6 resta vicino alla soglia del 50%. I bot non hanno
+    ancestrale+N, nodi finali né ranger, che oltre il 200 alzano la potenza: decide Marco (§ 11).
+- **Misura delle valute** **[Claude]** (26/11/2026, `node tests/tools/pacco-stima.js`): ✦ in Epica a 400, un passaggio: 40 + 108,4 = **148,4**, mancano 39,6; con il pacco (Standard ed Epica)
+  preso al 100% **156,9** (mancano 31,1, circa 25 rigiocate di un boss finale con i suoi mini-boss, 1,27 ✦ l’una), al 50% 152,7 (mancano 35,3, circa 28).
+  ◆ con la cupola al 100% / 75% / 50% dei livelli: **2340 / 2047,5 / 1755** (Standard 740 / 647,5 / 555 + Epica 1600 / 1400 / 1200); col pacco preso al 100% +170, al 50% +85.
+  Contro l’albero a 1907 ◆: margine +433 / +140,5 / **−152** (al 50% l’albero non si completa senza il pacco; col pacco al 100% +18).
+
 ## 17. Ranger e Protezione planetaria (costruiti: 1.16.0-1.21.0)
 
 ### Ranger
@@ -1108,10 +1178,23 @@ Regole di calcolo **[Claude] [da rivedere]**:
   - **Contro i nemici invisibili** l'extra non si applica: vale solo la parte energy della conversione.
   - **Esplosione dei Colpi esplosivi**: segue il tipo con la **quota maggiore** del colpo. Se la quota convertita supera il 50% (conversione dal livello 6) è nel tipo del ranger; sotto il 50% è physical; **a pari quota (50/50, livello 5) vince physical**. Senza ranger di conversione o con Atlante è physical. L'intera esplosione è in un solo tipo, 70% del danno del colpo come prima **[deciso]** (Marco, 26/11/2026, su lettura di Claude). Come tutti gli effetti ad area colpisce anche gli invisibili (“Nemici della Protezione planetaria”, speciale force).
 - **Physical** **[deciso]**: ignora il X% della resistenza del nemico, X = 10% per livello (100% al livello 10: il ×0,5 diventa ×1,0); le debolezze non cambiano. Lo stesso coefficiente è la **probabilità che i proiettili del guardiano attraversino i gusci** dei nemici physical.
-- **Frammenti**: ogni ranger ha i propri, esclusivi; raggiunta la soglia si sblocca e si può equipaggiare; con altri frammenti sale di livello (**livello massimo 10, per ora**). **[deciso]** I frammenti di ogni partita si dividono tra i due ranger del tipo in **proporzioni casuali**, senza scelta del giocatore; proporzione uniforme tra 0 e 100% a ogni partita, e se uno è al livello massimo vanno tutti all’altro. **[deciso]** (approvato da Marco)
+- **Frammenti**: ogni ranger ha i propri, esclusivi; raggiunta la soglia si sblocca e si può equipaggiare; con altri frammenti sale di livello (livello massimo 10 fino al 26/11/2026; ora **20**, vedi “Livello massimo 20” sotto). **[deciso]** I frammenti di ogni partita si dividono tra i due ranger del tipo in **proporzioni casuali**, senza scelta del giocatore; proporzione uniforme tra 0 e 100% a ogni partita, e se uno è al livello massimo vanno tutti all’altro. **[deciso]** (approvato da Marco)
 - **Aspetto dei frammenti** **[deciso]** (Marco): etichetta con il **nome del ranger** e icona a forma di **pezzo di puzzle**.
 - **Costo dei livelli** **[deciso]** (Marco): il numero è il **totale di frammenti per avere quel livello**, non il costo della singola salita. Livello 1 = soglia di sblocco T; livello 2 = 1,5 T in tutto; livello 3 = 2 T; livello 4 = 2,5 T… livello L = T × (1 + 0,5 × (L − 1)), livello 10 = 5,5 T. Ogni salita costa quindi 0,5 T. Con T = 20 F un ranger al 10 richiede 110 F in tutto (90 F oltre lo sblocco). Portare tutti e 10 i ranger al 10 con F costante richiede circa 18 mesi per il giocatore di riferimento **[Claude] [provvisorio]**; crescita di F con la scala e costi: **da misurare con i bot**.
 - **Obiettivo** **[deciso]** (Marco): circa **4 mesi** per sbloccarli tutti. Soglia **[Claude] [provvisorio]**: T = 20 F per ranger (200 frammenti con F = 10 al livello 1), per un giocatore che gioca 5 giorni su 7, 2 partite al giorno sul tipo del giorno, con il 70% di ricompensa media: circa 3,6 mesi per un tipo medio e 4,0 per l’ultimo. Da misurare con i bot.
+- **Livello massimo dei ranger 20** **[deciso]** (Marco, 26/11/2026) (era “10, per ora”). Costo in frammenti dalla formula esistente T × (1 + 0,5 × (L − 1)): livello 20 = 10,5 T = 2100 frammenti
+  (livello 10 = 5,5 T = 1100); tutti e 10 al 20 richiedono 21.000 frammenti (11.000 al 10: circa ×1,9).
+  - Dopo il livello 10 **sia i supporti sia le conversioni aumentano il danno** **[deciso]** (Marco, 26/11/2026). Valori **[deciso]** (Marco, 26/11/2026, su proposta di Claude): supporti, per i ranger il cui effetto infligge danno,
+    **+15% di danno per livello** (lineare come oggi, circa ×3,85 al 20), ciclo fermo a 20 s; conversioni **+5% di danno del guardiano per livello** da 11 a 20 (+50% al 20), come bonus percentuale.
+  - Alfa Z (100%) e Omega (120°) sono già al limite al livello 10 e non cambiano. Per ciò che non è danno (stati, statistiche) come si traduce l’aumento dopo il 10: **[aperto]**.
+    Che cosa ha oggi ogni ranger per livello (tabella sotto) e opzioni **[Claude]** (da scegliere, nessuna decisa):
+    - **Alfa**: danno +15%, durata Y 4 → 10 s, bruciatura Z 10% → 100% (al limite). Opzioni: (a) solo il danno; (b) durata Y che continua (+0,67 s per livello, 16,7 s al 20: col ciclo di 20 s la fiammata copre quasi tutto il ciclo); (c) bruciatura più lunga (3 → 5 s).
+    - **Omega**: danno +15%, ampiezza 20° → 120° (al limite), stato a caso di 3 s. Opzioni: (a) solo il danno; (b) stato più lungo (3 → 5 s al 20); (c) due stati diversi per onda dal livello 15.
+    - **Sigma**: danno +15%, bersagli 1 → 5 (+1 ogni due livelli), paralisi 5% → 50%. Opzioni: (a) solo il danno; (b) bersagli che continuano (+1 ogni due livelli, 10 al 20); (c) paralisi che continua (+5% per livello, 100% al 20; boss e mini-boss restano immuni).
+    - **Gamma**: danno +7% per livello (non +15%), bolle 2 → 12. Da chiarire anche il danno dopo il 10: +7% come oggi o +15% come gli altri supporti **[aperto]**. Opzioni per le bolle: (a) ferme a 12; (b) +1 per livello (22 al 20); (c) raggio dell’esplosione che cresce.
+    - **Epsilon**: missili 2 → 6, danno a gradini (×1,9 dal lv8), portata 260 → 377 px, a turno danno / missile / portata. Da chiarire anche il danno: +15% lineare o il turno a gradini **[aperto]**.
+      Opzioni: (a) danno lineare +15% e missili e portata fermi; (b) il turno continua (danno, missile, portata: 9 missili e 494 px al 20); (c) solo missili (+1 ogni due livelli).
+    - **Atlante** (conversione physical): resistenza ignorata e attraversamento dei gusci al 100% al 10 (al limite). Lettura **[Claude]**: dopo il 10 vale per lui il +5% di danno del guardiano come per le altre conversioni.
 
 ### Nomi e supporti dei ranger
 **[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,
@@ -1183,6 +1266,10 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Avanzamento**: completato un livello si sblocca il superiore, stesse regole e difficoltà maggiore. Livello completato = 20 ondate partite e tutti i nemici uccisi, mini-boss e boss compresi. **[deciso]** (approvato da Marco)
 - **Rotazione**: tutti i tipi sempre sbloccati; il tipo del giorno dà un **bonus ×2 alle ricompense** (valore **[provvisorio]**): lunedì physical, martedì force, mercoledì energy, giovedì electric, venerdì fire; sabato e domenica un tipo a caso ciascuno (un solo tipo per giorno, seme legato alla data **[Claude]**). **[deciso]**
 - **Ricompense**: frammenti **proporzionali a ondate raggiunte e mini-boss sconfitti**, anche senza completare il livello. **[deciso]** Formula (approvata da Marco, valori **[provvisorio]**): F × (0,7 × ondate raggiunte ÷ 20 + 0,3 × mini-boss sconfitti ÷ 3), ondata raggiunta = ondata partita.
+- **Crescita dei frammenti** **[deciso]** (Marco, 26/11/2026, su proposta di Claude): moltiplicatore **M = 1 + 0,1 × numero di ranger arrivati al livello 10** (×1 finché nessuno è al 10, ×2 con tutti e 10 al 10), applicato a F (partita piena)
+  e ai frammenti del pacco; non cambia i tempi di sblocco già misurati.
+- **Bonus di completamento** **[deciso]** (Marco, 26/11/2026, su proposta di Claude): oggi il massimo (1,0 F) si ottiene anche morendo all’ondata 20 con 3 mini-boss; formula nuova:
+  F × M × (0,7 × ondate ÷ 20 + 0,3 × mini-boss ÷ 3) + **0,5 × F × M** se il livello è completato (boss sconfitto).
 - **Limite**: al massimo **2 partite al giorno** in questa modalità (2 sullo stesso livello e tipo, oppure 1 su due diversi). **[deciso]** Si conta alla partenza, anche se persa o abbandonata; “Continua” non conta due volte; giorno = data locale **[Claude]**.
 - **Salvataggio** **[Claude]**: frammenti e livello dei ranger, livelli completati per tipo, data e partite del giorno; `SAVE_VERSION` +1; la partita sospesa (§ 2) salva anche lo stato della modalità. **Autosalvataggio** quando tutti i nemici di un’ondata sono sconfitti; “Continua” riprende dall’ondata successiva. **[deciso]** (Marco)
 
@@ -1407,19 +1494,22 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 
 ### Pacco regalo (campagna e Epica)
 - **Dove e quando** **[deciso]** (Marco): in Standard dal **livello 61**, in Epica dal **livello 31** (stessa difficoltà, 61); **non** nella Protezione planetaria.
-  Una volta per livello, **probabilità 25% per livello** (uguale in Standard ed Epica); l’ondata si estrae a caso tra la **3 e la 19, escluse 5, 10 e 15**.
+  Una volta per livello, probabilità **60%** per livello (una volta per livello) **[deciso]** (Marco, 26/11/2026) (prima 25%; uguale in Standard ed Epica); l’ondata si estrae a caso tra la **3 e la 19, escluse 5, 10 e 15**.
   Si tira a inizio livello. Se il pacco è già stato risolto (preso o scaduto), non ricompare rigiocando l’ondata dopo “Continua”. **[Claude]**
 - **Nemico speciale** **[deciso]** (Marco): non infligge danni e non arriva alla cupola; **fluttua tra il 25% e il 50% dell’altezza dello schermo** (misurata dal basso, y da 480 a 320),
   ha un **timer**. **Solo il guardiano in modalità manuale può colpirlo**: torrette, ranger e mira automatica non lo considerano bersaglio, e il “Bersaglio” (più vicino / vita più alta) lo ignora.
   Non conta nel contatore “Nemici” né per finire l’ondata, né per la frenesia (come il guscio). Se l’ondata finisce prima del timer, o scade il timer, **se ne va e il premio sfuma**. **[deciso]** (Marco)
-- **Ricompensa** **[deciso]** (Marco): **5 frammenti** (Standard) o **10** (Epica) di un **ranger a caso tra quelli non al livello 10** (etichetta col nome e pezzo di puzzle, come i frammenti del § 17).
-  Se **tutti i ranger sono al livello 10**: in Standard il pacco **non compare più**; in Epica lascia **un pezzo di equipaggiamento o un Modulo di rarità epica o superiore**.
-  Frammenti medi per livello giocato: 1,25 in Standard, 2,5 in Epica.
+- **Ricompensa** **[deciso]** (Marco, 26/11/2026): il pacco dà più di frammenti. Estrazione: **50% frammenti** · **20% pezzo di equipaggiamento** · **20% Modulo** · **8% Sigilli ◆** (5 ◆) · **2% Sigillo maggiore ✦** (1),
+  in **Standard e in Epica**. Pezzi e Moduli **partono dalla rarità comune** e salgono con la **tabella dei drop del § 15 per la difficoltà del livello** (nessun minimo epico); tipo del pezzo a caso.
+  Frammenti: 5 (Standard) o 10 (Epica) di un ranger non al massimo (20), × M (vedi “Crescita dei frammenti”), con l’etichetta col nome e il pezzo di puzzle.
+  Se tutti i ranger sono al massimo la quota dei frammenti si redistribuisce sulle altre in proporzione (pezzo 40%, Modulo 40%, ◆ 16%, ✦ 4%) e il pacco **compare comunque**, anche in Standard
+  (cambia la regola precedente “in Standard non compare più”) **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
+  Frammenti medi per livello giocato: 1,25 in Standard, 2,5 in Epica: valori della 1.21.0 (probabilità 25%, solo frammenti): da rimisurare.
 - **Danni** **[deciso]** (Marco): i colpi del guardiano colpiscono **anche i nemici che trovano lungo la strada**; per raggiungere il pacco serve quindi una traiettoria libera
   oppure abbastanza perforazioni da superare i nemici in mezzo. **[Claude]** (lettura): lo ferisce solo il proiettile diretto del guardiano e del Clone, con resistenze neutre (×1);
   aree, raggi, fulmini, mine, schegge e stati lo attraversano senza contare come perforazione né attivare effetti; è immune a attrazione, spinta e teletrasporto.
   Dalla 1.24.1 il tiro premendo è in colonna (§ 2): il pacco si colpisce tenendo il guardiano sotto di lui, ovunque sia il dito in verticale. **[deciso]** (Marco)
-- **Equipaggiamento in Epica con tutti i ranger al 10** **[Claude]**: pezzo o Modulo 50% / 50%, tipo a caso, rarità dalla tabella dei drop del § 15 per la difficoltà, limitata a epico o superiore e riscalata al 100%.
+- Equipaggiamento in Epica con tutti i ranger al 10: sostituito dalla Ricompensa del 26/11/2026 (sopra). Nella 1.21.0: pezzo o Modulo 50% / 50%, rarità limitata a epico o superiore **[Claude]**.
 - **Valori** **[Claude]** (accettati da Marco come punto di partenza, da provare a mano): timer **12 s** (fermo in pausa e nella scelta delle carte, scorre con la velocità 1,5x / 2x come la logica);
   vita calcolata all’apparizione come **danno al secondo del guardiano × 5 s di fuoco**; movimento morbido, circa **50 px/s**, con cambi di direzione; entra dall’alto e, alla fine, esce verso l’alto.
 - **Salvataggio** **[Claude]**: la partita sospesa (§ 2) salva l’ondata estratta e l’esito del pacco; “Continua” rigioca l’ondata dall’inizio e il pacco ricompare solo se non era già risolto.
@@ -1441,7 +1531,26 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 - **Misura 1.21.0** (bot che ignorano il pacco): `EQUIP=1.5 node tests/tools/curva.js 61,70,100 15` dà **gli stessi numeri** partita per partita sulla 1.20.0 e sulla 1.21.0,
   anche con il pacco forzato in ogni livello (probabilità 100%): 61 8/15 e 5/15, 70 12/15 e 5/15, 100 9/15 e 7/15 (random / smart). L’effetto sui muri di un giocatore che insegue il pacco
   resta da misurare con un bot che lo miri **[da misurare]**.
-- **Tempi di sblocco con il pacco** (`PACCO=<livelli di Standard al giorno> PACCO_EPICA=<livelli di Epica al giorno> node tests/tools/ranger-tempi.js`, stessi giorni di gioco, pacco sempre preso;
+- **Il bot ignora il pacco**: per le stime si usa un **tasso di presa ipotizzato** (50% e 100%), che è un’ipotesi di misura e non una regola di gioco.
+- **Stima delle ricompense** **[Claude]** (26/11/2026, `node tests/tools/pacco-stima.js`, campagna a 400 livelli giocata una volta: Standard 61-400 ed Epica 31-400, 710 livelli al 60%):
+  presa 100%: **426 pacchi**, 85 pezzi, 85 Moduli, 170 ◆, 8,5 ✦ (4,4 in Epica), 1620 frammenti base (prima di M); presa 50%: 213 pacchi, 43 pezzi, 43 Moduli, 85 ◆, 4,3 ✦, 810 frammenti.
+- **Ranger fino al 20** **[Claude]** (misura del 26/11/2026, `NUOVE=1 … node tests/tools/ranger-tempi.js 10 200 5 300`: livello massimo 20, M, bonus di completamento, pacco al 60% con il 50% di frammenti;
+  quote e vittorie per tipo dai bot al livello 1, `planet.js 1 30`, 60 partite per tipo: fire 0,60 e 32% · force 0,43 e 13% · electric 0,86 e 57% · energy 0,55 e 22% · physical 0,16 e 0%).
+  Mesi (mediane di 300 calendari) per tutti e 10 sbloccati / tutti al 10 / tutti al 20:
+
+  | Pacco | Presa | Sbloccati | Tutti al 10 | Tutti al 20 | Frammenti dal pacco |
+  |---|---|---|---|---|---|
+  | nessuno (regole vecchie) | – | 14,7 | 77,4 | – | – |
+  | 3 livelli di Standard al giorno (regole vecchie, 25%) | 100% | 9,3 | 32,5 | – | 15% |
+  | nessuno | – | 13,8 | 47,9 | 82,2 | – |
+  | 3 livelli di Standard al giorno | 100% | 8,8 | 27,8 | 35,4 | 15% |
+  | 3 livelli di Standard al giorno | 50% | 10,8 | 33,3 | 45,7 | 8% |
+  | 2 di Standard e 2 di Epica al giorno | 100% | 6,5 | 21,8 | 26,5 | 26% |
+  | 2 di Standard e 2 di Epica al giorno | 50% | 9,0 | 27,9 | 35,6 | 15% |
+
+  Il collo di bottiglia resta il **physical** (quota 0,16, nessuna vittoria al livello 1); dopo che tutti sono al 10, M = ×2 e il pacco vanno ai ranger ancora sotto il 20, quindi l’ultimo tratto è breve.
+  Lo strumento senza `NUOVE` riproduce la misura della 1.21.0 (9,4 e 35,7 mesi con le vecchie quote e 3 livelli di Standard al giorno).
+- **Tempi di sblocco con il pacco** — valori della 1.21.0 (probabilità 25%, solo frammenti): da rimisurare (misura del 26/11/2026 sotto, “Ranger fino al 20”) — (`PACCO=<livelli di Standard al giorno> PACCO_EPICA=<livelli di Epica al giorno> node tests/tools/ranger-tempi.js`, stessi giorni di gioco, pacco sempre preso;
   quote dei continenti della 1.18.0: fire 0,58 · force 0,23 · electric 0,88 · energy 0,58 · physical 0,16): tutti e 10 sbloccati **14,8 mesi senza pacco → 9,5 con 3 livelli di Standard al giorno
   → 7,3 con 2 di Standard e 2 di Epica (o 3 di Epica)**; tutti al 10: oltre 6 anni → 35,7 → 25,6 mesi. Il pacco va a un ranger qualsiasi non al 10, quindi aiuta soprattutto i tipi più lenti
   (physical da 14,8 a 9,5 mesi, force da 10,1 a 7,4) e poco i veloci (electric da 3,0 a 2,7). Con le quote della 1.16.0: 10,9 → 7,9 mesi. **[Claude]** (misura)

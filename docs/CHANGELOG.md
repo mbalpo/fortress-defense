@@ -3,6 +3,42 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione del 26/11/2026 — Ancestrale+N, ranger fino al 20, pacco nuovo, campagna a 400 (nessuna versione nuova)
+
+**Nessun codice del gioco toccato** (`app/` invariata, `APP_VERSION` resta 1.25.4): decisioni di Marco in DESIGN.md e misure con strumenti in `tests/tools/`. L’implementazione verrà dopo.
+
+- **Decisioni** (DESIGN.md; tag **[deciso]** (Marco, 26/11/2026), “su proposta di Claude” dove Marco ha confermato una proposta):
+  - § 15 **Ancestrale+N**: fusione dei pezzi ancestrali fino a +10 (pezzo +(N−1) + N ancestrali base), +20% del valore ancestrale a passo, slot 6 / 7 / 8 a +1 / +5 / +10 per Moduli di ogni rarità;
+    Moduli ancestrali nuovi **[aperto]**. Messo dopo il blocco “Fusione” (con le sue due righe Equip e Moduli), non in mezzo.
+  - § 16 **Tetti**: tetto del cooldown confermato al 60%; nodo nuovo della barriera che porta la riduzione del danno al 65% (1 livello, 15 ◆, dal 200).
+    **Nodi finali** (sottosezione nuova): 12 entità, 5 livelli da +1/6 del danno base, 10 ◆ a livello, dal 200. Sottosezione nuova **Campagna a 400 livelli**.
+  - § 17 **Pacco regalo**: probabilità 60%; premio 50% frammenti / 20% pezzo / 20% Modulo / 8% 5 ◆ / 2% 1 ✦ in Standard ed Epica, rarità dalla tabella dei drop; con tutti i ranger al massimo
+    compare comunque. **Ranger fino al 20** (2100 frammenti per il 20), danno dopo il 10: supporti +15% per livello, conversioni +5% del danno del guardiano; **crescita M** e **bonus di completamento**.
+    Per ciò che non è danno dopo il 10: **[aperto]**, con lo stato di ogni ranger e opzioni **[Claude]** (anche: Gamma ed Epsilon oggi non crescono del 15% lineare, da chiarire).
+  - § 4 e § 16: **campagna a 400 livelli** (`CAMPAIGN.maxLevel` ancora 200 nel codice); § 16 Sigilli maggiori anche dal pacco.
+  - § 11: pacco aggiornato; aperti nuovi: pendenza oltre il 200, nodi oltre il 20 e carte standard a 10 livelli, riduzione oltre il 65%, Moduli ancestrali nuovi, supporti senza danno dopo il 10.
+- **Correzioni verificate nel codice**: § 11 dal 30 al 200 vita ×3,96, danno ×2,70, numero ×1,93 (non 1,94: 2,145 ÷ 1,11), velocità ×1,40 (`effD` 23 → 230; i numeri vecchi erano della 1.11.0);
+  § 16 albero **1292 ◆ e 188 ✦** (testo: 1213), 1907 ◆ con i nodi nuovi; massimo dell’equipaggiamento sulla riduzione del danno **−50%** (Modulo 10 ancestrale −20% sull’armatura,
+  Modulo 11 −15% su armatura e stivali): il “−30%” era nel § 16 (“Tetti”), nel § 15 c’erano i tetti vecchi “40% e 60%” e il −30% del solo Modulo 11 (giusto, ora con il rimando al −50%).
+- **Strumenti** (solo misure): `equip-atteso.js` (`gearMax`, `patchAncestrale`, `--ancestrale`), `curva.js` (`MASSIMO=<N>`, `PENDENZA=<s>`, livelli oltre il 200),
+  `ranger-tempi.js` (`NUOVE=1`, `MAX`, `W`, `PRESA`; senza `NUOVE` come prima), nuovo `pacco-stima.js`.
+- **Misure** (dettagli in DESIGN.md § 15, § 16 “Campagna a 400 livelli”, § 17):
+  - Ancestrale+N (drop veri, fusione ideale, 400 simulazioni): al 180+ set di 6 pezzi ancestrale **88** vittorie (stima 37: era il valore di un pezzo, 45), +1 139, +2 233, +3 363, +5 746, +10 **2346**; al 140 e al 100 da 1,4 a 3 volte di più.
+  - Tutto al massimo (+5 e +10, 1560 partite): **100%** di vittorie dal 200 al 400 con pendenza 1,2, 0,8 e 0,6. Profilo atteso oltre il 200 (60 partite per punto): pendenza 1,2 → 250 38% · 300 15% · 350 2% · 400 3%;
+    0,8 → 50 · 40 · 22 · 15%; 0,6 → 42 · 53 · 53 · 42%.
+  - Ranger (quote e vittorie dei bot al livello 1, 60 partite per tipo): regole nuove con 3 livelli di Standard al giorno e pacco preso sempre: sbloccati 8,8 mesi, tutti al 10 27,8, al 20 35,4
+    (presa 50%: 10,8 / 33,3 / 45,7; 2 di Standard e 2 di Epica: 6,5 / 21,8 / 26,5); senza pacco 13,8 / 47,9 / 82,2. Physical resta il collo di bottiglia.
+  - Pacco su 400 livelli: 426 pacchi, 85 pezzi, 85 Moduli, 170 ◆, 8,5 ✦, 1620 frammenti base (presa 100%; metà al 50%).
+  - Valute: ✦ in Epica a 400 148,4 (157 col pacco: mancano 31, circa 25 rigiocate di un boss); ◆ con la cupola al 100 / 75 / 50%: 2340 / 2047,5 / 1755 contro 1907 (al 50% mancano 152 senza pacco).
+
+**Test**: `npm test`: tutti verdi (nessun test cambiato).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versione 60): sei domande nuove in “Da decidere” (pendenza oltre il 200, ranger dopo il 10 senza danno e crescita di Gamma ed Epsilon, nodi oltre il 20 e carte a 10 livelli,
+riduzione oltre il 65%, valute a 400, tempi dell’ancestrale+N); la domanda sui tempi dei ranger col pacco riscritta con la misura nuova; in “Resto del progetto” la voce delle decisioni da costruire.
+I riferimenti (“come funziona oggi”) non cambiano finché le decisioni non sono nel gioco; i Moduli ancestrali nuovi restano fuori (Marco: “in un secondo momento”).
+
 ## 1.25.4 — Conversione, danni extra ed esplosioni del guardiano
 
 - **Decisioni di Marco** (26/11/2026), scritte in DESIGN.md § 17 “Conversione e danni extra” (con i rimandi in § 10 e in “Fase 2 costruita”):

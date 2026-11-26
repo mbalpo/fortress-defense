@@ -48,9 +48,62 @@ function gearFor(L, vit = 1.5, seed = 1, epic = 0) {   // epic = livelli di Epic
   for (let lv = 1; lv <= epic; lv++) ev(`rollDrops(diffOf(${lv}, true), true)`);
   return JSON.parse(ev(STRATEGY));
 }
-module.exports = { gearFor };
+// Equipaggiamento al massimo (26/11/2026, § 15 “Ancestrale+N”): 6 pezzi ancestrali, ciascuno con i `slots` Moduli ancestrali più utili del suo pool
+// (stessa scala di valori della strategia). La statistica base dell’ancestrale+N si ottiene con patchAncestrale (sostituzione nel sorgente, solo per le misure).
+function gearMax(slots) {
+  const g = makeGame({ patch: EV, cleared: 30, level: 30, storage: { "fortress-progress-v1": JSON.stringify({ cleared: 30, seen: [] }) } });
+  return JSON.parse(g.win.__ev(`(() => {
+    const PRI = { 2: 9, 1: 8, 7: 8, 18: 7, 6: 6, 13: 6, 3: 6, 20: 6, 9: 5, 5: 5, 8: 3, 19: 2, 11: 7, 10: 4, 14: 4, 16: 4, 15: 3,
+      28: 6, 23: 4, 24: 4, 25: 4, 26: 4, 27: 4, 22: 6, 21: 4, 29: 5, 30: 7 };
+    const val = (fx) => fx === 4 || fx === 12 || fx === 17 ? 48 : PRI[fx] + 40;
+    const eq = {}; for (const pc of PIECE_IDS) eq[pc] = { r: 4, m: [...PIECES[pc].pool].sort((a, b) => val(b) - val(a)).slice(0, ${slots}).map((fx) => [fx, 4]) };
+    return JSON.stringify({ pcs: {}, mods: {}, eq, lock: {} });
+  })()`));
+}
+// ancestrale+N nel sorgente: statistica base dell’ancestrale × (1 + 0,2 N) e slot in più (6, 7, 8 a +1, +5, +10) accettati al caricamento
+const slotsAt = (N) => 5 + (N >= 1) + (N >= 5) + (N >= 10);
+function patchAncestrale(h, N) {
+  const k = 1 + 0.2 * N, need = (x) => { if (!h.includes(x)) throw new Error("manca " + x); };
+  for (const x of ["base: [6, 10, 15, 21, 28]", "base: [4, 7, 11, 15, 20]", "m.length < e.r + 1) m.push"]) need(x);
+  return h.split("base: [6, 10, 15, 21, 28]").join(`base: [6, 10, 15, 21, ${28 * k}]`).split("base: [4, 7, 11, 15, 20]").join(`base: [4, 7, 11, 15, ${20 * k}]`)
+    .replace("m.length < e.r + 1) m.push", `m.length < e.r + 1 + (e.r === 4 ? ${slotsAt(N) - 5} : 0)) m.push`);
+}
+module.exports = { gearFor, gearMax, patchAncestrale, slotsAt };
 
-if (require.main === module) {
+// Ancestrale+N (26/11/2026, § 15): vittorie per avere un pezzo (l’arma) e un set di 6 pezzi a +N, con i drop veri (2 pezzi a vittoria, tipo e rarità
+// dalla tabella del gioco) e la fusione ideale (5 uguali → rarità successiva appena possibile). Un pezzo +N richiede 1 + N(N+1)/2 ancestrali base del suo tipo.
+// Uso: node tests/tools/equip-atteso.js --ancestrale [simulazioni=400]
+if (require.main === module && process.argv[2] === "--ancestrale") {
+  const RUNS = +(process.argv[3] || 400), g = makeGame({ patch: EV });
+  const TAB = JSON.parse(g.win.__ev("JSON.stringify(DROP_RARITY)")), BASE = JSON.parse(g.win.__ev("JSON.stringify(Object.fromEntries(PIECE_IDS.map((p) => [p, [PIECES[p].stat, PIECES[p].base[4]]])))"));
+  const NS = [0, 1, 2, 3, 5, 10], need = (N) => 1 + N * (N + 1) / 2, med = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
+  const pct = (x) => (Math.round(x * 10) / 10).toString().replace(".", ",") + "%";
+  console.log("Potenza della statistica base (set di 6 pezzi allo stesso passo, prima dei Moduli) e slot per i Moduli:");
+  for (const N of NS) {
+    const tot = { pdmg: 0, hp: 0, tdmg: 0 }; for (const [st, b] of Object.values(BASE)) tot[st] += b * (1 + 0.2 * N);
+    console.log(`  ${N ? "+" + N : "ancestrale"}`.padEnd(13), `guardiano +${pct(tot.pdmg)} · barriera +${pct(tot.hp)} · torrette +${pct(tot.tdmg)} · slot ${slotsAt(N)} · ancestrali base per pezzo ${need(N)}`);
+  }
+  for (const D of [100, 140, 180]) {
+    const w = TAB.reduce((a, [d, x]) => D >= d ? x : a, TAB[0][1]), tw = w.reduce((a, b) => a + b, 0);
+    const one = Object.fromEntries(NS.map((N) => [N, []])), set = Object.fromEntries(NS.map((N) => [N, []]));
+    for (let run = 0; run < RUNS; run++) {
+      const c = [...Array(6)].map(() => [0, 0, 0, 0, 0]); let v = 0, done1 = 0, doneS = 0;
+      while (doneS < NS.length && v < 20000) {
+        v++;
+        for (let k = 0; k < 2; k++) {
+          const t = Math.floor(Math.random() * 6); let x = Math.random() * tw, r = 0; while ((x -= w[r]) >= 0) r++;
+          c[t][r]++; for (let q = 0; q < 4; q++) while (c[t][q] >= 5) { c[t][q] -= 5; c[t][q + 1]++; }
+        }
+        while (done1 < NS.length && c[0][4] >= need(NS[done1])) { one[NS[done1]].push(v); done1++; }
+        while (doneS < NS.length && c.every((x) => x[4] >= need(NS[doneS]))) { set[NS[doneS]].push(v); doneS++; }
+      }
+    }
+    console.log(`Drop alla difficoltà ${D} (tabella ${w.join("/")}), ${RUNS} simulazioni, mediane delle vittorie:`);
+    console.log("  un pezzo (arma):", NS.map((N) => (N ? "+" + N : "ancestrale") + " " + med(one[N])).join(" · "));
+    console.log("  set di 6 pezzi: ", NS.map((N) => (N ? "+" + N : "ancestrale") + " " + med(set[N])).join(" · "));
+  }
+}
+if (require.main === module && process.argv[2] !== "--ancestrale") {
   const LVS = process.argv[2].split(",").map(Number), VIT = +(process.argv[3] || 1.5);
   for (const L of LVS) {
     const gear = gearFor(L, VIT, 1), g = makeGame({ patch: EV, cleared: L - 1, level: L, storage: { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], gear }) } });
