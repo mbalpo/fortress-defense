@@ -43,20 +43,28 @@ console.log("— laser e cupola —");
 {
   const { g, X, mk } = setup(); mk("drone", 180, 250).speed = 0;
   const s = X.makeShooter(X.TURRETS.laser, 180, X.GROUND_Y - 14); s.up.bounce = 3; X.laserFire(s);
-  const R = g.win.__rays[0].segs, last = R[R.length - 1];
-  console.log("laser al centro verso l’alto con 3 rimbalzi → tratti:", R.length, "| il secondo finisce sul bordo della cupola a y", last.y2.toFixed(1),
-    "(atteso", X.GROUND_Y - 95 + ")", ok(R.length === 2 && Math.abs(inDome(X, last.x2, last.y2) - 1) < 1e-6 && Math.abs(last.y2 - (X.GROUND_Y - 95)) < 0.5));
+  // 1.25.3: la cupola è un muro come i bordi dello schermo: su, giù sulla cupola, di nuovo su (normale verticale), giù sulla cupola
+  const R = g.win.__rays[0].segs, last = R[R.length - 1], onDome = (q) => Math.abs(inDome(X, q.x2, q.y2) - 1) < 1e-6;
+  console.log("laser al centro verso l’alto con 3 rimbalzi → tratti:", R.length, "| il secondo e il quarto finiscono sul bordo della cupola a y", R[1].y2.toFixed(1), last.y2.toFixed(1),
+    "(atteso", X.GROUND_Y - 95 + ") | il terzo torna su fino a y", R[2].y2.toFixed(0),
+    ok(R.length === 4 && onDome(R[1]) && onDome(last) && Math.abs(last.y2 - (X.GROUND_Y - 95)) < 0.5 && R[2].y2 === 0 && R[1].dome && last.dome));
   const first = R[0];
   console.log("il primo tratto parte da dentro la cupola ed esce fino al bordo dello schermo: da y", first.y1.toFixed(0), "a", first.y2.toFixed(0), ok(inDome(X, first.x1, first.y1) < 1 && first.y2 === 0));
-  // raggio obliquo: rimbalza sul lato destro (sopra la cupola) e poi rientra
+  // raggio obliquo: rimbalza sul lato destro, sulla cupola e ancora sui bordi; mai dentro la cupola, angolo di uscita uguale a quello di entrata
   const T = X.trace(180, X.GROUND_Y - 22, -Math.PI / 2 + 0.5, 5);
-  const ends = T.map((q) => inDome(X, q.x2, q.y2).toFixed(3));
-  console.log("raggio obliquo con 5 rimbalzi → tratti:", T.length, "| fine dell’ultimo sul bordo:", ends[ends.length - 1], "| nessun tratto dentro la cupola dopo il primo:",
-    T.slice(1).every((q) => inDome(X, q.x1, q.y1) >= 1 - 1e-9 && inDome(X, (q.x1 + q.x2) / 2, (q.y1 + q.y2) / 2) > 1), ok(T.length < 6 && Math.abs(inDome(X, T[T.length - 1].x2, T[T.length - 1].y2) - 1) < 1e-6));
-  const s3 = X.makeShooter(X.TURRETS.laser, 180, X.GROUND_Y - 14); Object.assign(s3.up, { bounce: 2, multi1: 1, multi3: 1 }); X.laserFire(s3);
-  const M = g.win.__rays.slice(1).map((r) => r.segs), mEnd = M.map((q) => q[q.length - 1]);
-  console.log("mini-raggi lv3 → tratti:", M.map((q) => q.length).join(", "), "| finiscono sul bordo:", mEnd.every((q) => Math.abs(inDome(X, q.x2, q.y2) - 1) < 1e-6),
-    ok(M.every((q) => q.length > 1) && mEnd.every((q) => Math.abs(inDome(X, q.x2, q.y2) - 1) < 1e-6)));
+  const D = T.filter((q) => q.dome), refl = T.every((q, i) => {
+    if (!q.dome || !T[i + 1]) return true;
+    const n = T[i + 1], nx0 = (q.x2 - X.DOME.cx) / X.DOME.rx ** 2, ny0 = (q.y2 - X.DOME.cy) / X.DOME.ry ** 2, nl = Math.hypot(nx0, ny0), nx = nx0 / nl, ny = ny0 / nl;
+    const ix = q.x2 - q.x1, iy = q.y2 - q.y1, il = Math.hypot(ix, iy), ox = n.x2 - n.x1, oy = n.y2 - n.y1, ol = Math.hypot(ox, oy);
+    return Math.abs(-(ix * nx + iy * ny) / il - (ox * nx + oy * ny) / ol) < 1e-6 && n.x1 === q.x2 && n.y1 === q.y2;
+  });
+  console.log("raggio obliquo con 5 rimbalzi → tratti:", T.length, "| rimbalzi sulla cupola:", D.length, "| riflessi sulla normale:", refl, "| nessun tratto dentro la cupola dopo il primo:",
+    T.slice(1).every((q) => inDome(X, q.x1, q.y1) >= 1 - 1e-9 && inDome(X, (q.x1 + q.x2) / 2, (q.y1 + q.y2) / 2) > 1),
+    ok(T.length === 6 && D.length >= 1 && D.every(onDome) && refl && T.slice(1).every((q) => inDome(X, (q.x1 + q.x2) / 2, (q.y1 + q.y2) / 2) > 1)));
+  const s3 = X.makeShooter(X.TURRETS.laser, 180, X.GROUND_Y - 14); Object.assign(s3.up, { bounce: 3, multi1: 1, multi3: 1 }); X.laserFire(s3);
+  const M = g.win.__rays.slice(1).map((r) => r.segs);
+  console.log("mini-raggi lv3 → tratti:", M.map((q) => q.length).join(", "), "| toccano la cupola e proseguono:", M.every((q) => q.slice(0, -1).some((x) => x.dome)),
+    ok(M.every((q) => q.length === 4 && q.slice(0, -1).some((x) => x.dome))));
   const sw = X.trace(180, X.GROUND_Y - 22, -Math.PI, 0);
   console.log("spazzata (nessun rimbalzo) orizzontale da dentro: un tratto fino al bordo dello schermo:", sw.length === 1 && sw[0].x2 === 0, ok(sw.length === 1 && sw[0].x2 === 0));
   console.log("errori JS:", g.errors[0] || "nessuno");
@@ -126,14 +134,13 @@ for (const clone of [false, true]) {
     ok(b.edges === 1 && A.hp < h[0] && B.hp < h[1] && C.hp === h[2] && b.dead));
 }
 {
-  // senza nemici: bordo sinistro, bordo alto, poi scende e si ferma appena rientra nella cupola
+  // senza nemici: bordo sinistro, bordo alto, poi scende e rimbalza sulla cupola (1.25.3, prima si fermava); non entra mai nella cupola
   const { g, X, mk, run } = setup(); const p = X.player(); p.up.ricochet = 1;
   const before = X.ents().length; X.playerBullet(p, 60, 300, null, 10, Math.atan2(-0.8, -0.6));
-  const b = X.ents()[before]; let last = null, inside = 0;
-  for (let i = 0; i < 400 && !b.dead; i++) { run(1); if (!b.dead) { last = { x: b.x, y: b.y }; if (inDome(X, b.x, b.y) < 1) inside++; } }
-  console.log("rimbalzo senza nemici: rimbalzi", b.edges, "| si ferma al passaggio del bordo della cupola, ultima posizione fuori, a",
-    last ? Math.hypot(b.x - last.x, b.y - last.y).toFixed(1) : "-", "px | fotogrammi visibili dentro:", inside,
-    ok(b.edges >= 2 && b.dead && inside === 0 && last && inDome(X, last.x, last.y) > 1 && inDome(X, b.x, b.y) <= 1 && Math.hypot(b.x - last.x, b.y - last.y) <= 10.5));
+  const b = X.ents()[before]; let inside = 0, after = 0, up = false;
+  for (let i = 0; i < 300 && !b.dead; i++) { run(1); if (!b.dead) { if (inDome(X, b.x, b.y) < 1) inside++; if (b.domes) { after++; if (b.vy < 0) up = true; } } }
+  console.log("rimbalzo senza nemici: rimbalzi sui bordi", b.edges, "| sulla cupola", b.domes, "| fotogrammi dopo la cupola", after, "| risale:", up, "| fotogrammi visibili dentro:", inside,
+    ok(b.edges >= 2 && b.domes >= 1 && after > 10 && up && inside === 0));
 }
 {
   // senza Rimbalzo lo stesso colpo esce dallo schermo a sinistra

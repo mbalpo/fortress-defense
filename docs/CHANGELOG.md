@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.25.3 — Il laser e i colpi del guardiano rimbalzano sulla cupola
+
+- **Bug segnalato da Marco** (26/11/2026): il raggio del Laser rimbalzava sui bordi dello schermo ma, quando un tratto tornava sulla cupola, si fermava lì e perdeva i rimbalzi rimasti
+  (un Laser con 3 “+1 rimbalzo” arrivava molto meno lontano del previsto). Era la regola della revisione 3 (DESIGN.md § 10), ora cambiata **[deciso]**: la cupola è un muro come i bordi.
+  `trace()` riflette il raggio sulla normale dell’ellisse nel punto d’ingresso (come il Firewheel) e il rimbalzo conta tra quelli disponibili; finiti i rimbalzi, il tratto si ferma sul bordo.
+  Vale per il raggio principale e per i mini-raggi con la chain lv3; spazzata e laser rotante restano senza rimbalzi.
+- **Guardiano e Clone** (verificato: stesso comportamento, regola della revisione 4): un proiettile che dopo un rimbalzo rientrava nella cupola spariva; ora rimbalza sul bordo,
+  smette di inseguire il bersaglio e prosegue finché ha perforazioni o durata (6 s). Vale anche per il Colpo caricato. DESIGN.md § 10 aggiornato (Laser, Rimbalzo del guardiano, cupola larga).
+- Bilanciamento non rimisurato: il laser con rimbalzi e il Rimbalzo del guardiano diventano un po’ più forti (più tratti in campo).
+- `APP_VERSION` e `sw.js` 1.25.3.
+
+**Test**: `npm test`: tutti verdi. `tests/rev3.js` riscritto sulla regola nuova: laser al centro con 3 rimbalzi → 4 tratti (su, giù sulla cupola, di nuovo su, giù sulla cupola);
+raggio obliquo con 5 rimbalzi → 6 tratti, almeno uno sulla cupola, riflessi con angolo di uscita uguale a quello di entrata, nessun tratto dentro la cupola; mini-raggi lv3 con 3 rimbalzi → 4 tratti
+che toccano la cupola e proseguono; colpo del guardiano con Rimbalzo senza nemici → rimbalza sui bordi e sulla cupola, risale e non entra mai nella cupola.
+`tests/rev1.js`: il raggio principale con 2 rimbalzi ora fa 3 tratti (prima 2, perché il terzo si perdeva sulla cupola: era il bug).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (incorpora il codice del gioco; disegni invariati).
+
+Checklist: aggiornata (versione 57): “Rimbalzi del guardiano fermati dalla cupola” sostituita da “Rimbalzi sulla cupola (1.25.3)” per laser e guardiano.
+
 ## 1.25.2 — Icona nuova (variante HD-2D)
 
 - **Scelta di Marco** (DESIGN.md § 7): variante **HD-2D** dell’anteprima della 1.25.1. `node tests/tools/icona.js --usa hd2d` ha riscritto `icon-512.png`, `icon-192.png`, `icon-180.png`

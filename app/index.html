@@ -1403,9 +1403,9 @@ function zone(x, y, r, life, apply, color, look) {
     draw() { if (look) FX[look](this); else FX.zone(this, color); } });
 }
 
-// ---- raggi: tracciamento con rimbalzi sui bordi dello schermo ----
-// un tratto che parte fuori dalla cupola e la rientra si ferma sul suo bordo e il raggio non rimbalza più
-// (il primo tratto parte da dentro ed esce normalmente: una retta non rientra in un’ellisse da cui è uscita)
+// ---- raggi: tracciamento con rimbalzi sui bordi dello schermo e sulla cupola ----
+// un tratto che parte fuori dalla cupola e la rientra rimbalza sul suo bordo (riflessione sulla normale dell’ellisse, come il Firewheel)
+// e il rimbalzo conta come gli altri (1.25.3, Marco: prima si fermava lì); il primo tratto parte da dentro ed esce normalmente
 function domeEntry(x, y, dx, dy) {               // distanza lungo la direzione a cui si entra nella cupola, o Infinity
   const ux = (x - DOME.cx) / DOME.rx, uy = (y - DOME.cy) / DOME.ry, vx = dx / DOME.rx, vy = dy / DOME.ry;
   const a = vx * vx + vy * vy, b = 2 * (ux * vx + uy * vy), c = ux * ux + uy * uy - 1;
@@ -1422,7 +1422,13 @@ function trace(x, y, a, bounces) {
     const t = Math.min(tx, ty);
     if (!isFinite(t) || t < 0.5) break;
     const td = domeEntry(x, y, dx, dy);
-    if (td <= t) { segs.push({ x1: x, y1: y, x2: x + dx * td, y2: y + dy * td, dome: true }); break; }   // rientra nella cupola: si ferma
+    if (td > 0.5 && td <= t) {                   // rientra nella cupola: rimbalza sul bordo
+      const ex = x + dx * td, ey = y + dy * td;
+      segs.push({ x1: x, y1: y, x2: ex, y2: ey, dome: true }); len += td;
+      let nx = (ex - DOME.cx) / (DOME.rx * DOME.rx), ny = (ey - DOME.cy) / (DOME.ry * DOME.ry); const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+      const d = dx * nx + dy * ny; if (d < 0) { dx -= 2 * d * nx; dy -= 2 * d * ny; }
+      x = ex; y = ey; continue;
+    }
     const nx = x + dx * t, ny = y + dy * t;
     segs.push({ x1: x, y1: y, x2: nx, y2: ny }); len += t;
     if (tx <= ty) dx = -dx; else dy = -dy;
@@ -2731,9 +2737,15 @@ function playerBullet(p, x, y, t, dmg, ang, o) {
     update(dt) {
       this.life -= dt; if (this.life <= 0) { this.dead = true; return; }
       if (this.t && !this.t.dead) { const d = edist(this.t, this.x, this.y) || 1; this.vx = (this.t.x - this.x) / d; this.vy = (this.t.y - this.y) / d; }
+      const px = this.x, py = this.y;
       this.x += this.vx * 600 * dt; this.y += this.vy * 600 * dt;
-      if (this.reb) {                            // dopo un rimbalzo il colpo non attraversa la cupola: se la rientra si ferma sul bordo
-        if (domeK(this.x, this.y, 0) > 1) this.out = true; else if (this.out) { this.dead = true; return; }
+      if (this.reb) {                            // dopo un rimbalzo il colpo non attraversa la cupola: se la rientra rimbalza sul bordo (1.25.3, prima si fermava)
+        if (domeK(this.x, this.y, 0) > 1) this.out = true;
+        else if (this.out) {                     // riflessione sulla normale dell’ellisse, come il Firewheel; resta sull’ultima posizione fuori
+          let nx = (px - DOME.cx) / (DOME.rx * DOME.rx), ny = (py - DOME.cy) / (DOME.ry * DOME.ry); const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+          const d = this.vx * nx + this.vy * ny; if (d < 0) { this.vx -= 2 * d * nx; this.vy -= 2 * d * ny; }
+          this.x = px; this.y = py; this.t = null; this.domes = (this.domes || 0) + 1;
+        }
       }
       const sh = shells.length && shellAt(this.x, this.y);   // guscio: blocca il colpo; con Atlante a volte lo attraversa (una prova per guscio)
       if (sh && !(this.pass && this.pass.has(sh))) { if (RG.ign && Math.random() < RG.ign) (this.pass = this.pass || new Set()).add(sh); else { this.dead = true; return; } }
@@ -3826,7 +3838,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.25.2";
+const APP_VERSION = "1.25.3";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
