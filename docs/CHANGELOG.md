@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.34.0 — Ingressi e fiamme con i campioni
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Ingressi e fiamme”): spaceEngine_000 per l’ingresso dei boss, spaceEngine_003 per i mini-boss, il rumore delle fiamme dai thrusterFire.
+- **Ingressi** **[Claude] [da rivedere]**: il motore cresce piano e alla fine il colpo profondo, come nel sintetico. Boss: spaceEngine_000 (sale in 3,4 s, 4,6 s in tutto) con lowFrequency_explosion_000 e impactMetal_001 grave a 3,5 s;
+  mini-boss: spaceEngine_003 (sale in 1,4 s, 2 s in tutto) con lowFrequency_explosion_001 a 1,5 s.
+- **Fiamme** **[Claude] [da rivedere]**: lette come le torrette di fuoco Sky Guard e Firewheel. Un solo file, thrusterFire_001, con varianti da punti diversi del file.
+  Sky Guard: fiammata breve alla partenza dei missili (0,45 s, ×1,3). Firewheel: fiammata al lancio (0,7 s, ×0,9) e suono continuo di fiamma finché i droni girano (come il Laser, con un’onda di 3 Hz).
+- **Modulo**: punto di partenza nel file per strato (`off`); i tratti ripetuti si adattano a un file più corto. Volumi tarati sul sintetico (entro 0,6 dB): boss 0,55, mini-boss 0,29, Sky Guard 0,134, Firewheel 0,137; continuo della Firewheel 0,068.
+- **File**: spaceEngine_000, spaceEngine_003, thrusterFire_001 (usati interi): **32 file, 934,9 KB** (prima 563,0). `ASSETS`, `CREDITI.md`, dati del catalogo sonoro aggiornati; nel catalogo Sky Guard, Firewheel (anche “partenza + continuo”) e ingressi nella prova.
+  `APP_VERSION` e `sw.js` 1.34.0. Tra le torrette restano sintetiche solo Thunderbolt e Teslacoil.
+
+**Misure** (Chromium sul computer): decodifica dei tre file nuovi 24 ms; memoria dei campioni circa 6,4 MB (+2,9). Sul telefono non misurato.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: con “campioni” suonano con i file 15 eventi (e solo loro); nuovo controllo 1.34.0 (boss spaceEngine_000, mini-boss spaceEngine_003 con il colpo profondo, Sky Guard e Firewheel con thrusterFire,
+suono continuo della Firewheel); nella partita con i campioni si accendono i continui di Laser, Beam e Firewheel; catalogo con 17 tasti sintetici e 4 “partenza + continuo”.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 75): ingressi di boss e mini-boss con i campioni; fiamme di Sky Guard e Firewheel; peso 935 KB; valori e lettura di Claude.
+
 ## 1.33.0 — Suoni continui, colpi dei droni e Vortex più lungo
 
 - **Prova delle torrette sul telefono** (Marco, 27/11/2026, DESIGN.md § 18 “Esito della prova delle torrette sul telefono”): Aeroblast e Railgun vanno bene; Vortex troppo basso e breve;

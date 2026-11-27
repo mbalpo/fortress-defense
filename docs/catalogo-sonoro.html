@@ -104,7 +104,7 @@ function preview(n, w, pick, btn) {
   btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), 250);
 }
 {
-  const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola e sette torrette; suoni continui e colpi dell’Hive dalla 1.33.0)"; root.appendChild(h);
+  const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola e sette torrette; suoni continui e colpi dell’Hive dalla 1.33.0; Sky Guard, Firewheel e ingressi dalla 1.34.0)"; root.appendChild(h);
   const grid = document.createElement("div"); grid.className = "grid cmp"; root.appendChild(grid);
   for (const n of S.SAMPLED_EVENTS) for (const w of WEIGHTS[n] || [1]) {
     const h3 = document.createElement("h3"); h3.textContent = CMP_NOTE[n] ? n + " · peso " + w + " · " + CMP_NOTE[n][w] : n.startsWith("sparo.") ? NAMES[n.slice(6)] + " · " + n : n === "colpo.hive" ? "Hive · colpi dei droni (solo campioni) · " + n : n; grid.appendChild(h3);

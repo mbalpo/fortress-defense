@@ -1772,5 +1772,17 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **Volumi** (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa): partenza del Laser e del Beam 3 dB sotto il sintetico (volume 0,03 e 0,039); suono continuo circa 6 dB sotto la partenza
     per Laser e Beam (0,0225 e 0,0325) e 8 dB sotto per il Disruption (0,1); Vortex 5 dB sopra il sintetico (0,135), circa −21/−29 dB per 2 s invece di un colpo che cala in 1 s; colpi dei droni circa 10 dB sotto il lancio dell’Hive (0,115).
   - **File**: gli stessi 29 (563,0 KB); i tratti ripetuti si costruiscono una volta, alla prima accensione (pochi KB di memoria).
+- **Ingressi e fiamme** **[deciso]** (Marco, 27/11/2026): **spaceEngine_000** per l’ingresso dei **boss**, **spaceEngine_003** per i **mini-boss**; il **rumore delle fiamme** da uno o più **thrusterFire**.
+- **Ingressi e fiamme (1.34.0)** · scelte **[Claude] [da rivedere]**:
+  - **Lettura**: “le fiamme” = le due torrette di fuoco ancora sintetiche, **Sky Guard** e **Firewheel Drone** (non le aree in fiamme della Sky Guard né le bruciature, che non hanno un suono).
+  - **Ingressi**: come nel sintetico il motore cresce piano e alla fine arriva il colpo profondo. **Boss**: spaceEngine_000 (motore grave che pulsa ogni 1,75 s circa) che sale in 3,4 s, tenuto fino a 4,6 s e spento in 1 s;
+    a 3,5 s il rombo lowFrequency_explosion_000 con un colpo metallico grave (impactMetal_001 a 0,6). **Mini-boss**: spaceEngine_003 (ronzio fermo intorno a 180 Hz) che sale in 1,4 s, 2 s in tutto; a 1,5 s lowFrequency_explosion_001.
+  - **Fiamme**: un solo file, **thrusterFire_001** (il più scuro con il 003, fruscio intorno a 800 Hz; 200 KB l’uno: due file avrebbero pesato il doppio); le varianti partono da punti diversi del file (`off`, strumento nuovo del modulo).
+    **Sky Guard**: fiammata di propulsore breve alla partenza dei missili (0,45 s, accelerata a 1,3; tre varianti). **Firewheel**: fiammata più lunga e grave al lancio (0,7 s, a 0,9; due varianti)
+    e poi un **suono continuo** come quello del Laser (1.33.0), finché i droni girano (torretta occupata): fruscio di fiamma (thrusterFire_001 da 1 a 3 s, ripetuto) con un’onda di 3 Hz, come la ruota che passa.
+  - **Volumi** (come nella 1.33.0): ingressi forti come il sintetico (boss 0,55, mini-boss 0,29; scarto entro 0,6 dB); Sky Guard e Firewheel forti come il sintetico (0,134 e 0,137); suono continuo della Firewheel circa 8 dB sotto il lancio (0,068).
+  - **File**: 3 nuovi, usati interi (loop da 5 s: il modulo ne legge solo una parte); **32 file, 934,9 KB** (957 339 byte), +372 KB. Memoria dei campioni decodificati circa **6,4 MB** (+15 s mono a 48 kHz, +2,9 MB);
+    decodifica dei tre file nuovi 24 ms sul computer. Sul telefono non misurato.
+  - Restano sintetiche solo **Thunderbolt** e **Teslacoil** (elettricità) tra le torrette.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

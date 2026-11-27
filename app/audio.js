@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -142,9 +142,12 @@
     // torrette (1.32.0)
     laserLarge_000: -17.2, laserLarge_001: -16.6, laserLarge_002: -16.5, laserLarge_003: -17.0, laserLarge_004: -16.9,
     forceField_000: -10.6, forceField_002: -10.6, forceField_004: -10.6, laserSmall_000: -21.6, laserSmall_001: -21.9, laserSmall_002: -22.6, laserSmall_003: -22.1,
-    lowFrequency_explosion_000: -18.0, laserRetro_000: -7.4, laserRetro_001: -7.4, laserRetro_003: -7.6 };
+    lowFrequency_explosion_000: -18.0, laserRetro_000: -7.4, laserRetro_001: -7.4, laserRetro_003: -7.6,
+    // ingressi e fiamme (1.34.0, Marco): loop da 5 s del pacchetto, usati interi (si legge solo una parte con off e d)
+    spaceEngine_000: -9.7, spaceEngine_003: -12.1, thrusterFire_001: -17.4 };
   const SAMPLE_RMS = -18;
-  // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0) };
+  // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0),
+  // off: punto del file da cui si parte (s, 1.34.0) };
   // gain: volume dell’evento con i campioni (al posto di def.gain); vars(peso) → varianti tra cui il modulo sceglie (generatore proprio)
   const S_ = (f, g, extra) => Object.assign({ f, g: g == null ? 1 : g, at: 0 }, extra || {});
   // volumi tarati (1.31.0, cupola 1.31.1) perché ogni evento suoni forte come il suo sintetico (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa)
@@ -161,6 +164,10 @@
     // 1.33.0 (Marco: troppo basso e breve): il rombo intero (2 s) con sotto il ronzio grave del campo di forza tenuto 2 s (il percorso del buco nero dura circa 2 s)
     vortex: [[S_("lowFrequency_explosion_000"), S_("forceField_000", 1.4, { lp: [0.1, 0.3], r: 0.5, d: 2.0, fi: 0.15, fo: 0.7 })],
       [S_("lowFrequency_explosion_000"), S_("forceField_002", 1.4, { lp: [0.1, 0.3], r: 0.45, d: 2.0, fi: 0.15, fo: 0.7 })]],
+    // fuoco (1.34.0, Marco: “il rumore delle fiamme da thrusterFire”): Sky Guard = fiammata di propulsore breve alla partenza dei missili (tre punti diversi
+    // dello stesso file, accelerato a 1,3); Firewheel = fiammata più lunga e grave al lancio (il fruscio dei droni che girano è nel suono continuo)
+    sky: [0.4, 1.9, 3.4].map((off) => [S_("thrusterFire_001", 1, { off, r: 1.3, d: 0.45, fi: 0.02, fo: 0.3 })]),
+    wheel: [0.8, 2.6].map((off) => [S_("thrusterFire_001", 1, { off, r: 0.9, d: 0.7, fi: 0.05, fo: 0.4 })]),
     // colpi dei droni dell’Hive (1.33.0): un laserino corto e più acuto, tagliato a 0,12 s
     hivec: [["laserSmall_000", 1], ["laserSmall_001", 1.35], ["laserSmall_002", 1], ["laserSmall_003", 1]].map(([f, g]) => [S_(f, g, { r: 1.25, d: 0.12, fo: 0.04 })]),
     aero: [[S_("lowFrequency_explosion_001", 1, { d: 0.5 }), S_("impactMetal_000", 0.5, { d: 0.25 })],
@@ -188,6 +195,12 @@
     "sparo.aero": { gain: 0.103, vars: () => SPARO.aero },
     "sparo.rail": { gain: 0.26, vars: () => SPARO.rail },
     "colpo.hive": { gain: 0.115, vars: () => SPARO.hivec },
+    "sparo.sky": { gain: 0.134, vars: () => SPARO.sky },
+    "sparo.wheel": { gain: 0.137, vars: () => SPARO.wheel },
+    // ingressi (1.34.0, Marco): boss = spaceEngine_000 (motore grave che pulsa), mini-boss = spaceEngine_003 (ronzio fermo); come nel sintetico il motore cresce
+    // (entrata lenta) e alla fine arriva il colpo profondo (boss a 3,5 s: rombo lowFrequency_explosion_000 e colpo metallico grave; mini-boss a 1,5 s: lowFrequency_explosion_001)
+    "boss.arrivo": { gain: 0.55, vars: () => [[S_("spaceEngine_000", 1, { d: 4.6, fi: 3.4, fo: 1.0 }), S_("lowFrequency_explosion_000", 1.2, { at: 3.5 }), S_("impactMetal_001", 0.5, { at: 3.5, r: 0.6 })]] },
+    "miniboss.arrivo": { gain: 0.29, vars: () => [[S_("spaceEngine_003", 1, { d: 2.0, fi: 1.4, fo: 0.5 }), S_("lowFrequency_explosion_001", 1.2, { at: 1.5 })]] },
   };
   // ---- suoni continui (1.33.0, Marco): Laser, Beam e Disruption Drone suonano finché il raggio o il campo è acceso, più piano della partenza ----
   // il gioco chiama hold(torretta, acceso) a ogni fotogramma; strati come sopra, con lp: [da, a, piatto] = tratto del file (s) ripetuto senza fine
@@ -198,6 +211,8 @@
     laser: { gain: 0.0225, layers: [S_("laserLarge_000", 1, { lp: [0.05, 0.4, true], fi: 0.12 })] },
     beam: { gain: 0.0325, layers: [S_("laserLarge_003", 0.6, { lp: [0.05, 0.45, true], r: 0.6, fi: 0.1, am: [7, 0.6] }), S_("forceField_004", 1, { lp: [0.1, 0.3], r: 1.5, fi: 0.1, am: [7, 0.6] })] },
     disr: { gain: 0.1, layers: [S_("forceField_000", 1, { lp: [0.1, 0.3], r: 0.6, fi: 0.3, am: [0.8, 0.3] })] },
+    // Firewheel (1.34.0): fruscio di fiamma finché i droni girano (thrusterFire_001 da 1 a 3 s), con un’onda di 3 Hz come la ruota che passa
+    wheel: { gain: 0.068, layers: [S_("thrusterFire_001", 1, { lp: [1.0, 3.0], fi: 0.4, am: [3, 0.35] })] },
   };
   const HOLD_FADE = 0.15;     // dissolvenza in uscita (s) quando il raggio o il campo si spegne
   const SAMPLE_CHAIN = {
@@ -306,7 +321,8 @@
     function loopBuf(f, a, b, flat) {
       const key = f + ":" + a + ":" + b + ":" + (flat ? 1 : 0);
       if (loops[key]) return loops[key];
-      const src = buffers[f], sr = src.sampleRate, x = src.getChannelData(0), i0 = Math.floor(a * sr), n = Math.min(x.length, Math.floor(b * sr)) - i0;
+      const src = buffers[f], sr = src.sampleRate, x = src.getChannelData(0), k = Math.min(1, src.duration / b);   // file più corto del tratto: tratto in proporzione
+      const i0 = Math.floor(a * k * sr), n = Math.min(x.length, Math.floor(b * k * sr)) - i0;
       const seg = new Float32Array(n);
       for (let i = 0; i < n; i++) seg[i] = x[i0 + i];
       if (flat) {
@@ -328,8 +344,8 @@
     // uno strato di campione → nodi verso out, dall’istante t; len: durata (s; Infinity = suono continuo, si ferma da fuori)
     // d taglia con una dissolvenza di fo s (15 ms se non detto), fi fa entrare in fi s, am pulsa il volume
     function sampleLayer(l, t, rate, out, srcs) {
-      const lr = rate * (l.r || 1), b = l.lp ? loopBuf(l.f, l.lp[0], l.lp[1], l.lp[2]) : buffers[l.f];
-      const len = l.lp ? (l.d || Infinity) : Math.min(b.duration / lr, l.d || 1e9), fi = l.fi || 0;
+      const lr = rate * (l.r || 1), b = l.lp ? loopBuf(l.f, l.lp[0], l.lp[1], l.lp[2]) : buffers[l.f], off = l.lp ? 0 : Math.min(l.off || 0, b.duration);
+      const len = l.lp ? (l.d || Infinity) : Math.min((b.duration - off) / lr, l.d || 1e9), fi = l.fi || 0;
       const src = ctx.createBufferSource(), env = ctx.createGain();
       src.buffer = b; src.playbackRate.value = lr; if (l.lp) src.loop = true;
       if (fi) { env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(l.g, t + fi); } else env.gain.setValueAtTime(l.g, t);
@@ -341,7 +357,7 @@
         lfo.connect(dep); dep.connect(amg.gain); env.connect(amg); amg.connect(out);
         lfo.start(t); if (len < Infinity) lfo.stop(t + len + 0.01); srcs.push(lfo);
       } else env.connect(out);
-      src.start(t); if (len < Infinity) src.stop(t + len + 0.01); srcs.push(src);
+      src.start(t, off); if (len < Infinity) src.stop(t + len + 0.01); srcs.push(src);
       return len;
     }
     // un campione (variante) → nodi Web Audio

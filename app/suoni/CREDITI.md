@@ -1,6 +1,6 @@
 # Crediti dei suoni
 
-Campioni usati dalla prova dei campioni (Planet Defense 1.31.0, rivista nella 1.31.1, DESIGN.md § 18) per `guardiano`, `esplosione.grande`, `cupola` e, dalla 1.32.0, gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun.
+Campioni usati dalla prova dei campioni (Planet Defense 1.31.0, rivista nella 1.31.1, DESIGN.md § 18) per `guardiano`, `esplosione.grande`, `cupola` e, dalla 1.32.0, gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun; dalla 1.34.0 anche Sky Guard, Firewheel e gli ingressi di mini-boss e boss.
 Sono i file originali, non modificati (OGG Vorbis, 44,1 kHz): mono, volume e tagli li fa `app/audio.js` alla decodifica e al suono.
 
 - **Autore**: Kenney (www.kenney.nl), pacchetti “Interface Sounds” (1.0) e “Sci-Fi Sounds” (1.0, 11/10/2020).
@@ -37,5 +37,8 @@ Sono i file originali, non modificati (OGG Vorbis, 44,1 kHz): mono, volume e tag
 | `laserSmall_003.ogg` | Kenney Sci-Fi Sounds (1.0) | 8,0 KB |
 | `lowFrequency_explosion_000.ogg` | Kenney Sci-Fi Sounds (1.0) | 14,0 KB |
 | `lowFrequency_explosion_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 9,2 KB |
+| `spaceEngine_000.ogg` | Kenney Sci-Fi Sounds (1.0) | 106,5 KB |
+| `spaceEngine_003.ogg` | Kenney Sci-Fi Sounds (1.0) | 65,9 KB |
+| `thrusterFire_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 199,4 KB |
 
-Totale: 29 file, 563,0 KB.
+Totale: 32 file, 934,9 KB.
