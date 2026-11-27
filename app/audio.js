@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -213,6 +213,9 @@
     disr: { gain: 0.1, layers: [S_("forceField_000", 1, { lp: [0.1, 0.3], r: 0.6, fi: 0.3, am: [0.8, 0.3] })] },
     // Firewheel (1.34.0): fruscio di fiamma finché i droni girano (thrusterFire_001 da 1 a 3 s), con un’onda di 3 Hz come la ruota che passa
     wheel: { gain: 0.068, layers: [S_("thrusterFire_001", 1, { lp: [1.0, 3.0], fi: 0.4, am: [3, 0.35] })] },
+    // aree in fiamme della Sky Guard (1.35.0, Marco): fuoco a terra finché ce n’è almeno una (non per torretta: il gioco chiama hold("fiamme", …));
+    // un altro tratto dello stesso file (3-4,8 s), più grave (×0,7) e con un tremolio irregolare di 5 Hz; le bruciature restano senza suono [deciso]
+    fiamme: { gain: 0.055, layers: [S_("thrusterFire_001", 1, { lp: [3.0, 4.8], r: 0.7, fi: 0.3, am: [5, 0.4] })] },
   };
   const HOLD_FADE = 0.15;     // dissolvenza in uscita (s) quando il raggio o il campo si spegne
   const SAMPLE_CHAIN = {

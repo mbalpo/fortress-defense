@@ -2,7 +2,7 @@
 // e dentro il gioco (eventi emessi, sospensione fuori dall’ondata, cursore del volume, nessun effetto sulla logica).
 // Prova dei campioni (1.31.0): sintetico identico alla 1.25.1, campioni per guardiano, esplosione grande e cupola, ripiego se un file manca, campo “suoni”.
 // Suoni continui (1.33.0): Laser, Beam e Disruption finché il raggio o il campo è acceso, colpi dei droni dell’Hive (solo campioni), Vortex di 2 s.
-// Ingressi e fiamme (1.34.0): boss e mini-boss con spaceEngine, Sky Guard e Firewheel con thrusterFire, Firewheel con il suono continuo.
+// Ingressi e fiamme (1.34.0): boss e mini-boss con spaceEngine, Sky Guard e Firewheel con thrusterFire, Firewheel con il suono continuo; aree in fiamme (1.35.0).
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const { makeGame, play } = require("./bot.js");
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -182,6 +182,11 @@ const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.ar
     const impact = fv("boss.arrivo").every((v) => v.files.includes("lowFrequency_explosion_000")) && fv("miniboss.arrivo").every((v) => v.files.includes("lowFrequency_explosion_001"));
     console.log("1.34.0: ingresso del boss", bossF, "· del mini-boss", miniF, "· colpo profondo alla fine:", impact, "· Sky Guard e Firewheel con thrusterFire:", fire, "· suono continuo della Firewheel:", S.HOLD_TURRETS.includes("wheel"),
       ok(bossF === "spaceEngine_000" && miniF === "spaceEngine_003" && impact && fire && S.HOLD_TURRETS.includes("wheel")));
+    // 1.35.0 (Marco): aree in fiamme della Sky Guard con un suono continuo; le bruciature senza suono
+    t += 5000; const fOn = S.hold("fiamme", true), fHeld = S.holding().includes("fiamme"), fOff = S.hold("fiamme", false), fGone = !S.holding().includes("fiamme");
+    const burnSfx = /sfx\(/.test(GAME.slice(GAME.indexOf("function skyBurn"), GAME.indexOf("function skyBurn") + 300)) || /sfx\(/.test(GAME.slice(GAME.indexOf("const burn = "), GAME.indexOf("\n", GAME.indexOf("const burn = "))));
+    console.log("1.35.0: aree in fiamme: acceso", fOn && fHeld, "· spento", !fOff && fGone, "· file", S.variants ? "thrusterFire_001" : "", "· bruciature senza suono:", !burnSfx,
+      ok(fOn && fHeld && !fOff && fGone && !burnSfx));
     // 1.33.0 (Marco dopo la prova sul telefono): suoni continui per Laser, Beam e Disruption; colpi dei droni dell’Hive; Vortex più forte e di 2 s
     t += 5000; const lp0 = ac.log.loops, st0 = ac.log.stops;
     const h1 = S.hold("laser", true), h2 = S.hold("laser", true), h3 = S.hold("beam", true), h4 = S.hold("disr", true), lpOn = ac.log.loops - lp0, held = S.holding().join(" ");
@@ -191,7 +196,7 @@ const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.ar
     const bad = S.hold("sky", true) === false && S.hold("inesistente", true) === false;
     console.log("1.33.0: suoni continui", S.HOLD_TURRETS.join(" "), "· accesi", held, "(ripetizioni avviate " + lpOn + ", acceso due volte = uno solo:", h1 && h2, ") · spento il Laser →", after || "nessuno", "con dissolvenza:", stopped,
       "· in pausa accesi", paused, "· sintetici: spenti", synthOff === 0, "e non si accendono", !synthOn, "· altre torrette no:", bad,
-      ok(S.HOLD_TURRETS.join() === "laser,beam,disr,wheel" && h1 && h2 && h3 && h4 && !h5 && held === "laser beam disr" && lpOn >= 4 && after === "beam disr" && stopped && paused === 0 && synthOff === 0 && !synthOn && bad));
+      ok(S.HOLD_TURRETS.join() === "laser,beam,disr,wheel,fiamme" && h1 && h2 && h3 && h4 && !h5 && held === "laser beam disr" && lpOn >= 4 && after === "beam disr" && stopped && paused === 0 && synthOff === 0 && !synthOn && bad));
     const hv = S.variants("colpo.hive", 1), vx = S.variants("sparo.vortex", 1), sm0 = S.stats.sampled["colpo.hive"] || 0;
     t += 5000; const hp = S.play("colpo.hive"); t += 5000; S.setMode("sintetici"); const st1 = ac.log.started, hq = S.play("colpo.hive"), silent = ac.log.started === st1; S.setMode("campioni");
     console.log("1.33.0: colpi dei droni", hv.length, "varianti (" + [...new Set(hv.map((v) => v.files[0].replace(/_\d+$/, "")))].join() + ") · con i campioni suona", hp, "con i file", (S.stats.sampled["colpo.hive"] || 0) - sm0,
@@ -274,7 +279,8 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
     ok(out[3].same && /guardiano/.test(smp) && smp.split(", ").every((n) => ALLS.includes(n)) && !Object.keys(CS.stats.failed).length));
   // suoni continui nel gioco (1.33.0): accesi dalle torrette occupate (raggio o campo), chiamati dopo gli effetti a ogni fotogramma
   const heldG = Object.keys(CS.stats.held).sort().join(" "), upd = GAME.slice(GAME.indexOf("function update(dt)"), GAME.indexOf("function update(dt)") + 1500);
-  const wired = /for \(const o of ents\) o\.update\(dt\);\n  holdSounds\(\);/.test(upd) && /const HOLD_SOUNDS = \["laser", "beam", "disr", "wheel"\];/.test(GAME) && /s\.busy > 0/.test(GAME.slice(GAME.indexOf("function holdSounds"), GAME.indexOf("function holdSounds") + 300));
+  const wired = /for \(const o of ents\) o\.update\(dt\);\n  holdSounds\(\);/.test(upd) && /const HOLD_SOUNDS = \["laser", "beam", "disr", "wheel"\];/.test(GAME) && /s\.busy > 0/.test(GAME.slice(GAME.indexOf("function holdSounds"), GAME.indexOf("function holdSounds") + 300))
+    && /SOUND\.hold\("fiamme", ents\.some\(\(o\) => o\.fireField && !o\.dead\)\);/.test(GAME);
   const hiveShot = /this\.shots\+\+; this\.cd = 1\.0; sfx\("colpo\.hive"\);/.test(GAME);
   console.log("1.33.0 nel gioco: suoni continui accesi nella partita con i campioni:", heldG || "nessuno", "· collegati alle torrette occupate:", wired, "· colpo dei droni dell’Hive a ogni sparo:", hiveShot,
     ok(/laser/.test(heldG) && wired && hiveShot));
@@ -312,6 +318,6 @@ console.log("— Catalogo sonoro —");
   const synth = cmp.filter((b) => b.className === "synth").length, data = require("./tools/sonoro-campioni.js"), fresh = fs.existsSync(data.OUT) && fs.readFileSync(data.OUT, "utf8") === data.build();
   const onDisk = fs.readdirSync(path.join(__dirname, "..", "app", "suoni")).filter((f) => f.endsWith(".ogg")).map((f) => f.slice(0, -4)).sort().join();
   console.log("campioni nel catalogo: tasti", cmp.length, "(attesi " + want + ", sintetici " + synth + ") · usa catalogo-sonoro-campioni.js:", html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>"), "· dati al passo con app/suoni/:", fresh,
-    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 17 && cmp.filter((b) => b.className === "hold").length === 4 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
+    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 17 && cmp.filter((b) => b.className === "hold").length === 5 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
 }
 }

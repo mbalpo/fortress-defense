@@ -820,6 +820,7 @@ const HOLD_SOUNDS = ["laser", "beam", "disr", "wheel"];
 function holdSounds() {
   if (!SOUND || !SOUND.hold) return;
   for (const id of HOLD_SOUNDS) SOUND.hold(id, slots.some((s) => s && s.id === id && s.busy > 0));
+  SOUND.hold("fiamme", ents.some((o) => o.fireField && !o.dead));   // aree in fiamme della Sky Guard (1.35.0): finché ce n’è almeno una
 }
 if (SOUND) { SOUND.setVolume(settings.volume / 100); if (SOUND.setMode) SOUND.setMode(settings.suoni); }
 // tasto accanto al cursore del volume: sintetici ⇄ campioni (vale subito; i file si decodificano al primo sblocco con “campioni”)
@@ -3920,7 +3921,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.34.0";
+const APP_VERSION = "1.35.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

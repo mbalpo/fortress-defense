@@ -3,6 +3,19 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.35.0 — Aree in fiamme della Sky Guard
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Aree in fiamme”): le fiamme comprendono anche le aree in fiamme della Sky Guard; nessun suono sulle bruciature.
+- **Suono continuo delle aree in fiamme** **[Claude] [da rivedere]**: fuoco a terra finché c’è almeno un’area in fiamme della Sky Guard (uno solo per quante siano), solo con i campioni;
+  `holdSounds()` chiama `SOUND.hold("fiamme", …)`. thrusterFire_001 da 3 a 4,8 s, ×0,7, tremolio di 5 Hz, circa 10 dB sotto la partenza dei missili (0,055). Nessun file nuovo.
+- **Catalogo sonoro**: sotto la Sky Guard il tasto “partenza + continuo” fa sentire le aree in fiamme per 3 s. `APP_VERSION` e `sw.js` 1.35.0; `ASSETS` invariato.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: nuovo controllo 1.35.0 (aree in fiamme accese e spente; nessun suono nelle bruciature); collegamento nel gioco alle aree della Sky Guard; catalogo con 5 tasti “partenza + continuo”.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 76): suono delle aree in fiamme; bruciature senza suono.
+
 ## 1.34.0 — Ingressi e fiamme con i campioni
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Ingressi e fiamme”): spaceEngine_000 per l’ingresso dei boss, spaceEngine_003 per i mini-boss, il rumore delle fiamme dai thrusterFire.

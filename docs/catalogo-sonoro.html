@@ -117,16 +117,16 @@ function preview(n, w, pick, btn) {
     if (!S.def(n).only) add("sintetico", "sintetico", "generato dal codice (com’era)");
     S.variants(n, w).forEach((v, i) => add(i, "campione " + (i + 1), v.files.join(" + ")));
     // suono continuo (1.33.0): partenza e poi il raggio o il campo acceso per 3 s, come nel gioco
-    const id = n.slice(6);
+    const id = n === "sparo.sky" ? "fiamme" : n.slice(6);     // la Sky Guard: aree in fiamme (1.35.0)
     if (n.startsWith("sparo.") && S.HOLD_TURRETS.includes(id)) {
       const b = document.createElement("button"); b.className = "hold"; b.append("partenza + continuo");
-      const sm = document.createElement("small"); sm.textContent = "raggio o campo acceso 3 s"; b.appendChild(sm);
+      const sm = document.createElement("small"); sm.textContent = id === "fiamme" ? "aree in fiamme per 3 s" : "raggio, campo o droni per 3 s"; b.appendChild(sm);
       b.addEventListener("click", () => {
         ensure();
         const vs = S.variants(n, 1);
         if (!vs.every((v) => v.ok)) { document.getElementById("log").textContent = "· campioni non ancora pronti (decodifica in corso o file mancante)"; return; }
         S.preview(n, 1, 0); const on = S.hold(id, true, true);
-        document.getElementById("log").textContent = (on ? "▶ " : "· non acceso: ") + NAMES[id] + " · partenza (campione 1) e suono continuo per 3 s";
+        document.getElementById("log").textContent = (on ? "▶ " : "· non acceso: ") + (NAMES[id] || "Sky Guard, aree in fiamme") + " · partenza (campione 1) e suono continuo per 3 s";
         b.classList.add("on"); setTimeout(() => { S.hold(id, false); b.classList.remove("on"); }, 3000);
       });
       grid.appendChild(b);

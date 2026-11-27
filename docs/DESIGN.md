@@ -1784,5 +1784,10 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **File**: 3 nuovi, usati interi (loop da 5 s: il modulo ne legge solo una parte); **32 file, 934,9 KB** (957 339 byte), +372 KB. Memoria dei campioni decodificati circa **6,4 MB** (+15 s mono a 48 kHz, +2,9 MB);
     decodifica dei tre file nuovi 24 ms sul computer. Sul telefono non misurato.
   - Restano sintetiche solo **Thunderbolt** e **Teslacoil** (elettricità) tra le torrette.
+- **Aree in fiamme** **[deciso]** (Marco, 27/11/2026): le “fiamme” comprendono anche le **aree in fiamme della Sky Guard**; **nessun suono sulle bruciature**.
+- **Aree in fiamme (1.35.0)** · scelte **[Claude] [da rivedere]**: un **suono continuo** di fuoco a terra finché sul campo c’è almeno un’area in fiamme della Sky Guard (uno solo, quante che siano le aree;
+  il gioco chiama `SOUND.hold("fiamme", …)` a ogni fotogramma), spento con la dissolvenza di 0,15 s come gli altri suoni continui; solo con i campioni.
+  Stesso file della Sky Guard, un altro tratto (thrusterFire_001 da 3 a 4,8 s), più grave (×0,7, intorno a 780 Hz) con un tremolio di 5 Hz; volume circa 10 dB sotto la partenza dei missili (0,055).
+  Nessun file nuovo (32 file, 934,9 KB).
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.
