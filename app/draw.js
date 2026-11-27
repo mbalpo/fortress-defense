@@ -1249,7 +1249,7 @@ function treeScreen() {
     if (barrierTab === "nodes") {
       txt("Vita % → Riduzione danno → rami", 16, 128, 12, "#9fb4d9", "left", "700");
       rows(TREE.barrier, 140);
-      txt("Tetti sul totale: danno subito −" + pctS(TREE_CAP.red) + ", cooldown −" + pctS(TREE_CAP.abCd) + ".", 16, 140 + TREE.barrier.length * 45 + 8, 10, "#6f82ad", "left", "500");
+      txt("Tetti sul totale: danno subito −" + pctS(capRed()) + ", cooldown −" + pctS(TREE_CAP.abCd) + ".", 16, 140 + TREE.barrier.length * 45 + 8, 10, "#6f82ad", "left", "500");
     } else treeAbilities();
   }
   if (treePick) startPicker(treePick);

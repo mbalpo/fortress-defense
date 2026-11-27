@@ -337,3 +337,13 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   e("openGear(); gearSel = 'arma'; gearTab = 'pcs'; gearMode = 'use'"); g.frame(); g.save("123-ancestrale-piu-10.png");
   e("gearSel = 'guanti'; gearMode = 'fuse'; tapPiece(4)"); g.frame(); g.save("124-ancestrale-fondi.png");
 }
+{ // 1.30.0: nodi del 200 (DESIGN.md § 16): Specializzazione in fondo alla Sky Guard e al guardiano, Tetto della riduzione in fondo alla barriera, avviso di sblocco
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const tree = { "sky:final": 2, "player:final": 5, "barrier:hp": 5, "barrier:red": 5, "barrier:cap": 1 };
+  const g = game({ progress: { cleared: 200, seen: ALL_SEEN, seals: 300, majors: 20, tree }, src }), e = g.w.__ev;
+  e("openTree(); treeTab = 'turrets'; treeSel = 'sky'"); g.frame(); g.save("125-albero-sky-200.png");
+  e("treeTab = 'player'"); g.frame(); g.save("126-albero-guardiano-200.png");
+  e("treeTab = 'barrier'; barrierTab = 'nodes'"); g.frame(); g.save("127-albero-barriera-200.png");
+  const b = game({ progress: { cleared: 199, seen: ALL_SEEN }, src }), eb = b.w.__ev;
+  eb("setSel('standard', 200); startRun('standard'); winLevel()"); b.frame(2); b.save("128-avviso-200.png");
+}

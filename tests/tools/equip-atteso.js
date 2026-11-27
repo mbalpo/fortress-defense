@@ -48,27 +48,20 @@ function gearFor(L, vit = 1.5, seed = 1, epic = 0) {   // epic = livelli di Epic
   for (let lv = 1; lv <= epic; lv++) ev(`rollDrops(diffOf(${lv}, true), true)`);
   return JSON.parse(ev(STRATEGY));
 }
-// Equipaggiamento al massimo (26/11/2026, § 15 “Ancestrale+N”): 6 pezzi ancestrali, ciascuno con i `slots` Moduli ancestrali più utili del suo pool
-// (stessa scala di valori della strategia). La statistica base dell’ancestrale+N si ottiene con patchAncestrale (sostituzione nel sorgente, solo per le misure).
-function gearMax(slots) {
+// Equipaggiamento al massimo (26/11/2026, § 15 “Ancestrale+N”): 6 pezzi ancestrali +N (dalla 1.29.0 il +N è nel gioco: gear.eq.<pezzo>.p),
+// ciascuno con i Moduli ancestrali più utili del suo pool, tanti quanti gli slot (stessa scala di valori della strategia)
+const slotsAt = (N) => 5 + (N >= 1) + (N >= 5) + (N >= 10);
+function gearMax(N) {
   const g = makeGame({ patch: EV, cleared: 30, level: 30, storage: { "fortress-progress-v1": JSON.stringify({ cleared: 30, seen: [] }) } });
   return JSON.parse(g.win.__ev(`(() => {
     const PRI = { 2: 9, 1: 8, 7: 8, 18: 7, 6: 6, 13: 6, 3: 6, 20: 6, 9: 5, 5: 5, 8: 3, 19: 2, 11: 7, 10: 4, 14: 4, 16: 4, 15: 3,
       28: 6, 23: 4, 24: 4, 25: 4, 26: 4, 27: 4, 22: 6, 21: 4, 29: 5, 30: 7 };
     const val = (fx) => fx === 4 || fx === 12 || fx === 17 ? 48 : PRI[fx] + 40;
-    const eq = {}; for (const pc of PIECE_IDS) eq[pc] = { r: 4, m: [...PIECES[pc].pool].sort((a, b) => val(b) - val(a)).slice(0, ${slots}).map((fx) => [fx, 4]) };
+    const eq = {}; for (const pc of PIECE_IDS) eq[pc] = Object.assign({ r: 4, m: [...PIECES[pc].pool].sort((a, b) => val(b) - val(a)).slice(0, ${slotsAt(N)}).map((fx) => [fx, 4]) }, ${N} ? { p: ${N} } : {});
     return JSON.stringify({ pcs: {}, mods: {}, eq, lock: {} });
   })()`));
 }
-// ancestrale+N nel sorgente: statistica base dell’ancestrale × (1 + 0,2 N) e slot in più (6, 7, 8 a +1, +5, +10) accettati al caricamento
-const slotsAt = (N) => 5 + (N >= 1) + (N >= 5) + (N >= 10);
-function patchAncestrale(h, N) {
-  const k = 1 + 0.2 * N, need = (x) => { if (!h.includes(x)) throw new Error("manca " + x); };
-  for (const x of ["base: [6, 10, 15, 21, 28]", "base: [4, 7, 11, 15, 20]", "m.length < e.r + 1) m.push"]) need(x);
-  return h.split("base: [6, 10, 15, 21, 28]").join(`base: [6, 10, 15, 21, ${28 * k}]`).split("base: [4, 7, 11, 15, 20]").join(`base: [4, 7, 11, 15, ${20 * k}]`)
-    .replace("m.length < e.r + 1) m.push", `m.length < e.r + 1 + (e.r === 4 ? ${slotsAt(N) - 5} : 0)) m.push`);
-}
-module.exports = { gearFor, gearMax, patchAncestrale, slotsAt };
+module.exports = { gearFor, gearMax, slotsAt };
 
 // Ancestrale+N (26/11/2026, § 15): vittorie per avere un pezzo (l’arma) e un set di 6 pezzi a +N, con i drop veri (2 pezzi a vittoria, tipo e rarità
 // dalla tabella del gioco) e la fusione ideale (5 uguali → rarità successiva appena possibile). Un pezzo +N richiede 1 + N(N+1)/2 ancestrali base del suo tipo.

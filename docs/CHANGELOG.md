@@ -3,6 +3,31 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.30.0 — Nodi del 200: Specializzazione e Tetto della riduzione
+
+- **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 16 “Nodi finali” e “Tetti”): guardiano e 11 torrette hanno in fondo al ramo la **Specializzazione**: 5 livelli, ognuno **+1/6 del danno base**
+  (×1,83 al 5) su **tutti i danni dell’entità**, stati compresi, **10 Sigilli a livello**; la barriera ha in fondo il **Tetto della riduzione**: 1 livello, **15 Sigilli**, porta il tetto della
+  riduzione del danno subito **dal 50% al 65%**. Si comprano **solo col livello 200 completato**, senza altri requisiti (il Tetto non chiede Riduzione danno al 5).
+- **Avviso di sblocco al 200** (testi **[Claude]**): “Specializzazione e tetto al 65%”, a fine livello al primo completamento; i testi stanno anche sui nodi (“Dal livello 200 completato”).
+- **Codice**: `FINAL`, `finalNode`, `FINAL_M` e `finalOf` (calcolati a inizio partita), moltiplicatore in `damage()` per sorgente, bruciature di Sky Guard e Firewheel; `minLv` in `nodeState`;
+  `TREE_CAP.red200`, `capRed`; Carta extra non richiede il Tetto. Albero intero **1907 ◆ e 188 ✦** (verificato). Salvataggio invariato (i nodi stanno in `progress.tree`).
+- **Strumenti**: `curva.js` con `MASSIMO` usa i nodi veri (livelli completati almeno 200) e l’ancestrale+N vero (`gearMax(N)`); tolte le sostituzioni che li simulavano
+  (dalla 1.29.0 quella dell’ancestrale non trovava più il testo e lo strumento si fermava).
+- `APP_VERSION` e `sw.js` 1.30.0.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/nodi200.js` (7 controlli): Specializzazione ultima nei 12 rami e Tetto ultimo della barriera, costi 10 × 5 e 15, totale 1907 / 188, testi;
+prima del 200 bloccati, dal 200 acquistabili senza altri nodi (25 Sigilli); danno del guardiano ×11/6 al 5 e della Sky Guard ×1,5 al 3 (anche la bruciatura), Laser senza nodo e ranger ×1;
+riduzione 65% con il nodo (equipaggiamento 50% + albero 15%), 50% senza; avviso al primo completamento del 200 e non dopo; albero della barriera prima del 200. Aggiornati `seals.js` (12 nodi per ramo,
+8 nella barriera) e `v122.js` (la Carta iniziale richiede tutti gli altri nodi tranne la Specializzazione). `npm run screenshots`: nuove 125-128 (alberi di Sky Guard, guardiano e barriera, avviso);
+testo della Specializzazione accorciato perché nell’albero della torretta (12 nodi) andava a capo schiacciato.
+
+**Misura** (`EQUIP=1.5 node tests/tools/curva.js L 30`, 60 partite per muro, 1.26.0 → 1.30.0): 240 20,0 → 58,3% · 300 71,7 → 78,3% · 340 20,0 → 35,0% · 400 23,3 → 55,0%.
+Sotto il 200 nulla cambia (i nodi si comprano solo dal 200).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): incorpora il codice nuovo; le scene dell’albero sono sotto il 200.
+
+Checklist: aggiornata (versione 70): prove dei nodi del 200 e dell’avviso; riferimento dei tetti e dei nodi finali; tolte dalle cose da costruire le decisioni del 26/11 (tutte costruite).
+
 ## 1.29.0 — Ancestrale+N
 
 - **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 15 “Ancestrale+N”): un ancestrale **equipaggiato non si toglie né si cambia**; si **evolve** fino a **+10** con il tasto “Fondi”:

@@ -611,7 +611,7 @@ function stdFx(kind, v, L) {                    // effetto per pila della carta 
 }
 // valori dei nodi della sezione per tipo e della barriera, per livello
 const TREE_VAL = { typeDmg: 0.06, allDmg: 0.03, statDur: 0.06, hpPct: 0.1, red: 0.03, hpFlat: 10, abCd: 0.05, ignore: 0.02, cards: 0.05 };
-const TREE_CAP = { red: 0.5, abCd: 0.6 };      // tetti sul totale (META + albero + equipaggiamento): riduzione del danno (50% dalla 1.14.2, prima 40%) e del cooldown delle abilità
+const TREE_CAP = { red: 0.5, abCd: 0.6, red200: 0.65 };   // red200: tetto della riduzione con il nodo del 200 (1.30.0)      // tetti sul totale (META + albero + equipaggiamento): riduzione del danno (50% dalla 1.14.2, prima 40%) e del cooldown delle abilità
 // maj(L) = Sigilli maggiori per il livello L (oltre ai Sigilli normali levelCost(L)); senza maj nessun maggiore
 const lvNode = (id, who, name, max, fx, req, maj) => ({ id, who, kind: "level", name, max, costs: Array.from({ length: max }, (_, i) => levelCost(i + 1)),
   mcosts: Array.from({ length: max }, (_, i) => maj ? maj(i + 1) : 0), req: req || [], fx });
@@ -620,6 +620,9 @@ const lvNode = (id, who, name, max, fx, req, maj) => ({ id, who, kind: "level", 
 const MAJ_EVERY5 = (L) => (L - 1) % 5 === 0 ? 1 : 0, MAJ_FIRST = (L) => L === 1 ? 1 : 0, MAJ_EACH = () => 1;
 // barriera (1.14.0, Marco): 1 maggiore allo sblocco di ogni nodo; Vita %, radice dell’albero, ai livelli 6, 11, 16 ma non all’1
 const MAJ_ROOT = (L) => L > 1 && (L - 1) % 5 === 0 ? 1 : 0;
+const FINAL = { from: 200, per: 1 / 6, max: 5, cost: 10 };
+const finalNode = (who) => ({ id: who + ":final", who, kind: "level", name: "Specializzazione", max: FINAL.max, costs: Array(FINAL.max).fill(FINAL.cost), mcosts: Array(FINAL.max).fill(0),
+  req: [], minLv: FINAL.from, reqMsg: "Dal livello " + FINAL.from + " completato", fx: (L) => "danno base +" + fmt(100 * FINAL.per * L) + "%" });   // vale per tutti i danni dell’entità (DESIGN.md § 16)
 function buildTree(who) {
   const def = who === "player" ? PLAYER_DEF : TURRETS[who], ups = TREE_LOCKS[who].map((id) => def.ups.find((u) => u.id === id));
   const whole = ups.find((u) => u.cat === "chain" && def.ups.filter((v) => v.chain === u.chain).every((v) => TREE_LOCKS[who].includes(v.id))).chain;
@@ -647,6 +650,8 @@ function buildTree(who) {
   // Carta iniziale (1.22.0) [deciso, Marco]: dopo tutti gli altri nodi (per le torrette anche lo Sblocco permanente); una carta standard o chain scelta tra una partita e l’altra
   nodes.push({ id: who + ":start", who, kind: "start", name: "Carta iniziale", sub: "Parti con una carta standard o chain a scelta", req: nodes.map((n) => n.id),
     max: 1, costs: [0], mcosts: [SEAL_COST.startMajor] });
+  // nodo finale (1.30.0) [deciso] (Marco, 26-27/11/2026): ultimo del ramo, solo dal livello 200 completato; 5 livelli da +1/6 del danno base, 10 Sigilli a livello
+  nodes.push(finalNode(who));
   return nodes;
 }
 const TREE = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, buildTree(w)]));
@@ -663,8 +668,11 @@ TREE.barrier = [lvNode("barrier:hp", "barrier", "Vita %", 20, (L) => "vita +" + 
 // Carta extra (1.22.0) [deciso, Marco]: dopo tutti gli altri potenziamenti della barriera (basta averli sbloccati: reqOne, la regola dei livelli non vale);
 // al livello L, L scelte di carte in più per livello giocato, dopo L ondate diverse estratte a caso tra la 1 e la 19
 TREE.barrier.push({ id: "barrier:extra", who: "barrier", kind: "level", name: "Carta extra", max: 5, costs: SEAL_COST.extra, mcosts: SEAL_COST.extraMajor,
-  req: TREE.barrier.map((n) => n.id), reqOne: true, reqMsg: "Prima tutti gli altri potenziamenti della barriera",
+  req: TREE.barrier.filter((n) => !n.minLv).map((n) => n.id), reqOne: true, reqMsg: "Prima tutti gli altri potenziamenti della barriera",
   fx: (L) => L + (L === 1 ? " scelta in più" : " scelte in più") + " per livello, in ondate a caso" });
+// tetto della riduzione al 65% (1.30.0) [deciso] (Marco, 26-27/11/2026): ultimo della barriera, dal 200, senza Riduzione danno al 5
+TREE.barrier.push({ id: "barrier:cap", who: "barrier", kind: "level", name: "Tetto della riduzione", max: 1, costs: [15], mcosts: [0], req: [],   // 1.30.0 [deciso] (Marco, 26-27/11/2026)
+  minLv: FINAL.from, reqMsg: "Dal livello " + FINAL.from + " completato", fx: () => "riduzione del danno subito fino al 65% (prima 50%)" });
 // Abilità della barriera (DESIGN.md § 16, fase 3): 3 gruppi, una abilità equipaggiata per gruppo, dal livello 40 completato.
 // La prima di ogni gruppo è l’abilità d’ingresso (livello 1 senza spesa); la seconda si sblocca con un nodo, la terza dopo la seconda.
 // Valori per livello 1-5 [Claude, provvisori] salvo quelli dati da Marco (Potenziante, Congelante: gas e altezza, mine da 4).
@@ -931,6 +939,7 @@ const UNLOCKS = [
   { lv: CAMPAIGN.barrierUnlock, title: "Abilità della barriera", lines: ["Fino a 3 abilità della cupola in battaglia:", "sceglile nell’albero, Barriera · Abilità."] },
   { lv: CAMPAIGN.epicUnlock, title: "Modalità Epica", lines: ["Livelli con difficoltà +" + CAMPAIGN.epicOffset + " e più Sigilli:", "scegli “Epica” nel menu."] },
   { lv: PLANET.unlock, title: "Protezione planetaria", lines: ["Cinque continenti, uno per tipo di nemico:", "frammenti dei ranger, 2 partite al giorno."] },
+  { lv: FINAL.from, title: "Specializzazione e tetto al 65%", lines: ["Nell’albero, in fondo a guardiano e torrette:", "Specializzazione, danno base fino a +83%.", "Barriera: riduzione del danno fino al 65%."] },   // 1.30.0
 ];
 let unlockNotes = [];
 const closeUnlocks = () => { unlockNotes = []; };
@@ -1045,7 +1054,7 @@ const abilitiesOpen = () => progress.cleared >= CAMPAIGN.barrierUnlock;
 const nodeCost = (n) => n.costs[Math.min(nodeLv(n), n.max - 1)];             // costo del prossimo livello
 const nodeMCost = (n) => n.mcosts ? n.mcosts[Math.min(nodeLv(n), n.max - 1)] : 0;   // Sigilli maggiori del prossimo livello
 // max (livello massimo) · ready (si può comprare) · req (i nodi precedenti non sono abbastanza alti) · poor (Sigilli insufficienti)
-const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.req.some((r) => treeLv(r) < (n.reqOne ? 1 : Math.min(nodeLv(n) + 1, TREE_NODE[r].max))) ? "req"
+const nodeState = (n) => nodeLv(n) >= n.max ? "max" : n.minLv && progress.cleared < n.minLv ? "req" : n.req.some((r) => treeLv(r) < (n.reqOne ? 1 : Math.min(nodeLv(n) + 1, TREE_NODE[r].max))) ? "req"
   : progress.seals < nodeCost(n) || progress.majors < nodeMCost(n) ? "poor" : "ready";
 function buyNode(n) {
   if (nodeState(n) !== "ready") return false;
@@ -1369,7 +1378,11 @@ function popup(e, v, mult, src) {
   });
 }
 // ignore = ignora le resistenze del nemico (Laser, Raggi penetranti); un numero da 0 a 1 = ne ignora quella quota (ranger Atlante, le debolezze non cambiano)
+// nodi finali (1.30.0): ogni danno di guardiano e torrette (sorgente = id dell’entità) × (1 + livello/6); le bruciature lo prendono all’applicazione
+let FINAL_M = {};
+const finalOf = (who) => FINAL_M[who] || 1;
 function damage(e, base, type, quiet, src, ignore) {
+  if (FINAL_M[src]) base *= FINAL_M[src];
   if (e.immT > 0) return;                          // speciale energy: immune ai danni, anche da stato (1.18.0)
   if (e.def.absorb && Math.random() < e.def.absorb) { if (!quiet) absorbFx(e); return; }   // disco volante: assorbe il colpo (1.19.0)
   let mult = e.def.selfRes != null && type === e.def.type ? 1 - e.def.selfRes : (e.res || RESIST[e.def.type])[type];   // nemici della Protezione planetaria: resistenza propria al loro tipo; Cristallo maggiore: profilo attivo
@@ -1558,7 +1571,7 @@ function skyImpact(s, x, y, mini, echo) {
 }
 // tutte le bruciature della Sky Guard passano da qui: chain Bruciatura (danno +60%, esplosione alla morte)
 function skyBurn(s, e, t, dps) {
-  burn(e, t, dps * (has(s, "burn2") ? 1.6 : 1));
+  burn(e, t, dps * (has(s, "burn2") ? 1.6 : 1) * finalOf(s.id));
   e.skyBurnT = Math.max(e.skyBurnT, t * statDur); e.skyBurnS = s;
 }
 function skyCombust(s, x, y) {                 // Combustione: chi muore bruciato dalla Sky Guard esplode
@@ -1971,7 +1984,7 @@ function wheelDrone(s, x, y, a, o) {
       for (const e of living()) if (edist(e, this.x, this.y) <= o.rad + e.def.r) {
         touching = true; this.hit.add(e); o.launch.hit.add(e); now.add(e);
         damage(e, o.dps * boost * dt, "fire", true, "wheel");
-        if (o.mini && has(s, "miniB")) { burn(e, 2, 5 * bm); reveal(e); }
+        if (o.mini && has(s, "miniB")) { burn(e, 2, 5 * bm * finalOf(s.id)); reveal(e); }
         if (!this.inside.has(e) && !e.dead) {                // nuovo passaggio su questo nemico
           if (kD) destruction(kD, e, disrDmg(kD));
           if (kT) kOrb(s.id + ":kTesla", kT, e.x, e.y);
@@ -2010,7 +2023,7 @@ function wheelDrone(s, x, y, a, o) {
       for (const p of this.trail) {
         p.t -= dt;
         for (const e of living()) if (edist(e, p.x, p.y) <= 14 + e.def.r) {
-          burn(e, 2, 5 * dmgM(s) * bm); reveal(e);
+          burn(e, 2, 5 * dmgM(s) * bm * finalOf(s.id)); reveal(e);
           if (has(s, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);     // Scia combustibile: +30% di danno da fuoco per 2 s
         }
       }
@@ -2437,7 +2450,7 @@ function kTrail(tag, w) {
       for (const p of this.pts) {
         p.t -= dt;
         for (const e of living()) if (edist(e, p.x, p.y) <= 14 + e.def.r) {
-          burn(e, 2, 5 * dmgM(w) * bm); reveal(e);
+          burn(e, 2, 5 * dmgM(w) * bm * finalOf(w.id)); reveal(e);
           if (has(w, "trailR")) e.fireVulnT = Math.max(e.fireVulnT, 2 * statDur);
         }
       }
@@ -3097,7 +3110,8 @@ function startRun(m, resume) {
   mode = m; campLevel = m === "planet" ? planetLv(planetType) : selOf(m); bossBonus = 0; bonusLeft = 0; bonusMode = false;
   pw = m === "planet" ? { next: 0, clr: [], mb: 0, choices: [], banner: 0, started: false, paid: false } : null; planetGain = null;
   enemies = []; ents = []; floaters = []; shells = []; gift = null; giftWait = -1; giftNote = null; giftPlan = null;
-  GEAR = gearStats(progress.gear); gearRun(); if (resume) turretsLv2 = !!resume.t2;
+  GEAR = gearStats(progress.gear); gearRun();
+  FINAL_M = Object.fromEntries(Object.keys(TREE_LOCKS).map((w) => [w, 1 + FINAL.per * treeLv(w + ":final")]).filter(([, m]) => m > 1)); if (resume) turretsLv2 = !!resume.t2;
   domeMax = Math.round(META.domeHp * (1 + TREE_VAL.hpPct * treeLv("barrier:hp") + GEAR.hp) + TREE_VAL.hpFlat * treeLv("barrier:flat")); domeHp = domeMax; domeFlash = 0; domeSince = 0;
   player = makeShooter(PLAYER_DEF, W / 2, GROUND_Y - 30); player.targetX = W / 2; player.cd = 0.3; player.fanX = treeLv("player:fan"); player.frzL = treeLv("player:frenzy");
   runP2 = resume ? !!resume.p2 : !!GEAR.p2 && Math.random() < GEAR.p2;
@@ -3469,7 +3483,8 @@ function domeWave(side) {
 }
 
 // riduzione del danno alla cupola: META + albero + equipaggiamento (Moduli 10 e 11), con tetto del 50% sul totale; cooldown delle abilità idem
-const domeRed = () => Math.min(TREE_CAP.red, clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red") + GEAR.red);
+const capRed = () => treeLv("barrier:cap") ? TREE_CAP.red200 : TREE_CAP.red;
+const domeRed = () => Math.min(capRed(), clamp(META.domeReduction, 0, 0.9) + TREE_VAL.red * treeLv("barrier:red") + GEAR.red);
 const abCdM = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd") + GEAR.abCd);
 // per i testi (albero, anche fuori partita): l’equipaggiamento attuale, non quello della partita precedente (GEAR)
 const abCdShow = () => 1 - Math.min(TREE_CAP.abCd, TREE_VAL.abCd * treeLv("barrier:cd") + gearStats(progress.gear).abCd);
@@ -3889,7 +3904,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.29.0";
+const APP_VERSION = "1.30.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

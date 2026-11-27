@@ -18,9 +18,9 @@ function game(extra) {
 console.log("— Carta iniziale: nodi, costi, requisiti —");
 {
   const { ev } = game();
-  const nodes = J(ev, `["player", ...TURRET_ORDER].map((w) => { const n = TREE_NODE[w + ":start"]; return n && [w, n.costs[0], n.mcosts[0], n.max, n.req.length === TREE[w].length - 1, w === "player" || n.req.includes(w + ":perm")]; })`);
+  const nodes = J(ev, `["player", ...TURRET_ORDER].map((w) => { const n = TREE_NODE[w + ":start"]; return n && [w, n.costs[0], n.mcosts[0], n.max, n.req.length === TREE[w].length - 2 && !n.req.includes(w + ":final"), w === "player" || n.req.includes(w + ":perm")]; })`);
   const good = nodes.every((x) => x && x[1] === 0 && x[2] === 3 && x[3] === 1 && x[4] && x[5]);
-  console.log("nodo in guardiano e 11 torrette:", nodes.filter(Boolean).length, "· 3 maggiori, nessun Sigillo, un livello, dopo tutti gli altri nodi (torrette: anche lo Sblocco permanente)", ok(nodes.length === 12 && good));
+  console.log("nodo in guardiano e 11 torrette:", nodes.filter(Boolean).length, "· 3 maggiori, nessun Sigillo, un livello, dopo tutti gli altri nodi tranne la Specializzazione del 200 (torrette: anche lo Sblocco permanente)", ok(nodes.length === 12 && good));
   const st = J(ev, `(() => { const a = nodeState(TREE_NODE["sky:start"]); delete progress.tree["sky:perm"]; const b = nodeState(TREE_NODE["sky:start"]); progress.tree["sky:perm"] = 1;
     delete progress.tree["player:std:dmg"]; const c = nodeState(TREE_NODE["player:start"]); progress.tree["player:std:dmg"] = 1; const d = nodeState(TREE_NODE["beam:start"]); return { a, b, c, d }; })()`);
   console.log("Sky Guard con tutto:", st.a, "· senza Sblocco permanente:", st.b, "· guardiano senza Danno maggiorato:", st.c, "· Beam senza nodi:", st.d, ok(st.a === "ready" && st.b === "req" && st.c === "req" && st.d === "req"));

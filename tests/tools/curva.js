@@ -5,11 +5,11 @@
 // Con EQUIP=<vittorie per livello> (es. EQUIP=1.5) i bot hanno anche l’equipaggiamento atteso (tests/tools/equip-atteso.js), uguale per tutte le partite del livello.
 // Con RANGERS=<id:livello,…> (es. RANGERS=atlante:5,epsilon:5) i bot hanno quei ranger equipaggiati (DESIGN.md § 17, 1.17.0).
 // Profilo “tutto al massimo” (26/11/2026, § 16 “Campagna a 400 livelli”), solo nelle misure (sostituzioni nel sorgente, il gioco non cambia):
-//   MASSIMO=<N> → albero pieno, nodi finali (danno di guardiano e torrette ×1,83), tetto della riduzione del danno al 65%, equipaggiamento ancestrale+N
+//   MASSIMO=<N> → albero pieno (dalla 1.30.0 con i nodi finali e il tetto al 65% veri: livelli completati almeno 200), equipaggiamento ancestrale+N
 //   con i Moduli ancestrali migliori (6, 7, 8 slot a +1, +5, +10), ranger al “20” (default RANGERS=atlante:10,epsilon:10 con supporti ×3,85 / 2,35 e +50% al danno del guardiano).
 //   PENDENZA=<s> → pendenza della difficoltà oltre il 200 (`EFF_SLOPE_200`, 0,8 dalla 1.25.5; fino al 200 resta 1,2). La campagna arriva a 400 dalla 1.26.0.
 const { play, makeGame } = require("../bot.js");
-const { gearFor, gearMax, patchAncestrale, slotsAt } = require("./equip-atteso.js");
+const { gearFor, gearMax } = require("./equip-atteso.js");
 const EQUIP = +(process.env.EQUIP || 0);
 const LVS = process.argv[2].split(",").map(Number), N = +(process.argv[3] || 20), S0 = +(process.argv[4] || 1), PER = +(process.argv[5] || 1.5);
 const reps = JSON.parse(process.argv[6] || "[]");
@@ -19,9 +19,6 @@ const sub = (h, x, y) => { if (!h.includes(x)) throw new Error("manca " + x); re
 function extra(h) {
   if (PEND !== null) h = sub(h, "const EFF_SLOPE_200 = 0.8;", `const EFF_SLOPE_200 = ${PEND};`);
   if (MASSIMO === null) return h;
-  h = patchAncestrale(h, MASSIMO);
-  h = sub(h, "const TREE_CAP = { red: 0.5,", "const TREE_CAP = { red: 0.65,");
-  h = sub(h, "let d = base * mult;", "let d = base * mult * (src === \"ranger\" || src === \"deflect\" ? 1 : 1 + 5 / 6);");
   h = sub(h, "const rangerBonus = (t) => 1 + TREE_VAL.typeDmg * treeLv(\"types:dmg:\" + t) + (GEAR.type[t] || 0);",
     "const rangerBonus = (t) => (1 + 0.15 * 19) / (1 + 0.15 * 9) * (1 + TREE_VAL.typeDmg * treeLv(\"types:dmg:\" + t) + (GEAR.type[t] || 0));");
   return sub(h, "function guardHit(e, dmg, quiet) {", "function guardHit(e, dmg, quiet) { dmg *= 1.5;");
@@ -55,11 +52,12 @@ const SPEND = `(() => {
 const grandfather = (L) => L - 1 >= 40 ? { "ab:regen": 1, "ab:repulse": 1, "ab:burn": 1 } : {};
 function treeFor(L) {
   const seals = MASSIMO !== null ? 1e5 : sealsAt(L), majors = MASSIMO !== null ? 1e4 : majorsAt(L);   // profilo al massimo: albero pieno
-  const g = makeGame({ patch: EV, cleared: L - 1, level: L, storage: { "fortress-progress-v1": JSON.stringify({ cleared: L - 1, seen: [], seals, majors, tree: grandfather(L) }) } });
+  const C = MASSIMO !== null ? Math.max(L - 1, 200) : L - 1;   // i nodi del 200 si comprano col 200 completato
+  const g = makeGame({ patch: EV, cleared: C, level: L, storage: { "fortress-progress-v1": JSON.stringify({ cleared: C, seen: [], seals, majors, tree: grandfather(L) }) } });
   return JSON.parse(g.win.__ev(SPEND));
 }
 for (const L of LVS) {
-  const tree = treeFor(L), gear = MASSIMO !== null ? gearMax(slotsAt(MASSIMO)) : EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined;
+  const tree = treeFor(L), gear = MASSIMO !== null ? gearMax(MASSIMO) : EQUIP ? gearFor(L, EQUIP, 1, epicAt(L)) : undefined;
   const rg = (process.env.RANGERS || "").split(",").filter(Boolean).map((x) => x.split(":")), frags = {};
   for (const [id, lv] of rg) frags[id] = 200 * (1 + 0.5 * (+lv - 1));
   const planet = rg.length ? { lv: {}, frags, day: { d: "", n: 0 }, eq: rg.map((x) => x[0]) } : undefined;

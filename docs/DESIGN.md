@@ -1158,6 +1158,12 @@ Regole di calcolo **[Claude] [da rivedere]**:
   per il guardiano anche Clone, Ventaglio ed esplosioni dei Colpi esplosivi. I ranger no.
 - **Posizione** **[deciso]** (Marco, 27/11/2026): richiedono **solo il livello 200 completato** (nessun altro nodo); ogni nodo compare **ultimo nella lista** del proprio ramo (guardiano, ogni torretta).
 - Totali **[Claude]** (da verificare con `seals` quando i nodi saranno nel codice): albero intero 1907 ◆ (1292 + 600 + 15) e 188 ✦ (invariato).
+- **Costruito (1.30.0)**: nodo “**Specializzazione**” (`<entità>:final`, ultimo di guardiano e 11 torrette; `FINAL`) e nodo “**Tetto della riduzione**” (`barrier:cap`, ultimo della barriera;
+  `TREE_CAP.red200`, `capRed`), con `minLv` 200 (“Dal livello 200 completato”). Effetto: `damage()` moltiplica per 1 + livello/6 i danni con la sorgente dell’entità (guardiano “player”,
+  torrette col loro id) e le bruciature lo prendono all’applicazione (Sky Guard, Firewheel); i ranger e la barriera no. Lettura **[Claude]**: nelle combo tra torrette vale la sorgente del danno,
+  cioè la torretta che lo infligge. Nomi e testi **[Claude]**: “Specializzazione · danno base +16,7% … +83,3%”, “Tetto della riduzione · riduzione del danno subito fino al 65% (prima 50%)”.
+  Totale verificato: **1907 ◆ e 188 ✦**. Misura (`EQUIP=1.5 node tests/tools/curva.js L 30`, 60 partite; i bot comprano anche la Specializzazione oltre il 200): 240 20,0 → **58,3%** ·
+  300 71,7 → 78,3% · 340 20,0 → 35,0% · 400 23,3 → **55,0%** (1.26.0 → 1.30.0).
 - **Avviso di sblocco al 200** **[deciso]** (Marco, 27/11/2026): al primo completamento del 200 di Standard, come gli avvisi dei livelli 10-50 (nodi finali e tetto al 65%), e testi sui nodi; **non** nella schermata iniziale. Testi **[Claude]**.
 
 ### Campagna a 400 livelli

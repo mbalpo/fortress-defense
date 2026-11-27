@@ -114,7 +114,7 @@ console.log("— Fase 2: nodi a livelli —");
   const { ev } = fresh(40, { seals: 100, majors: 10 });
   console.log("nodi: Sky Guard", ev("TREE.sky.length"), "| guardiano", ev("TREE.player.length"), "| tipi", ev("TREE.types.length"), "| barriera", ev("TREE.barrier.length"),
     "| carte standard della Sky Guard:", ev("TREE.sky.filter((n) => n.kind === 'level').map((n) => n.id).join(' ')"),
-    ok(ev("TREE.sky.length") === 11 && ev("TREE.player.length") === 11 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 7));   // 1.22.0: Carta iniziale e Carta extra
+    ok(ev("TREE.sky.length") === 12 && ev("TREE.player.length") === 12 && ev("TREE.types.length") === 7 && ev("TREE.barrier.length") === 8));   // 1.22.0: Carta iniziale e Carta extra; 1.30.0: Specializzazione e Tetto della riduzione
   const costs = [], mc = []; for (let i = 0; i < 21; i++) { const before = ev("progress.seals"), mb = ev("progress.majors"); ev("buyNode(TREE_NODE['sky:std:dmg'])"); costs.push(before - ev("progress.seals")); mc.push(mb - ev("progress.majors")); }
   console.log("Danno maggiorato della Sky Guard, livelli 1-20 e oltre: costi", costs.join(""), "(totale " + costs.reduce((a, b) => a + b) + ") | maggiori", mc.join(""), "| stato", ev("nodeState(TREE_NODE['sky:std:dmg'])"),
     ok(costs.join("") === "111112222233333444440" && mc.join("") === "100001000010000100000" && ev("nodeState(TREE_NODE['sky:std:dmg'])") === "max"));
