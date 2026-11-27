@@ -816,7 +816,7 @@ function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringif
 const SOUND = window.FORTRESS_SOUND || null;
 const sfx = (ev, w) => { if (SOUND) SOUND.play(ev, w); };
 // suoni continui (1.33.0, DESIGN.md § 18): Laser, Beam e Disruption Drone suonano finché il raggio o il campo è acceso, la Firewheel (1.34.0) finché i droni girano (torretta occupata); solo con i campioni
-const HOLD_SOUNDS = ["laser", "beam", "disr", "wheel"];
+const HOLD_SOUNDS = ["laser", "beam", "disr", "wheel", "tesla"];   // Teslacoil (1.37.0): finché la bobina si carica
 function holdSounds() {
   if (!SOUND || !SOUND.hold) return;
   for (const id of HOLD_SOUNDS) SOUND.hold(id, slots.some((s) => s && s.id === id && s.busy > 0));
@@ -3922,7 +3922,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.36.0";
+const APP_VERSION = "1.37.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

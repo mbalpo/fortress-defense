@@ -131,7 +131,7 @@ const settle = () => new Promise((r) => setTimeout(r, 0));
 // eventi con i campioni: i tre della prova (1.31.0) e sette torrette (1.32.0); Sky Guard, Firewheel, Thunderbolt e Teslacoil restano sintetiche
 const TURRETS7 = ["laser", "beam", "disr", "hive", "vortex", "aero", "rail"].map((id) => "sparo." + id);
 const ALL3 = ["guardiano", "esplosione.grande", "cupola"].concat(TURRETS7);
-const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.arrivo", "boss.arrivo", "pacco.arrivo", "pacco.premio", "pacco.perso"]);   // colpi dei droni dell’Hive (1.33.0, solo campioni); fuoco e ingressi (1.34.0)
+const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.arrivo", "boss.arrivo", "pacco.arrivo", "pacco.premio", "pacco.perso", "sparo.thunder", "sparo.tesla"]);   // elettricità (1.37.0)   // colpi dei droni dell’Hive (1.33.0, solo campioni); fuoco e ingressi (1.34.0)
 (async () => {
   {
     // sintetico identico alla 1.25.1: firma degli strati di tutti gli eventi (pesi 1-3) e traccia dei nodi Web Audio di un giro di eventi
@@ -175,7 +175,13 @@ const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.ar
     const tv = TURRETS7.map((n) => S.variants(n, 1)), others = ["thunder", "tesla"].filter((id) => S.variants("sparo." + id, 1).length).length;
     const energy = ["sparo.laser", "sparo.beam"].every((n) => S.variants(n, 1).every((v) => /^laserLarge_/.test(v.files[0])));
     console.log("1.32.0: torrette con i campioni", TURRETS7.map((n, k) => n.slice(6) + " " + tv[k].length).join(" · "), "· Thunderbolt e Teslacoil con campioni:", others, "· Laser e Beam con laserLarge:", energy,
-      ok(tv.every((v) => v.length >= 2 && v.every((x) => x.ok)) && others === 0 && energy && S.SAMPLED_EVENTS.length === 18));
+      ok(tv.every((v) => v.length >= 2 && v.every((x) => x.ok)) && others === 2 && energy && S.SAMPLED_EVENTS.length === 20));
+    // 1.37.0 (Marco): Thunderbolt e Teslacoil con i campioni: crepitio (glitch) e tuono per il Thunderbolt, crepitio e ronzio per la Teslacoil, ronzio continuo durante la carica
+    const tv2 = S.variants("sparo.thunder", 1), sv2 = S.variants("sparo.tesla", 1);
+    const thOk = tv2.length >= 2 && tv2.every((v) => v.ok && v.files.includes("explosionCrunch_003") && v.files.some((f) => /^glitch_/.test(f)));
+    const tsOk = sv2.length >= 2 && sv2.every((v) => v.ok && v.files.includes("forceField_003") && v.files.some((f) => /^glitch_/.test(f)));
+    t += 5000; const tq = S.hold("tesla", true), tqH = S.holding().includes("tesla"); S.hold("tesla", false);
+    console.log("1.37.0: Thunderbolt crepitio e tuono:", thOk, "· Teslacoil crepitio e ronzio:", tsOk, "· ronzio continuo durante la carica:", tq && tqH, ok(thOk && tsOk && tq && tqH));
     // 1.36.0 (Marco): pacco regalo con i campioni; il pacco perso (timer scaduto) solo con i campioni
     const pk = ["pacco.arrivo", "pacco.premio", "pacco.perso"].map((n) => S.variants(n, 1).map((v) => v.files.join("+")).join()).join(" · ");
     t += 5000; S.setMode("sintetici"); const st2 = ac.log.started, pq = S.play("pacco.perso"), pSilent = !pq && ac.log.started === st2; S.setMode("campioni");
@@ -202,7 +208,7 @@ const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.ar
     const bad = S.hold("sky", true) === false && S.hold("inesistente", true) === false;
     console.log("1.33.0: suoni continui", S.HOLD_TURRETS.join(" "), "· accesi", held, "(ripetizioni avviate " + lpOn + ", acceso due volte = uno solo:", h1 && h2, ") · spento il Laser →", after || "nessuno", "con dissolvenza:", stopped,
       "· in pausa accesi", paused, "· sintetici: spenti", synthOff === 0, "e non si accendono", !synthOn, "· altre torrette no:", bad,
-      ok(S.HOLD_TURRETS.join() === "laser,beam,disr,wheel,fiamme" && h1 && h2 && h3 && h4 && !h5 && held === "laser beam disr" && lpOn >= 4 && after === "beam disr" && stopped && paused === 0 && synthOff === 0 && !synthOn && bad));
+      ok(S.HOLD_TURRETS.join() === "laser,beam,disr,wheel,tesla,fiamme" && h1 && h2 && h3 && h4 && !h5 && held === "laser beam disr" && lpOn >= 4 && after === "beam disr" && stopped && paused === 0 && synthOff === 0 && !synthOn && bad));
     const hv = S.variants("colpo.hive", 1), vx = S.variants("sparo.vortex", 1), sm0 = S.stats.sampled["colpo.hive"] || 0;
     t += 5000; const hp = S.play("colpo.hive"); t += 5000; S.setMode("sintetici"); const st1 = ac.log.started, hq = S.play("colpo.hive"), silent = ac.log.started === st1; S.setMode("campioni");
     console.log("1.33.0: colpi dei droni", hv.length, "varianti (" + [...new Set(hv.map((v) => v.files[0].replace(/_\d+$/, "")))].join() + ") · con i campioni suona", hp, "con i file", (S.stats.sampled["colpo.hive"] || 0) - sm0,
@@ -285,7 +291,7 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
     ok(out[3].same && /guardiano/.test(smp) && smp.split(", ").every((n) => ALLS.includes(n)) && !Object.keys(CS.stats.failed).length));
   // suoni continui nel gioco (1.33.0): accesi dalle torrette occupate (raggio o campo), chiamati dopo gli effetti a ogni fotogramma
   const heldG = Object.keys(CS.stats.held).sort().join(" "), upd = GAME.slice(GAME.indexOf("function update(dt)"), GAME.indexOf("function update(dt)") + 1500);
-  const wired = /for \(const o of ents\) o\.update\(dt\);\n  holdSounds\(\);/.test(upd) && /const HOLD_SOUNDS = \["laser", "beam", "disr", "wheel"\];/.test(GAME) && /s\.busy > 0/.test(GAME.slice(GAME.indexOf("function holdSounds"), GAME.indexOf("function holdSounds") + 300))
+  const wired = /for \(const o of ents\) o\.update\(dt\);\n  holdSounds\(\);/.test(upd) && /const HOLD_SOUNDS = \["laser", "beam", "disr", "wheel", "tesla"\];/.test(GAME) && /s\.busy > 0/.test(GAME.slice(GAME.indexOf("function holdSounds"), GAME.indexOf("function holdSounds") + 300))
     && /SOUND\.hold\("fiamme", ents\.some\(\(o\) => o\.fireField && !o\.dead\)\);/.test(GAME);
   const hiveShot = /this\.shots\+\+; this\.cd = 1\.0; sfx\("colpo\.hive"\);/.test(GAME);
   console.log("1.33.0 nel gioco: suoni continui accesi nella partita con i campioni:", heldG || "nessuno", "· collegati alle torrette occupate:", wired, "· colpo dei droni dell’Hive a ogni sparo:", hiveShot,
@@ -324,6 +330,6 @@ console.log("— Catalogo sonoro —");
   const synth = cmp.filter((b) => b.className === "synth").length, data = require("./tools/sonoro-campioni.js"), fresh = fs.existsSync(data.OUT) && fs.readFileSync(data.OUT, "utf8") === data.build();
   const onDisk = fs.readdirSync(path.join(__dirname, "..", "app", "suoni")).filter((f) => f.endsWith(".ogg")).map((f) => f.slice(0, -4)).sort().join();
   console.log("campioni nel catalogo: tasti", cmp.length, "(attesi " + want + ", sintetici " + synth + ") · usa catalogo-sonoro-campioni.js:", html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>"), "· dati al passo con app/suoni/:", fresh,
-    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 19 && cmp.filter((b) => b.className === "hold").length === 5 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
+    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 21 && cmp.filter((b) => b.className === "hold").length === 6 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
 }
 }

@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0, pacco regalo nella 1.36.0; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0, pacco regalo nella 1.36.0, elettricità nella 1.37.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -148,7 +148,9 @@
     // ingressi e fiamme (1.34.0, Marco): loop da 5 s del pacchetto, usati interi (si legge solo una parte con off e d)
     spaceEngine_000: -9.7, spaceEngine_003: -12.1, thrusterFire_001: -17.4,
     // pacco regalo (1.36.0, Marco): Kenney Interface Sounds
-    question_003: -9.9, maximize_007: -15.6, minimize_007: -13.4 };
+    question_003: -9.9, maximize_007: -15.6, minimize_007: -13.4,
+    // elettricità (1.37.0, Marco): nel pacchetto non c’è un fulmine; si compone con scoppiettii (glitch), uno schiocco con rombo (explosionCrunch_003) e un ronzio (forceField_003)
+    glitch_003: -16.6, glitch_004: -16.2, explosionCrunch_003: -14.0, forceField_003: -10.6 };
   const SAMPLE_RMS = -18;
   // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0),
   // off: punto del file da cui si parte (s, 1.34.0) };
@@ -172,6 +174,13 @@
     // dello stesso file, accelerato a 1,3); Firewheel = fiammata più lunga e grave al lancio (il fruscio dei droni che girano è nel suono continuo)
     sky: [0.4, 1.9, 3.4].map((off) => [S_("thrusterFire_001", 1, { off, r: 1.3, d: 0.45, fi: 0.02, fo: 0.3 })]),
     wheel: [0.8, 2.6].map((off) => [S_("thrusterFire_001", 1, { off, r: 0.9, d: 0.7, fi: 0.05, fo: 0.4 })]),
+    // elettricità (1.37.0): crepitio = scoppiettii brevissimi (glitch_003 e 004, 7-20 ms) a istanti irregolari nei primi 0,1 s, come i grani del sintetico;
+    // ronzio = forceField_003 (intorno a 175 Hz) pulsato a 32 Hz come il ronzio sintetico. Thunderbolt: crepitio e tuono (explosionCrunch_003: schiocco secco e rombo,
+    // tagliato a 0,9 s); Teslacoil: crepitio e ronzio elettrico (0,35 s); il ronzio poi resta finché la bobina si carica (suono continuo “tesla”)
+    thunder: [[0, 0.012, 0.03, 0.065], [0, 0.02, 0.045, 0.08]].map((ts, k) => ts.map((at, i) => S_(i % 2 === k ? "glitch_004" : "glitch_003", 0.9, { at, r: 0.8 + 0.15 * i }))
+      .concat([S_("explosionCrunch_003", 1, { at: 0.01, d: 0.9, fo: 0.5 })])),
+    tesla: [[0, 0.025, 0.06], [0, 0.04, 0.075]].map((ts, k) => ts.map((at, i) => S_(i % 2 === k ? "glitch_003" : "glitch_004", 0.8, { at, r: 1 + 0.2 * i }))
+      .concat([S_("forceField_003", 0.8, { at: 0.01, off: 0.1, d: 0.35, fo: 0.15, am: [32, 0.7] })])),
     // colpi dei droni dell’Hive (1.33.0): un laserino corto e più acuto, tagliato a 0,12 s
     hivec: [["laserSmall_000", 1], ["laserSmall_001", 1.35], ["laserSmall_002", 1], ["laserSmall_003", 1]].map(([f, g]) => [S_(f, g, { r: 1.25, d: 0.12, fo: 0.04 })]),
     aero: [[S_("lowFrequency_explosion_001", 1, { d: 0.5 }), S_("impactMetal_000", 0.5, { d: 0.25 })],
@@ -201,6 +210,8 @@
     "colpo.hive": { gain: 0.115, vars: () => SPARO.hivec },
     "sparo.sky": { gain: 0.134, vars: () => SPARO.sky },
     "sparo.wheel": { gain: 0.137, vars: () => SPARO.wheel },
+    "sparo.thunder": { gain: 0.068, vars: () => SPARO.thunder },
+    "sparo.tesla": { gain: 0.087, vars: () => SPARO.tesla },
     // ingressi (1.34.0, Marco): boss = spaceEngine_000 (motore grave che pulsa), mini-boss = spaceEngine_003 (ronzio fermo); come nel sintetico il motore cresce
     // (entrata lenta) e alla fine arriva il colpo profondo (boss a 3,5 s: rombo lowFrequency_explosion_000 e colpo metallico grave; mini-boss a 1,5 s: lowFrequency_explosion_001)
     "boss.arrivo": { gain: 0.55, vars: () => [[S_("spaceEngine_000", 1, { d: 4.6, fi: 3.4, fo: 1.0 }), S_("lowFrequency_explosion_000", 1.2, { at: 3.5 }), S_("impactMetal_001", 0.5, { at: 3.5, r: 0.6 })]] },
@@ -224,6 +235,8 @@
     wheel: { gain: 0.068, layers: [S_("thrusterFire_001", 1, { lp: [1.0, 3.0], fi: 0.4, am: [3, 0.35] })] },
     // aree in fiamme della Sky Guard (1.35.0, Marco): fuoco a terra finché ce n’è almeno una (non per torretta: il gioco chiama hold("fiamme", …));
     // un altro tratto dello stesso file (3-4,8 s), più grave (×0,7) e con un tremolio irregolare di 5 Hz; le bruciature restano senza suono [deciso]
+    // Teslacoil (1.37.0): ronzio elettrico finché la bobina si carica (0,7-2,7 s)
+    tesla: { gain: 0.05, layers: [S_("forceField_003", 1, { lp: [0.1, 0.3], fi: 0.2, am: [32, 0.7] })] },
     fiamme: { gain: 0.055, layers: [S_("thrusterFire_001", 1, { lp: [3.0, 4.8], r: 0.7, fi: 0.3, am: [5, 0.4] })] },
   };
   const HOLD_FADE = 0.15;     // dissolvenza in uscita (s) quando il raggio o il campo si spegne

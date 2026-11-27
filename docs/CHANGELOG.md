@@ -3,6 +3,21 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.37.0 — Thunderbolt e Teslacoil con i campioni
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Elettricità con i campioni”): campioni anche per Thunderbolt e Teslacoil; nei pacchetti non c’è un fulmine, forse un ronzio per l’elettricità.
+- **Scelte** **[Claude] [da rivedere]**: fulmine composto. Crepitio di scoppiettii brevissimi (glitch_003, glitch_004) nei primi 0,1 s; Thunderbolt con il tuono (explosionCrunch_003, schiocco e rombo, 0,9 s);
+  Teslacoil con il ronzio elettrico (forceField_003 pulsato a 32 Hz, 0,35 s) e lo stesso ronzio continuo finché la bobina si carica.
+- **Volumi** tarati sul sintetico: Thunderbolt 0,068, Teslacoil 0,087; ronzio continuo 0,05 (circa 8 dB sotto la partenza).
+- **File**: 4 nuovi, **39 file, 1045,2 KB** (prima 958,3). `ASSETS`, `CREDITI.md`, dati del catalogo sonoro aggiornati; nel catalogo Thunderbolt e Teslacoil nella prova (Teslacoil anche “partenza + continuo”).
+  `APP_VERSION` e `sw.js` 1.37.0. Tutte le 11 torrette hanno ora i campioni.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: con “campioni” suonano con i file 20 eventi; nuovo controllo 1.37.0 (crepitio e tuono, crepitio e ronzio, ronzio continuo durante la carica); catalogo con 21 tasti sintetici e 6 “partenza + continuo”.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 78): Thunderbolt e Teslacoil con i campioni; peso 1045 KB.
+
 ## 1.36.0 — Pacco regalo con i campioni
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Pacco regalo con i campioni”): question_003 all’arrivo, maximize_007 al premio, minimize_007 quando il pacco esce senza essere stato sconfitto.

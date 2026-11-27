@@ -1795,5 +1795,13 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     non suona se il pacco sfuma perché l’ondata finisce prima (il sonoro si ferma con l’ondata). Solo con i campioni: con “Sintetici” resta muto, come prima.
   - **Volumi**: arrivo e premio forti come il sintetico (0,185 e 0,43), pacco perso 3 dB sotto il premio (0,18). Voci e soglie quelle degli altri eventi del pacco (categoria “pacco”, priorità 4).
   - **File**: 3 nuovi del pacchetto Interface Sounds (circa 8 KB l’uno): **35 file, 958,3 KB** (981 346 byte).
+- **Elettricità con i campioni** **[deciso]** (Marco, 27/11/2026): campioni anche per **Thunderbolt** e **Teslacoil**; nei pacchetti non c’è un fulmine riconoscibile, forse per l’elettricità c’è un ronzio.
+- **Thunderbolt e Teslacoil (1.37.0)** · scelte **[Claude] [da rivedere]**: il fulmine si compone con tre pezzi dei pacchetti.
+  - **Crepitio**: scoppiettii brevissimi (glitch_003 e glitch_004 di Interface Sounds, 7-20 ms) a istanti irregolari nei primi 0,1 s, come i grani del sintetico.
+  - **Thunderbolt**: crepitio e **tuono**, explosionCrunch_003 (schiocco secco e rombo basso) tagliato a 0,9 s; due varianti.
+  - **Teslacoil**: crepitio e **ronzio elettrico**, forceField_003 (intorno a 175 Hz) pulsato a 32 Hz come il ronzio sintetico, 0,35 s; due varianti. Il ronzio poi **resta finché la bobina si carica**
+    (0,7-2,7 s, torretta occupata: suono continuo come quello del Laser), circa 8 dB più piano della partenza.
+  - **Volumi**: forti come il sintetico (Thunderbolt 0,068, Teslacoil 0,087; continuo 0,05).
+  - **File**: 4 nuovi (glitch_003, glitch_004, explosionCrunch_003, forceField_003): **39 file, 1045,2 KB** (1 070 248 byte). Ora tutte le 11 torrette hanno i campioni.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.
