@@ -1812,7 +1812,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **electricitysoundspreview non usato**: è una raccolta di 56 s di scariche diverse (677 KB, più della metà di tutti i suoni) e qui non si può tagliare senza un codificatore OGG.
   - **Volumi**: forti come il sintetico (Thunderbolt 0,034, Teslacoil 0,113, bolle 0,33; ronzio continuo 0,0385, circa 8 dB sotto la partenza).
   - **File**: nel gioco con un nome senza spazi (thunderVeryClose_01, buzz, pops3); **38 file, 1210,8 KB** (1 239 879 byte; il tuono pesa 166 KB per i suoi 12,8 s, quasi tutti di pioggia).
-    **Fonte, autore e licenza dei tre file: da indicare** in `app/suoni/CREDITI.md` prima della pubblicazione.
+    **Fonte e licenza** (Marco, 27/11/2026): tutti e quattro i file vengono da **OpenGameArt** (opengameart.org), in licenza **CC0**; scritto in `app/suoni/CREDITI.md`.
 - **Codificatore OGG** (27/11/2026): Marco ha installato vorbis-tools (`oggenc`) sul suo computer; ora i file si possono tagliare e ricodificare (prima solo interi, § 18 “Prova dei campioni · realizzazione”).
 - **File tagliati e scariche del fulmine (1.39.0)** · scelte **[Claude] [da rivedere]**:
   - **Tagliati alla parte usata e ricodificati in mono** (oggenc, qualità 4): il tuono (solo il tuono, senza la pioggia: 166 → 17 KB), buzz (23 → 12 KB), 3pops (63 → 26 KB),

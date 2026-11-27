@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Crediti dei file di Marco (dopo la 1.39.0, senza nuova versione)
+
+- **Fonte e licenza** (Marco, 27/11/2026): “Thunder, Very Close, Rain, 01”, buzz, 3pops ed electricitysoundspreview vengono da **OpenGameArt** (opengameart.org), licenza **CC0**.
+  Scritto in `app/suoni/CREDITI.md` e in DESIGN.md § 18; il gioco non cambia (nessuna versione nuova: CREDITI.md non è tra i file in cache).
+
+**Test**: `npm test`: tutti verdi.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/ (CREDITI.md); nessun disegno cambiato.
+
+Checklist: aggiornata (versione 80): tolta la voce su fonte e licenza dei file portati da Marco.
+
 ## 1.39.0 — File tagliati e scariche del fulmine
 
 - **Codificatore OGG**: Marco ha installato vorbis-tools; i file ora si possono tagliare e ricodificare.

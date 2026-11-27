@@ -49,7 +49,8 @@ Totale: 40 file, 937,1 KB.
 ## File portati da Marco (1.38.0, tagliati nella 1.39.0)
 
 Scaricati da Marco; dalla 1.39.0 tagliati alla parte usata e ricodificati in mono (oggenc, qualità 4), con un nome senza spazi.
-**Fonte, autore e licenza: da indicare** (Marco, prima della pubblicazione).
+- **Fonte**: OpenGameArt (https://opengameart.org), scaricati da Marco (27/11/2026).
+- **Licenza**: Creative Commons Zero (CC0), http://creativecommons.org/publicdomain/zero/1.0/ — uso libero anche commerciale e modifiche permesse; il credito non è obbligatorio.
 
 | File nel gioco | File originale | Parte usata | Uso | Peso |
 |---|---|---|---|---|
