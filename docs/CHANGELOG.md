@@ -3,6 +3,17 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.40.0 — Campioni di partenza
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Campioni di partenza”): provato il fulmine della 1.39.0 sul telefono, va bene; i campioni diventano il suono di partenza.
+- **Realizzato**: campo `suoni` di partenza `"campioni"` (assente o non valido = `"campioni"`); chi aveva scelto “Sintetici” lo tiene; il tasto nel menu resta. `APP_VERSION` e `sw.js` 1.40.0; nessun file nuovo.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: campo “suoni” di base “campioni” (anche con valori non validi), “sintetici” salvato tenuto; tasto del menu da “Campioni” a “Sintetici” e ritorno.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 81): campioni di partenza; voce del tasto “Sintetici” / “Campioni” con il nuovo valore di partenza.
+
 ## Crediti dei file di Marco (dopo la 1.39.0, senza nuova versione)
 
 - **Fonte e licenza** (Marco, 27/11/2026): “Thunder, Very Close, Rain, 01”, buzz, 3pops ed electricitysoundspreview vengono da **OpenGameArt** (opengameart.org), licenza **CC0**.

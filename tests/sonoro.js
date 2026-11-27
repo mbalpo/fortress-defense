@@ -262,15 +262,16 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
   console.log("volume fuori dall’esportazione:", JSON.stringify(X.makeSave().settings), ok(!("volume" in X.makeSave().settings)));
   // prova dei campioni: campo “suoni” e tasto accanto al cursore
   const mode = (st) => { const g2 = makeGame({ patch: hook, settings: st }); return g2.win.__x.settings.suoni + "/" + g2.win.FORTRESS_SOUND.mode(); };
-  const m = [mode(null), mode({ suoni: "campioni" }), mode({ suoni: "boh" }), mode({ suoni: 1 })];
-  console.log("suoni letti (impostazione/modulo): di base", m[0], "· campioni →", m[1], "· \"boh\" →", m[2], "· 1 →", m[3], ok(m.join() === "sintetici/sintetici,campioni/campioni,sintetici/sintetici,sintetici/sintetici"));
-  g.texts.length = 0; g.frame(); const b0 = g.texts.includes("Sintetici");
+  // 1.40.0 (Marco): i campioni sono il suono di partenza; chi aveva salvato “sintetici” lo tiene
+  const m = [mode(null), mode({ suoni: "sintetici" }), mode({ suoni: "boh" }), mode({ suoni: 1 })];
+  console.log("suoni letti (impostazione/modulo): di base", m[0], "· sintetici salvato →", m[1], "· \"boh\" →", m[2], "· 1 →", m[3], ok(m.join() === "campioni/campioni,sintetici/sintetici,campioni/campioni,campioni/campioni"));
+  g.texts.length = 0; g.frame(); const b0 = g.texts.includes("Campioni");
   g.click(272, 614); g.up(272, 614); g.texts.length = 0; g.frame();
-  const sv = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1")).suoni, b1 = g.texts.includes("Campioni");
-  console.log("tasto “Sintetici” nel menu → “Campioni”:", b0 && b1, "· salvato", sv, "· modulo", S.mode(), "· fuori dall’esportazione:", !("suoni" in X.makeSave().settings),
-    ok(b0 && b1 && sv === "campioni" && S.mode() === "campioni" && !("suoni" in X.makeSave().settings)));
+  const sv = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1")).suoni, b1 = g.texts.includes("Sintetici");
+  console.log("tasto “Campioni” nel menu → “Sintetici”:", b0 && b1, "· salvato", sv, "· modulo", S.mode(), "· fuori dall’esportazione:", !("suoni" in X.makeSave().settings),
+    ok(b0 && b1 && sv === "sintetici" && S.mode() === "sintetici" && !("suoni" in X.makeSave().settings)));
   g.click(272, 614); g.up(272, 614);
-  console.log("di nuovo → sintetici:", X.settings.suoni, S.mode(), ok(X.settings.suoni === "sintetici" && S.mode() === "sintetici"));
+  console.log("di nuovo → campioni:", X.settings.suoni, S.mode(), ok(X.settings.suoni === "campioni" && S.mode() === "campioni"));
 }
 {
   // partita intera con il contesto finto: eventi emessi, sospensione in pausa e nelle carte; stesso esito senza audio

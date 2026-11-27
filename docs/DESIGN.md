@@ -1700,7 +1700,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **Formato e peso**: file brevi in OGG o MP3, silenzi di coda tagliati; solo i file della prova in `ASSETS` di `sw.js`.
   - **Caricamento**: i campioni si decodificano una volta sola, al primo sblocco dell’`AudioContext`, non a ogni suono; solo quelli della prova (l’intera libreria decodificata supererebbe i 30 MB). Se un file manca o non si decodifica, l’evento ricade sul sintetico e il caso è contato in `stats.failed`.
   - **Catena comune**: tutti i campioni passano da una stessa catena (EQ, compressore e un riverbero breve) prima del `master`, perché suonino nello stesso spazio; i sintetici restano dove sono.
-  - **Scelta tra sintetico e campioni**: campo `suoni` (valori `"sintetici"` o `"campioni"`) in `fortress-proto-v1`, fuori dall’esportazione come `volume`; valore non valido = `"sintetici"`. Si cambia con un tasto accanto al cursore del volume nel menu principale. Il valore di partenza resta `"sintetici"` finché Marco non ha giudicato la prova.
+  - **Scelta tra sintetico e campioni**: campo `suoni` (valori `"sintetici"` o `"campioni"`) in `fortress-proto-v1`, fuori dall’esportazione come `volume`; valore non valido = `"sintetici"`. Si cambia con un tasto accanto al cursore del volume nel menu principale. Il valore di partenza resta `"sintetici"` finché Marco non ha giudicato la prova (dalla 1.40.0 è `"campioni"`, vedi sotto “Campioni di partenza”).
   - **Catalogo sonoro**: mostra per i tre eventi un tasto per la versione sintetica e uno per ciascun campione, per il confronto dal computer (il giudizio resta sul telefono).
   - **Test**: `tests/sonoro.js` controlla che con `suoni: "sintetici"` gli eventi siano identici alla 1.25.1, che con `"campioni"` i tre eventi usino i file, che il ripiego funzioni se un file manca, e che le partite con e senza audio diano gli stessi esiti.
   - **Da misurare in Claude Code**: peso reale dei file in cache (stima mia: circa 260 KB per i candidati), memoria dei campioni decodificati (stima mia: circa 2 MB) e tempo di avvio sul telefono. Sono stime, non misure.
@@ -1821,5 +1821,8 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     forte quanto il tuono, che arriva 50 ms dopo (1,35 s). Volume 0,04, come il sintetico.
   - Gli altri file Kenney restano originali (già piccoli, o usati quasi interi come thrusterFire).
   - **File**: **40 file, 937,1 KB** (959 638 byte; prima 1210,8).
+- **Campioni di partenza** **[deciso]** (Marco, 27/11/2026, dopo la prova della 1.39.0 sul telefono: “il fulmine ora va bene”): i campioni diventano il suono di partenza.
+  - **Realizzato (1.40.0)**: campo `suoni` di partenza `"campioni"`; un valore assente o non valido vale `"campioni"`; chi aveva salvato `"sintetici"` (tasto nel menu) lo tiene.
+    Il tasto “Campioni” / “Sintetici” accanto al cursore del volume resta, e i sintetici restano com’erano (traccia identica alla 1.25.1). Il modulo da solo (catalogo sonoro, test) parte ancora da `"sintetici"` finché il gioco non gli passa il campo.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

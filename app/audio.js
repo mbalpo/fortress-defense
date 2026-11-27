@@ -501,7 +501,7 @@
         if (master) try { master.gain.setValueAtTime(volume * volume, ctx.currentTime); } catch (e) {}
       },
       volume: () => volume,
-      // prova dei campioni: "sintetici" (di partenza) o "campioni"; un valore non valido vale "sintetici". I file si decodificano alla prima richiesta.
+      // prova dei campioni: "sintetici" (di partenza del modulo; il gioco passa il suo campo, "campioni" dalla 1.40.0) o "campioni"; un valore non valido vale "sintetici". I file si decodificano alla prima richiesta.
       setMode(m) { mode = MODES.includes(m) ? m : "sintetici"; if (mode === "campioni") load(); else holdAllOff(); },
       mode: () => mode,
       SAMPLED_EVENTS: Object.keys(SAMPLED),
