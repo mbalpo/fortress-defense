@@ -136,20 +136,24 @@
   // (guadagno per file, al massimo +6 dB). I file sono gli originali Kenney (OGG Vorbis, 44,1 kHz): mono e tagli si fanno qui, alla decodifica e al suono.
   const FILES = { click_002: -14.9, click_003: -14.6, click_005: -11.2, impactMetal_004: -21.2,
     explosionCrunch_000: -13.8, explosionCrunch_001: -12.0, explosionCrunch_004: -14.6, lowFrequency_explosion_001: -15.5,
-    glass_001: -20.0, glass_002: -18.9, glass_005: -17.8, glass_006: -16.8, impactMetal_001: -19.8, glass_004: -17.7 };
+    impactMetal_000: -20.4, impactMetal_001: -19.8, impactMetal_002: -20.4, impactMetal_003: -19.9, forceField_001: -10.6 };
   const SAMPLE_RMS = -18;
   // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s) };
   // gain: volume dell’evento con i campioni (al posto di def.gain); vars(peso) → varianti tra cui il modulo sceglie (generatore proprio)
   const S_ = (f, g, extra) => Object.assign({ f, g: g == null ? 1 : g, at: 0 }, extra || {});
-  // volumi tarati (1.31.0) perché ogni evento suoni forte come il suo sintetico (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa)
-  const glass = [["glass_001", 0.54], ["glass_002", 1.22], ["glass_005", 1.64], ["glass_006", 1.58]].map(([f, g]) => [S_(f, g)]);
+  // volumi tarati (1.31.0, cupola 1.31.1) perché ogni evento suoni forte come il suo sintetico (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa)
+  // cupola come campo di forza (1.31.1, Marco: niente vetro): colpo metallico con sotto il ronzio del campo di forza (sale in 0,1-0,2 s e si spegne verso 0,6 s)
+  // k: volume della variante (colpo e campo insieme, il campo a 0,35 del colpo); pesi 1-2 col campo tagliato a 0,55 s
+  const FIELD = (k, d) => S_("forceField_001", 0.35 * k, d ? { d } : null);
+  const shield = [["impactMetal_002", 0.41], ["impactMetal_000", 0.39], ["impactMetal_003", 0.31]].map(([f, k]) => [S_(f, k), FIELD(k, 0.55)]);
   const SAMPLED = {
     // clic brevissimo (7-9 ms) con il colpo metallico grave tagliato a 85 ms sotto
     guardiano: { gain: 0.09, vars: () => ["click_002", "click_003", "click_005"].map((f) => [S_(f, 0.8), S_("impactMetal_004", 0.55, { d: 0.085 })]) },
     // scoppio con il rombo basso sotto (il file basso è stereo: si somma in mono alla decodifica)
-    "esplosione.grande": { gain: 1.15, vars: () => ["explosionCrunch_000", "explosionCrunch_001", "explosionCrunch_004"].map((f) => [S_(f), S_("lowFrequency_explosion_001", 0.7)]) },
-    // pesi 1 e 2: vetro (il peso cambia solo il volume, def.level); peso 3: colpo di metallo con il vetro lungo sopra
-    cupola: { gain: 0.8, vars: (w) => w >= 3 ? [[S_("impactMetal_001", 0.48), S_("glass_004", 0.24)]] : glass },
+    // 1.31.1 (Marco): peso 1 (Sky Guard) explosionCrunch_000 e 001; peso 2 (kamikaze: Droni kamikaze dell’Hive e nemico kamikaze) explosionCrunch_004
+    "esplosione.grande": { gain: 1.15, vars: (w) => (w >= 2 ? ["explosionCrunch_004"] : ["explosionCrunch_000", "explosionCrunch_001"]).map((f) => [S_(f), S_("lowFrequency_explosion_001", 0.7)]) },
+    // pesi 1 e 2: tre colpi metallici sul campo di forza (il peso cambia solo il volume, def.level); peso 3: il colpo più grave con il campo intero
+    cupola: { gain: 0.8, vars: (w) => w >= 3 ? [[S_("impactMetal_001", 0.42), FIELD(0.42)]] : shield },
   };
   const SAMPLE_CHAIN = {
     hp: 40,                // passaalto (Hz): toglie il rombo sotto l’udibile

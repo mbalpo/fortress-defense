@@ -1722,5 +1722,17 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     il browser non lascia leggere i file: li prende da `docs/catalogo-sonoro-campioni.js` (base64, generato da `npm run catalog-sonoro`; un test lo vuole al passo con `app/suoni/`).
   - **Misure**: peso in cache **231,4 KB** (237 004 byte, 14 file); memoria dei campioni decodificati circa **1,4 MB** (7,5 s mono in virgola mobile a 48 kHz, la frequenza tipica di Android); decodifica di tutti
     i file **15-37 ms sul computer** (Chromium). **Sul telefono non misurato**: tempo di avvio e di decodifica da controllare.
+- **Esito della prova sul telefono** **[deciso]** (Marco, 27/11/2026):
+  - **Guardiano**: perfetto con i campioni, resta com’è.
+  - **Esplosione grande**: si tengono solo i campioni 1 e 2 (explosionCrunch_000 e 001); il campione 3 (explosionCrunch_004) diventa il suono dei **kamikaze**.
+  - **Cupola**: niente effetto vetro. La cupola è un **campo di forza**, non qualcosa di vetro: suoni da “impactMetal” o “click”.
+- **Rivisto (1.31.1)** · scelte **[Claude] [da rivedere]**:
+  - **Kamikaze**: `esplosione.grande` con **peso 2** (Droni kamikaze dell’Hive e nemico kamikaze sulla cupola, i due “kamikaze” del § 18); la Sky Guard resta a peso 1. Il raggruppamento tiene il peso più alto,
+    quindi in una finestra con un kamikaze suona il suo campione. Il sintetico non guarda il peso: invariato.
+  - **Cupola**: colpo **impactMetal** con sotto il ronzio del **campo di forza** (forceField_001, il più grave dei cinque: tutti salgono in 0,1-0,2 s e si spengono verso 0,6 s), a 0,35 del colpo.
+    Pesi 1-2: tre varianti, impactMetal_002, 000 e 003, con il campo tagliato a 0,55 s (il peso cambia solo il volume); peso 3: impactMetal_001 (il più grave) con il campo intero.
+    Il clic non l’ho usato: è già il suono del guardiano, e a 6-7 salve al secondo i colpi alla cupola si confonderebbero con gli spari. Tolti i 5 vetri (glass_001, 002, 004, 005, 006).
+  - **Volumi**: tarati come nella 1.31.0 (forte come il sintetico, scarto entro 0,7 dB): varianti 0,41 / 0,39 / 0,31, peso 3 0,42.
+  - **File**: 13, **272,4 KB** (278 948 byte).
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

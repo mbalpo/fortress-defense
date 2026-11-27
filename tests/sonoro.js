@@ -158,22 +158,28 @@ const ALL3 = ["guardiano", "esplosione.grande", "cupola"];
       ok(sampled.join() === ALL3.slice().sort().join() && ac.log.samples > 0 && !Object.keys(S.stats.failed).length));
     const vars = ALL3.map((n) => n + " " + S.variants(n, 1).length).concat(["cupola peso 3 " + S.variants("cupola", 3).length]);
     console.log("varianti pronte:", vars.join(" · "), "· tutte decodificate", ALL3.every((n) => S.variants(n, 1).every((v) => v.ok)), ok(ALL3.every((n) => S.variants(n, 1).length >= 2 && S.variants(n, 1).every((v) => v.ok)) && S.variants("cupola", 3).length >= 1));
+    // scelte di Marco dopo la prova sul telefono (1.31.1): esplosione 1-2 per la Sky Guard e 3 per i kamikaze (peso 2); cupola come campo di forza, senza vetro
+    const ex = (w) => S.variants("esplosione.grande", w).map((v) => v.files[0]).join(" "), cv = [1, 2, 3].flatMap((w) => S.variants("cupola", w));
+    const field = cv.every((v) => v.files.includes("forceField_001") && v.files.some((f) => /^impactMetal_/.test(f))), noGlass = !S.files().some((f) => /glass/.test(f));
+    const kami = (GAME.match(/sfx\("esplosione\.grande", 2\)/g) || []).length, kSites = [GAME.indexOf("boom() {"), GAME.indexOf("function kamikaze(e)")].map((p) => /sfx\("esplosione\.grande", 2\)/.test(GAME.slice(p, p + 400)));
+    console.log("1.31.1: esplosione peso 1 →", ex(1), "· peso 2 (kamikaze) →", ex(2), "· cupola: colpo metallico + campo di forza in tutte le", cv.length, "varianti:", field, "· niente vetro:", noGlass,
+      "· nel gioco peso 2 ai Droni kamikaze e al kamikaze:", kSites.join(" "), "(" + kami + " chiamate)", ok(ex(1) === "explosionCrunch_000 explosionCrunch_001" && ex(2) === "explosionCrunch_004" && field && noGlass && kami === 2 && kSites.every(Boolean)));
     // il catalogo può chiedere il sintetico o una variante precisa
     t += 5000; const s0 = ac.log.samples; S.preview("guardiano", 1, "sintetico"); t += 5000; const s1 = ac.log.samples; S.preview("guardiano", 1, 2); const s2 = ac.log.samples;
     S.setMode("boh");
     console.log("catalogo: sintetico senza file", s1 === s0, "· variante 3 con i file", s2 > s1, "· modo non valido →", S.mode(), ok(s1 === s0 && s2 > s1 && S.mode() === "sintetici"));
   }
   {
-    // ripiego: mancano i tre clic del guardiano e un vetro → il guardiano torna sintetico, la cupola usa gli altri vetri; i file mancanti sono contati
+    // ripiego: mancano i tre clic del guardiano e un colpo della cupola → il guardiano torna sintetico, la cupola usa le altre varianti; i file mancanti sono contati
     let t = 0; const q = [], sb = loadModule(true), fl = [];
-    const S = sb.FORTRESS_SOUND_CREATE({ AudioContext: sb.AudioContext, now: () => t, setTimer: (fn, ms) => q.push({ at: t + ms, fn }), fetch: fakeFetch(fl, ["click_", "glass_002"]) });
+    const S = sb.FORTRESS_SOUND_CREATE({ AudioContext: sb.AudioContext, now: () => t, setTimer: (fn, ms) => q.push({ at: t + ms, fn }), fetch: fakeFetch(fl, ["click_", "impactMetal_000"]) });
     const flush = () => { q.sort((a, b) => a.at - b.at); while (q.length && q[0].at <= t) q.shift().fn(); };
     S.setMode("campioni"); S.unlock(); S.setActive(true); await settle(); await settle();
     const st0 = sb.__acs[0].log.started;
     for (let i = 0; i < 6; i++) { t += 5000; S.play("guardiano"); S.play("cupola", 1); t += 200; flush(); }
     const g = S.stats.sampled.guardiano || 0, c = S.stats.sampled.cupola || 0, failed = Object.keys(S.stats.failed);
     console.log("file mancanti: guardiano con i file", g, "su 6 (sintetico, sorgenti avviate " + (sb.__acs[0].log.started - st0) + ") · cupola con i file", c, "su 6 · contati in stats.failed:", failed.join(", "),
-      ok(g === 0 && c === 6 && sb.__acs[0].log.started > st0 && failed.length === 4 && failed.every((k) => /^suoni\/(click_00[235]|glass_002)\.ogg$/.test(k))));
+      ok(g === 0 && c === 6 && sb.__acs[0].log.started > st0 && failed.length === 4 && failed.every((k) => /^suoni\/(click_00[235]|impactMetal_000)\.ogg$/.test(k))));
     // senza fetch (o file non decodificabile) nessun errore: tutto sintetico
     const sb2 = loadModule(true), S2 = sb2.FORTRESS_SOUND_CREATE({ AudioContext: sb2.AudioContext, fetch: null });
     let err = null; try { S2.setMode("campioni"); S2.unlock(); S2.setActive(true); for (const n of ALL3) S2.play(n, 3); } catch (e) { err = e.message; }
@@ -262,10 +268,10 @@ console.log("— Catalogo sonoro —");
   console.log("usa app/audio.js:", usesFile, "· tasti", btn.length, "(attesi " + (S.EVENTS.length + 2) + ") · ogni evento ha il suo tasto:", covered,
     ok(usesFile && btn.length === S.EVENTS.length + 2 && covered));
   // prova dei campioni: per guardiano, esplosione grande e cupola (pesi 1-3) un tasto sintetico e uno per variante; dati dei campioni al passo con app/suoni/
-  const cmp = [...d.window.document.querySelectorAll(".grid.cmp button")], want = S.SAMPLED_EVENTS.flatMap((n) => (n === "cupola" ? [1, 2, 3] : [1]).map((w) => 1 + S.variants(n, w).length)).reduce((a, b) => a + b, 0);
+  const cmp = [...d.window.document.querySelectorAll(".grid.cmp button")], want = S.SAMPLED_EVENTS.flatMap((n) => (n === "cupola" ? [1, 2, 3] : n === "esplosione.grande" ? [1, 2] : [1]).map((w) => 1 + S.variants(n, w).length)).reduce((a, b) => a + b, 0);
   const synth = cmp.filter((b) => b.className === "synth").length, data = require("./tools/sonoro-campioni.js"), fresh = fs.existsSync(data.OUT) && fs.readFileSync(data.OUT, "utf8") === data.build();
   const onDisk = fs.readdirSync(path.join(__dirname, "..", "app", "suoni")).filter((f) => f.endsWith(".ogg")).map((f) => f.slice(0, -4)).sort().join();
   console.log("campioni nel catalogo: tasti", cmp.length, "(attesi " + want + ", sintetici " + synth + ") · usa catalogo-sonoro-campioni.js:", html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>"), "· dati al passo con app/suoni/:", fresh,
-    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 5 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
+    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 6 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
 }
 }

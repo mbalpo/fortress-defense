@@ -3,6 +3,23 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.31.1 — Campioni rivisti dopo la prova sul telefono
+
+- **Decisioni di Marco** (27/11/2026, DESIGN.md § 18 “Esito della prova sul telefono”): guardiano perfetto, resta; esplosione grande solo con i campioni 1 e 2, il 3 per i kamikaze;
+  cupola senza vetro, pensata come un campo di forza (impactMetal o click).
+- **Kamikaze**: i Droni kamikaze dell’Hive e il nemico kamikaze chiamano `esplosione.grande` con peso 2 → explosionCrunch_004; la Sky Guard (peso 1) → explosionCrunch_000 o 001. Sintetico invariato.
+- **Cupola** **[Claude] [da rivedere]**: colpo impactMetal con sotto il campo di forza (forceField_001, a 0,35); pesi 1-2 impactMetal_002, 000, 003 (campo tagliato a 0,55 s), peso 3 impactMetal_001 col campo intero.
+  Il clic non è usato perché è già il suono del guardiano. Volumi tarati sul sintetico (entro 0,7 dB).
+- **File**: tolti glass_001, 002, 004, 005, 006; aggiunti impactMetal_000, 002, 003 e forceField_001. 13 file, **272,4 KB** (prima 231,4). `ASSETS`, `CREDITI.md` e dati del catalogo aggiornati.
+- **Catalogo sonoro**: esplosione grande anche a peso 2 (kamikaze), cupola con i campioni nuovi (19 tasti nella prova). `APP_VERSION` e `sw.js` 1.31.1.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: nuovo controllo 1.31.1 (esplosione peso 1 → 000 e 001, peso 2 → 004; tutte le 7 varianti della cupola con impactMetal e campo di forza; nessun vetro;
+peso 2 nei due punti dei kamikaze); ripiego rifatto con un colpo della cupola mancante; catalogo con 19 tasti e 6 sintetici.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 72): tolta la prova del guardiano (decisa); esplosione (Sky Guard e kamikaze), cupola come campo di forza e peso (272 KB) riscritte; decisione rimasta: varianti della cupola e suono di partenza; valori e interpretazioni della 1.31.1.
+
 ## 1.31.0 — Prova dei campioni nel sonoro
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Prova dei campioni”): la regola “nessun file audio” è sospesa per una prova su tre eventi, `guardiano`, `esplosione.grande` e `cupola`,

@@ -2141,7 +2141,7 @@ function hiveDrone(s, x, y, lvl, gen) {
     },
     boom() {                                              // Droni kamikaze: esplosione ad area al doppio del danno di un colpo
       for (const e of living()) if (edist(e, this.x, this.y) <= 40 + e.def.r) damage(e, dmg * 2, "force", false, "hive");
-      ring(this.x, this.y, 40, TYPES.force.color, 0.35); sfx("esplosione.grande"); this.die();
+      ring(this.x, this.y, 40, TYPES.force.color, 0.35); sfx("esplosione.grande", 2); this.die();   // peso 2 = kamikaze (campione proprio, 1.31.1)
     },
     update(dt) {
       if (this.ray && (this.ray.t -= dt) <= 0) this.ray = null;
@@ -3404,7 +3404,7 @@ function spawn(q) {
 function kamikaze(e) {
   const k = 1 + SPECIAL.kamiK * clamp(e.hp / e.maxHp, 0, 1), d0 = e.dmg;
   e.dmg = d0 * k; domeHit(e); e.dmg = d0;
-  e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5); sfx("esplosione.grande");
+  e.dead = true; e.rewarded = true; ring(e.x, Math.min(e.y, GROUND_Y), 46, TYPES.fire.color, 0.5); sfx("esplosione.grande", 2);   // peso 2 = kamikaze (1.31.1)
 }
 const bottomOf = (e) => e.y + (e.def.box ? e.def.box[1] : e.def.r);   // bordo inferiore (boss giganti: della sagoma)
 function touchesDome(e) {
@@ -3913,7 +3913,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.31.0";
+const APP_VERSION = "1.31.1";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

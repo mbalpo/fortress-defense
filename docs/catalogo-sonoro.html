@@ -27,7 +27,7 @@
 <h1>Planet Defense · catalogo sonoro</h1>
 <p>Un tasto per ogni evento del modulo audio del gioco (<code>app/audio.js</code>, lo stesso file del gioco) e tre per la cupola (pesi 1, 2, 3).
 Si ascolta dal computer per confrontare i timbri; il giudizio finale resta sul telefono (DESIGN.md § 18). Tasti ripetuti molto in fretta possono essere scartati dalle soglie e dai limiti di voci, come nel gioco.</p>
-<p>In fondo, la <b>prova dei campioni</b> (1.31.0): per guardiano, esplosione grande e cupola un tasto per la versione sintetica e uno per ciascuna variante con i file (Kenney, CC0),
+<p>In fondo, la <b>prova dei campioni</b> (1.31.0, rivista nella 1.31.1): per guardiano, esplosione grande (Sky Guard e kamikaze) e cupola (campo di forza) un tasto per la versione sintetica e uno per ciascuna variante con i file (Kenney, CC0),
 con la stessa catena del gioco. I file vengono da <code>catalogo-sonoro-campioni.js</code> (generato da <code>npm run catalog-sonoro</code>), così funzionano anche aprendo la pagina dalla cartella.</p>
 <div class="bar">
   <label>Volume <input id="vol" type="range" min="0" max="100" step="5" value="70"> <span id="volv">70%</span></label>
@@ -93,20 +93,21 @@ for (const [title, test] of GROUPS) {
   }
 }
 // prova dei campioni: per ogni evento e peso, il sintetico e ogni variante
-const CMP_NOTE = { guardiano: "", "esplosione.grande": "", cupola: ["", "nemici normali", "kamikaze", "boss e mini-boss"] };
+const CMP_NOTE = { "esplosione.grande": ["", "Sky Guard", "kamikaze (Droni kamikaze dell’Hive e nemico kamikaze)"], cupola: ["", "nemici normali", "kamikaze", "boss e mini-boss"] };
+const WEIGHTS = { "esplosione.grande": [1, 2], cupola: [1, 2, 3] };
 function preview(n, w, pick, btn) {
   ensure();
   const vs = S.variants(n, w), label = pick === "sintetico" ? "sintetico" : vs[pick].files.join(" + ");
   if (pick !== "sintetico" && !vs[pick].ok) { document.getElementById("log").textContent = "· campioni non ancora pronti (decodifica in corso o file mancante): " + label; return; }
   const r = S.preview(n, w, pick);
-  document.getElementById("log").textContent = (r ? "▶ " : "· scartato (voci): ") + n + (n === "cupola" ? " peso " + w : "") + " · " + label;
+  document.getElementById("log").textContent = (r ? "▶ " : "· scartato (voci): ") + n + (WEIGHTS[n] ? " peso " + w : "") + " · " + label;
   btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), 250);
 }
 {
   const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola)"; root.appendChild(h);
   const grid = document.createElement("div"); grid.className = "grid cmp"; root.appendChild(grid);
-  for (const n of S.SAMPLED_EVENTS) for (const w of n === "cupola" ? [1, 2, 3] : [1]) {
-    const h3 = document.createElement("h3"); h3.textContent = n === "cupola" ? "cupola · peso " + w + " · " + CMP_NOTE.cupola[w] : n; grid.appendChild(h3);
+  for (const n of S.SAMPLED_EVENTS) for (const w of WEIGHTS[n] || [1]) {
+    const h3 = document.createElement("h3"); h3.textContent = CMP_NOTE[n] ? n + " · peso " + w + " · " + CMP_NOTE[n][w] : n; grid.appendChild(h3);
     const add = (pick, main, sub) => {
       const b = document.createElement("button"); b.append(main);
       const sm = document.createElement("small"); sm.textContent = sub; b.appendChild(sm);
