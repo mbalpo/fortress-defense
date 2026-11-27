@@ -1789,5 +1789,11 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   il gioco chiama `SOUND.hold("fiamme", …)` a ogni fotogramma), spento con la dissolvenza di 0,15 s come gli altri suoni continui; solo con i campioni.
   Stesso file della Sky Guard, un altro tratto (thrusterFire_001 da 3 a 4,8 s), più grave (×0,7, intorno a 780 Hz) con un tremolio di 5 Hz; volume circa 10 dB sotto la partenza dei missili (0,055).
   Nessun file nuovo (32 file, 934,9 KB).
+- **Pacco regalo con i campioni** **[deciso]** (Marco, 27/11/2026): **question_003** all’arrivo del pacco, **maximize_007** quando si ottiene il premio, **minimize_007** quando esce dallo schermo senza essere stato sconfitto.
+- **Pacco regalo (1.36.0)** · scelte **[Claude] [da rivedere]**:
+  - **Pacco perso**: evento nuovo `pacco.perso`, nel momento in cui il timer scade e il pacco comincia ad andarsene (compare “Il pacco se ne va”), non quando sparisce oltre il bordo in alto;
+    non suona se il pacco sfuma perché l’ondata finisce prima (il sonoro si ferma con l’ondata). Solo con i campioni: con “Sintetici” resta muto, come prima.
+  - **Volumi**: arrivo e premio forti come il sintetico (0,185 e 0,43), pacco perso 3 dB sotto il premio (0,18). Voci e soglie quelle degli altri eventi del pacco (categoria “pacco”, priorità 4).
+  - **File**: 3 nuovi del pacchetto Interface Sounds (circa 8 KB l’uno): **35 file, 958,3 KB** (981 346 byte).
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

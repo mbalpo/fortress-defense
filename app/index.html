@@ -2741,7 +2741,8 @@ function giftTick(dt) {
   if (g.phase === "in") { g.y += GIFT.enter * dt; if (g.y >= g.ty) { g.y = g.ty; g.phase = "float"; } return; }
   if (g.phase === "out") { g.y -= GIFT.enter * dt; if (g.y < -GIFT.r * 3) gift = null; return; }
   g.t -= dt;
-  if (g.t <= 0) { g.phase = "out"; giftDone(); floaters.push({ x: clamp(g.x, 70, W - 70), y: g.y - 24, life: 1.4, max: 1.4, txt: "Il pacco se ne va", color: "#9fb4d9" }); return; }
+  // timer scaduto: il pacco se ne va; suono del pacco perso (1.36.0), solo con i campioni
+  if (g.t <= 0) { g.phase = "out"; giftDone(); sfx("pacco.perso"); floaters.push({ x: clamp(g.x, 70, W - 70), y: g.y - 24, life: 1.4, max: 1.4, txt: "Il pacco se ne va", color: "#9fb4d9" }); return; }
   if (dist(g.x, g.y, g.tx, g.ty) < 8) { g.tx = 30 + giftRand() * (W - 60); g.ty = GIFT.yTop + giftRand() * (GIFT.yBot - GIFT.yTop); }   // nuovo punto: cambi di direzione
   const d = dist(g.x, g.y, g.tx, g.ty) || 1, k = Math.min(1, dt * 2.5);              // movimento morbido verso il punto, circa 50 px/s
   g.vx += ((g.tx - g.x) / d * GIFT.speed - g.vx) * k; g.vy += ((g.ty - g.y) / d * GIFT.speed - g.vy) * k;
@@ -3921,7 +3922,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.35.0";
+const APP_VERSION = "1.36.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

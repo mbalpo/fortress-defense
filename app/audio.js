@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0, pacco regalo nella 1.36.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -84,6 +84,8 @@
     level: (w) => [0.6, 0.85, 1][w - 1] || 0.6 });
   ev("pacco.arrivo", { cat: "pacco", prio: 4, gain: 0.4, gap: 500,
     make: () => [L("sine", 880, 880, 0.16, 0.6), L("triangle", 1320, 1320, 0.3, 0.45, { at: 0.12 }), L("sine", 1760, 1760, 0.3, 0.2, { at: 0.12 })] });
+  // pacco perso (1.36.0, Marco): il timer scade e il pacco se ne va; solo con i campioni (nel modo “sintetici” tace, come prima)
+  ev("pacco.perso", { cat: "pacco", prio: 4, gain: 0.4, gap: 500, only: "campioni", make: () => [] });
   ev("pacco.premio", { cat: "pacco", prio: 4, gain: 0.42, gap: 500,
     make: () => [660, 880, 1100, 1320].map((f, i) => L("triangle", f, f, 0.26, 0.5, { at: i * 0.07 })).concat([L("sine", 2640, 2640, 0.4, 0.12, { at: 0.21 })]) });
   // ingressi (1.25.1): niente note né ritmo da notifica; rombo di rumore filtrato in crescendo (il filtro si apre) e un colpo profondo alla fine
@@ -144,7 +146,9 @@
     forceField_000: -10.6, forceField_002: -10.6, forceField_004: -10.6, laserSmall_000: -21.6, laserSmall_001: -21.9, laserSmall_002: -22.6, laserSmall_003: -22.1,
     lowFrequency_explosion_000: -18.0, laserRetro_000: -7.4, laserRetro_001: -7.4, laserRetro_003: -7.6,
     // ingressi e fiamme (1.34.0, Marco): loop da 5 s del pacchetto, usati interi (si legge solo una parte con off e d)
-    spaceEngine_000: -9.7, spaceEngine_003: -12.1, thrusterFire_001: -17.4 };
+    spaceEngine_000: -9.7, spaceEngine_003: -12.1, thrusterFire_001: -17.4,
+    // pacco regalo (1.36.0, Marco): Kenney Interface Sounds
+    question_003: -9.9, maximize_007: -15.6, minimize_007: -13.4 };
   const SAMPLE_RMS = -18;
   // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0),
   // off: punto del file da cui si parte (s, 1.34.0) };
@@ -200,6 +204,11 @@
     // ingressi (1.34.0, Marco): boss = spaceEngine_000 (motore grave che pulsa), mini-boss = spaceEngine_003 (ronzio fermo); come nel sintetico il motore cresce
     // (entrata lenta) e alla fine arriva il colpo profondo (boss a 3,5 s: rombo lowFrequency_explosion_000 e colpo metallico grave; mini-boss a 1,5 s: lowFrequency_explosion_001)
     "boss.arrivo": { gain: 0.55, vars: () => [[S_("spaceEngine_000", 1, { d: 4.6, fi: 3.4, fo: 1.0 }), S_("lowFrequency_explosion_000", 1.2, { at: 3.5 }), S_("impactMetal_001", 0.5, { at: 3.5, r: 0.6 })]] },
+    // pacco regalo (1.36.0, Marco): arrivo question_003, premio maximize_007, pacco perso minimize_007 (il suono “al contrario” del premio);
+    // arrivo e premio forti come il sintetico, pacco perso 3 dB sotto il premio
+    "pacco.arrivo": { gain: 0.185, vars: () => [[S_("question_003")]] },
+    "pacco.premio": { gain: 0.43, vars: () => [[S_("maximize_007")]] },
+    "pacco.perso": { gain: 0.18, vars: () => [[S_("minimize_007")]] },
     "miniboss.arrivo": { gain: 0.29, vars: () => [[S_("spaceEngine_003", 1, { d: 2.0, fi: 1.4, fo: 0.5 }), S_("lowFrequency_explosion_001", 1.2, { at: 1.5 })]] },
   };
   // ---- suoni continui (1.33.0, Marco): Laser, Beam e Disruption Drone suonano finché il raggio o il campo è acceso, più piano della partenza ----

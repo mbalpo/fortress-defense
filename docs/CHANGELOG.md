@@ -3,6 +3,21 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.36.0 — Pacco regalo con i campioni
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Pacco regalo con i campioni”): question_003 all’arrivo, maximize_007 al premio, minimize_007 quando il pacco esce senza essere stato sconfitto.
+- **Pacco perso** **[Claude] [da rivedere]**: evento nuovo `pacco.perso` allo scadere del timer (quando compare “Il pacco se ne va”), solo con i campioni; non suona se il pacco sfuma per la fine dell’ondata.
+- **Volumi** tarati sul sintetico: arrivo 0,185, premio 0,43; pacco perso 3 dB sotto il premio (0,18).
+- **File**: question_003, maximize_007, minimize_007: **35 file, 958,3 KB** (prima 934,9). `ASSETS`, `CREDITI.md`, dati del catalogo sonoro aggiornati; nel catalogo il pacco perso sta nella prova dei campioni (senza tasto sintetico).
+  `APP_VERSION` e `sw.js` 1.36.0.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: 37 eventi; con “campioni” suonano con i file 18 eventi; nuovo controllo 1.36.0 (file dei tre suoni del pacco, pacco perso muto con i sintetici, chiamato allo scadere del timer); catalogo con 19 tasti sintetici.
+Corretto durante il lavoro: un commento messo a metà della riga del timer del pacco toglieva il resto della riga (la pagina non partiva); trovato dai test prima del commit.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 77): suoni del pacco regalo con i campioni; peso 958 KB.
+
 ## 1.35.0 — Aree in fiamme della Sky Guard
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Aree in fiamme”): le fiamme comprendono anche le aree in fiamme della Sky Guard; nessun suono sulle bruciature.
