@@ -1,6 +1,7 @@
-// Pacco regalo (1.21.0, DESIGN.md § 17): Standard dal 61, Epica dal 31, non nella Protezione planetaria; 25% per livello, ondata tra la 3 e la 19 (non 5, 10, 15);
+// Pacco regalo (1.21.0, DESIGN.md § 17): Standard dal 61, Epica dal 31, non nella Protezione planetaria; 60% per livello (1.27.0, prima 25%), ondata tra la 3 e la 19 (non 5, 10, 15);
 // solo il guardiano tenendo premuto lo colpisce (mirino entro 45 px), i nemici in mezzo fermano i colpi; timer fermo in pausa e nelle carte, scorre con la velocità;
-// premio: frammenti di un ranger non al 10 (5 Standard, 10 Epica), con tutti al 10 niente pacco in Standard e pezzo o Modulo epico+ in Epica; partita sospesa e “Continua”.
+// premio a estrazione (1.27.0): 50% frammenti di un ranger non al massimo (5 Standard, 10 Epica, × M), 20% pezzo, 20% Modulo (rarità dalla tabella dei drop), 8% 5 Sigilli, 2% 1 maggiore;
+// con tutti i ranger al massimo il pacco compare comunque e la quota dei frammenti va alle altre; partita sospesa e “Continua”.
 const { makeGame } = require("./bot.js");
 const ok = (c) => c ? "✓" : "✗ ERRORE";
 const patch = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
@@ -30,9 +31,9 @@ console.log("— Dove e quando —");
   console.log("Standard 60 / 61:", r[0], "/", r[1], "· Epica 30 / 31:", r[2], "/", r[3], ok(!r[0] && r[1] && !r[2] && r[3]));
   const st = J(ev, `(() => { ${START("standard", 61)} let n = 0; const w = {}; for (let i = 0; i < 8000; i++) { giftRoll(); if (giftPlan) { n++; w[giftPlan.wave] = (w[giftPlan.wave] || 0) + 1; } } return { n, w: Object.keys(w).map(Number).sort((a, b) => a - b) }; })()`);
   const allowed = [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19];
-  console.log("8000 tiri al 61: pacco nel", (st.n / 80).toFixed(1) + "% · ondate:", st.w.join(" "), ok(Math.abs(st.n / 8000 - 0.25) < 0.02 && st.w.join(" ") === allowed.join(" ")));
+  console.log("8000 tiri al 61: pacco nel", (st.n / 80).toFixed(1) + "% · ondate:", st.w.join(" "), ok(Math.abs(st.n / 8000 - 0.6) < 0.02 && st.w.join(" ") === allowed.join(" ")));
   const ep = ev(`(() => { ${START("epic", 31)} let n = 0; for (let i = 0; i < 8000; i++) { giftRoll(); if (giftPlan) n++; } return n; })()`);
-  console.log("8000 tiri in Epica 31: pacco nel", (ep / 80).toFixed(1) + "%", ok(Math.abs(ep / 8000 - 0.25) < 0.02));
+  console.log("8000 tiri in Epica 31: pacco nel", (ep / 80).toFixed(1) + "%", ok(Math.abs(ep / 8000 - 0.6) < 0.02));
   // generatore separato: tiro e scelta dell’ondata non toccano Math.random (le calibrazioni a semi fissi non cambiano)
   const n1 = ev(`(() => { ${START("standard", 61)} const R = Math.random; let n = 0; Math.random = () => { n++; return R(); }; for (let i = 0; i < 500; i++) giftRoll(); Math.random = R; return n; })()`);
   const n2 = ev(`(() => { ${START("standard", 61)} giftPlan = { wave: 3, done: false }; startWave(3); queue = []; enemies = []; waveTime = 3.1; const R = Math.random; let n = 0; Math.random = () => { n++; return R(); }; for (let i = 0; i < 200; i++) giftTick(0.02); Math.random = R; return !!gift && n; })()`);
@@ -115,30 +116,41 @@ console.log("— Timer —");
 
 console.log("— Ricompensa —");
 {
+  const FR = "(() => { const R = giftRand; let f = true; giftRand = () => f ? (f = false, 0.01) : R(); })();";   // il prossimo premio sono frammenti
   const kill = (ev) => J(ev, "(() => { const f0 = JSON.parse(JSON.stringify(progress.planet.frags)), g0 = JSON.parse(JSON.stringify(progress.gear)); giftHit(1e9); return { f0, f1: progress.planet.frags, g0, g1: progress.gear, note: giftNote && giftNote.gain, done: giftPlan.done }; })()");
   const diff = (a, b) => Object.keys(b).filter((k) => b[k] !== a[k]).map((k) => [k, b[k] - a[k]]);
-  { const { ev } = game(); ev(START("standard", 61) + READY(180, 400)); const r = kill(ev), d = diff(r.f0, r.f1);
+  { const { ev } = game(); ev(START("standard", 61) + READY(180, 400) + FR); const r = kill(ev), d = diff(r.f0, r.f1);
     console.log("Standard: frammenti", JSON.stringify(d), "· avviso:", r.note && r.note.id + " +" + r.note.n, ok(d.length === 1 && d[0][1] === 5 && r.note.n === 5 && r.done)); }
-  { const { ev } = game(); ev(START("epic", 31) + READY(180, 400)); const r = kill(ev), d = diff(r.f0, r.f1);
+  { const { ev } = game(); ev(START("epic", 31) + READY(180, 400) + FR); const r = kill(ev), d = diff(r.f0, r.f1);
     console.log("Epica: frammenti", JSON.stringify(d), ok(d.length === 1 && d[0][1] === 10)); }
   { const nine = IDS.filter((id) => id !== "ceo"), seen = new Set();
-    for (let s = 1; s <= 12; s++) { const { ev } = game({ max: nine, seed: s }); ev(`giftRand = (() => { let x = ${s * 97}; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })();` + START("standard", 61) + READY(180, 400)); diff(kill(ev).f0, J(ev, "progress.planet.frags")).forEach(([k]) => seen.add(k)); }
-    const { ev } = game({ max: nine }); ev(START("standard", 61) + READY(180, 400)); const d = diff(kill(ev).f0, J(ev, "progress.planet.frags"));
-    console.log("nove ranger al 10: frammenti sempre a Ceo", JSON.stringify(d), [...seen].join(","), ok(d.length === 1 && d[0][0] === "ceo" && [...seen].join(",") === "ceo")); }
+    for (let s = 1; s <= 12; s++) { const { ev } = game({ max: nine, seed: s }); ev(`giftRand = (() => { let x = ${s * 97}; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })();` + START("standard", 61) + READY(180, 400) + FR); diff(kill(ev).f0, J(ev, "progress.planet.frags")).forEach(([k]) => seen.add(k)); }
+    const { ev } = game({ max: nine }); ev(START("standard", 61) + READY(180, 400) + FR); const d = diff(kill(ev).f0, J(ev, "progress.planet.frags"));
+    console.log("nove ranger al 10: frammenti sempre a Ceo", JSON.stringify(d), [...seen].join(","), "(× M 1,9: 5 → 10)", ok(d.length === 1 && d[0][0] === "ceo" && d[0][1] === 10 && [...seen].join(",") === "ceo")); }
+  { const { ev } = game({ max: ["alfa", "omega", "sigma", "gamma"] }); ev(START("standard", 61) + READY(180, 400) + FR); const r = kill(ev), d = diff(r.f0, r.f1);
+    console.log("quattro ranger al 10: M", ev("fragM()"), "· frammenti", JSON.stringify(d), "(5 × 1,4 = 7)", ok(Math.abs(ev("fragM()") - 1.4) < 1e-9 && d.length === 1 && d[0][1] === 7)); }
+  { const { ev } = game(); const k = { frags: 0, pcs: 0, mods: 0, seals: 0, majors: 0 }, rar = [0, 0, 0, 0, 0]; let bad = 0;
+    const s0 = J(ev, "[progress.seals, progress.majors]");
+    for (let i = 0; i < 1000; i++) { const n = J(ev, `(() => { ${START("epic", 270)} giftPlan = { wave: 4, done: false }; return giftReward(); })()`); if (!n || !k.hasOwnProperty(n.kind)) { bad++; continue; } k[n.kind]++; if (n.r != null) rar[n.r]++; }
+    const s1 = J(ev, "[progress.seals, progress.majors]"), pct = (x) => x / 10;
+    console.log("estrazione su 1000 pacchi (Epica 270, difficoltà 300): frammenti", pct(k.frags), "% · pezzi", pct(k.pcs), "% · Moduli", pct(k.mods), "% · Sigilli", pct(k.seals), "% · maggiori", pct(k.majors),
+      "% · rarità di pezzi e Moduli", rar.join("/"), "· Sigilli +", s1[0] - s0[0], "maggiori +", s1[1] - s0[1],
+      ok(!bad && Math.abs(k.frags - 500) < 50 && Math.abs(k.pcs - 200) < 40 && Math.abs(k.mods - 200) < 40 && Math.abs(k.seals - 80) < 25 && k.majors >= 5 && k.majors <= 40
+        && s1[0] - s0[0] === 5 * k.seals && s1[1] - s0[1] === k.majors && rar[0] > 0 && rar[4] > 0)); }
   { const { ev } = game({ max: IDS });
     const st = ev(`(() => { giftRand = Math.random; ${START("standard", 61)} let n = 0; for (let i = 0; i < 500; i++) { giftRoll(); if (giftPlan) n++; } giftPlan = { wave: 4, done: false }; startWave(4); waveTime = 3.5; queue = []; enemies = []; giftTick(0.01); return { n, sp: !!gift }; })()`);
-    console.log("tutti i ranger al 10, Standard: pacco su 500 livelli", st.n, "· comparsa forzata", st.sp, ok(st.n === 0 && !st.sp)); }
-  { const { ev } = game({ max: IDS }); const kinds = { pcs: 0, mods: 0 }, rar = new Set(); let bad = 0;
-    for (const lv of [31, 100, 170]) for (let i = 0; i < 60; i++) {
-      ev(START("epic", lv) + READY(180, 400)); const r = kill(ev), n = r.note;
-      if (!n || !kinds.hasOwnProperty(n.kind) || n.r < 2) { bad++; continue; }
-      kinds[n.kind]++; rar.add(n.r);
-      const k = n.kind === "pcs" ? n.pc + ":" + n.r : n.pc + ":" + n.r + ":" + n.fx; if ((r.g1[n.kind][k] || 0) !== (r.g0[n.kind][k] || 0) + 1) bad++;
-      if (JSON.stringify(r.f0) !== JSON.stringify(r.f1)) bad++;
+    console.log("tutti i ranger al massimo, Standard: pacco su 500 livelli", st.n, "· comparsa forzata", st.sp, ok(Math.abs(st.n - 300) < 45 && st.sp)); }
+  { const { ev } = game({ max: IDS }); const kinds = { pcs: 0, mods: 0, seals: 0, majors: 0 }, rar = new Set(); let bad = 0;
+    for (const [m, lv] of [["epic", 31], ["epic", 100], ["standard", 170]]) for (let i = 0; i < 100; i++) {
+      ev(START(m, lv) + READY(180, 400)); const r = kill(ev), n = r.note;
+      if (!n || !kinds.hasOwnProperty(n.kind)) { bad++; continue; }
+      kinds[n.kind]++; if (JSON.stringify(r.f0) !== JSON.stringify(r.f1)) bad++;
+      if (n.kind !== "pcs" && n.kind !== "mods") continue;
+      rar.add(n.r); const k = n.kind === "pcs" ? n.pc + ":" + n.r : n.pc + ":" + n.r + ":" + n.fx; if ((r.g1[n.kind][k] || 0) !== (r.g0[n.kind][k] || 0) + 1) bad++;
     }
-    console.log("tutti al 10, Epica (180 pacchi): pezzi", kinds.pcs, "· Moduli", kinds.mods, "· rarità", [...rar].sort().join(","), "(epico = 2) · errori", bad,
-      ok(!bad && kinds.pcs > 50 && kinds.mods > 50 && Math.min(...rar) >= 2 && rar.size >= 2)); }
-  { const { ev } = game(); ev(START("standard", 61) + READY(180, 400)); const r = kill(ev); ev("domeHp = 0; update(0.02)");
+    console.log("tutti al massimo (300 pacchi, Standard ed Epica): pezzi", kinds.pcs, "· Moduli", kinds.mods, "· Sigilli", kinds.seals, "· maggiori", kinds.majors, "· nessun frammento · rarità", [...rar].sort().join(","), "· errori", bad,
+      ok(!bad && Math.abs(kinds.pcs - 120) < 30 && Math.abs(kinds.mods - 120) < 30 && Math.abs(kinds.seals - 48) < 20 && kinds.majors <= 30 && rar.has(0))); }
+  { const { ev } = game(); ev(START("standard", 61) + READY(180, 400) + FR); const r = kill(ev); ev("domeHp = 0; update(0.02)");
     const saved = JSON.parse(ev("localStorage.getItem('fortress-progress-v1')")).planet.frags;
     console.log("frammenti accreditati subito, anche perdendo il livello: stato", ev("state"), "· salvati", JSON.stringify(saved) === JSON.stringify(r.f1), ok(ev("state") === "lost" && JSON.stringify(saved) === JSON.stringify(r.f1))); }
 }
@@ -175,8 +187,12 @@ console.log("— Scoperta e pausa —");
   ev("pauseGame(); pauseTab = 'enemies'"); g.texts.length = 0; g.frame(); const t2 = g.texts.join("|");
   console.log("avviso “Nuovo nemico: Pacco regalo”:", al.seen && !!al.a && t1.includes("Pacco regalo") && t1.includes("Solo il guardiano, premendo sotto di lui"), "· scheda Nemici:", t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto sotto il pacco"),
     ok(al.seen && al.a && t1.includes("Pacco regalo") && t1.includes("Solo il guardiano, premendo sotto di lui") && t2.includes("Pacco regalo") && t2.includes("Solo il guardiano: tieni premuto sotto il pacco")));
-  ev("state = 'play'; giftHit(1e9); alerts = []"); g.texts.length = 0; g.frame(); const t3 = g.texts.join("|");
+  ev("state = 'play'; giftRand = () => 0.01; giftHit(1e9); alerts = []"); g.texts.length = 0; g.frame(); const t3 = g.texts.join("|");
   console.log("avviso del premio con il nome del ranger:", t3.includes("Pacco regalo!") && /frammenti/.test(t3), ok(t3.includes("Pacco regalo!") && /(Alfa|Prometeo|Omega|Mnemosine|Sigma|Ceo|Gamma|Iperione|Epsilon|Atlante)  \+5 frammenti/.test(t3)));
+  const note = (v) => { ev(`giftNote = null; giftRand = () => ${v}; giftReward && (giftNote = { t: 3.5, gain: giftReward() })`); g.texts.length = 0; g.frame(); return g.texts.join("|"); };
+  const t4 = note(0.95), t5 = note(0.995);
+  console.log("avviso dei Sigilli:", /\+5 Sigilli ◆/.test(t4), "· del maggiore:", /\+1 Sigillo maggiore ✦/.test(t5), "· Math.random nel premio:", ev("(() => { const R = Math.random; let n = 0; Math.random = () => { n++; return R(); }; giftRand = R; for (let i = 0; i < 200; i++) giftReward(); Math.random = R; return n; })()"),
+    ok(/\+5 Sigilli ◆/.test(t4) && /\+1 Sigillo maggiore ✦/.test(t5) && ev("(() => { const R = Math.random; let n = 0; Math.random = () => { n++; return R(); }; const G = giftRand; giftRand = (() => { let x = 7; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })(); for (let i = 0; i < 200; i++) giftReward(); Math.random = R; giftRand = G; return n; })()") === 0));
 }
 
 console.log("— Partite vere —");

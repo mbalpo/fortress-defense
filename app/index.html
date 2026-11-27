@@ -1203,10 +1203,10 @@ function fusePieces(pc, r) {
 // Effetti rari (peso 1: 4, 10, 14, 20, 21, 22, 28, 29, 30): insieme escono con RARE_CHANCE[rarità] (5% nel comune → 30% nell’ancestrale) [deciso, Marco;
 // valori intermedi Claude]; dentro ciascun gruppo (rari o standard) l’effetto si estrae con i pesi. Vale per drop e fusioni.
 const RARE_CHANCE = [0.05, 0.11, 0.18, 0.24, 0.30];
-function rollModFx(pc, r) {
+function rollModFx(pc, r, rnd = Math.random) {   // rnd: il pacco regalo usa il suo generatore (1.27.0)
   const all = PIECES[pc].pool, rare = all.filter((fx) => MOD[fx].w === 1), std = all.filter((fx) => MOD[fx].w > 1);
-  const pool = rare.length && Math.random() < RARE_CHANCE[r || 0] ? rare : std;
-  let x = Math.random() * pool.reduce((a, fx) => a + MOD[fx].w, 0);
+  const pool = rare.length && rnd() < RARE_CHANCE[r || 0] ? rare : std;
+  let x = rnd() * pool.reduce((a, fx) => a + MOD[fx].w, 0);
   for (const fx of pool) if ((x -= MOD[fx].w) < 0) return fx;
   return pool[pool.length - 1];
 }
@@ -2633,21 +2633,24 @@ const SUPPORT = {
   },
 };
 /* ---------- PACCO REGALO (1.21.0, DESIGN.md § 17) ----------
-   In Standard dal livello 61, in Epica dal 31 (non nella Protezione planetaria): una volta per livello, al 25%, in un’ondata a caso tra la 3 e la 19 (non 5, 10, 15) [deciso].
+   In Standard dal livello 61, in Epica dal 31 (non nella Protezione planetaria): una volta per livello, al 60% (1.27.0; prima 25%), in un’ondata a caso tra la 3 e la 19 (non 5, 10, 15) [deciso].
    Non è un nemico per torrette, ranger, mira automatica e “Bersaglio” (non sta in enemies): solo i colpi sparati dal guardiano tenendo premuto (anche il Clone)
    lo feriscono, quando passa nella colonna del guardiano (1.24.1); i nemici lungo la strada fermano i colpi come sempre. Non conta per l’ondata né per la frenesia; non fa danni.
-   Fluttua tra il 25% e il 50% dell’altezza (dal basso), con un timer; se scade o l’ondata finisce se ne va. Premio: frammenti di un ranger non al 10 (5 Standard, 10 Epica);
-   con tutti i ranger al 10 in Standard non compare più, in Epica lascia un pezzo o un Modulo epico o superiore [deciso].
+   Fluttua tra il 25% e il 50% dell’altezza (dal basso), con un timer; se scade o l’ondata finisce se ne va. Premio a estrazione (1.27.0, Marco 26/11/2026) [deciso]:
+   50% frammenti di un ranger non al massimo (5 Standard, 10 Epica, × M) · 20% pezzo · 20% Modulo (rarità dalla tabella dei drop) · 8% 5 Sigilli · 2% 1 Sigillo maggiore;
+   con tutti i ranger al massimo la quota dei frammenti va alle altre in proporzione e il pacco compare comunque, anche in Standard.
    Valori [Claude] (accettati, da provare a mano): timer 12 s, vita = danno al secondo del guardiano × 5 s, 50 px/s; entrata e uscita, ritardo e dimensioni [Claude].
    Tiro e ondata con un generatore separato (giftRand): Math.random e le calibrazioni a semi fissi non cambiano. */
-const GIFT = { stdFrom: 61, epicFrom: 31, chance: 0.25, waves: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19], time: 12, fireSec: 5, speed: 50,
-  enter: 140, yTop: H * 0.5, yBot: H * 0.75, r: 15, delay: 3, frags: { standard: 5, epic: 10 }, epicPiece: 0.5 };
+const GIFT = { stdFrom: 61, epicFrom: 31, chance: 0.6, waves: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19], time: 12, fireSec: 5, speed: 50,
+  enter: 140, yTop: H * 0.5, yBot: H * 0.75, r: 15, delay: 3, frags: { standard: 5, epic: 10 }, seals: 5, majors: 1,
+  prize: [["frags", 50], ["pcs", 20], ["mods", 20], ["seals", 8], ["majors", 2]] };   // estrazione del premio, in percentuale [deciso]
 const GIFT_DEF = { look: "gift", gift: true, r: GIFT.r, type: "physical" };   // per scoperte e avvisi; type solo per non rompere i disegni generici
 const GIFT_COLOR = "#ff5fa8";                       // diverso dai cinque tipi
 let giftRand = (() => { let s = (Date.now() ^ 0x5f3759df) >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
 let giftPlan = null, gift = null, giftWait = -1, giftNote = null, shotManual = false;   // giftPlan: { wave, done } del livello; gift: il pacco in campo; giftNote: avviso del premio
-const allRangersMax = () => Object.keys(RANGER_DEF).every((id) => rangerLv(id) >= RANGER.maxLv);
-const giftOn = () => (mode === "standard" && campLevel >= GIFT.stdFrom && !allRangersMax()) || (mode === "epic" && campLevel >= GIFT.epicFrom);
+const giftOn = () => (mode === "standard" && campLevel >= GIFT.stdFrom) || (mode === "epic" && campLevel >= GIFT.epicFrom);   // dalla 1.27.0 anche con tutti i ranger al massimo
+// crescita dei frammenti (DESIGN.md § 17) [deciso, Marco 26/11/2026]: M = 1 + 0,1 × ranger arrivati al livello 10 (pacco; dalla 1.28.0 anche le partite della Protezione planetaria)
+const fragM = () => 1 + 0.1 * Object.keys(RANGER_DEF).filter((id) => rangerLv(id) >= 10).length;
 function giftRoll() {                              // a inizio livello (non con “Continua”, che riprende il piano salvato)
   giftPlan = giftOn() && giftRand() < GIFT.chance ? { wave: GIFT.waves[Math.floor(giftRand() * GIFT.waves.length)], done: false } : null;
 }
@@ -2662,7 +2665,6 @@ function guardDps(p) {
   return per * cnt / (PLAYER.interval / (has(p, "rate3") ? 1.2 : 1) * (1 - (GEAR.rate || 0)));
 }
 function spawnGift() {
-  if (mode === "standard" && allRangersMax()) { giftDone(); return; }
   const hp = guardDps(player) * GIFT.fireSec, x = 40 + giftRand() * (W - 80);
   sfx("pacco.arrivo");
   gift = { def: GIFT_DEF, x, y: -GIFT.r - 4, hp, maxHp: hp, t: GIFT.time, phase: "in", ty: GIFT.yTop + giftRand() * (GIFT.yBot - GIFT.yTop), tx: x, vx: 0, vy: 0,
@@ -2697,22 +2699,27 @@ function giftHit(dmg) {                            // resistenze neutre (×1), n
   g.dead = true; gift = null; ring(g.x, g.y, 34, GIFT_COLOR, 0.5); giftDone(); sfx("pacco.premio");
   const gain = giftReward(); if (gain) giftNote = { t: 3.5, gain };
 }
-// frammenti a un ranger a caso tra quelli non al livello 10, subito; con tutti al 10 (solo Epica) un pezzo o un Modulo epico o superiore
+// premio a estrazione (1.27.0) [deciso]: frammenti a un ranger a caso non al massimo (× M), pezzo o Modulo dalla tabella dei drop (dal comune), Sigilli, Sigillo maggiore;
+// senza ranger da far crescere la quota dei frammenti si ridistribuisce sulle altre in proporzione (pezzo 40%, Modulo 40%, Sigilli 16%, maggiore 4%). Tutto con giftRand.
 function giftReward() {
   const open = Object.keys(RANGER_DEF).filter((id) => rangerLv(id) < RANGER.maxLv);
-  if (open.length) {
-    const id = open[Math.floor(giftRand() * open.length)], n = GIFT.frags[mode] || GIFT.frags.standard;
-    progress.planet.frags[id] += n; saveProgress(); return { kind: "frags", id, n };
+  const prize = GIFT.prize.filter(([k]) => k !== "frags" || open.length);
+  let x = giftRand() * prize.reduce((a, [, w]) => a + w, 0), kind = prize[prize.length - 1][0];
+  for (const [k, w] of prize) if ((x -= w) < 0) { kind = k; break; }
+  if (kind === "frags") {
+    const id = open[Math.floor(giftRand() * open.length)], n = Math.round((GIFT.frags[mode] || GIFT.frags.standard) * fragM());
+    progress.planet.frags[id] += n; saveProgress(); return { kind, id, n };
   }
-  if (mode !== "epic") return null;
+  if (kind === "seals") { progress.seals += GIFT.seals; saveProgress(); return { kind, n: GIFT.seals }; }
+  if (kind === "majors") { progress.majors += GIFT.majors; saveProgress(); return { kind, n: GIFT.majors }; }
   const g = progress.gear, pc = PIECE_IDS[Math.floor(giftRand() * PIECE_IDS.length)], r = giftRarity(curDiff());
-  if (giftRand() < GIFT.epicPiece) { bump(g.pcs, pcKey(pc, r), 1); saveProgress(); return { kind: "pcs", pc, r }; }
-  const fx = rollModFx(pc, r); bump(g.mods, modKey(pc, r, fx), 1); saveProgress(); return { kind: "mods", pc, r, fx };
+  if (kind === "pcs") { bump(g.pcs, pcKey(pc, r), 1); saveProgress(); return { kind, pc, r }; }
+  const fx = rollModFx(pc, r, giftRand); bump(g.mods, modKey(pc, r, fx), 1); saveProgress(); return { kind: "mods", pc, r, fx };
 }
-function giftRarity(D) {                           // tabella dei drop (§ 15) per la difficoltà, solo epico o superiore, riscalata al 100% [Claude]
-  const t = DROP_RARITY.reduce((a, [d, w]) => D >= d ? w : a, DROP_RARITY[0][1]).map((w, r) => r >= 2 ? w : 0), tot = t.reduce((a, b) => a + b, 0);
-  let x = giftRand() * tot; for (let r = 2; r < 5; r++) if ((x -= t[r]) < 0) return r;
-  return 2;
+function giftRarity(D) {                           // tabella dei drop (§ 15) per la difficoltà, dal comune (1.27.0; prima solo epico o superiore)
+  const t = DROP_RARITY.reduce((a, [d, w]) => D >= d ? w : a, DROP_RARITY[0][1]);
+  let x = giftRand() * 100; for (let r = 0; r < 5; r++) if ((x -= t[r]) < 0) return r;
+  return 0;
 }
 function playerBullet(p, x, y, t, dmg, ang, o) {
   o = o || {};
@@ -3843,7 +3850,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.26.0";
+const APP_VERSION = "1.27.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

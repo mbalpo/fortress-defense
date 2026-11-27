@@ -743,7 +743,7 @@ function pauseEnemies() {
     enemyIcon(GIFT_DEF, 34, y + 18, 15);
     segs([["Pacco regalo  ", GIFT_COLOR, 13, "700"], ["ondata " + giftPlan.wave + (giftPlan.done ? " · già risolto" : ""), MUTED, 11, "600"]], 62, y + 4, 13);
     txt("Solo il guardiano: tieni premuto sotto il pacco", 62, y + 21, 11, "#e8eefc", "left", "600");
-    txt("Premio: " + (allRangersMax() ? "equipaggiamento epico o superiore" : (GIFT.frags[mode] || 5) + " frammenti di un ranger") + " · " + GIFT.time + " s", 62, y + 36, 10, "#6f82ad", "left", "500");
+    txt("Premio: frammenti, equipaggiamento o Sigilli · " + GIFT.time + " s", 62, y + 36, 10, "#6f82ad", "left", "500");
     y += 47;
   }
   const knownBoss = bosses.find((b) => seen("ship:" + b.def.type));
@@ -807,7 +807,7 @@ function puzzleIcon(x, y, s, c, bg) {
   ctx.beginPath(); ctx.arc(x + b, y, k, 0, 6.2832); ctx.fill();
   ctx.fillStyle = bg || "#121e3a"; ctx.beginPath(); ctx.arc(x - b, y, k, 0, 6.2832); ctx.fill();
 }
-function drawGiftNote() {                        // pacco regalo preso: etichetta col nome del ranger e pezzo di puzzle (o l’equipaggiamento in Epica)
+function drawGiftNote() {                        // pacco regalo preso: frammenti (nome del ranger e pezzo di puzzle), pezzo, Modulo, Sigilli o Sigillo maggiore
   const n = giftNote; if (!n) return;
   const g = n.gain, x = 40, y = alerts.length ? 184 : 120, w = W - 80, h = 40;
   ctx.globalAlpha = clamp(n.t / 0.4, 0, 1);
@@ -817,6 +817,9 @@ function drawGiftNote() {                        // pacco regalo preso: etichett
     const c = TYPES[RANGER_DEF[g.id].type].color, lab = RANGER_NAME[g.id] + "  +" + g.n + " frammenti", lw = tw(lab, 12, "700") + 30, lx = x + (w - lw) / 2;
     rr(lx, y + 19, lw, 17, 5); ctx.fillStyle = "rgba(18,30,58,0.95)"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = c; ctx.stroke();
     puzzleIcon(lx + 12, y + 28, 12, c); txt(lab, lx + 22, y + 28, 12, "#e8eefc", "left", "700");
+  } else if (g.kind === "seals" || g.kind === "majors") {            // 1.27.0: Sigilli e Sigillo maggiore
+    const maj = g.kind === "majors", c = maj ? "#ffd166" : "#c9a2ff";
+    txt("+" + g.n + (maj ? (g.n === 1 ? " Sigillo maggiore ✦" : " Sigilli maggiori ✦") : " Sigilli ◆"), x + w / 2, y + 28, 12, c, "center", "700");
   } else {
     const c = rarColor(g.r), lab = (g.kind === "mods" ? "Modulo " : "") + RARITY[g.r].name.toLowerCase() + ": " + PIECES[g.pc].name.toLowerCase();
     if (g.kind === "mods") modIcon(g.pc, x + 22, y + 26, 14, c); else pieceIcon(g.pc, x + 22, y + 26, 16, c);

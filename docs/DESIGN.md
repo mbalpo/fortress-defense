@@ -1560,6 +1560,11 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   e voce nella scheda “Nemici del livello” con il suggerimento “tieni premuto sotto il pacco” (nell’avviso “premendo sotto di lui”, 1.24.1). Disegno classico e HD-2D.
 - **Da misurare con i bot**: bot che sappia mirare il pacco; effetto sui muri (il guardiano non spara ai nemici mentre lo insegue); tempi di sblocco con `tests/tools/ranger-tempi.js`
   includendo il pacco (stima: +30% di frammenti per 3 livelli al giorno in Standard). Vita e timer li prova Marco a mano.
+- **Costruito (1.27.0)**: probabilità 60% (`GIFT.chance`), premio a estrazione (`GIFT.prize`: 50 / 20 / 20 / 8 / 2; `giftReward`), pezzi e Moduli dalla tabella dei drop dal comune (`giftRarity`),
+  frammenti × M (`fragM`: 1 + 0,1 × ranger al livello 10, con l’arrotondamento all’intero più vicino **[Claude]**: 5 × 1,1 = 5,5 → 6), il pacco compare anche con tutti i ranger al massimo.
+  Tutte le estrazioni del premio con il generatore del pacco (anche l’effetto del Modulo: `rollModFx` accetta il generatore), quindi le calibrazioni a semi fissi non cambiano.
+  Avviso del premio: “+5 Sigilli ◆” e “+1 Sigillo maggiore ✦”; nella scheda “Nemici del livello” il premio è “frammenti, equipaggiamento o Sigilli” **[Claude]**.
+  Il maggiore del pacco non entra nel conto “dai boss” della vittoria. M vale per ora solo sul pacco; sulle partite della Protezione planetaria arriva con i ranger fino al 20.
 - **Costruito (1.21.0)** · dettagli **[Claude] [da rivedere]**: il pacco non sta tra i nemici (`gift`, `GIFT` in `index.html`), quindi torrette, ranger, mira automatica, “Bersaglio”, missili, aree e stati
   non lo vedono per costruzione; lo colpiscono solo i proiettili sparati **mentre si preme** (guardiano, Colpo caricato e Clone; non il Ventaglio né i frammenti della combo Railgun), anche se non era il bersaglio,
   dopo i nemici lungo la strada (una perforazione per superarne uno, una per il pacco). Con la mira automatica i colpi gli passano attraverso, così la partita dei bot non cambia.

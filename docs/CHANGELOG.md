@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.27.0 — Pacco regalo: 60% e premio a estrazione
+
+- **Decisioni di Marco** (26/11/2026, DESIGN.md § 17 “Pacco regalo”): probabilità **60%** per livello (prima 25%); premio estratto: **50% frammenti** (5 Standard, 10 Epica, × M) · **20% pezzo**
+  · **20% Modulo** (rarità dalla tabella dei drop per la difficoltà, dal comune; prima solo epico o superiore in Epica) · **8% 5 Sigilli ◆** · **2% 1 Sigillo maggiore ✦**, in Standard ed Epica.
+  Con tutti i ranger al massimo il pacco **compare comunque** (prima in Standard spariva) e la quota dei frammenti va alle altre in proporzione (40 / 40 / 16 / 4).
+- **Crescita dei frammenti M** (= 1 + 0,1 × ranger al livello 10): applicata al pacco (`fragM`); arrotondamento all’intero più vicino **[Claude]**. Sulle partite della Protezione planetaria arriva con i ranger fino al 20.
+- **Codice**: `GIFT.chance`, `GIFT.prize`, `GIFT.seals`, `GIFT.majors`, `giftReward`, `giftRarity` (dal comune), `rollModFx(pc, r, rnd)` col generatore del pacco; tolto `allRangersMax`.
+  Disegno (`draw.js`): avviso del premio per Sigilli e maggiore; nella scheda Nemici “Premio: frammenti, equipaggiamento o Sigilli”. Il maggiore del pacco non entra nel conto “dai boss” della vittoria.
+- `APP_VERSION` e `sw.js` 1.27.0.
+
+**Test**: `npm test`: tutti verdi. `tests/pacco.js` aggiornato e ampliato: 60% in Standard ed Epica (8000 tiri); frammenti 5 / 10 col premio forzato; nove ranger al 10 → sempre Ceo con M 1,9 (10 frammenti);
+quattro al 10 → M 1,4 (7 frammenti); estrazione su 1000 pacchi alla difficoltà 300 (51 / 20 / 19 / 7 / 3%, rarità dal comune all’ancestrale, Sigilli e maggiori accreditati); con tutti i ranger
+al massimo il pacco compare (314 su 500 livelli) e su 300 pacchi nessun frammento (124 pezzi, 117 Moduli, 42 Sigilli, 17 maggiori); avvisi “+5 Sigilli ◆” e “+1 Sigillo maggiore ✦”;
+nessuna chiamata a `Math.random` nel premio. `npm run screenshots`: avviso del premio e scheda Nemici dentro i bordi.
+**Bot**: ignorano il pacco (non lo colpiscono), quindi le calibrazioni non cambiano.
+
+Catalogo grafico: non cambiato (rigenerato solo per la versione).
+
+Checklist: aggiornata (versione 67): prove del pacco con le regole nuove (frequenza e premi); riferimento del pacco aggiornato; tolto il valore di Claude sull’equipaggiamento in Epica con tutti i ranger al 10.
+
 ## 1.26.0 — Campagna a 400 livelli
 
 - **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 4, § 15, § 16): la campagna arriva al **livello 400** (`CAMPAIGN.maxLevel` da 200 a 400), anche l’Epica (difficoltà fino a 430);
