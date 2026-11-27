@@ -16,6 +16,8 @@
   button { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font: inherit; text-align: left; cursor: pointer; }
   button:hover { border-color: var(--acc); }
   button.on { border-color: var(--acc); background: #1d2a4d; }
+  .cmp button.synth { border-style: dashed; }
+  .cmp h3 { grid-column: 1 / -1; font-size: 13px; margin: 8px 0 0; color: var(--dim); font-weight: 600; }
   button small { display: block; color: var(--dim); font-size: 12px; }
   code { color: var(--acc); }
   #log { color: var(--dim); font-size: 13px; min-height: 1.4em; }
@@ -25,6 +27,8 @@
 <h1>Planet Defense · catalogo sonoro</h1>
 <p>Un tasto per ogni evento del modulo audio del gioco (<code>app/audio.js</code>, lo stesso file del gioco) e tre per la cupola (pesi 1, 2, 3).
 Si ascolta dal computer per confrontare i timbri; il giudizio finale resta sul telefono (DESIGN.md § 18). Tasti ripetuti molto in fretta possono essere scartati dalle soglie e dai limiti di voci, come nel gioco.</p>
+<p>In fondo, la <b>prova dei campioni</b> (1.31.0): per guardiano, esplosione grande e cupola un tasto per la versione sintetica e uno per ciascuna variante con i file (Kenney, CC0),
+con la stessa catena del gioco. I file vengono da <code>catalogo-sonoro-campioni.js</code> (generato da <code>npm run catalog-sonoro</code>), così funzionano anche aprendo la pagina dalla cartella.</p>
 <div class="bar">
   <label>Volume <input id="vol" type="range" min="0" max="100" step="5" value="70"> <span id="volv">70%</span></label>
   <button id="all">Suona tutti in fila</button>
@@ -33,9 +37,19 @@ Si ascolta dal computer per confrontare i timbri; il giudizio finale resta sul t
 <div id="groups"></div>
 
 <script src="../app/audio.js"></script>
+<script src="catalogo-sonoro-campioni.js"></script>
 <script>
 "use strict";
-const S = window.FORTRESS_SOUND;
+// un modulo proprio che legge i campioni dal file di dati (base64) invece che dalla rete; se il file di dati manca, prova app/suoni/ (pagina servita da un server)
+const DATA = window.FORTRESS_SAMPLES_DATA || null;
+const dataFetch = (url) => {
+  const name = url.replace(/^.*\//, "").replace(/\.ogg$/, "");
+  if (!DATA || !DATA[name]) return fetch("../app/suoni/" + name + ".ogg");
+  const bin = atob(DATA[name]), buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(buf.buffer) });
+};
+const S = window.FORTRESS_SOUND_CREATE({ fetch: dataFetch });
 const NAMES = { sky: "Sky Guard", wheel: "Firewheel Drone", laser: "Laser", beam: "Beam", thunder: "Thunderbolt", tesla: "Teslacoil", disr: "Disruption Drone",
   hive: "Hive", vortex: "Gravity Vortex Gun", aero: "Aeroblast", rail: "Railgun" };
 const GROUPS = [
@@ -55,7 +69,7 @@ function label(n) {
   if (n.startsWith("sparo.")) { const id = n.slice(6); return [NAMES[id] || id, FAM[S.def(n).family] || ""]; }
   return [n, NOTE[n] || ""];
 }
-function ensure() { S.unlock(); S.setActive(true); }
+function ensure() { S.unlock(); S.setActive(true); S.loadSamples(); }
 function hit(n, w, btn) {
   ensure();
   const r = S.play(n, w);
@@ -76,6 +90,31 @@ for (const [title, test] of GROUPS) {
       b.addEventListener("click", () => hit(n, w || undefined, b));
       grid.appendChild(b); queue.push([n, w || undefined, b]);
     }
+  }
+}
+// prova dei campioni: per ogni evento e peso, il sintetico e ogni variante
+const CMP_NOTE = { guardiano: "", "esplosione.grande": "", cupola: ["", "nemici normali", "kamikaze", "boss e mini-boss"] };
+function preview(n, w, pick, btn) {
+  ensure();
+  const vs = S.variants(n, w), label = pick === "sintetico" ? "sintetico" : vs[pick].files.join(" + ");
+  if (pick !== "sintetico" && !vs[pick].ok) { document.getElementById("log").textContent = "· campioni non ancora pronti (decodifica in corso o file mancante): " + label; return; }
+  const r = S.preview(n, w, pick);
+  document.getElementById("log").textContent = (r ? "▶ " : "· scartato (voci): ") + n + (n === "cupola" ? " peso " + w : "") + " · " + label;
+  btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), 250);
+}
+{
+  const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola)"; root.appendChild(h);
+  const grid = document.createElement("div"); grid.className = "grid cmp"; root.appendChild(grid);
+  for (const n of S.SAMPLED_EVENTS) for (const w of n === "cupola" ? [1, 2, 3] : [1]) {
+    const h3 = document.createElement("h3"); h3.textContent = n === "cupola" ? "cupola · peso " + w + " · " + CMP_NOTE.cupola[w] : n; grid.appendChild(h3);
+    const add = (pick, main, sub) => {
+      const b = document.createElement("button"); b.append(main);
+      const sm = document.createElement("small"); sm.textContent = sub; b.appendChild(sm);
+      if (pick === "sintetico") b.className = "synth";
+      b.addEventListener("click", () => preview(n, w, pick, b)); grid.appendChild(b);
+    };
+    add("sintetico", "sintetico", "generato dal codice (com’era)");
+    S.variants(n, w).forEach((v, i) => add(i, "campione " + (i + 1), v.files.join(" + ")));
   }
 }
 const vol = document.getElementById("vol");

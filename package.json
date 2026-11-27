@@ -10,7 +10,8 @@
     "calibrate": "node tests/tools/calib2.js 1,5,8,10,11,15,20,25,30",
     "design-lists": "node tests/tools/design-lists.js",
     "catalog": "node tests/tools/catalog.js",
-    "catalog-hd2d": "node tests/tools/catalog.js --hd2d"
+    "catalog-hd2d": "node tests/tools/catalog.js --hd2d",
+    "catalog-sonoro": "node tests/tools/sonoro-campioni.js"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.1.0",

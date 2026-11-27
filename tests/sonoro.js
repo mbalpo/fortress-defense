@@ -1,5 +1,6 @@
 // Sonoro (1.25.0, DESIGN.md § 18): modulo app/audio.js da solo (eventi, voci, soglie, raggruppamenti, priorità, nessun errore senza AudioContext)
 // e dentro il gioco (eventi emessi, sospensione fuori dall’ondata, cursore del volume, nessun effetto sulla logica).
+// Prova dei campioni (1.31.0): sintetico identico alla 1.25.1, campioni per guardiano, esplosione grande e cupola, ripiego se un file manca, campo “suoni”.
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const { makeGame, play } = require("./bot.js");
 const ok = (c) => c ? "✓" : "✗ ERRORE";
@@ -7,20 +8,27 @@ const SRC = fs.readFileSync(path.join(__dirname, "..", "app", "audio.js"), "utf8
 const GAME = fs.readFileSync(path.join(__dirname, "..", "app", "index.html"), "utf8");
 
 // AudioContext finto: controlla le rampe (un valore ≤ 0 in una rampa esponenziale è un errore in Web Audio) e conta i suoni avviati
+// globalThis.__trace (se c’è) riceve ogni nodo creato e ogni valore programmato: serve a confrontare il sintetico con la 1.25.1
+// decodeAudioData: buffer finto di 0,5 s con tanti canali quanti byte ha il file (il fetch finto dà 2 byte al file stereo)
 const FAKE = `(function () {
-  function param() { return { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {},
-    exponentialRampToValueAtTime(v) { if (!(v > 0)) throw new Error("rampa esponenziale a " + v); } }; }
+  const tr = (...a) => { if (globalThis.__trace) globalThis.__trace.push(a.join(" ")); };
+  function param(n) { return { value: 0, setValueAtTime(v, t) { tr(n, "set", v, t); }, linearRampToValueAtTime(v, t) { tr(n, "lin", v, t); }, cancelScheduledValues() {},
+    exponentialRampToValueAtTime(v, t) { tr(n, "exp", v, t); if (!(v > 0)) throw new Error("rampa esponenziale a " + v); } }; }
   function node() { return { connect() {}, disconnect() {} }; }
+  function buffer(c, n, sr) { const d = Array.from({ length: c }, () => new Float32Array(n)); return { numberOfChannels: c, length: n, sampleRate: sr, duration: n / sr, getChannelData(i) { return d[i]; } }; }
   class FakeAC {
-    constructor() { this.currentTime = 0; this.sampleRate = 8000; this.state = "suspended"; this.destination = node(); this.log = { started: 0, resumes: 0, suspends: 0 }; (globalThis.__acs = globalThis.__acs || []).push(this); }
+    constructor() { this.currentTime = 0; this.sampleRate = 8000; this.state = "suspended"; this.destination = node(); this.log = { started: 0, resumes: 0, suspends: 0, samples: 0, comp: 0, conv: 0, decoded: 0 }; (globalThis.__acs = globalThis.__acs || []).push(this); }
+    createDynamicsCompressor() { this.log.comp++; const p = param; return Object.assign(node(), { threshold: p("c"), knee: p("c"), ratio: p("c"), attack: p("c"), release: p("c") }); }
+    createConvolver() { this.log.conv++; return Object.assign(node(), { buffer: null }); }
+    decodeAudioData(ab) { this.log.decoded++; return Promise.resolve(buffer(ab.byteLength, 4000, 8000)); }
     resume() { this.state = "running"; this.log.resumes++; return Promise.resolve(); }
     suspend() { this.state = "suspended"; this.log.suspends++; return Promise.resolve(); }
-    createGain() { return Object.assign(node(), { gain: param() }); }
-    createBiquadFilter() { return Object.assign(node(), { type: "", frequency: param(), Q: param() }); }
-    createOscillator() { const ac = this; return Object.assign(node(), { type: "", frequency: param(), start() { ac.log.started++; }, stop() {} }); }
-    createWaveShaper() { return Object.assign(node(), { curve: null }); }
-    createBufferSource() { const ac = this; return Object.assign(node(), { buffer: null, loop: false, start() { ac.log.started++; }, stop() {} }); }
-    createBuffer(c, n) { const d = new Float32Array(n); return { getChannelData() { return d; } }; }
+    createGain() { tr("gain"); return Object.assign(node(), { gain: param("g") }); }
+    createBiquadFilter() { tr("filtro"); return Object.assign(node(), { type: "", frequency: param("f"), Q: param("q"), gain: param("fg") }); }
+    createOscillator() { const ac = this; tr("osc"); return Object.assign(node(), { type: "", frequency: param("o"), start(t) { tr("start", t); ac.log.started++; }, stop() {} }); }
+    createWaveShaper() { tr("sat"); return Object.assign(node(), { curve: null }); }
+    createBufferSource() { const ac = this; tr("buf"); return Object.assign(node(), { buffer: null, loop: false, playbackRate: param("r"), start(t, o) { tr("start", t, o); ac.log.started++; if (this.buffer && this.buffer.sample) ac.log.samples++; }, stop() {} }); }
+    createBuffer(c, n, sr) { const b = buffer(c, n, sr); b.sample = c === 1 && n === 4000; return b; }
   }
   return FakeAC;
 })()`;
@@ -109,6 +117,72 @@ const EXPECT = ["guardiano", "sparo.sky", "sparo.wheel", "sparo.laser", "sparo.b
   console.log("volume 0 (muto): suono ignorato:", mute, "· volume 1,7 →", S.volume(), ok(mute && S.volume() === 1));
 }
 
+console.log("— Prova dei campioni —");
+// fetch finto: registra gli indirizzi; i file in “missing” mancano (404); il file stereo ha 2 byte, gli altri 1 (vedi decodeAudioData del finto)
+const fakeFetch = (log, missing) => (url) => { log.push(url); const miss = (missing || []).some((m) => url.includes(m));
+  return Promise.resolve(miss ? { ok: false } : { ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(/lowFrequency/.test(url) ? 2 : 1)) }); };
+// traccia Web Audio del giro di eventi sintetici con la 1.25.1 (audio.js invariato fino alla 1.30.0), calcolata con questo AudioContext finto
+const TRACE_1251 = "195aba5";
+const settle = () => new Promise((r) => setTimeout(r, 0));
+const ALL3 = ["guardiano", "esplosione.grande", "cupola"];
+(async () => {
+  {
+    // sintetico identico alla 1.25.1: firma degli strati di tutti gli eventi (pesi 1-3) e traccia dei nodi Web Audio di un giro di eventi
+    const sb = loadModule(false), S = sb.FORTRESS_SOUND, parts = [];
+    for (const n of S.EVENTS) { const d = S.def(n); for (const w of [1, 2, 3]) { let x = 7; const r = () => (x = (x * 48271) % 2147483647) / 2147483647;
+      parts.push(n + "|" + w + "|" + JSON.stringify([d.cat, d.max, d.prio, d.gain, d.gap, d.group, d.vary, d.family, d.level ? d.level(w) : 1, d.make(w, r)])); } }
+    const fnv = (str) => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); };
+    const sig = fnv(parts.join("\n"));
+    // traccia: dopo lo sblocco (la catena dei campioni si crea allo sblocco e non suona), un evento alla volta con i pesi 1-3, in modo “sintetici”
+    let t = 0; const q = [], sb2 = loadModule(true), fl = [];
+    const S2 = sb2.FORTRESS_SOUND_CREATE({ AudioContext: sb2.AudioContext, now: () => t, setTimer: (fn, ms) => q.push({ at: t + ms, fn }), fetch: fakeFetch(fl) });
+    S2.unlock(); S2.setActive(true); sb2.__trace = [];
+    for (const n of S2.EVENTS) for (const w of [1, 2, 3]) { t += 5000; S2.play(n, w); t += 200; q.sort((a, b) => a.at - b.at); while (q.length && q[0].at <= t) q.shift().fn(); }
+    const tsig = fnv(sb2.__trace.join("\n"));
+    console.log("sintetici: firma degli strati", sig, "(1.25.1: da469a69) · traccia Web Audio", tsig, "(1.25.1: " + TRACE_1251 + ") · file chiesti", fl.length, "· suoni con campioni", Object.keys(S2.stats.sampled).length,
+      ok(sig === "da469a69" && tsig === TRACE_1251 && !fl.length && !Object.keys(S2.stats.sampled).length));
+  }
+  {
+    // campioni: i file si decodificano una volta sola al primo sblocco; i tre eventi usano i file, gli altri restano sintetici
+    let t = 0; const q = [], sb = loadModule(true), fl = [];
+    const S = sb.FORTRESS_SOUND_CREATE({ AudioContext: sb.AudioContext, now: () => t, setTimer: (fn, ms) => q.push({ at: t + ms, fn }), fetch: fakeFetch(fl) });
+    const flush = () => { q.sort((a, b) => a.at - b.at); while (q.length && q[0].at <= t) q.shift().fn(); };
+    S.setMode("campioni"); const before = fl.length;
+    S.unlock(); S.setActive(true); S.unlock(); S.setMode("sintetici"); S.setMode("campioni"); await settle(); await settle();
+    const ac = sb.__acs[0], files = S.files();
+    console.log("campioni: file chiesti prima dello sblocco", before, "· dopo", fl.length, "(file della prova " + files.length + ", indirizzi " + (fl[0] || "").replace(/[^/]*$/, "") + "…) · decodificati", ac.log.decoded,
+      "· catena comune: compressore", ac.log.comp, "riverbero", ac.log.conv, ok(before === 0 && fl.length === files.length && new Set(fl).size === files.length && ac.log.decoded === files.length && ac.log.comp === 1 && ac.log.conv === 1));
+    for (const n of S.EVENTS) for (const w of [1, 2, 3]) { t += 5000; S.play(n, w); t += 200; flush(); }
+    const sampled = Object.keys(S.stats.sampled).sort();
+    console.log("campioni: eventi suonati con i file", sampled.join(", "), "· sorgenti dei file avviate", ac.log.samples, "· suoni non costruiti", Object.keys(S.stats.failed).join(", ") || "nessuno",
+      ok(sampled.join() === ALL3.slice().sort().join() && ac.log.samples > 0 && !Object.keys(S.stats.failed).length));
+    const vars = ALL3.map((n) => n + " " + S.variants(n, 1).length).concat(["cupola peso 3 " + S.variants("cupola", 3).length]);
+    console.log("varianti pronte:", vars.join(" · "), "· tutte decodificate", ALL3.every((n) => S.variants(n, 1).every((v) => v.ok)), ok(ALL3.every((n) => S.variants(n, 1).length >= 2 && S.variants(n, 1).every((v) => v.ok)) && S.variants("cupola", 3).length >= 1));
+    // il catalogo può chiedere il sintetico o una variante precisa
+    t += 5000; const s0 = ac.log.samples; S.preview("guardiano", 1, "sintetico"); t += 5000; const s1 = ac.log.samples; S.preview("guardiano", 1, 2); const s2 = ac.log.samples;
+    S.setMode("boh");
+    console.log("catalogo: sintetico senza file", s1 === s0, "· variante 3 con i file", s2 > s1, "· modo non valido →", S.mode(), ok(s1 === s0 && s2 > s1 && S.mode() === "sintetici"));
+  }
+  {
+    // ripiego: mancano i tre clic del guardiano e un vetro → il guardiano torna sintetico, la cupola usa gli altri vetri; i file mancanti sono contati
+    let t = 0; const q = [], sb = loadModule(true), fl = [];
+    const S = sb.FORTRESS_SOUND_CREATE({ AudioContext: sb.AudioContext, now: () => t, setTimer: (fn, ms) => q.push({ at: t + ms, fn }), fetch: fakeFetch(fl, ["click_", "glass_002"]) });
+    const flush = () => { q.sort((a, b) => a.at - b.at); while (q.length && q[0].at <= t) q.shift().fn(); };
+    S.setMode("campioni"); S.unlock(); S.setActive(true); await settle(); await settle();
+    const st0 = sb.__acs[0].log.started;
+    for (let i = 0; i < 6; i++) { t += 5000; S.play("guardiano"); S.play("cupola", 1); t += 200; flush(); }
+    const g = S.stats.sampled.guardiano || 0, c = S.stats.sampled.cupola || 0, failed = Object.keys(S.stats.failed);
+    console.log("file mancanti: guardiano con i file", g, "su 6 (sintetico, sorgenti avviate " + (sb.__acs[0].log.started - st0) + ") · cupola con i file", c, "su 6 · contati in stats.failed:", failed.join(", "),
+      ok(g === 0 && c === 6 && sb.__acs[0].log.started > st0 && failed.length === 4 && failed.every((k) => /^suoni\/(click_00[235]|glass_002)\.ogg$/.test(k))));
+    // senza fetch (o file non decodificabile) nessun errore: tutto sintetico
+    const sb2 = loadModule(true), S2 = sb2.FORTRESS_SOUND_CREATE({ AudioContext: sb2.AudioContext, fetch: null });
+    let err = null; try { S2.setMode("campioni"); S2.unlock(); S2.setActive(true); for (const n of ALL3) S2.play(n, 3); } catch (e) { err = e.message; }
+    console.log("senza fetch: errori", err || "nessuno", "· file contati come mancanti", Object.keys(S2.stats.failed).length, ok(!err && Object.keys(S2.stats.failed).length === S2.files().length));
+  }
+  await game();
+})().catch((e) => { console.log("✗ ERRORE", e.stack); });
+
+async function game() {
 console.log("— Nel gioco —");
 const injectAC = (h) => h.replace('<canvas id="c"', "<script>window.AudioContext = " + FAKE + ";</script>\n<canvas id=\"c\"");
 const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__x = { settings, state: () => state, makeSave };\n})();");
@@ -120,13 +194,24 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
   console.log("tocco su “Start” → contesto creato:", S.ready(), "· nel menu sospeso:", g.win.__acs[0].state, "· volume del modulo", S.volume(), ok(S.ready() && g.win.__acs[0].state !== "running" && S.volume() === 0.7));
   g.texts.length = 0; g.frame();
   const T = g.texts.slice();
-  g.click(184 + 6 + 0.3 * 104, 614); g.frame(); const mid = X.settings.volume, savedMid = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1") || "{}").volume;
-  g.move(184 + 110, 614); g.frame(); g.up(184 + 110, 614); const saved = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1")).volume;
+  g.click(154 + 6 + 0.3 * 72, 614); g.frame(); const mid = X.settings.volume, savedMid = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1") || "{}").volume;
+  g.move(154 + 80, 614); g.frame(); g.up(154 + 80, 614); const saved = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1")).volume;
   console.log("cursore nel menu (“" + T.find((s) => /^Volume/.test(s)) + "”): tocco al 30% →", mid, "(non ancora salvato:", savedMid === undefined, ") · trascinato in fondo →", X.settings.volume, "salvato", saved, "· modulo", S.volume(),
     ok(mid === 30 && savedMid === undefined && X.settings.volume === 100 && saved === 100 && S.volume() === 1));
-  g.click(184 + 3, 614); g.up(184 + 3, 614); g.texts.length = 0; g.frame(); const T2 = g.texts.slice();
+  g.click(154 + 3, 614); g.up(154 + 3, 614); g.texts.length = 0; g.frame(); const T2 = g.texts.slice();
   console.log("tocco a sinistra → 0:", X.settings.volume, T2.find((s) => /^Volume/.test(s)), ok(X.settings.volume === 0 && T2.includes("Volume: muto")));
   console.log("volume fuori dall’esportazione:", JSON.stringify(X.makeSave().settings), ok(!("volume" in X.makeSave().settings)));
+  // prova dei campioni: campo “suoni” e tasto accanto al cursore
+  const mode = (st) => { const g2 = makeGame({ patch: hook, settings: st }); return g2.win.__x.settings.suoni + "/" + g2.win.FORTRESS_SOUND.mode(); };
+  const m = [mode(null), mode({ suoni: "campioni" }), mode({ suoni: "boh" }), mode({ suoni: 1 })];
+  console.log("suoni letti (impostazione/modulo): di base", m[0], "· campioni →", m[1], "· \"boh\" →", m[2], "· 1 →", m[3], ok(m.join() === "sintetici/sintetici,campioni/campioni,sintetici/sintetici,sintetici/sintetici"));
+  g.texts.length = 0; g.frame(); const b0 = g.texts.includes("Sintetici");
+  g.click(272, 614); g.up(272, 614); g.texts.length = 0; g.frame();
+  const sv = JSON.parse(g.win.localStorage.getItem("fortress-proto-v1")).suoni, b1 = g.texts.includes("Campioni");
+  console.log("tasto “Sintetici” nel menu → “Campioni”:", b0 && b1, "· salvato", sv, "· modulo", S.mode(), "· fuori dall’esportazione:", !("suoni" in X.makeSave().settings),
+    ok(b0 && b1 && sv === "campioni" && S.mode() === "campioni" && !("suoni" in X.makeSave().settings)));
+  g.click(272, 614); g.up(272, 614);
+  console.log("di nuovo → sintetici:", X.settings.suoni, S.mode(), ok(X.settings.suoni === "sintetici" && S.mode() === "sintetici"));
 }
 {
   // partita intera con il contesto finto: eventi emessi, sospensione in pausa e nelle carte; stesso esito senza audio
@@ -138,7 +223,18 @@ const hook = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAn
     out.push({ seed, same: a.result === b.result && a.wave === b.wave && a.picks.join("|") === b.picks.join("|"), a: a.result[0] + a.wave, b: b.result[0] + b.wave, err: a.errors.concat(b.errors) });
     add(a.g.win.FORTRESS_SOUND);
   }
-  console.log("livello " + L + ", 3 semi, con e senza audio:", out.map((o) => o.a + "/" + o.b).join(" "), "| stessi esiti e stesse carte:", out.every((o) => o.same), ok(out.every((o) => o.same)));
+  // con i campioni (fetch finto nella pagina): stessi esiti; i tre eventi suonano con i file
+  const injectFetch = (h) => h.replace('<canvas id="c"', "<script>window.fetch = (u) => Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(/lowFrequency/.test(u) ? 2 : 1)) });</script>\n<canvas id=\"c\"");
+  const o4 = { seed: 4, cleared: L - 1, level: L, settings: { suoni: "campioni" }, patch: (h) => hook(injectAC(injectFetch(h))) };
+  o4.game = makeGame(o4); await settle(); await settle(); await settle();   // il tocco su “Start” ha avviato la decodifica: si aspetta che finisca
+  const cs = play(o4, "smart");
+  const cn = play({ seed: 4, cleared: L - 1, level: L, patch: hook }, "smart");
+  out.push({ seed: 4, same: cs.result === cn.result && cs.wave === cn.wave && cs.picks.join("|") === cn.picks.join("|"), a: cs.result[0] + cs.wave, b: cn.result[0] + cn.wave, err: cs.errors.concat(cn.errors) });
+  const CS = cs.g.win.FORTRESS_SOUND, smp = Object.keys(CS.stats.sampled).sort().join(", ");
+  console.log("livello " + L + " con i campioni (seme 4): " + out[3].a + "/" + out[3].b, "· stesso esito e stesse carte:", out[3].same, "· eventi suonati con i file (solo della prova):", smp, "· file non riusciti:", Object.keys(CS.stats.failed).length,
+    ok(out[3].same && /guardiano/.test(smp) && smp.split(", ").every((n) => ALL3.includes(n)) && !Object.keys(CS.stats.failed).length));
+  // (cupola ed esplosione grande sono raggruppate con un timer che qui scatta solo a partita finita: i tre eventi li controlla la prova del modulo)
+  console.log("livello " + L + ", 3 semi, con e senza audio:", out.slice(0, 3).map((o) => o.a + "/" + o.b).join(" "), "| stessi esiti e stesse carte:", out.every((o) => o.same), ok(out.every((o) => o.same)));
   // eventi chiesti dal gioco (suonati, scartati da soglie e voci o raggruppati: qui i fotogrammi corrono molto più del tempo reale)
   const P = req, sh = Object.keys(P).filter((k) => k.startsWith("sparo.")).length;
   console.log("eventi chiesti: guardiano", P.guardiano || 0, "· torrette", sh, "tipi ·", P["sparo.rail"] || 0, "Railgun · cupola", P.cupola || 0, "· boss", P["boss.arrivo"] || 0, "· mini-boss", P["miniboss.arrivo"] || 0,
@@ -161,8 +257,15 @@ console.log("— Catalogo sonoro —");
   const html = fs.readFileSync(path.join(__dirname, "..", "docs", "catalogo-sonoro.html"), "utf8");
   const usesFile = html.includes('<script src="../app/audio.js"></script>');
   const d = new JSDOM(html.replace('<script src="../app/audio.js"></script>', "<script>" + SRC + "</script>"), { runScripts: "dangerously" });
-  const btn = [...d.window.document.querySelectorAll(".grid button")], S = d.window.FORTRESS_SOUND;
+  const btn = [...d.window.document.querySelectorAll(".grid:not(.cmp) button")], S = d.window.FORTRESS_SOUND;
   const covered = S.EVENTS.every((n) => btn.some((b) => b.textContent.includes(n) || (n.startsWith("sparo.") && b.textContent.includes(n))));
   console.log("usa app/audio.js:", usesFile, "· tasti", btn.length, "(attesi " + (S.EVENTS.length + 2) + ") · ogni evento ha il suo tasto:", covered,
     ok(usesFile && btn.length === S.EVENTS.length + 2 && covered));
+  // prova dei campioni: per guardiano, esplosione grande e cupola (pesi 1-3) un tasto sintetico e uno per variante; dati dei campioni al passo con app/suoni/
+  const cmp = [...d.window.document.querySelectorAll(".grid.cmp button")], want = S.SAMPLED_EVENTS.flatMap((n) => (n === "cupola" ? [1, 2, 3] : [1]).map((w) => 1 + S.variants(n, w).length)).reduce((a, b) => a + b, 0);
+  const synth = cmp.filter((b) => b.className === "synth").length, data = require("./tools/sonoro-campioni.js"), fresh = fs.existsSync(data.OUT) && fs.readFileSync(data.OUT, "utf8") === data.build();
+  const onDisk = fs.readdirSync(path.join(__dirname, "..", "app", "suoni")).filter((f) => f.endsWith(".ogg")).map((f) => f.slice(0, -4)).sort().join();
+  console.log("campioni nel catalogo: tasti", cmp.length, "(attesi " + want + ", sintetici " + synth + ") · usa catalogo-sonoro-campioni.js:", html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>"), "· dati al passo con app/suoni/:", fresh,
+    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 5 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
+}
 }

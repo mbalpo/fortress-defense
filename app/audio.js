@@ -1,8 +1,8 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
-// Suoni generati dal codice (oscillatori e rumore), nessun file. Per passare a file audio basta cambiare voice() per gli eventi interessati
-// (e aggiungere i file ad ASSETS in sw.js).
+// Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
+// con file audio (app/suoni/, Kenney CC0, crediti in app/suoni/CREDITI.md); si sceglie con setMode("sintetici" | "campioni"), il sintetico resta com’era.
 // Regole: nessun uso di Math.random (le variazioni usano un generatore proprio) e nessun valore di gioco letto o scritto: calibrazioni e bot non cambiano.
 // Senza AudioContext (test in Node, browser vecchi) ogni funzione non fa nulla e non dà errori.
 // Timbri, volumi, voci e soglie [Claude, da rivedere]: da provare a mano su Android, a 2x e con molte esplosioni a catena.
@@ -131,6 +131,34 @@
     duckT: 0.3,           // …per questi secondi, così le minacce alla cupola si sentono sempre sopra gli spari
   };
 
+  // ---- prova dei campioni (1.31.0, DESIGN.md § 18) · file, varianti e volumi [Claude, da rivedere: scelti dai dati dei file, non ascoltati] ----
+  // FILES: volume medio (RMS in dB della parte attiva, misurato sulla decodifica di Chromium) di ogni file usato; il modulo lo porta a SAMPLE_RMS
+  // (guadagno per file, al massimo +6 dB). I file sono gli originali Kenney (OGG Vorbis, 44,1 kHz): mono e tagli si fanno qui, alla decodifica e al suono.
+  const FILES = { click_002: -14.9, click_003: -14.6, click_005: -11.2, impactMetal_004: -21.2,
+    explosionCrunch_000: -13.8, explosionCrunch_001: -12.0, explosionCrunch_004: -14.6, lowFrequency_explosion_001: -15.5,
+    glass_001: -20.0, glass_002: -18.9, glass_005: -17.8, glass_006: -16.8, impactMetal_001: -19.8, glass_004: -17.7 };
+  const SAMPLE_RMS = -18;
+  // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s) };
+  // gain: volume dell’evento con i campioni (al posto di def.gain); vars(peso) → varianti tra cui il modulo sceglie (generatore proprio)
+  const S_ = (f, g, extra) => Object.assign({ f, g: g == null ? 1 : g, at: 0 }, extra || {});
+  // volumi tarati (1.31.0) perché ogni evento suoni forte come il suo sintetico (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa)
+  const glass = [["glass_001", 0.54], ["glass_002", 1.22], ["glass_005", 1.64], ["glass_006", 1.58]].map(([f, g]) => [S_(f, g)]);
+  const SAMPLED = {
+    // clic brevissimo (7-9 ms) con il colpo metallico grave tagliato a 85 ms sotto
+    guardiano: { gain: 0.09, vars: () => ["click_002", "click_003", "click_005"].map((f) => [S_(f, 0.8), S_("impactMetal_004", 0.55, { d: 0.085 })]) },
+    // scoppio con il rombo basso sotto (il file basso è stereo: si somma in mono alla decodifica)
+    "esplosione.grande": { gain: 1.15, vars: () => ["explosionCrunch_000", "explosionCrunch_001", "explosionCrunch_004"].map((f) => [S_(f), S_("lowFrequency_explosion_001", 0.7)]) },
+    // pesi 1 e 2: vetro (il peso cambia solo il volume, def.level); peso 3: colpo di metallo con il vetro lungo sopra
+    cupola: { gain: 0.8, vars: (w) => w >= 3 ? [[S_("impactMetal_001", 0.48), S_("glass_004", 0.24)]] : glass },
+  };
+  const SAMPLE_CHAIN = {
+    hp: 40,                // passaalto (Hz): toglie il rombo sotto l’udibile
+    shelf: [7000, -3],     // attenua gli acuti (Hz, dB), più vicini ai sintetici, quasi tutti filtrati
+    comp: { threshold: -16, knee: 8, ratio: 3, attack: 0.003, release: 0.15 },
+    verb: [0.35, 0.07, 0.16],   // riverbero breve: durata (s), decadimento (s), volume del riverbero
+  };
+  const MODES = ["sintetici", "campioni"];
+
   // generatore proprio per l’intonazione (mai Math.random)
   function prng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 
@@ -142,8 +170,13 @@
     const rand = prng(opts.seed || 0x5eed);
     let ctx = null, master = null, low = null, high = null, noise = null;
     let volume = 0.7, active = false;
+    // campioni: modo scelto, bus dei campioni (bassa e alta priorità, verso la catena comune), buffer decodificati (file → AudioBuffer, "attesa" o null se non riuscito)
+    let mode = "sintetici", sLow = null, sHigh = null, loading = false;
+    const buffers = {};
+    const fetchFn = "fetch" in opts ? opts.fetch : (root.fetch ? root.fetch.bind(root) : null);
+    const base = opts.base || (() => { try { const s = root.document && root.document.currentScript; return s && s.src ? new URL("suoni/", s.src).href : "suoni/"; } catch (e) { return "suoni/"; } })();
     const lastAt = {}, groups = {}, voices = [];        // voices: { name, cat, prio, end (ms), nodes }
-    const stats = { played: {}, dropped: {}, grouped: {}, failed: {} };
+    const stats = { played: {}, dropped: {}, grouped: {}, failed: {}, sampled: {} };   // sampled: suoni fatti con i campioni
     const curves = {};                                 // curve di saturazione per quantità (tanh normalizzata)
     const curve = (k) => curves[k] || (curves[k] = (() => { const n = 1024, c = new Float32Array(n), m = Math.tanh(k);
       for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(k * x) / m; } return c; })());
@@ -160,6 +193,81 @@
         for (let i = 0; i < n; i++) ch[i] = r() * 2 - 1;
         noise = buf;
       } catch (e) { ctx = null; }
+      if (ctx) chain();
+      if (ctx && mode === "campioni") load();
+    }
+    // catena comune dei campioni: passaalto e mensola degli acuti, compressore, riverbero breve; poi il master (i sintetici non ci passano)
+    function chain() {
+      try {
+        sLow = ctx.createGain(); sHigh = ctx.createGain();
+        const C = SAMPLE_CHAIN, hp = ctx.createBiquadFilter(), sh = ctx.createBiquadFilter();
+        hp.type = "highpass"; hp.frequency.value = C.hp; hp.Q.value = 0.7;
+        sh.type = "highshelf"; sh.frequency.value = C.shelf[0]; sh.gain.value = C.shelf[1];
+        sLow.connect(hp); sHigh.connect(hp); hp.connect(sh);
+        let last = sh;
+        if (ctx.createDynamicsCompressor) {
+          const cp = ctx.createDynamicsCompressor();
+          for (const k in C.comp) cp[k].value = C.comp[k];
+          last.connect(cp); last = cp;
+        }
+        last.connect(master);
+        if (ctx.createConvolver) {                     // risposta all’impulso generata: rumore che decade (generatore proprio)
+          const sr = ctx.sampleRate || 44100, n = Math.floor(sr * C.verb[0]), ir = ctx.createBuffer(1, n, sr), ch = ir.getChannelData(0), r = prng(0x7e3b);
+          for (let i = 0; i < n; i++) ch[i] = (r() * 2 - 1) * Math.exp(-i / (sr * C.verb[1]));
+          const cv = ctx.createConvolver(), wet = ctx.createGain(); cv.buffer = ir; wet.gain.value = C.verb[2];
+          last.connect(cv); cv.connect(wet); wet.connect(master);
+        }
+      } catch (e) { sLow = sHigh = null; }
+    }
+    // decodifica dei campioni: una volta sola, al primo sblocco con il modo “campioni” (o al passaggio a “campioni” dopo lo sblocco)
+    function load() {
+      if (loading || !ctx || !sLow) return;
+      loading = true;
+      for (const f in FILES) {
+        buffers[f] = "attesa";
+        const fail = () => { buffers[f] = null; count(stats.failed, "suoni/" + f + ".ogg"); };   // il suono ricade sul sintetico
+        try {
+          if (!fetchFn) { fail(); continue; }
+          Promise.resolve(fetchFn(base + f + ".ogg"))
+            .then((r) => { if (!r || !r.ok) throw new Error("file mancante"); return r.arrayBuffer(); })
+            .then((ab) => new Promise((ok, ko) => { const p = ctx.decodeAudioData(ab, ok, ko); if (p && p.then) p.then(ok, ko); }))
+            .then((b) => { buffers[f] = mono(b, Math.min(2, Math.pow(10, (SAMPLE_RMS - FILES[f]) / 20))); })
+            .catch(fail);
+        } catch (e) { fail(); }
+      }
+    }
+    // somma dei canali in mono e guadagno del file in un buffer nuovo
+    function mono(b, g) {
+      const n = b.length, out = ctx.createBuffer(1, n, b.sampleRate), o = out.getChannelData(0), k = b.numberOfChannels || 1;
+      for (let c = 0; c < k; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) o[i] += d[i] * g / k; }
+      return out;
+    }
+    // variante da suonare: quella chiesta dal catalogo (numero) o una a caso tra le pronte (tutti i file decodificati); null = sintetico
+    const loaded = (v) => v.every((l) => buffers[l.f] && buffers[l.f] !== "attesa");
+    function choose(name, w, pick) {
+      const sm = SAMPLED[name];
+      if (!sm) return null;
+      const all = sm.vars(w);
+      if (typeof pick === "number") return all[pick] && loaded(all[pick]) ? all[pick] : null;
+      const ok = all.filter(loaded);
+      return ok.length ? ok[Math.floor(rand() * ok.length)] : null;
+    }
+    // un campione (variante) → nodi Web Audio
+    function sampleVoice(def, sm, v, bus, gainMul) {
+      const t0 = ctx.currentTime + 0.005, rate = def.vary ? 1 + (rand() * 2 - 1) * def.vary : 1, srcs = [];
+      let dur = 0;
+      const out = ctx.createGain(); out.gain.value = sm.gain * gainMul; out.connect(bus);
+      for (const l of v) {
+        const b = buffers[l.f], t = t0 + l.at, len = Math.min(b.duration / rate, l.d || 1e9);
+        const src = ctx.createBufferSource(), env = ctx.createGain();
+        src.buffer = b; src.playbackRate.value = rate;
+        env.gain.setValueAtTime(l.g, t);
+        if (l.d) { env.gain.setValueAtTime(l.g, t + Math.max(0, len - 0.015)); env.gain.linearRampToValueAtTime(0, t + len); }   // taglio con dissolvenza
+        src.connect(env); env.connect(out);
+        src.start(t); src.stop(t + len + 0.01); srcs.push(src);
+        dur = Math.max(dur, l.at + len + 0.02);
+      }
+      return { srcs, dur };
     }
     function sync() {                                  // sospeso fuori dall’ondata e in secondo piano
       if (!ctx) return;
@@ -201,10 +309,11 @@
     }
     function duck() {
       if (!low) return;
-      try { const t = ctx.currentTime; low.gain.cancelScheduledValues(t); low.gain.setValueAtTime(MIX.duck, t); low.gain.linearRampToValueAtTime(1, t + MIX.duckT); } catch (e) {}
+      try { const t = ctx.currentTime; for (const g of sLow && mode === "campioni" ? [low, sLow] : [low]) { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(MIX.duck, t); g.gain.linearRampToValueAtTime(1, t + MIX.duckT); } } catch (e) {}
     }
     // suona subito (dopo soglia e raggruppamento): limite di voci per categoria e in tutto, con priorità
-    function start(name, def, w) {
+    // pick (solo dal catalogo): "sintetico" o il numero della variante dei campioni
+    function start(name, def, w, pick) {
       const t = now();
       for (let i = voices.length - 1; i >= 0; i--) if (voices[i].end <= t) voices.splice(i, 1);
       const same = voices.filter((v) => v.cat === def.cat);
@@ -222,7 +331,10 @@
         try {
           if (def.prio >= 3) duck();
           const lv = def.level ? def.level(w) : 1;
-          ({ srcs, dur } = voice(def, w, def.prio >= 3 ? high : low, lv));
+          // campioni: nel modo “campioni” (o se il catalogo ne chiede uno) e con almeno una variante pronta; altrimenti il sintetico di sempre
+          const v = pick === "sintetico" ? null : (mode === "campioni" || pick != null) ? choose(name, w, pick) : null;
+          if (v) { ({ srcs, dur } = sampleVoice(def, SAMPLED[name], v, def.prio >= 3 ? sHigh : sLow, lv)); count(stats.sampled, name); }
+          else ({ srcs, dur } = voice(def, w, def.prio >= 3 ? high : low, lv));
         } catch (e) { count(stats.failed, name); /* un suono non riuscito non ferma il gioco */ }
       }
       voices.push({ name, cat: def.cat, prio: def.prio, end: t + dur * 1000, srcs });
@@ -241,6 +353,16 @@
         if (master) try { master.gain.setValueAtTime(volume * volume, ctx.currentTime); } catch (e) {}
       },
       volume: () => volume,
+      // prova dei campioni: "sintetici" (di partenza) o "campioni"; un valore non valido vale "sintetici". I file si decodificano alla prima richiesta.
+      setMode(m) { mode = MODES.includes(m) ? m : "sintetici"; if (mode === "campioni") load(); },
+      mode: () => mode,
+      SAMPLED_EVENTS: Object.keys(SAMPLED),
+      // varianti dei campioni di un evento per il catalogo: [{ files, ok }] (ok: tutti i file decodificati)
+      variants: (name, w) => SAMPLED[name] ? SAMPLED[name].vars(w || 1).map((v) => ({ files: v.map((l) => l.f), ok: loaded(v) })) : [],
+      files: () => Object.keys(FILES),
+      loadSamples() { load(); },
+      // catalogo: suona subito la versione chiesta ("sintetico" o il numero della variante), senza soglia né raggruppamento
+      preview(name, w, pick) { const def = EVENTS[name]; if (!def || !active || volume <= 0) return false; return start(name, def, w || 1, pick); },
       active: () => active,
       ready: () => !!ctx,
       // evento del gioco; w = peso (cupola: 1 leggero, 2 medio, 3 pesante)

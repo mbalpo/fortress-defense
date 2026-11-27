@@ -798,7 +798,9 @@ const TARGET_LABEL = { closest: "Più vicino", highest: "Vita più alta" };
 const SPEEDS = [1, 1.5, 2];
 // volume (1.25.0, DESIGN.md § 18): un solo cursore per tutti i suoni, da 0 (muto) a 100, di partenza 70; non entra nell’esportazione
 const VOLUME0 = 70;
-const settings = { targeting: "closest", graphics: "classic", fps: false, speed: 1, volume: VOLUME0 };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
+// suoni (1.31.0, prova dei campioni, DESIGN.md § 18): "sintetici" (di partenza) o "campioni" per guardiano, esplosione grande e cupola; non entra nell’esportazione
+const SOUND_MODES = ["sintetici", "campioni"];
+const settings = { targeting: "closest", graphics: "classic", fps: false, speed: 1, volume: VOLUME0, suoni: "sintetici" };     // la mira è solo automatica: un vecchio campo "aim" viene ignorato
 try {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
   if (s && (s.targeting === "closest" || s.targeting === "highest")) settings.targeting = s.targeting;
@@ -806,13 +808,20 @@ try {
   if (s && s.fps === true) settings.fps = true;
   if (s && SPEEDS.includes(s.speed)) settings.speed = s.speed;
   if (s && Number.isInteger(s.volume) && s.volume >= 0 && s.volume <= 100) settings.volume = s.volume;   // valore non valido: 70
+  if (s && SOUND_MODES.includes(s.suoni)) settings.suoni = s.suoni;                                       // valore non valido: "sintetici"
 } catch (e) { /* storage non disponibile: si gioca lo stesso */ }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
 // SONORO (1.25.0): il gioco emette solo eventi; timbri, mix e Web Audio stanno tutti in audio.js (DESIGN.md § 18).
 // Senza il modulo (catalogo grafico) o senza AudioContext (test) non succede nulla. L’audio non legge né cambia valori di gioco.
 const SOUND = window.FORTRESS_SOUND || null;
 const sfx = (ev, w) => { if (SOUND) SOUND.play(ev, w); };
-if (SOUND) SOUND.setVolume(settings.volume / 100);
+if (SOUND) { SOUND.setVolume(settings.volume / 100); if (SOUND.setMode) SOUND.setMode(settings.suoni); }
+// tasto accanto al cursore del volume: sintetici ⇄ campioni (vale subito; i file si decodificano al primo sblocco con “campioni”)
+function toggleSounds() {
+  if (state !== "menu") return;
+  settings.suoni = settings.suoni === "campioni" ? "sintetici" : "campioni"; saveSettings();
+  if (SOUND && SOUND.setMode) SOUND.setMode(settings.suoni);
+}
 // cursore del volume nel menu principale: passi del 5%; si salva al rilascio
 function setVolume(v, save) {
   settings.volume = clamp(Math.round(v / 5) * 5, 0, 100);
@@ -3904,7 +3913,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.30.0";
+const APP_VERSION = "1.31.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

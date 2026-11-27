@@ -648,7 +648,7 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
   Il disegno sta in `app/draw.js`, modulo condiviso dal gioco e dal catalogo **[Claude]**.
 - **Catalogo sonoro** (`docs/catalogo-sonoro.html`, 1.25.1): un tasto per ogni evento del modulo audio e tre per la cupola (pesi 1, 2, 3), suonati con lo stesso `app/audio.js` del gioco;
   serve ad ascoltare i timbri dal computer (il giudizio finale resta sul telefono, § 18). Si apre direttamente nel browser dalla cartella del progetto **[Claude]**.
-  Non è generato: carica `../app/audio.js`, quindi è sempre al passo; `tests/sonoro.js` controlla che ci sia un tasto per ogni evento.
+  Non è generato: carica `../app/audio.js`, quindi è sempre al passo; `tests/sonoro.js` controlla che ci sia un tasto per ogni evento. Per i tre eventi della prova dei campioni (§ 18) mostra anche i campioni **[Claude]**.
 - **Anteprima dell’icona** (`docs/anteprima-icona.html`, generata da `node tests/tools/icona.js`, § 7) **[Claude]**.
 
 ## 15. Equipaggiamento e chip (costruito nella 1.10.0, da tarare)
@@ -1621,7 +1621,7 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
 
 ## 18. Sonoro (costruito nella 1.25.0, da provare sul telefono)
 
-- **Scelte** **[deciso]** (Marco, 23/11/2026): suoni **generati dal codice con Web Audio**, nessun file audio (il gioco si usa quasi solo su Android).
+- **Scelte** **[deciso]** (Marco, 23/11/2026): suoni **generati dal codice con Web Audio** (il gioco si usa quasi solo su Android); dal 27/11/2026 la regola “nessun file audio” è sospesa per una prova su tre eventi (vedi “Prova dei campioni”).
   **Un solo cursore del volume** per tutti i suoni, nelle impostazioni (`fortress-proto-v1`, campo `volume`). Il gioco non sa come nasce un suono:
   chiede un **evento** (“sparo del guardiano”, “esplosione grande”…) a un solo modulo audio, che decide timbro e mix. Così i suoni si cambiano dopo senza toccare la logica,
   e un domani si può passare ai file audio, per tutti gli eventi o solo per alcuni, cambiando solo quel modulo (nuovi file in `ASSETS` di `sw.js`, versione alzata).
@@ -1686,4 +1686,41 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     da 2 a 4 scoppiettii di rumore passaalto (5-10 ms, 2,5-6 kHz) nei primi 0,2 s. Restano i tratti propri (tuono, carica che sale).
   - **Fuoco** (Sky Guard e Firewheel): “fwoomp” di rumore passabasso che si apre da 260 a 900 Hz in 0,3 s con attacco di 60 ms, una sinusoide morbida 95 → 70 Hz, e 12 grani di crepitio (3-15 ms, 1,5-4 kHz) nei primi 0,3 s. Restano i tratti propri.
   - Il carico cresce poco: al massimo 15 sorgenti per uno sparo di fuoco (con il tratto proprio) e 14 per l’esplosione grande, che durano pochi millisecondi; il limite di 14 voci conta gli eventi, non gli strati. Da controllare sul telefono a 2x con molte esplosioni.
-- **Fuori dal perimetro** (non deciso): musica, morte dei nemici, interfaccia (menu, carte, avvisi), frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
+- **Prova dei campioni** **[deciso]** (Marco, 27/11/2026, dopo le prove su Android: i suoni sono troppo finti, poco evocativi di ciò che rappresentano e poco coerenti tra loro; il sintetico resta come alternativa):
+  - **Fonte**: pacchetti **Kenney “Sci-Fi Sounds”** e **“Interface Sounds”** (entrambi CC0); dall’Interface Sounds si usano solo i suoni che servono agli eventi della prova, non quelli dell’interfaccia di gioco (vedi sotto).
+  - **Eventi della prova**: `guardiano`, `esplosione.grande`, `cupola` (pesi 1, 2, 3). Tutti gli altri eventi restano sintetici.
+  - **Il sintetico resta selezionabile**: per ogni evento della prova la versione generata resta nel modulo e si può scegliere se suonare quella o i campioni.
+  - Resta valido: il gioco emette solo eventi e non sa come nasce il suono; nessun valore di gioco cambia; mai `Math.random` nel modulo.
+- **Prova dei campioni · realizzazione** **[Claude] [da rivedere]**:
+  - **Scelta dei file** (candidati scelti da Claude dai dati dei file — durata, picco, volume, brillantezza —, non ancora ascoltati; Marco ha l’ultima parola dopo l’ascolto nel catalogo sonoro):
+    `guardiano` ← click_002, 003 o 005 (Interface) per il clic, con impactMetal_004 (Sci-Fi) come colpo grave sotto, durata totale circa 80-90 ms; si scarta click_004 (troppo acuto);
+    `esplosione.grande` ← explosionCrunch_000, 001, 004 con lowFrequency_explosion_001 sotto (Sci-Fi); si scarta explosionCrunch_002 (attacco di 233 ms);
+    `cupola` ← glass_001, 002, 005 o 006 (Interface) per i pesi 1 e 2; peso 3 con impactMetal_001 (Sci-Fi) e glass_004 sopra; forceField (Sci-Fi) solo come possibile strato di fondo.
+    2-3 varianti per evento, scelte ascoltando, non dal peso. Tutti convertiti in mono (dove stereo), con guadagno per file per portarli allo stesso volume medio (RMS originali da circa −7 a −29 dB). Elenco dei file usati e licenza CC0 in un file di crediti nel progetto.
+  - **Formato e peso**: file brevi in OGG o MP3, silenzi di coda tagliati; solo i file della prova in `ASSETS` di `sw.js`.
+  - **Caricamento**: i campioni si decodificano una volta sola, al primo sblocco dell’`AudioContext`, non a ogni suono; solo quelli della prova (l’intera libreria decodificata supererebbe i 30 MB). Se un file manca o non si decodifica, l’evento ricade sul sintetico e il caso è contato in `stats.failed`.
+  - **Catena comune**: tutti i campioni passano da una stessa catena (EQ, compressore e un riverbero breve) prima del `master`, perché suonino nello stesso spazio; i sintetici restano dove sono.
+  - **Scelta tra sintetico e campioni**: campo `suoni` (valori `"sintetici"` o `"campioni"`) in `fortress-proto-v1`, fuori dall’esportazione come `volume`; valore non valido = `"sintetici"`. Si cambia con un tasto accanto al cursore del volume nel menu principale. Il valore di partenza resta `"sintetici"` finché Marco non ha giudicato la prova.
+  - **Catalogo sonoro**: mostra per i tre eventi un tasto per la versione sintetica e uno per ciascun campione, per il confronto dal computer (il giudizio resta sul telefono).
+  - **Test**: `tests/sonoro.js` controlla che con `suoni: "sintetici"` gli eventi siano identici alla 1.25.1, che con `"campioni"` i tre eventi usino i file, che il ripiego funzioni se un file manca, e che le partite con e senza audio diano gli stessi esiti.
+  - **Da misurare in Claude Code**: peso reale dei file in cache (stima mia: circa 260 KB per i candidati), memoria dei campioni decodificati (stima mia: circa 2 MB) e tempo di avvio sul telefono. Sono stime, non misure.
+- **Costruito (1.31.0)** · valori **[Claude] [da rivedere]** (sul telefono resta tutto da provare):
+  - **File**: 14, gli **originali Kenney non modificati** (OGG Vorbis, 44,1 kHz) in `app/suoni/`, crediti e licenza in `app/suoni/CREDITI.md`. Su questo computer non c’è un codificatore Vorbis o MP3,
+    e i file sono già brevi, quasi tutti mono e senza code di silenzio da togliere (al massimo 30 ms): **mono, guadagno per file e tagli li fa il modulo** alla decodifica (somma dei canali in un buffer mono
+    con il guadagno) e al suono (taglio con dissolvenza di 15 ms). RMS misurato sulla decodifica di Chromium (parte attiva): da −11,2 dB (click_005) a −21,2 dB (impactMetal_004); il modulo li porta a −18 dB (al massimo +6 dB).
+  - **Varianti**: tutti i candidati, per sceglierli ascoltando: `guardiano` 3 (click_002, 003, 005 a 0,8 con impactMetal_004 a 0,55 tagliato a 85 ms); `esplosione.grande` 3 (explosionCrunch_000, 001, 004
+    con lowFrequency_explosion_001 a 0,7, stereo sommato in mono); `cupola` pesi 1-2: 4 vetri (glass_001, 002, 005, 006; il peso cambia solo il volume, come nel sintetico), peso 3: impactMetal_001 con glass_004 sopra.
+    forceField non è usato. Variante scelta a caso col generatore del modulo; l’intonazione varia come nel sintetico (±6% guardiano, ±5% esplosione, con la velocità di lettura).
+  - **Volumi**: ogni evento è tarato per suonare **forte come il suo sintetico** (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa; scarto entro 1,5 dB): volume dell’evento 0,09 guardiano,
+    1,15 esplosione, 0,8 cupola; vetri 0,54 / 1,22 / 1,64 / 1,58; peso 3 metallo 0,48 e vetro 0,24. Priorità, voci, soglie e raggruppamenti sono quelli dell’evento.
+  - **Catena comune**: passaalto 40 Hz, mensola degli acuti −3 dB da 7 kHz, compressore (soglia −16 dB, rapporto 3, attacco 3 ms, rilascio 150 ms), riverbero breve generato (0,35 s, decadimento 70 ms, volume 0,16).
+    Due ingressi (bassa e alta priorità): in modo “campioni” gli eventi di priorità 3-4 abbassano anche il guardiano campionato, come gli spari sintetici.
+  - **Caricamento**: alla prima volta che il contesto è sbloccato con “campioni” scelto (o al passaggio a “campioni” dopo lo sblocco), una volta sola. Finché un file non è pronto l’evento suona sintetico;
+    un file mancante o non decodificabile è contato in `stats.failed` (`"suoni/<file>.ogg"`) e le sue varianti sono saltate; senza varianti pronte resta il sintetico. `stats.sampled` conta i suoni fatti con i file.
+  - **Menu**: “Classica ⇄” (88 px), cursore del volume (84 px) e tasto “Sintetici” / “Campioni” (56 px) nella stessa riga; vale subito, senza ricaricare.
+  - **Catalogo sonoro**: sezione “Prova dei campioni”: per guardiano, esplosione grande e cupola (pesi 1-3) un tasto “sintetico” e uno per variante (20 tasti). Il catalogo si apre dalla cartella (file://), dove
+    il browser non lascia leggere i file: li prende da `docs/catalogo-sonoro-campioni.js` (base64, generato da `npm run catalog-sonoro`; un test lo vuole al passo con `app/suoni/`).
+  - **Misure**: peso in cache **231,4 KB** (237 004 byte, 14 file); memoria dei campioni decodificati circa **1,4 MB** (7,5 s mono in virgola mobile a 48 kHz, la frequenza tipica di Android); decodifica di tutti
+    i file **15-37 ms sul computer** (Chromium). **Sul telefono non misurato**: tempo di avvio e di decodifica da controllare.
+- **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
+  - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

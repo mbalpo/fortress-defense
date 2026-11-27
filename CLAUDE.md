@@ -13,7 +13,7 @@ Tower defense personale di Marco, PWA offline ispirata a *Galaxy Defense: Fortre
 - Le decisioni di design si prendono anche nel progetto su claude.ai: Marco può portarti testo pronto da inserire in DESIGN.md.
 
 ## Struttura
-- `app/` — cartella da pubblicare: `index.html` (il gioco, nessuna dipendenza), `draw.js` (il disegno), `draw-hd2d.js` (la grafica HD-2D, solo le differenze), `manifest.json`, `sw.js`, icone.
+- `app/` — cartella da pubblicare: `index.html` (il gioco, nessuna dipendenza), `draw.js` (il disegno), `draw-hd2d.js` (la grafica HD-2D, solo le differenze), `audio.js` (il sonoro, § 18), `suoni/` (campioni della prova, Kenney CC0, crediti in `suoni/CREDITI.md`), `manifest.json`, `sw.js`, icone.
 - `docs/` — `DESIGN.md`, `CHANGELOG.md`, `DEPLOY.md`, `PROGETTO-claude-ai.md`, `catalogo-grafico.html` (generato: `npm run catalog`).
 - `tests/` — test automatici (jsdom) e `run.js`; `tests/src.js` dà ai test `index.html` con `draw.js` e `draw-hd2d.js` incorporati (`gameHtml(file, "hd2d")` impone la grafica HD-2D);
   `tests/tools/` — calibrazione, screenshot, catalogo grafico, generatore degli elenchi di DESIGN.md.

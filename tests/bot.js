@@ -45,7 +45,7 @@ function makeGame({ seed = 1, patch = (h) => h, cleared = 50, level = 10, settin
 
 // policy: "random" | "smart"
 function play(opts, policy, startKey = "Enter", maxFrames = 200000) {
-  const g = makeGame(opts); const rng = seeded((opts.seed || 1) * 7 + 3);
+  const g = opts.game || makeGame(opts); const rng = seeded((opts.seed || 1) * 7 + 3);   // opts.game: gioco già creato (es. dopo aver atteso la decodifica dei campioni)
   if (opts.start) opts.start(g); else g.key(startKey);   // opts.start: avvio diverso dal tasto (es. Protezione planetaria)
   g.frame();
   let waveSeen = 1, result = null, picks = [];

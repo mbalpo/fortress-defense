@@ -3,6 +3,37 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.31.0 — Prova dei campioni nel sonoro
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Prova dei campioni”): la regola “nessun file audio” è sospesa per una prova su tre eventi, `guardiano`, `esplosione.grande` e `cupola`,
+  con i pacchetti Kenney “Sci-Fi Sounds” e “Interface Sounds” (CC0); il sintetico resta e si sceglie con il campo `suoni` (`"sintetici"` di partenza o `"campioni"`). Niente suoni di interfaccia (deciso).
+- **File scelti** (14, `app/suoni/`, crediti in `app/suoni/CREDITI.md`), tutti i candidati di DESIGN.md perché Marco scelga ascoltando: click_002, click_003, click_005 con impactMetal_004 (guardiano);
+  explosionCrunch_000, 001, 004 con lowFrequency_explosion_001 (esplosione grande); glass_001, 002, 005, 006 (cupola pesi 1-2); impactMetal_001 con glass_004 (cupola peso 3). forceField non usato.
+  **Peso totale 231,4 KB** (237 004 byte). Sono gli originali non modificati (OGG Vorbis): qui non c’è un codificatore Vorbis o MP3 e i file non hanno code di silenzio da togliere,
+  quindi mono, guadagno per file (RMS da −11,2 a −21,2 dB portato a −18 dB) e tagli (impactMetal_004 a 85 ms) li fa `audio.js`.
+- **Modulo** (`audio.js`): tabella `FILES` e `SAMPLED` (varianti per evento e peso, volumi tarati perché ogni evento suoni forte come il suo sintetico), catena comune dei campioni
+  (passaalto, mensola degli acuti, compressore, riverbero breve generato) prima del master; decodifica una volta sola al primo sblocco con “campioni” (o al passaggio a “campioni”); file mancante o non decodificabile
+  → ripiego sul sintetico, contato in `stats.failed`; `stats.sampled`; `setMode`, `mode`, `variants`, `files`, `loadSamples`, `preview` (per il catalogo). Il sintetico è invariato:
+  stessa firma degli strati e stessa traccia Web Audio della 1.25.1; in modo “sintetici” nessun file viene chiesto.
+- **Gioco**: `settings.suoni` in `fortress-proto-v1` (valore non valido = “sintetici”, fuori dall’esportazione); nel menu principale “Classica ⇄”, cursore del volume e tasto “Sintetici” / “Campioni” nella stessa riga.
+- **Catalogo sonoro**: sezione “Prova dei campioni” (per i tre eventi e i pesi della cupola, un tasto sintetico e uno per variante: 20 tasti). I campioni arrivano da `docs/catalogo-sonoro-campioni.js`
+  (base64, nuovo comando `npm run catalog-sonoro`), perché dalla cartella (file://) il browser non lascia leggere i file.
+- `sw.js`: i 14 file in `ASSETS`. `tests/tools/catalog.js`: l’hash comprende le sottocartelle di `app/`. `tests/bot.js`: `play()` accetta un gioco già creato (`opts.game`).
+  DEPLOY.md e CLAUDE.md: la cartella `app/suoni/`. `APP_VERSION` e `sw.js` 1.31.0.
+
+**Misure** (Chromium sul computer; sul telefono da fare): decodifica di tutti i file 15-37 ms; memoria dei campioni decodificati circa 1,4 MB (7,5 s mono a 48 kHz); volumi campioni / sintetici entro 1,5 dB
+(massimo RMS su 100 ms, rendering offline con la catena). Nel gioco vero (server locale, modo “campioni”) il guardiano suona con i file e nessun file fallisce.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`, sezione nuova “Prova dei campioni” (12 controlli): sintetico identico alla 1.25.1 (firma degli strati da469a69 e traccia Web Audio, nessun file chiesto);
+con “campioni” 14 file chiesti e decodificati una volta sola dopo lo sblocco, catena con compressore e riverbero, i tre eventi (e solo loro) suonano con i file, varianti pronte, tasti del catalogo
+(sintetico o variante precisa), modo non valido → sintetici; ripiego con file mancanti (guardiano sintetico, cupola sugli altri vetri, file contati in `stats.failed`) e senza fetch; campo `suoni` letto,
+tasto del menu che lo cambia e lo salva, fuori dall’esportazione; partita al livello 30 con i campioni uguale a quella senza audio; catalogo con 20 tasti della prova e dati al passo con `app/suoni/`.
+Aggiornati in `sonoro.js` i punti del cursore del volume (ora 84 px) e `swtest.js` (24 file in cache, ogni .ogg di `app/suoni/`). `npm run screenshots`: menu con la riga nuova, testi dentro i tasti.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): incorpora il codice nuovo (menu); nessuna torretta, nemico o effetto nuovo.
+
+Checklist: aggiornata (versione 71): nuovo gruppo “Prova dei campioni (1.31)” da provare sul telefono (tasto del menu, confronto sintetico / campioni su guardiano, esplosione grande e cupola, coerenza con gli altri suoni, peso e avvio, catalogo); decisione sulle varianti da tenere e sul suono di partenza; valori e interpretazioni di Claude della prova; “Sonoro fuori dal perimetro” senza l’interfaccia (decisa: niente suoni).
+
 ## 1.30.0 — Nodi del 200: Specializzazione e Tetto della riduzione
 
 - **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 16 “Nodi finali” e “Tetti”): guardiano e 11 torrette hanno in fondo al ramo la **Specializzazione**: 5 livelli, ognuno **+1/6 del danno base**

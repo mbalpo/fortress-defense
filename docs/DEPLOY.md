@@ -5,6 +5,8 @@ CONTENUTO
   app/index.html          il gioco
   app/draw.js             il disegno (grafica del canvas), usato da index.html
   app/draw-hd2d.js        la grafica HD-2D: solo le differenze, innestate su draw.js se scelta nel menu
+  app/audio.js            il sonoro (eventi, timbri, mix)
+  app/suoni/              campioni della prova dei campioni (OGG, Kenney CC0, crediti in CREDITI.md)
   app/manifest.json       nome, colori e icone dell'app
   app/sw.js               service worker: fa partire il gioco anche offline
   app/icon-*.png          icone (192, 512, 512 "maskable" per Android, 180 per iPhone)
@@ -48,6 +50,8 @@ AGGIORNARE
   (la versione è scritta in basso nel menu). Offline, o se il controllo supera 3 secondi,
   compare subito "Start" con la versione già installata.
   Se aggiungi o togli file, aggiorna anche l'elenco ASSETS in sw.js.
+  Dalla 1.31.0 la cartella app/ contiene anche la sottocartella suoni/ (campioni della prova
+  dei campioni): va pubblicata insieme al resto, con la stessa struttura.
 
 SALVATAGGIO
   Menu → "Salvataggio · esporta o importa".

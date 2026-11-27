@@ -13,9 +13,11 @@ const OUT = path.join(ROOT, "docs", ALT ? "catalogo-grafico-alternativo.html" : 
 const OUT_REL = "docs/" + path.basename(OUT), TITLE = ALT ? "catalogo grafico · grafica HD-2D" : "catalogo grafico · grafica classica";
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 
-/* ---------- hash: tutti i file di app/ e questo generatore ---------- */
+/* ---------- hash: tutti i file di app/ (anche nelle sottocartelle, come app/suoni/ dalla 1.31.0) e questo generatore ---------- */
 function hashedFiles() {
-  return [...fs.readdirSync(APP).filter((f) => !f.startsWith(".")).sort().map((f) => "app/" + f), "tests/tools/catalog.js"];
+  const walk = (dir, rel) => fs.readdirSync(dir).filter((f) => !f.startsWith(".")).sort()
+    .flatMap((f) => fs.statSync(path.join(dir, f)).isDirectory() ? walk(path.join(dir, f), rel + f + "/") : [rel + f]);
+  return [...walk(APP, "app/"), "tests/tools/catalog.js"];
 }
 function computeHash() {
   const all = crypto.createHash("sha256"), each = {};

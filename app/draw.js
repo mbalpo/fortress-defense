@@ -997,8 +997,10 @@ function menuScreen() {
   button(60, 562, 154, 36, "Salvataggio", openSave, { size: 13, stroke: "#7fa0e0" });
   button(220, 562, 80, 36, "Guida", openGuide, { size: 13, stroke: "#3fe0a0" });
   // grafica (1.13.0): solo qui nel menu principale, perché vale dal caricamento successivo (la pagina si ricarica da sola)
-  button(60, 603, 116, 22, (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + "  ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
-  volumeSlider(184, 603, 116, 22);
+  button(60, 603, 88, 22, (GFX_ON === "hd2d" ? "HD-2D" : "Classica") + " ⇄", toggleGraphics, { size: 11, stroke: "#c9a2ff" });
+  volumeSlider(154, 603, 84, 22);
+  // suoni (1.31.0, prova dei campioni): sintetici o campioni per guardiano, esplosione grande e cupola
+  button(244, 603, 56, 22, settings.suoni === "campioni" ? "Campioni" : "Sintetici", toggleSounds, { size: 10, stroke: "#3fe0a0" });
   txt("Invio = Standard · E = Epica · ←/→ = livello", W / 2, 634, 10, "#5f7299", "center", "500");
   txt("v" + APP_VERSION + (LAUNCH ? " · " + LAUNCH : "") + (settings.fps ? " · fps" : ""), W - 8, 634, 9, settings.fps ? "#3fe0a0" : "#3a4a70", "right", "500");   // LAUNCH: tipo di avvio
   buttons.push({ x: W - 50, y: 626, w: 50, h: 14, onTap: toggleFps });   // tocco sulla versione: contatore dei fotogrammi al secondo
