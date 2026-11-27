@@ -613,8 +613,8 @@ Gravity Vortex Gun, “75% dello schermo” = 75% dell’altezza (percorso 253 p
 - **Moduli** (§ 15): valori X per rarità e regole di calcolo proposti da Claude, da confermare e poi misurare con i bot.
 - **Equipaggiamento** (§ 15, costruito nella 1.10.0): aperti i valori provvisori (tabella delle rarità, colori), la schermata e le letture degli effetti di Claude (§ 15, “Costruito”), la misura con i bot dell’equipaggiamento atteso (muri al 50%).
 - **Guardiano e torrette (grafica)**: il guardiano diventa una figura da personaggio con un’arma puntata verso l’alto, al posto della freccia (non coerente con il resto). Guardiano e torrette hanno parti mobili che seguono la direzione di sparo, invece di figure statiche. **[deciso]** Aperto: quali torrette hanno una direzione (Disruption Drone e Hive non ne hanno una chiara), posa a riposo, velocità di rotazione, parte mobile ruotata o con 8-16 posizioni disegnate. Rotazione solo grafica, senza effetti sul gioco. Si fa con gli sprite (passo 2). **(da decidere)** Stato (1.9.3): il guardiano ha la figura nuova, ancora statica (il cannone punta sempre in alto); parti mobili e torrette restano da decidere. **[Claude]**
-- **Pendenza della difficoltà oltre il 200**: **0,8** **[deciso]** (Marco, 26/11/2026; nel codice dalla 1.25.5, `EFF_SLOPE_200`; misure con 1,2, 0,8 e 0,6 in § 16, “Campagna a 400 livelli”). Restano **[aperto]**, da rivedere con le misure: `FINAL_BOSS_K` oltre il 200,
-  livello dei giganti oltre il 200, tabella dei drop oltre il 180, validazione di `cleared` e `clearedEpic` e testi che citano il 200.
+- **Pendenza della difficoltà oltre il 200**: **0,8** **[deciso]** (Marco, 26/11/2026; nel codice dalla 1.25.5, `EFF_SLOPE_200`; misure con 1,2, 0,8 e 0,6 in § 16, “Campagna a 400 livelli”). Decisi il 27/11/2026 (§ 16, “Campagna a 400 livelli”): nessun tetto ai giganti, drop oltre il 180 (righe proposte da Claude, confermate), salvataggio e testi fino a 400, valute così.
+  Resta **[aperto]**: `FINAL_BOSS_K` oltre il 200.
 - **Nodi dell’albero oltre il livello 20** **[aperto]**: estendere i nodi da 20 livelli (per nodo: a 30 +55 ◆ e +2 ✦, a 40 +130 ◆ e +4 ✦, a 50 +225 ◆ e +6 ✦) e le carte standard
   da 5 a 10 livelli (+10 ◆ per nodo, nessun ✦; 22 nodi = +220 ◆) **[Claude]** (conti).
 - **Riduzione del danno subito oltre il 65%** **[aperto]** (§ 16, “Tetti”).
@@ -671,7 +671,15 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
 | 60-99 | 60 | 30 | 9 | 1 | – |
 | 100-139 | 42 | 39 | 14 | 4 | 1 |
 | 140-179 | 30 | 38 | 20 | 9 | 3 |
-| 180 e oltre | 22 | 36 | 24 | 14 | 4 |
+| 180-219 | 22 | 36 | 24 | 14 | 4 |
+| 220-259 | 16 | 33 | 27 | 18 | 6 |
+| 260-299 | 11 | 30 | 29 | 22 | 8 |
+| 300-339 | 7 | 27 | 30 | 26 | 10 |
+| 340-379 | 4 | 24 | 30 | 30 | 12 |
+| 380 e oltre | 2 | 21 | 30 | 33 | 14 |
+
+  Righe dal 220 **[deciso]** (Marco, 27/11/2026, su proposta di Claude; campagna a 400, “mantenendo una progressione simile”): stesso passo di 40, comune −6/−5/−4/−3/−2, epico verso il 30%,
+  leggendario +4 e ancestrale +2 a riga (dal 180 il passo dell’ancestrale era +1). Da misurare (`equip-atteso.js --ancestrale`, curva oltre il 200); valgono anche per il pacco regalo.
 
 - **Colori della rarità** **[deciso]**: ogni rarità ha il suo colore, pieno per pezzi e Moduli, tranne l’**ancestrale, iridescente** (sfumatura che cambia colore).
   Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
@@ -698,6 +706,9 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
   - **+20% a passo** **[deciso]** (Marco, 26/11/2026): ogni passo aggiunge il 20% del valore ancestrale base alla statistica base, in somma lineare: +10 = +200%, cioè ×3,0 il valore ancestrale.
     Verificato su `PIECES.base` (ancestrale: arma 28, guanti 20, testa 20, armatura 28, stivali 28, nucleo 20): **guardiano** 68% → +1 81,6% · +5 136% · +10 **204%**;
     **barriera** 56% → 67,2% · 112% · **168%**; **torrette** 20% → 24% · 40% · **60%** (set di 6 pezzi tutti allo stesso passo, prima dei Moduli).
+  - **Gestione dell’oggetto** **[deciso]** (Marco, 27/11/2026): un pezzo ancestrale **equipaggiato non si toglie più** (né si sostituisce con un altro pezzo): si può solo **evolvere**
+    nelle versioni “+” con il tasto **Fusione**, scegliendo gli altri ancestrali dello stesso tipo presenti in inventario (non bloccati). Così i pezzi +N esistono solo equipaggiati
+    e non ci sono mai, per esempio, più elmi +1 in inventario. Nome: “**Arma ancestrale +3**”, colore iridescente con il numero. I Moduli installati si tolgono e si cambiano come sempre **[Claude]**.
   - **Slot** **[deciso]** (Marco, 26/11/2026): un nuovo slot per Moduli a +1, +5 e +10 (6, 7 e 8 slot), che accettano Moduli di **ogni rarità** **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
   - **Moduli ancestrali nuovi** **[aperto]** (Marco: “in un secondo momento”).
   - Stime **[Claude]** (tabella dei drop 180+, fusione ideale, da simulare): set di 6 pezzi ancestrale 37 vittorie · +1 74 · +2 150 · +3 260 · +5 600 · +10 2100.
@@ -907,7 +918,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Cooldown delle abilità** **[deciso]** (Marco, 26/11/2026): la regola “nessuna abilità dura quanto il suo cooldown minimo” è confermata e il **tetto del cooldown resta 60%** (16 s su 40 s).
   Le abilità si scalano con equip, carte e Moduli, non con il tetto. Limite teorico della regola: sotto il 75% (Potenziante 10 s al livello 5).
 - **Riduzione del danno subito oltre il 50%** **[deciso]** (Marco, 26/11/2026, su proposta di Claude): nuovo nodo della barriera che porta il **tetto sul totale dal 50% al 65%**, senza bonus propri; **un livello**, **15 ◆**,
-  sbloccato dal **livello 200 di Standard completato**. Massimo teorico con tutto al massimo: albero 15% (Riduzione danno, 5 livelli da 3%) + equipaggiamento 50% = 65% (META 0%);
+  sbloccato dal **livello 200 di Standard completato**, **senza** richiedere Riduzione danno al 5; compare **ultimo nella lista** dei potenziamenti della barriera **[deciso]** (Marco, 27/11/2026). Massimo teorico con tutto al massimo: albero 15% (Riduzione danno, 5 livelli da 3%) + equipaggiamento 50% = 65% (META 0%);
   il danno subito passa da ×0,5 a ×0,35. Oltre il 65%: **[aperto]** (§ 11).
 
 ### Barriera
@@ -1139,11 +1150,16 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **[deciso]** (Marco, 26/11/2026): il guardiano e ogni torretta (12 entità) hanno un nodo finale che alza il **danno base** con un **valore fisso** (non percentuale), sommato al danno base;
   poi si sommano ad esso tutti i bonus percentuali (effetto: moltiplica il danno). **Sblocco: livello 200 di Standard completato.** Costo in **◆**, non in ✦.
 - **5 livelli**, ciascuno **+1/6 del danno base** dell’entità al livello 1 (totale 5/6, +83%: ×1,83 effettivo), **10 ◆ a livello**: 50 ◆ per entità, 600 ◆ in tutto **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
+- **Che cosa moltiplicano** **[deciso]** (Marco, 27/11/2026, su proposta di Claude): **tutti i danni dell’entità**, stati compresi (bruciature, scosse, scie…); nelle combo tra torrette quelli della principale;
+  per il guardiano anche Clone, Ventaglio ed esplosioni dei Colpi esplosivi. I ranger no.
+- **Posizione** **[deciso]** (Marco, 27/11/2026): richiedono **solo il livello 200 completato** (nessun altro nodo); ogni nodo compare **ultimo nella lista** del proprio ramo (guardiano, ogni torretta).
 - Totali **[Claude]** (da verificare con `seals` quando i nodi saranno nel codice): albero intero 1907 ◆ (1292 + 600 + 15) e 188 ✦ (invariato).
+- **Avviso di sblocco al 200** **[deciso]** (Marco, 27/11/2026): al primo completamento del 200 di Standard, come gli avvisi dei livelli 10-50 (nodi finali e tetto al 65%), e testi sui nodi; **non** nella schermata iniziale. Testi **[Claude]**.
 
 ### Campagna a 400 livelli
-- **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, oggi 200 nel codice). Da rivedere con le misure **[aperto]**: `FINAL_BOSS_K` per i muri oltre il 200;
-  livello dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400); tabella dei drop oltre il 180; salvataggio (`cleared`, `clearedEpic` e la loro validazione) e testi che citano il 200.
+- **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, oggi 200 nel codice). Decisioni del 27/11/2026 **[deciso]** (Marco): **nessun tetto** al livello delle abilità dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400);
+  **tabella dei drop estesa oltre il 180** con una progressione simile (valori in § 15, proposti da Claude e confermati); salvataggio: `cleared` e `clearedEpic` validati fino a 400, formato invariato;
+  testi che citano il 200 aggiornati; **valute a 400 vanno bene così** (✦ e ◆ sotto). Resta **[aperto]**: `FINAL_BOSS_K` per i muri oltre il 200 (oggi ×1: vedi § 5), da decidere con le misure.
 - Dati **[Claude]** (pendenza 1,2 dal 30, rispetto al 200, da `effD` e `LV`): al 400 vita ×1,87, danno ×1,73, numero ×1,56, velocità ×1,33, combinato (vita × danno × numero) ×5,0; in Epica 400 (difficoltà 430) ×6,0.
   Con la pendenza **0,8 oltre il 200** (decisa: effD 390 al 400 invece di 470): al 400 vita ×1,58, danno ×1,49, numero ×1,37, velocità ×1,22, combinato ×3,2; in Epica 400 ×3,7 **[Claude]**.
 - **◆ massimi** (cupola sempre al 100%): Standard 31-400 = 740, Epica 400 livelli = 1600, totale 2340; con l’albero a 1907 restano circa 433 ◆ **[Claude]**.
@@ -1186,7 +1202,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Livello massimo dei ranger 20** **[deciso]** (Marco, 26/11/2026) (era “10, per ora”). Costo in frammenti dalla formula esistente T × (1 + 0,5 × (L − 1)): livello 20 = 10,5 T = 2100 frammenti
   (livello 10 = 5,5 T = 1100); tutti e 10 al 20 richiedono 21.000 frammenti (11.000 al 10: circa ×1,9).
   - Dopo il livello 10 **sia i supporti sia le conversioni aumentano il danno** **[deciso]** (Marco, 26/11/2026). Valori **[deciso]** (Marco, 26/11/2026, su proposta di Claude): supporti, per i ranger il cui effetto infligge danno,
-    **+15% di danno per livello** (lineare come oggi, circa ×3,85 al 20), ciclo fermo a 20 s; conversioni **+5% di danno del guardiano per livello** da 11 a 20 (+50% al 20), come bonus percentuale.
+    **+15% di danno per livello** (lineare come oggi, circa ×3,85 al 20), ciclo fermo a 20 s; conversioni **+5% di danno del guardiano per livello** da 11 a 20 (+50% al 20), come bonus percentuale: si **somma** agli altri bonus percentuali del guardiano (equipaggiamento, albero), non è un moltiplicatore a parte **[deciso]** (Marco, 27/11/2026, su proposta di Claude).
   - Alfa Z (100%) e Omega (120°) sono già al limite al livello 10 e non cambiano. Ciò che non è danno, dal livello 11 al 20 **[deciso]** (Marco, 26/11/2026, sulle opzioni di Claude); ciclo fermo a 20 s:
     - **Alfa**: danno +15% per livello; **bruciatura da 3 a 5 s** (+0,2 s per livello); la **durata della fiammata resta 10 s**.
     - **Omega**: danno +15% per livello; **stato da 3 a 5 s** (+0,2 s per livello); **due stati diversi per onda dal livello 15**.

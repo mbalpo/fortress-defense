@@ -3,6 +3,24 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## Documentazione del 27/11/2026 — Dettagli per implementare le decisioni del 26/11 (nessuna versione nuova)
+
+- **Decisioni di Marco** (27/11/2026; DESIGN.md § 11, 15, 16, 17):
+  - **Nodi finali**: moltiplicano tutti i danni dell’entità, stati compresi (combo tra torrette: quelli della principale; guardiano: anche Clone, Ventaglio ed esplosioni); richiedono solo il 200 completato;
+    ultimi nella lista del loro ramo. **Nodo del 65%**: non richiede Riduzione danno al 5, ultimo tra i potenziamenti della barriera.
+  - **Ancestrale+N**: un ancestrale equipaggiato non si toglie più, si evolve con il tasto Fusione scegliendo gli ancestrali in inventario; nome “Arma ancestrale +3”, iridescente con il numero.
+  - **Conversioni +5%**: si sommano agli altri bonus percentuali del guardiano.
+  - **Avviso di sblocco al 200**: a fine livello 200 e sui nodi, non nella schermata iniziale.
+  - **Campagna a 400**: nessun tetto ai giganti; salvataggio e testi fino a 400; valute così. Tabella dei drop estesa oltre il 180: righe 220, 260, 300, 340, 380 proposte da Claude e confermate da Marco.
+    Resta aperto `FINAL_BOSS_K` oltre il 200.
+- Nessun codice del gioco toccato.
+
+**Test**: nessuno (solo documenti).
+
+Catalogo grafico: non cambiato.
+
+Checklist: aggiornata (versioni 64 e 65): tolta la domanda sulle valute a 400 (vanno bene così); aggiunta `FINAL_BOSS_K` oltre il 200 (la tabella dei drop, chiesta nella 64, è confermata).
+
 ## Documentazione del 26/11/2026 (2) — Ranger dal livello 11 al 20 (nessuna versione nuova)
 
 - **Decisioni di Marco** (26/11/2026, sulle opzioni di Claude; DESIGN.md § 17 “Livello massimo 20”, con la tabella dei livelli 11-20; § 11 aggiornato):
