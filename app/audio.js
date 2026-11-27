@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0, pacco regalo nella 1.36.0, elettricità nella 1.37.0, rivista nella 1.38.0 con i file di Marco; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0, ingressi e fiamme nella 1.34.0, aree in fiamme nella 1.35.0, pacco regalo nella 1.36.0, elettricità nella 1.37.0, rivista nella 1.38.0 con i file di Marco, file tagliati nella 1.39.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -137,7 +137,8 @@
 
   // ---- prova dei campioni (1.31.0, DESIGN.md § 18) · file, varianti e volumi [Claude, da rivedere: scelti dai dati dei file, non ascoltati] ----
   // FILES: volume medio (RMS in dB della parte attiva, misurato sulla decodifica di Chromium) di ogni file usato; il modulo lo porta a SAMPLE_RMS
-  // (guadagno per file, al massimo +6 dB). I file sono gli originali Kenney (OGG Vorbis, 44,1 kHz): mono e tagli si fanno qui, alla decodifica e al suono.
+  // (guadagno per file, al massimo +6 dB). I file sono gli originali Kenney (OGG Vorbis, 44,1 kHz): mono e tagli si fanno qui, alla decodifica e al suono;
+// dalla 1.39.0 (codificatore OGG sul computer di Marco) alcuni file sono tagliati e ricodificati in mono (app/suoni/CREDITI.md).
   const FILES = { click_002: -14.9, click_003: -14.6, click_005: -11.2, impactMetal_004: -21.2,
     explosionCrunch_000: -13.8, explosionCrunch_001: -12.0, explosionCrunch_004: -14.6, lowFrequency_explosion_001: -15.5,
     impactMetal_000: -20.4, impactMetal_001: -19.8, impactMetal_002: -20.4, impactMetal_003: -19.9, forceField_001: -10.6,
@@ -151,7 +152,9 @@
     question_003: -9.9, maximize_007: -15.6, minimize_007: -13.4,
     // elettricità e bolle (1.38.0, file portati da Marco al posto dei pezzi Kenney della 1.37.0): tuono vicino, ronzio elettrico, tre scoppi di bolla
     // (per pops3 e il tuono il volume è quello della parte usata: il file ha lunghi silenzi o la pioggia)
-    thunderVeryClose_01: -14, buzz: -27.4, pops3: -26 };
+    thunderVeryClose_01: -14, buzz: -27.4, pops3: -26,
+    // scariche ritagliate (1.39.0) dalla raccolta electricitysoundspreview portata da Marco: “zzt” crepitante (0,38 s) e schiocco con coda (0,67 s)
+    electricZap_01: -22, electricZap_02: -24 };
   const SAMPLE_RMS = -18;
   // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0),
   // off: punto del file da cui si parte (s, 1.34.0) };
@@ -175,12 +178,13 @@
     // dello stesso file, accelerato a 1,3); Firewheel = fiammata più lunga e grave al lancio (il fruscio dei droni che girano è nel suono continuo)
     sky: [0.4, 1.9, 3.4].map((off) => [S_("thrusterFire_001", 1, { off, r: 1.3, d: 0.45, fi: 0.02, fo: 0.3 })]),
     wheel: [0.8, 2.6].map((off) => [S_("thrusterFire_001", 1, { off, r: 0.9, d: 0.7, fi: 0.05, fo: 0.4 })]),
-    // elettricità (1.38.0): Thunderbolt = il tuono vicino, dal colpo (1,18 s del file) per 1,4 s (meno della ricarica di 1,6 s), prima della pioggia; due varianti di intonazione;
+    // elettricità (1.38.0): Thunderbolt = il tuono vicino per 1,4 s (meno della ricarica di 1,6 s); dalla 1.39.0 il file è tagliato al tuono (0,08 s = il colpo)
+    // e il fulmine comincia con una scarica (electricZap_01 o 02), con il tuono sotto 50 ms dopo;
     // Teslacoil = il ronzio elettrico (0,35 s, dal suo tratto più pieno); il ronzio poi resta finché la bobina si carica (suono continuo “tesla”)
-    thunder: [1, 0.85].map((r) => [S_("thunderVeryClose_01", 1, { off: 1.18, r, d: 1.4, fo: 0.6 })]),
+    thunder: [["electricZap_01", 1, 2.8], ["electricZap_02", 0.85, 0.63]].map(([z, r, g]) => [S_(z, g), S_("thunderVeryClose_01", 0.8, { at: 0.05, off: 0.08, r, d: 1.35, fo: 0.6 })]),
     tesla: [[0.15, 1], [0.55, 1.19]].map(([off, g]) => [S_("buzz", g, { off, d: 0.35, fo: 0.12 })]),
-    // bolle di Gamma (1.38.0): i tre scoppi di pops3 (a 0,6, 1,6 e 2,95 s del file), 0,35 s ciascuno
-    bolla: [[0.58, 1], [1.58, 4.5], [2.93, 1.78]].map(([off, g]) => [S_("pops3", g, { off, d: 0.35, fo: 0.1 })]),   // volumi pareggiati tra i tre scoppi
+    // bolle di Gamma (1.38.0): i tre scoppi di pops3 (nel file tagliato della 1.39.0 a 0,05, 1,05 e 2,4 s), 0,35 s ciascuno
+    bolla: [[0.03, 1], [1.03, 4.5], [2.38, 1.78]].map(([off, g]) => [S_("pops3", g, { off, d: 0.35, fo: 0.1 })]),   // volumi pareggiati tra i tre scoppi
     // colpi dei droni dell’Hive (1.33.0): un laserino corto e più acuto, tagliato a 0,12 s
     hivec: [["laserSmall_000", 1], ["laserSmall_001", 1.35], ["laserSmall_002", 1], ["laserSmall_003", 1]].map(([f, g]) => [S_(f, g, { r: 1.25, d: 0.12, fo: 0.04 })]),
     aero: [[S_("lowFrequency_explosion_001", 1, { d: 0.5 }), S_("impactMetal_000", 0.5, { d: 0.25 })],
@@ -210,7 +214,7 @@
     "colpo.hive": { gain: 0.115, vars: () => SPARO.hivec },
     "sparo.sky": { gain: 0.134, vars: () => SPARO.sky },
     "sparo.wheel": { gain: 0.137, vars: () => SPARO.wheel },
-    "sparo.thunder": { gain: 0.034, vars: () => SPARO.thunder },
+    "sparo.thunder": { gain: 0.04, vars: () => SPARO.thunder },
     "sparo.tesla": { gain: 0.113, vars: () => SPARO.tesla },
     "bolla.scoppia": { gain: 0.33, vars: () => SPARO.bolla },
     // ingressi (1.34.0, Marco): boss = spaceEngine_000 (motore grave che pulsa), mini-boss = spaceEngine_003 (ronzio fermo); come nel sintetico il motore cresce

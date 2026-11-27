@@ -3,6 +3,19 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.39.0 — File tagliati e scariche del fulmine
+
+- **Codificatore OGG**: Marco ha installato vorbis-tools; i file ora si possono tagliare e ricodificare.
+- **Tagliati e ricodificati in mono** (oggenc, qualità 4) alla parte usata: tuono (166 → 17 KB), buzz (23 → 12), 3pops (63 → 26), spaceEngine_000 (106 → 60), spaceEngine_003 (66 → 20); stessi tratti e volumi.
+- **Thunderbolt** **[Claude] [da rivedere]**: il fulmine comincia con una scarica ritagliata da electricitysoundspreview (“zzt” crepitante o schiocco con coda: electricZap_01, electricZap_02) e il tuono sotto 50 ms dopo; volume 0,04.
+- **File**: **40 file, 937,1 KB** (prima 1210,8). `ASSETS`, `CREDITI.md` (parti usate; fonte e licenza dei file di Marco ancora da indicare), dati del catalogo sonoro aggiornati. `APP_VERSION` e `sw.js` 1.39.0.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: il Thunderbolt ha scarica e tuono in ogni variante.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 79, con la 1.38.0): elettricità e bolle con i file di Marco, scariche del fulmine, file tagliati (937 KB); fonte e licenza da indicare.
+
 ## 1.38.0 — Elettricità e bolle con i file di Marco
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Elettricità con i file di Marco”): i suoni elettrici della 1.37.0 non piacciono; prova con quattro file portati da Marco, tra cui la bolla che esplode.

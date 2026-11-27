@@ -1813,5 +1813,13 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **Volumi**: forti come il sintetico (Thunderbolt 0,034, Teslacoil 0,113, bolle 0,33; ronzio continuo 0,0385, circa 8 dB sotto la partenza).
   - **File**: nel gioco con un nome senza spazi (thunderVeryClose_01, buzz, pops3); **38 file, 1210,8 KB** (1 239 879 byte; il tuono pesa 166 KB per i suoi 12,8 s, quasi tutti di pioggia).
     **Fonte, autore e licenza dei tre file: da indicare** in `app/suoni/CREDITI.md` prima della pubblicazione.
+- **Codificatore OGG** (27/11/2026): Marco ha installato vorbis-tools (`oggenc`) sul suo computer; ora i file si possono tagliare e ricodificare (prima solo interi, § 18 “Prova dei campioni · realizzazione”).
+- **File tagliati e scariche del fulmine (1.39.0)** · scelte **[Claude] [da rivedere]**:
+  - **Tagliati alla parte usata e ricodificati in mono** (oggenc, qualità 4): il tuono (solo il tuono, senza la pioggia: 166 → 17 KB), buzz (23 → 12 KB), 3pops (63 → 26 KB),
+    spaceEngine_000 (primi 4,7 s: 106 → 60 KB) e spaceEngine_003 (primi 2,1 s: 66 → 20 KB). I suoni restano gli stessi (stessi tratti, stessi volumi).
+  - **Thunderbolt**: il fulmine comincia con una **scarica** ritagliata dalla raccolta electricitysoundspreview, uno “zzt” crepitante (22,12-22,50 s) o uno schiocco con coda (25,53-26,20 s),
+    forte quanto il tuono, che arriva 50 ms dopo (1,35 s). Volume 0,04, come il sintetico.
+  - Gli altri file Kenney restano originali (già piccoli, o usati quasi interi come thrusterFire).
+  - **File**: **40 file, 937,1 KB** (959 638 byte; prima 1210,8).
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.

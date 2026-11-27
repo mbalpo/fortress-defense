@@ -178,11 +178,12 @@ const ALLS = ALL3.concat(["colpo.hive", "sparo.sky", "sparo.wheel", "miniboss.ar
       ok(tv.every((v) => v.length >= 2 && v.every((x) => x.ok)) && others === 2 && energy && S.SAMPLED_EVENTS.length === 21));
     // 1.37.0-1.38.0 (Marco): Thunderbolt e Teslacoil con i campioni; dalla 1.38.0 con i file portati da Marco: tuono vicino, ronzio elettrico (anche durante la carica), tre scoppi di bolla
     const tv2 = S.variants("sparo.thunder", 1), sv2 = S.variants("sparo.tesla", 1), bv2 = S.variants("bolla.scoppia", 1);
-    const thOk = tv2.length >= 2 && tv2.every((v) => v.ok && v.files.join() === "thunderVeryClose_01");
+    // 1.39.0: il fulmine comincia con una scarica ritagliata dalla raccolta elettrica (electricZap_01 o 02) e il tuono sotto
+    const thOk = tv2.length >= 2 && tv2.every((v) => v.ok && v.files.includes("thunderVeryClose_01") && v.files.some((f) => /^electricZap_0[12]$/.test(f)));
     const tsOk = sv2.length >= 2 && sv2.every((v) => v.ok && v.files.join() === "buzz");
     const bOk = bv2.length === 3 && bv2.every((v) => v.ok && v.files.join() === "pops3"), oldGone = !S.files().some((f) => /^glitch_|^forceField_003$|^explosionCrunch_003$/.test(f));
     t += 5000; const tq = S.hold("tesla", true), tqH = S.holding().includes("tesla"); S.hold("tesla", false);
-    console.log("1.38.0: Thunderbolt con il tuono:", thOk, "· Teslacoil con il ronzio:", tsOk, "· ronzio continuo durante la carica:", tq && tqH, "· bolle di Gamma con i tre scoppi:", bOk, "· pezzi Kenney della 1.37.0 tolti:", oldGone,
+    console.log("1.38.0-1.39.0: Thunderbolt con scarica e tuono:", thOk, "· Teslacoil con il ronzio:", tsOk, "· ronzio continuo durante la carica:", tq && tqH, "· bolle di Gamma con i tre scoppi:", bOk, "· pezzi Kenney della 1.37.0 tolti:", oldGone,
       ok(thOk && tsOk && tq && tqH && bOk && oldGone));
     // 1.36.0 (Marco): pacco regalo con i campioni; il pacco perso (timer scaduto) solo con i campioni
     const pk = ["pacco.arrivo", "pacco.premio", "pacco.perso"].map((n) => S.variants(n, 1).map((v) => v.files.join("+")).join()).join(" · ");
