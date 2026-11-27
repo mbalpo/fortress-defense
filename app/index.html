@@ -815,6 +815,12 @@ function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringif
 // Senza il modulo (catalogo grafico) o senza AudioContext (test) non succede nulla. L’audio non legge né cambia valori di gioco.
 const SOUND = window.FORTRESS_SOUND || null;
 const sfx = (ev, w) => { if (SOUND) SOUND.play(ev, w); };
+// suoni continui (1.33.0, DESIGN.md § 18): Laser, Beam e Disruption Drone suonano finché il raggio o il campo è acceso (torretta occupata); solo con i campioni
+const HOLD_SOUNDS = ["laser", "beam", "disr"];
+function holdSounds() {
+  if (!SOUND || !SOUND.hold) return;
+  for (const id of HOLD_SOUNDS) SOUND.hold(id, slots.some((s) => s && s.id === id && s.busy > 0));
+}
 if (SOUND) { SOUND.setVolume(settings.volume / 100); if (SOUND.setMode) SOUND.setMode(settings.suoni); }
 // tasto accanto al cursore del volume: sintetici ⇄ campioni (vale subito; i file si decodificano al primo sblocco con “campioni”)
 function toggleSounds() {
@@ -2126,7 +2132,7 @@ function hiveDrone(s, x, y, lvl, gen) {
           hiveShotFx(this, e, this.lvl, k, n);            // colpo visibile, diverso per livello del drone (solo disegno)
         }
       }
-      this.shots++; this.cd = 1.0;
+      this.shots++; this.cd = 1.0; sfx("colpo.hive");      // colpo del drone (1.33.0): suona solo con i campioni
       if (this.shots % 3 === 0) {
         const lv0 = this.lvl;
         if (this.lvl === 1 && has(s, "evo1")) this.lvl = 2; else if (this.lvl === 2 && has(s, "evo2")) this.lvl = 3;
@@ -3523,6 +3529,7 @@ function update(dt) {
   for (const s of slots) if (s) runTurret(s, dt);
 
   for (const o of ents) o.update(dt);
+  holdSounds();
 
   // nemici: stati, movimento, attacco alla cupola
   for (const e of enemies) {
@@ -3913,7 +3920,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.32.0";
+const APP_VERSION = "1.33.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

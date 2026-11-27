@@ -1,4 +1,4 @@
-// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0; DESIGN.md § 18)
+// Planet Defense · SONORO (1.25.0, timbri rivisti nella 1.25.1, prova dei campioni nella 1.31.0, suoni continui nella 1.33.0; DESIGN.md § 18)
 // Un solo modulo per tutti i suoni. Il gioco chiede solo EVENTI ("guardiano", "sparo.sky", "esplosione.grande", "cupola"…) con play(nome, peso):
 // qui si decidono timbro, volume, priorità e raggruppamenti. Nessuna chiamata a Web Audio fuori da questo file.
 // Suoni generati dal codice (oscillatori e rumore). Prova dei campioni (1.31.0): guardiano, esplosione grande e cupola hanno anche una versione
@@ -122,6 +122,8 @@
     make: () => [L("sine", 300, 950, 0.18, 0.5), L("sine", 1500, 1500, 0.12, 0.2, { at: 0.04 })] });
   ev("gigante.raggio.avviso", { cat: "gigante", max: 2, prio: 3, gain: 0.3, gap: 300, make: rayWarn(760) });
   ev("gigante.raggio", { cat: "gigante", max: 2, prio: 3, gain: 0.45, gap: 300, make: rayShot(0.8) });
+  // colpi dei droni dell’Hive (1.33.0, Marco): solo con i campioni (only); nel modo “sintetici” non suona, come prima
+  ev("colpo.hive", { cat: "colpo.hive", max: 2, prio: 1, gain: 0.3, gap: 70, vary: 0.06, only: "campioni", make: () => [] });
   ev("gigante.scissione", { cat: "gigante", max: 2, prio: 3, gain: 0.6, gap: 200,
     make: () => [L("noise", 1300, 90, 1.0, 0.9, { flt: ["lowpass", 0, 1] }), L("sine", 62, 24, 0.9, 1), L("square", 240, 80, 0.15, 0.2)] });
 
@@ -152,10 +154,15 @@
   const shield = [["impactMetal_002", 0.41], ["impactMetal_000", 0.39], ["impactMetal_003", 0.31]].map(([f, k]) => [S_(f, k), FIELD(k, 0.55)]);
   const SPARO = {
     laser: ["laserLarge_000", "laserLarge_001", "laserLarge_002"].map((f) => [S_(f)]),
-    beam: ["laserLarge_003", "laserLarge_004"].map((f) => [S_(f, 1, { r: 0.8 }), S_("forceField_004", 0.3, { r: 0.8, d: 1.2 })]),
+    // 1.33.0: niente più rallentamento a 0,8 (portava laserLarge_003 all’altezza di laserLarge_000: Laser e Beam sembravano uguali); il ronzio è nel suono continuo
+    beam: ["laserLarge_003", "laserLarge_004"].map((f) => [S_(f)]),
     disr: ["forceField_000", "forceField_002"].map((f) => [S_(f, 1, { d: 0.8 })]),
     hive: [["laserSmall_000", "laserSmall_001", "laserSmall_003"], ["laserSmall_001", "laserSmall_002", "laserSmall_000"]].map((v) => v.map((f, i) => S_(f, 1, { at: i * 0.07 }))),
-    vortex: [[S_("lowFrequency_explosion_000", 1, { d: 1.2 })], [S_("lowFrequency_explosion_000", 1, { d: 1.2 }), S_("forceField_000", 0.4, { r: 0.5, d: 1.2 })]],
+    // 1.33.0 (Marco: troppo basso e breve): il rombo intero (2 s) con sotto il ronzio grave del campo di forza tenuto 2 s (il percorso del buco nero dura circa 2 s)
+    vortex: [[S_("lowFrequency_explosion_000"), S_("forceField_000", 1.4, { lp: [0.1, 0.3], r: 0.5, d: 2.0, fi: 0.15, fo: 0.7 })],
+      [S_("lowFrequency_explosion_000"), S_("forceField_002", 1.4, { lp: [0.1, 0.3], r: 0.45, d: 2.0, fi: 0.15, fo: 0.7 })]],
+    // colpi dei droni dell’Hive (1.33.0): un laserino corto e più acuto, tagliato a 0,12 s
+    hivec: [["laserSmall_000", 1], ["laserSmall_001", 1.35], ["laserSmall_002", 1], ["laserSmall_003", 1]].map(([f, g]) => [S_(f, g, { r: 1.25, d: 0.12, fo: 0.04 })]),
     aero: [[S_("lowFrequency_explosion_001", 1, { d: 0.5 }), S_("impactMetal_000", 0.5, { d: 0.25 })],
       [S_("explosionCrunch_001", 1.36, { r: 1.3, d: 0.35 }), S_("lowFrequency_explosion_001", 0.82, { d: 0.5 })]],
     rail: ["laserRetro_000", "laserRetro_001", "laserRetro_003"].map((f) => [S_(f), S_("impactMetal_004", 0.5, { d: 0.15 })]),
@@ -171,16 +178,28 @@
     // volumi degli eventi tarati sul sintetico (1.32.0, come sopra; il Laser e il Beam sintetici sono i più piani)
     // torrette (1.32.0, Marco: Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast, Railgun); timbro di famiglia per tipo di danno come nel sintetico
     // energy: Laser = scarica laserLarge; Beam = gli altri laserLarge più gravi (×0,8) con il ronzio del campo di forza che resta acceso
-    "sparo.laser": { gain: 0.043, vars: () => SPARO.laser },
-    "sparo.beam": { gain: 0.047, vars: () => SPARO.beam },
+    "sparo.laser": { gain: 0.03, vars: () => SPARO.laser },
+    "sparo.beam": { gain: 0.039, vars: () => SPARO.beam },
     // force: Disruption = campo di forza (più acuti di quello della cupola); Hive = tre laserini in fila (lo sciame che parte); Vortex = rombo profondo del buco nero
     "sparo.disr": { gain: 0.11, vars: () => SPARO.disr },
     "sparo.hive": { gain: 0.15, vars: () => SPARO.hive },
-    "sparo.vortex": { gain: 0.076, vars: () => SPARO.vortex },
+    "sparo.vortex": { gain: 0.135, vars: () => SPARO.vortex },
     // physical: Aeroblast = colpo sordo di mortaio; Railgun = scarica secca (laserRetro) con un colpo metallico sotto
     "sparo.aero": { gain: 0.103, vars: () => SPARO.aero },
     "sparo.rail": { gain: 0.26, vars: () => SPARO.rail },
+    "colpo.hive": { gain: 0.115, vars: () => SPARO.hivec },
   };
+  // ---- suoni continui (1.33.0, Marco): Laser, Beam e Disruption Drone suonano finché il raggio o il campo è acceso, più piano della partenza ----
+  // il gioco chiama hold(torretta, acceso) a ogni fotogramma; strati come sopra, con lp: [da, a, piatto] = tratto del file (s) ripetuto senza fine
+  // (giunzione incrociata di 40 ms; piatto: volume reso costante, per i laser che calano), am: [Hz, profondità] = pulsazione, fi: entrata (s)
+  // Laser: il laser chiaro che ondeggia (tratto di laserLarge_000); Beam: più grave e pulsante (laserLarge_003 a 0,6 e ronzio del campo a 1,5, 7 Hz);
+  // Disruption: ronzio di fondo grave e fermo del campo di forza (forceField_000 a 0,6)
+  const HOLD = {
+    laser: { gain: 0.0225, layers: [S_("laserLarge_000", 1, { lp: [0.05, 0.4, true], fi: 0.12 })] },
+    beam: { gain: 0.0325, layers: [S_("laserLarge_003", 0.6, { lp: [0.05, 0.45, true], r: 0.6, fi: 0.1, am: [7, 0.6] }), S_("forceField_004", 1, { lp: [0.1, 0.3], r: 1.5, fi: 0.1, am: [7, 0.6] })] },
+    disr: { gain: 0.1, layers: [S_("forceField_000", 1, { lp: [0.1, 0.3], r: 0.6, fi: 0.3, am: [0.8, 0.3] })] },
+  };
+  const HOLD_FADE = 0.15;     // dissolvenza in uscita (s) quando il raggio o il campo si spegne
   const SAMPLE_CHAIN = {
     hp: 40,                // passaalto (Hz): toglie il rombo sotto l’udibile
     shelf: [7000, -3],     // attenua gli acuti (Hz, dB), più vicini ai sintetici, quasi tutti filtrati
@@ -202,11 +221,11 @@
     let volume = 0.7, active = false;
     // campioni: modo scelto, bus dei campioni (bassa e alta priorità, verso la catena comune), buffer decodificati (file → AudioBuffer, "attesa" o null se non riuscito)
     let mode = "sintetici", sLow = null, sHigh = null, loading = false;
-    const buffers = {};
+    const buffers = {}, loops = {}, holds = {};      // loops: tratti ripetibili già costruiti; holds: suoni continui accesi (torretta → { out, srcs })
     const fetchFn = "fetch" in opts ? opts.fetch : (root.fetch ? root.fetch.bind(root) : null);
     const base = opts.base || (() => { try { const s = root.document && root.document.currentScript; return s && s.src ? new URL("suoni/", s.src).href : "suoni/"; } catch (e) { return "suoni/"; } })();
     const lastAt = {}, groups = {}, voices = [];        // voices: { name, cat, prio, end (ms), nodes }
-    const stats = { played: {}, dropped: {}, grouped: {}, failed: {}, sampled: {} };   // sampled: suoni fatti con i campioni
+    const stats = { played: {}, dropped: {}, grouped: {}, failed: {}, sampled: {}, held: {} };   // sampled: suoni fatti con i campioni; held: suoni continui accesi
     const curves = {};                                 // curve di saturazione per quantità (tanh normalizzata)
     const curve = (k) => curves[k] || (curves[k] = (() => { const n = 1024, c = new Float32Array(n), m = Math.tanh(k);
       for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(k * x) / m; } return c; })());
@@ -282,23 +301,75 @@
       const ok = all.filter(loaded);
       return ok.length ? ok[Math.floor(rand() * ok.length)] : null;
     }
+    // tratto ripetibile di un file (1.33.0): dal secondo a al secondo b, volume reso costante se piatto (diviso per il volume medio su 30 ms),
+    // fine e inizio sovrapposti in 40 ms (dissolvenza a potenza costante) perché la ripetizione non scatti; portato a SAMPLE_RMS; costruito una volta
+    function loopBuf(f, a, b, flat) {
+      const key = f + ":" + a + ":" + b + ":" + (flat ? 1 : 0);
+      if (loops[key]) return loops[key];
+      const src = buffers[f], sr = src.sampleRate, x = src.getChannelData(0), i0 = Math.floor(a * sr), n = Math.min(x.length, Math.floor(b * sr)) - i0;
+      const seg = new Float32Array(n);
+      for (let i = 0; i < n; i++) seg[i] = x[i0 + i];
+      if (flat) {
+        const w = Math.max(1, Math.floor(0.015 * sr)), sq = new Float64Array(n + 1);
+        for (let i = 0; i < n; i++) sq[i + 1] = sq[i] + seg[i] * seg[i];
+        const env = new Float32Array(n);
+        for (let i = 0; i < n; i++) { const lo = Math.max(0, i - w), hi = Math.min(n, i + w); env[i] = Math.sqrt((sq[hi] - sq[lo]) / (hi - lo)); }
+        const ref = Math.sqrt(sq[n] / n);
+        for (let i = 0; i < n; i++) seg[i] *= Math.min(8, ref / Math.max(1e-5, env[i]));
+      }
+      const xf = Math.min(Math.floor(0.04 * sr), Math.floor(n / 3)), m = n - xf, out = ctx.createBuffer(1, m, sr), o = out.getChannelData(0);
+      for (let i = 0; i < m; i++) o[i] = seg[i];
+      for (let i = 0; i < xf; i++) { const k = (i / xf) * Math.PI / 2; o[i] = seg[i] * Math.sin(k) + seg[m + i] * Math.cos(k); }
+      let ss = 0; for (let i = 0; i < m; i++) ss += o[i] * o[i];
+      const g = Math.pow(10, SAMPLE_RMS / 20) / Math.max(1e-6, Math.sqrt(ss / m));
+      for (let i = 0; i < m; i++) o[i] *= g;
+      return (loops[key] = out);
+    }
+    // uno strato di campione → nodi verso out, dall’istante t; len: durata (s; Infinity = suono continuo, si ferma da fuori)
+    // d taglia con una dissolvenza di fo s (15 ms se non detto), fi fa entrare in fi s, am pulsa il volume
+    function sampleLayer(l, t, rate, out, srcs) {
+      const lr = rate * (l.r || 1), b = l.lp ? loopBuf(l.f, l.lp[0], l.lp[1], l.lp[2]) : buffers[l.f];
+      const len = l.lp ? (l.d || Infinity) : Math.min(b.duration / lr, l.d || 1e9), fi = l.fi || 0;
+      const src = ctx.createBufferSource(), env = ctx.createGain();
+      src.buffer = b; src.playbackRate.value = lr; if (l.lp) src.loop = true;
+      if (fi) { env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(l.g, t + fi); } else env.gain.setValueAtTime(l.g, t);
+      if (l.d) { env.gain.setValueAtTime(l.g, t + Math.max(fi, len - (l.fo || 0.015))); env.gain.linearRampToValueAtTime(0, t + len); }   // taglio con dissolvenza
+      src.connect(env);
+      if (l.am) {                                    // pulsazione: un oscillatore lento fa oscillare il volume tra 1 − profondità e 1
+        const amg = ctx.createGain(), dep = ctx.createGain(), lfo = ctx.createOscillator();
+        amg.gain.value = 1 - l.am[1] / 2; dep.gain.value = l.am[1] / 2; lfo.type = "sine"; lfo.frequency.value = l.am[0];
+        lfo.connect(dep); dep.connect(amg.gain); env.connect(amg); amg.connect(out);
+        lfo.start(t); if (len < Infinity) lfo.stop(t + len + 0.01); srcs.push(lfo);
+      } else env.connect(out);
+      src.start(t); if (len < Infinity) src.stop(t + len + 0.01); srcs.push(src);
+      return len;
+    }
     // un campione (variante) → nodi Web Audio
     function sampleVoice(def, sm, v, bus, gainMul) {
       const t0 = ctx.currentTime + 0.005, rate = def.vary ? 1 + (rand() * 2 - 1) * def.vary : 1, srcs = [];
       let dur = 0;
       const out = ctx.createGain(); out.gain.value = sm.gain * gainMul; out.connect(bus);
-      for (const l of v) {
-        const lr = rate * (l.r || 1), b = buffers[l.f], t = t0 + l.at, len = Math.min(b.duration / lr, l.d || 1e9);
-        const src = ctx.createBufferSource(), env = ctx.createGain();
-        src.buffer = b; src.playbackRate.value = lr;
-        env.gain.setValueAtTime(l.g, t);
-        if (l.d) { env.gain.setValueAtTime(l.g, t + Math.max(0, len - 0.015)); env.gain.linearRampToValueAtTime(0, t + len); }   // taglio con dissolvenza
-        src.connect(env); env.connect(out);
-        src.start(t); src.stop(t + len + 0.01); srcs.push(src);
-        dur = Math.max(dur, l.at + len + 0.02);
-      }
+      for (const l of v) dur = Math.max(dur, l.at + sampleLayer(l, t0 + l.at, rate, out, srcs) + 0.02);
       return { srcs, dur };
     }
+    // suoni continui (1.33.0): accesi finché il gioco li tiene (hold), poi spenti con una dissolvenza
+    function holdOn(name) {
+      const def = HOLD[name], t0 = ctx.currentTime + 0.005, srcs = [];
+      const out = ctx.createGain(); out.gain.value = def.gain; out.connect(sLow);
+      for (const l of def.layers) sampleLayer(l, t0 + l.at, 1, out, srcs);
+      holds[name] = { out, srcs }; count(stats.held, name);
+    }
+    function holdOff(name) {
+      const h = holds[name];
+      if (!h) return;
+      delete holds[name];
+      try {
+        const t = ctx.currentTime;
+        h.out.gain.cancelScheduledValues(t); h.out.gain.setValueAtTime(h.out.gain.value, t); h.out.gain.linearRampToValueAtTime(0, t + HOLD_FADE);
+        for (const s of h.srcs) s.stop(t + HOLD_FADE + 0.02);
+      } catch (e) {}
+    }
+    const holdAllOff = () => { for (const k in holds) holdOff(k); };
     function sync() {                                  // sospeso fuori dall’ondata e in secondo piano
       if (!ctx) return;
       try { if (active && ctx.state !== "running") ctx.resume(); else if (!active && ctx.state === "running") ctx.suspend(); } catch (e) {}
@@ -345,6 +416,7 @@
     // pick (solo dal catalogo): "sintetico" o il numero della variante dei campioni
     function start(name, def, w, pick) {
       const t = now();
+      if (def.only && (pick === "sintetico" || (pick == null && mode !== def.only))) return false;   // evento solo con i campioni: nel modo “sintetici” tace
       for (let i = voices.length - 1; i >= 0; i--) if (voices[i].end <= t) voices.splice(i, 1);
       const same = voices.filter((v) => v.cat === def.cat);
       if (same.length >= def.max) { count(stats.dropped, name); return false; }
@@ -364,7 +436,7 @@
           // campioni: nel modo “campioni” (o se il catalogo ne chiede uno) e con almeno una variante pronta; altrimenti il sintetico di sempre
           const v = pick === "sintetico" ? null : (mode === "campioni" || pick != null) ? choose(name, w, pick) : null;
           if (v) { ({ srcs, dur } = sampleVoice(def, SAMPLED[name], v, def.prio >= 3 ? sHigh : sLow, lv)); count(stats.sampled, name); }
-          else ({ srcs, dur } = voice(def, w, def.prio >= 3 ? high : low, lv));
+          else if (!def.only) ({ srcs, dur } = voice(def, w, def.prio >= 3 ? high : low, lv));
         } catch (e) { count(stats.failed, name); /* un suono non riuscito non ferma il gioco */ }
       }
       voices.push({ name, cat: def.cat, prio: def.prio, end: t + dur * 1000, srcs });
@@ -377,19 +449,31 @@
       // al tocco su “Start” (e a ogni tocco sul gioco, per i browser che chiedono un gesto anche dopo): crea e sblocca l’AudioContext
       unlock() { setup(); sync(); },
       // il gioco lo chiama a ogni fotogramma: suoni solo durante l’ondata e con la pagina in primo piano
-      setActive(on) { on = !!on; if (on === active) return; active = on; sync(); },
+      setActive(on) { on = !!on; if (on === active) return; active = on; if (!on) holdAllOff(); sync(); },
       setVolume(v) {
         volume = Math.max(0, Math.min(1, +v || 0));
         if (master) try { master.gain.setValueAtTime(volume * volume, ctx.currentTime); } catch (e) {}
       },
       volume: () => volume,
       // prova dei campioni: "sintetici" (di partenza) o "campioni"; un valore non valido vale "sintetici". I file si decodificano alla prima richiesta.
-      setMode(m) { mode = MODES.includes(m) ? m : "sintetici"; if (mode === "campioni") load(); },
+      setMode(m) { mode = MODES.includes(m) ? m : "sintetici"; if (mode === "campioni") load(); else holdAllOff(); },
       mode: () => mode,
       SAMPLED_EVENTS: Object.keys(SAMPLED),
       // varianti dei campioni di un evento per il catalogo: [{ files, ok }] (ok: tutti i file decodificati)
       variants: (name, w) => SAMPLED[name] ? SAMPLED[name].vars(w || 1).map((v) => ({ files: v.map((l) => l.f), ok: loaded(v) })) : [],
       files: () => Object.keys(FILES),
+      HOLD_TURRETS: Object.keys(HOLD),
+      // suono continuo di una torretta (1.33.0): il gioco lo chiama a ogni fotogramma con acceso = raggio o campo attivo; solo con i campioni
+      // (nel modo “sintetici” non fa nulla). Restituisce true se il suono è acceso.
+      hold(name, on, force) {
+        if (!HOLD[name]) return false;
+        const ok = on && active && volume > 0 && (mode === "campioni" || force) && ctx && sLow && HOLD[name].layers.every((l) => buffers[l.f] && buffers[l.f] !== "attesa");
+        if (!ok) { if (holds[name] && ctx) holdOff(name); return false; }
+        if (holds[name]) return true;
+        try { holdOn(name); } catch (e) { count(stats.failed, "hold." + name); return false; }
+        return true;
+      },
+      holding: () => Object.keys(holds),
       loadSamples() { load(); },
       // catalogo: suona subito la versione chiesta ("sintetico" o il numero della variante), senza soglia né raggruppamento
       preview(name, w, pick) { const def = EVENTS[name]; if (!def || !active || volume <= 0) return false; return start(name, def, w || 1, pick); },

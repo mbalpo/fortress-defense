@@ -3,6 +3,30 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.33.0 — Suoni continui, colpi dei droni e Vortex più lungo
+
+- **Prova delle torrette sul telefono** (Marco, 27/11/2026, DESIGN.md § 18 “Esito della prova delle torrette sul telefono”): Aeroblast e Railgun vanno bene; Vortex troppo basso e breve;
+  Hive senza suono per i colpi dei droni; Disruption senza rumore di fondo a campo attivo; Laser e Beam troppo simili; per Laser, Beam e Disruption suono più piano ma lungo quanto il raggio o il campo.
+- **Suoni continui** **[Claude] [da rivedere]**: Laser, Beam e Disruption Drone suonano finché la torretta è occupata (raggio o campo acceso), con una dissolvenza di 0,15 s alla fine;
+  il gioco chiama `SOUND.hold(torretta, acceso)` a ogni fotogramma (`holdSounds()` in `update`), si spengono in pausa, nelle carte, a fine ondata e con “Sintetici”. Solo con i campioni.
+  Laser: tratto ripetuto di laserLarge_000 (chiaro, intorno a 1,7 kHz); Beam: laserLarge_003 a 0,6 e forceField_004 a 1,5 con pulsazione di 7 Hz (intorno a 730 Hz); Disruption: forceField_000 a 0,6 (ronzio grave, intorno a 110 Hz).
+  Nessun file nuovo: il modulo ricava i tratti ripetibili dai file esistenti (giunzione incrociata di 40 ms; volume reso costante per i laser).
+- **Laser e Beam distinti**: il Beam non rallenta più i suoi laserLarge a 0,8 (portava laserLarge_003 all’altezza del Laser); partenze 3 dB più piano.
+- **Hive**: evento nuovo `colpo.hive` a ogni colpo dei droni, solo con i campioni (laserSmall_000-003 a 1,25, 0,12 s, 2 voci, soglia 70 ms, priorità 1).
+- **Gravity Vortex Gun**: rombo intero di 2 s con il ronzio grave del campo di forza tenuto 2 s; 5 dB sopra il sintetico.
+- **Modulo**: strati con `lp` (tratto ripetuto), `fi`/`fo` (entrata e uscita), `am` (pulsazione); `hold`, `holding`, `HOLD_TURRETS`; eventi `only: "campioni"`.
+- **Catalogo sonoro**: tasto “partenza + continuo” (3 s) per Laser, Beam e Disruption; colpi dei droni dell’Hive nella prova (senza tasto sintetico). `APP_VERSION` e `sw.js` 1.33.0; `ASSETS` invariato.
+
+**Misure** (Chromium, rendering offline): volumi come in DESIGN.md § 18 “Suoni continui (1.33.0)”; nei tratti ripetuti nessun salto tra campioni vicini oltre 1,4 volte il volume medio (nessuno scatto). File e peso invariati (29, 563,0 KB).
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: 36 eventi; il sintetico resta identico alla 1.25.1 (firma degli strati senza gli eventi solo campioni, traccia Web Audio 195aba5);
+nuovi controlli 1.33.0 (suoni continui: accesi una volta sola, spenti con dissolvenza, in pausa e con “Sintetici”, solo per le tre torrette; colpi dei droni con i file e muti con “Sintetici”; Vortex col ronzio;
+nella partita con i campioni si accendono i suoni continui del Laser e del Beam, stesso esito della partita senza audio); catalogo con i 3 tasti dei suoni continui.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 74): suoni continui di Laser, Beam e Disruption; colpi dei droni dell’Hive; Vortex più forte e lungo; Laser e Beam distinguibili; Aeroblast e Railgun approvati.
+
 ## 1.32.0 — Campioni per sette torrette
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Campioni per sette torrette”): campioni anche per gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun;

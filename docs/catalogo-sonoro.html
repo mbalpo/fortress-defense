@@ -104,18 +104,33 @@ function preview(n, w, pick, btn) {
   btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), 250);
 }
 {
-  const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola e sette torrette)"; root.appendChild(h);
+  const h = document.createElement("h2"); h.textContent = "Prova dei campioni (guardiano, esplosione grande, cupola e sette torrette; suoni continui e colpi dell’Hive dalla 1.33.0)"; root.appendChild(h);
   const grid = document.createElement("div"); grid.className = "grid cmp"; root.appendChild(grid);
   for (const n of S.SAMPLED_EVENTS) for (const w of WEIGHTS[n] || [1]) {
-    const h3 = document.createElement("h3"); h3.textContent = CMP_NOTE[n] ? n + " · peso " + w + " · " + CMP_NOTE[n][w] : n.startsWith("sparo.") ? NAMES[n.slice(6)] + " · " + n : n; grid.appendChild(h3);
+    const h3 = document.createElement("h3"); h3.textContent = CMP_NOTE[n] ? n + " · peso " + w + " · " + CMP_NOTE[n][w] : n.startsWith("sparo.") ? NAMES[n.slice(6)] + " · " + n : n === "colpo.hive" ? "Hive · colpi dei droni (solo campioni) · " + n : n; grid.appendChild(h3);
     const add = (pick, main, sub) => {
       const b = document.createElement("button"); b.append(main);
       const sm = document.createElement("small"); sm.textContent = sub; b.appendChild(sm);
       if (pick === "sintetico") b.className = "synth";
       b.addEventListener("click", () => preview(n, w, pick, b)); grid.appendChild(b);
     };
-    add("sintetico", "sintetico", "generato dal codice (com’era)");
+    if (!S.def(n).only) add("sintetico", "sintetico", "generato dal codice (com’era)");
     S.variants(n, w).forEach((v, i) => add(i, "campione " + (i + 1), v.files.join(" + ")));
+    // suono continuo (1.33.0): partenza e poi il raggio o il campo acceso per 3 s, come nel gioco
+    const id = n.slice(6);
+    if (n.startsWith("sparo.") && S.HOLD_TURRETS.includes(id)) {
+      const b = document.createElement("button"); b.className = "hold"; b.append("partenza + continuo");
+      const sm = document.createElement("small"); sm.textContent = "raggio o campo acceso 3 s"; b.appendChild(sm);
+      b.addEventListener("click", () => {
+        ensure();
+        const vs = S.variants(n, 1);
+        if (!vs.every((v) => v.ok)) { document.getElementById("log").textContent = "· campioni non ancora pronti (decodifica in corso o file mancante)"; return; }
+        S.preview(n, 1, 0); const on = S.hold(id, true, true);
+        document.getElementById("log").textContent = (on ? "▶ " : "· non acceso: ") + NAMES[id] + " · partenza (campione 1) e suono continuo per 3 s";
+        b.classList.add("on"); setTimeout(() => { S.hold(id, false); b.classList.remove("on"); }, 3000);
+      });
+      grid.appendChild(b);
+    }
   }
 }
 const vol = document.getElementById("vol");

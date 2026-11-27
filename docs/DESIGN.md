@@ -1749,5 +1749,28 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
   - **Volumi** tarati sul sintetico (entro 1,1 dB): volume dell’evento 0,043 Laser, 0,047 Beam, 0,11 Disruption, 0,15 Hive, 0,076 Vortex, 0,103 Aeroblast, 0,26 Railgun
     (Laser e Beam sintetici sono i più piani: anche i campioni lo restano). Voci, soglie e priorità quelle dell’evento; le ricariche (1,5-8 s) sono più lunghe dei campioni (al massimo 1,2 s).
   - **File**: 29 in tutto (16 nuovi), **563,0 KB** (576 559 byte); memoria dei campioni decodificati circa **3,5 MB** (19,3 s mono a 48 kHz); decodifica di tutti 21-32 ms sul computer. Sul telefono non misurato.
+- **Esito della prova delle torrette sul telefono** **[deciso]** (Marco, 27/11/2026, sulla 1.32.0):
+  - **Aeroblast** e **Railgun**: vanno bene, restano.
+  - **Gravity Vortex Gun**: volume troppo basso e suono troppo breve.
+  - **Hive**: il suono quando i droni partono va bene, ma anche i **colpi dei droni** devono suonare (i laserini quando sparano).
+  - **Disruption Drone**: la partenza va bene, ma serve un **rumore di fondo finché il campo è attivo**.
+  - **Laser e Beam**: troppo simili nel gioco (mentre i file laserLarge_000 e 003, ascoltati da soli, sono molto diversi).
+  - **Laser, Beam e Disruption**: suono un po’ **meno forte**, ma **allungato o ripetuto fino all’esaurimento** del raggio o del campo.
+- **Suoni continui (1.33.0)** · scelte **[Claude] [da rivedere]**:
+  - **Perché Laser e Beam si confondevano**: il Beam suonava laserLarge_003 e 004 rallentati a 0,8, e così laserLarge_003 scendeva quasi all’altezza di laserLarge_000; in più erano i due spari più piani.
+    Il Beam ora usa i file alla loro velocità; la differenza vera la fa il suono continuo.
+  - **Suono continuo**: Laser, Beam e Disruption suonano finché la torretta è **occupata** (raggio o campo acceso: la stessa durata che ferma la ricarica) e si spengono con una dissolvenza di 0,15 s.
+    Il gioco lo dice al modulo a ogni fotogramma (`SOUND.hold(torretta, acceso)`); in pausa, nelle carte, a fine ondata e passando a “Sintetici” si spengono. Solo con i campioni: il sintetico resta com’era.
+    Si somma alla partenza, che resta (per Laser e Beam 3 dB più piano di prima).
+  - **Nessun file nuovo**: il suono continuo ripete un tratto dei file che ci sono già (giunzione incrociata di 40 ms, senza scatti; per i laser il volume del tratto è reso costante).
+    **Laser**: il laser chiaro che ondeggia (laserLarge_000 da 0,05 a 0,4 s), intorno a 1,7 kHz. **Beam**: più grave e pulsante, laserLarge_003 a 0,6 con il ronzio di forceField_004 a 1,5, pulsazione di 7 Hz, intorno a 730 Hz.
+    **Disruption Drone**: ronzio di fondo grave e fermo del campo di forza (forceField_000 a 0,6, con un’onda lenta di 0,8 Hz), intorno a 110 Hz.
+  - **Colpi dei droni dell’Hive**: evento nuovo `colpo.hive`, a ogni colpo di un drone (anche l’onda d’urto e il colpo del raggio delle combo), solo con i campioni (con “Sintetici” tace, come prima).
+    Laserini laserSmall_000-003 più acuti (×1,25) tagliati a 0,12 s; al massimo 2 insieme, soglia 70 ms, priorità più bassa (1, come il guardiano).
+  - **Gravity Vortex Gun**: il rombo lowFrequency_explosion_000 intero (2 s, prima tagliato a 1,2) con sotto il ronzio grave del campo di forza tenuto 2 s (forceField_000 a 0,5 o forceField_002 a 0,45),
+    quanto il percorso del buco nero alla velocità di partenza (253 px a 130 px/s).
+  - **Volumi** (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa): partenza del Laser e del Beam 3 dB sotto il sintetico (volume 0,03 e 0,039); suono continuo circa 6 dB sotto la partenza
+    per Laser e Beam (0,0225 e 0,0325) e 8 dB sotto per il Disruption (0,1); Vortex 5 dB sopra il sintetico (0,135), circa −21/−29 dB per 2 s invece di un colpo che cala in 1 s; colpi dei droni circa 10 dB sotto il lancio dell’Hive (0,115).
+  - **File**: gli stessi 29 (563,0 KB); i tratti ripetuti si costruiscono una volta, alla prima accensione (pochi KB di memoria).
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.
