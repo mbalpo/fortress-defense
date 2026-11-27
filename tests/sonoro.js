@@ -124,7 +124,9 @@ const fakeFetch = (log, missing) => (url) => { log.push(url); const miss = (miss
 // traccia Web Audio del giro di eventi sintetici con la 1.25.1 (audio.js invariato fino alla 1.30.0), calcolata con questo AudioContext finto
 const TRACE_1251 = "195aba5";
 const settle = () => new Promise((r) => setTimeout(r, 0));
-const ALL3 = ["guardiano", "esplosione.grande", "cupola"];
+// eventi con i campioni: i tre della prova (1.31.0) e sette torrette (1.32.0); Sky Guard, Firewheel, Thunderbolt e Teslacoil restano sintetiche
+const TURRETS7 = ["laser", "beam", "disr", "hive", "vortex", "aero", "rail"].map((id) => "sparo." + id);
+const ALL3 = ["guardiano", "esplosione.grande", "cupola"].concat(TURRETS7);
 (async () => {
   {
     // sintetico identico alla 1.25.1: firma degli strati di tutti gli eventi (pesi 1-3) e traccia dei nodi Web Audio di un giro di eventi
@@ -164,6 +166,11 @@ const ALL3 = ["guardiano", "esplosione.grande", "cupola"];
     const kami = (GAME.match(/sfx\("esplosione\.grande", 2\)/g) || []).length, kSites = [GAME.indexOf("boom() {"), GAME.indexOf("function kamikaze(e)")].map((p) => /sfx\("esplosione\.grande", 2\)/.test(GAME.slice(p, p + 400)));
     console.log("1.31.1: esplosione peso 1 →", ex(1), "· peso 2 (kamikaze) →", ex(2), "· cupola: colpo metallico + campo di forza in tutte le", cv.length, "varianti:", field, "· niente vetro:", noGlass,
       "· nel gioco peso 2 ai Droni kamikaze e al kamikaze:", kSites.join(" "), "(" + kami + " chiamate)", ok(ex(1) === "explosionCrunch_000 explosionCrunch_001" && ex(2) === "explosionCrunch_004" && field && noGlass && kami === 2 && kSites.every(Boolean)));
+    // sette torrette (1.32.0): almeno 2 varianti ciascuna, le altre quattro senza campioni; Laser e Beam (energy) con lo stesso tipo di file (laserLarge), il Beam più grave
+    const tv = TURRETS7.map((n) => S.variants(n, 1)), others = ["sky", "wheel", "thunder", "tesla"].filter((id) => S.variants("sparo." + id, 1).length).length;
+    const energy = ["sparo.laser", "sparo.beam"].every((n) => S.variants(n, 1).every((v) => /^laserLarge_/.test(v.files[0])));
+    console.log("1.32.0: torrette con i campioni", TURRETS7.map((n, k) => n.slice(6) + " " + tv[k].length).join(" · "), "· altre torrette con campioni:", others, "· Laser e Beam con laserLarge:", energy,
+      ok(tv.every((v) => v.length >= 2 && v.every((x) => x.ok)) && others === 0 && energy && S.SAMPLED_EVENTS.length === 10));
     // il catalogo può chiedere il sintetico o una variante precisa
     t += 5000; const s0 = ac.log.samples; S.preview("guardiano", 1, "sintetico"); t += 5000; const s1 = ac.log.samples; S.preview("guardiano", 1, 2); const s2 = ac.log.samples;
     S.setMode("boh");
@@ -272,6 +279,6 @@ console.log("— Catalogo sonoro —");
   const synth = cmp.filter((b) => b.className === "synth").length, data = require("./tools/sonoro-campioni.js"), fresh = fs.existsSync(data.OUT) && fs.readFileSync(data.OUT, "utf8") === data.build();
   const onDisk = fs.readdirSync(path.join(__dirname, "..", "app", "suoni")).filter((f) => f.endsWith(".ogg")).map((f) => f.slice(0, -4)).sort().join();
   console.log("campioni nel catalogo: tasti", cmp.length, "(attesi " + want + ", sintetici " + synth + ") · usa catalogo-sonoro-campioni.js:", html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>"), "· dati al passo con app/suoni/:", fresh,
-    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 6 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
+    "· file in app/suoni/ = file del modulo:", onDisk === S.files().slice().sort().join(), ok(cmp.length === want && synth === 13 && fresh && onDisk === S.files().slice().sort().join() && html.includes("<script src=\"catalogo-sonoro-campioni.js\"></script>")));
 }
 }

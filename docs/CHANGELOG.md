@@ -3,6 +3,26 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.32.0 — Campioni per sette torrette
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Campioni per sette torrette”): campioni anche per gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun;
+  Sky Guard, Firewheel, Thunderbolt e Teslacoil restano sintetiche. Stesso tasto “Sintetici” / “Campioni”.
+- **Scelte** **[Claude] [da rivedere]**, per famiglia come nel sintetico: Laser laserLarge_000-002; Beam laserLarge_003-004 più gravi con il ronzio di forceField_004; Disruption forceField_000, 002;
+  Hive tre laserSmall in fila; Vortex lowFrequency_explosion_000 (anche con forceField_000 grave); Aeroblast colpo sordo (lowFrequency_explosion_001 con impactMetal_000, o explosionCrunch_001 accelerato);
+  Railgun laserRetro_000, 001, 003 con impactMetal_004. Solo file brevi: i loop “motore” da 5 s pesano 100-200 KB l’uno e qui non si possono tagliare (nessun codificatore OGG usabile).
+- **Modulo**: intonazione per strato (`r`); volumi tarati sul sintetico entro 1,1 dB (Laser 0,043 · Beam 0,047 · Disruption 0,11 · Hive 0,15 · Vortex 0,076 · Aeroblast 0,103 · Railgun 0,26).
+- **File**: 16 nuovi, 29 in tutto, **563,0 KB** (prima 272,4). `ASSETS`, `CREDITI.md`, dati del catalogo aggiornati; catalogo sonoro con le sette torrette (sintetico e varianti, con il nome).
+  `APP_VERSION` e `sw.js` 1.32.0.
+
+**Misure** (Chromium sul computer): decodifica di tutti i file 21-32 ms; memoria dei campioni circa 3,5 MB (19,3 s mono a 48 kHz). Sul telefono non misurato.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: con “campioni” suonano con i file i 10 eventi (e solo loro); nuovo controllo 1.32.0 (7 torrette con almeno 2 varianti, le altre 4 senza campioni,
+Laser e Beam con laserLarge); catalogo con 13 tasti sintetici nella prova.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 73): prova delle sette torrette con i campioni sul telefono; peso (563 KB) e avvio; valori di Claude delle torrette.
+
 ## 1.31.1 — Campioni rivisti dopo la prova sul telefono
 
 - **Decisioni di Marco** (27/11/2026, DESIGN.md § 18 “Esito della prova sul telefono”): guardiano perfetto, resta; esplosione grande solo con i campioni 1 e 2, il 3 per i kamikaze;

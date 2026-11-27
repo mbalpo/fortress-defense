@@ -136,9 +136,13 @@
   // (guadagno per file, al massimo +6 dB). I file sono gli originali Kenney (OGG Vorbis, 44,1 kHz): mono e tagli si fanno qui, alla decodifica e al suono.
   const FILES = { click_002: -14.9, click_003: -14.6, click_005: -11.2, impactMetal_004: -21.2,
     explosionCrunch_000: -13.8, explosionCrunch_001: -12.0, explosionCrunch_004: -14.6, lowFrequency_explosion_001: -15.5,
-    impactMetal_000: -20.4, impactMetal_001: -19.8, impactMetal_002: -20.4, impactMetal_003: -19.9, forceField_001: -10.6 };
+    impactMetal_000: -20.4, impactMetal_001: -19.8, impactMetal_002: -20.4, impactMetal_003: -19.9, forceField_001: -10.6,
+    // torrette (1.32.0)
+    laserLarge_000: -17.2, laserLarge_001: -16.6, laserLarge_002: -16.5, laserLarge_003: -17.0, laserLarge_004: -16.9,
+    forceField_000: -10.6, forceField_002: -10.6, forceField_004: -10.6, laserSmall_000: -21.6, laserSmall_001: -21.9, laserSmall_002: -22.6, laserSmall_003: -22.1,
+    lowFrequency_explosion_000: -18.0, laserRetro_000: -7.4, laserRetro_001: -7.4, laserRetro_003: -7.6 };
   const SAMPLE_RMS = -18;
-  // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s) };
+  // varianti di un evento: elenchi di strati { f: file, g: volume dopo la normalizzazione, d: taglio (s, con dissolvenza di 15 ms), at: ritardo (s), r: intonazione (velocità di lettura, 1.32.0) };
   // gain: volume dell’evento con i campioni (al posto di def.gain); vars(peso) → varianti tra cui il modulo sceglie (generatore proprio)
   const S_ = (f, g, extra) => Object.assign({ f, g: g == null ? 1 : g, at: 0 }, extra || {});
   // volumi tarati (1.31.0, cupola 1.31.1) perché ogni evento suoni forte come il suo sintetico (massimo RMS su 100 ms, rendering offline in Chromium, catena compresa)
@@ -146,6 +150,16 @@
   // k: volume della variante (colpo e campo insieme, il campo a 0,35 del colpo); pesi 1-2 col campo tagliato a 0,55 s
   const FIELD = (k, d) => S_("forceField_001", 0.35 * k, d ? { d } : null);
   const shield = [["impactMetal_002", 0.41], ["impactMetal_000", 0.39], ["impactMetal_003", 0.31]].map(([f, k]) => [S_(f, k), FIELD(k, 0.55)]);
+  const SPARO = {
+    laser: ["laserLarge_000", "laserLarge_001", "laserLarge_002"].map((f) => [S_(f)]),
+    beam: ["laserLarge_003", "laserLarge_004"].map((f) => [S_(f, 1, { r: 0.8 }), S_("forceField_004", 0.3, { r: 0.8, d: 1.2 })]),
+    disr: ["forceField_000", "forceField_002"].map((f) => [S_(f, 1, { d: 0.8 })]),
+    hive: [["laserSmall_000", "laserSmall_001", "laserSmall_003"], ["laserSmall_001", "laserSmall_002", "laserSmall_000"]].map((v) => v.map((f, i) => S_(f, 1, { at: i * 0.07 }))),
+    vortex: [[S_("lowFrequency_explosion_000", 1, { d: 1.2 })], [S_("lowFrequency_explosion_000", 1, { d: 1.2 }), S_("forceField_000", 0.4, { r: 0.5, d: 1.2 })]],
+    aero: [[S_("lowFrequency_explosion_001", 1, { d: 0.5 }), S_("impactMetal_000", 0.5, { d: 0.25 })],
+      [S_("explosionCrunch_001", 1.36, { r: 1.3, d: 0.35 }), S_("lowFrequency_explosion_001", 0.82, { d: 0.5 })]],
+    rail: ["laserRetro_000", "laserRetro_001", "laserRetro_003"].map((f) => [S_(f), S_("impactMetal_004", 0.5, { d: 0.15 })]),
+  };
   const SAMPLED = {
     // clic brevissimo (7-9 ms) con il colpo metallico grave tagliato a 85 ms sotto
     guardiano: { gain: 0.09, vars: () => ["click_002", "click_003", "click_005"].map((f) => [S_(f, 0.8), S_("impactMetal_004", 0.55, { d: 0.085 })]) },
@@ -154,6 +168,18 @@
     "esplosione.grande": { gain: 1.15, vars: (w) => (w >= 2 ? ["explosionCrunch_004"] : ["explosionCrunch_000", "explosionCrunch_001"]).map((f) => [S_(f), S_("lowFrequency_explosion_001", 0.7)]) },
     // pesi 1 e 2: tre colpi metallici sul campo di forza (il peso cambia solo il volume, def.level); peso 3: il colpo più grave con il campo intero
     cupola: { gain: 0.8, vars: (w) => w >= 3 ? [[S_("impactMetal_001", 0.42), FIELD(0.42)]] : shield },
+    // volumi degli eventi tarati sul sintetico (1.32.0, come sopra; il Laser e il Beam sintetici sono i più piani)
+    // torrette (1.32.0, Marco: Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast, Railgun); timbro di famiglia per tipo di danno come nel sintetico
+    // energy: Laser = scarica laserLarge; Beam = gli altri laserLarge più gravi (×0,8) con il ronzio del campo di forza che resta acceso
+    "sparo.laser": { gain: 0.043, vars: () => SPARO.laser },
+    "sparo.beam": { gain: 0.047, vars: () => SPARO.beam },
+    // force: Disruption = campo di forza (più acuti di quello della cupola); Hive = tre laserini in fila (lo sciame che parte); Vortex = rombo profondo del buco nero
+    "sparo.disr": { gain: 0.11, vars: () => SPARO.disr },
+    "sparo.hive": { gain: 0.15, vars: () => SPARO.hive },
+    "sparo.vortex": { gain: 0.076, vars: () => SPARO.vortex },
+    // physical: Aeroblast = colpo sordo di mortaio; Railgun = scarica secca (laserRetro) con un colpo metallico sotto
+    "sparo.aero": { gain: 0.103, vars: () => SPARO.aero },
+    "sparo.rail": { gain: 0.26, vars: () => SPARO.rail },
   };
   const SAMPLE_CHAIN = {
     hp: 40,                // passaalto (Hz): toglie il rombo sotto l’udibile
@@ -262,9 +288,9 @@
       let dur = 0;
       const out = ctx.createGain(); out.gain.value = sm.gain * gainMul; out.connect(bus);
       for (const l of v) {
-        const b = buffers[l.f], t = t0 + l.at, len = Math.min(b.duration / rate, l.d || 1e9);
+        const lr = rate * (l.r || 1), b = buffers[l.f], t = t0 + l.at, len = Math.min(b.duration / lr, l.d || 1e9);
         const src = ctx.createBufferSource(), env = ctx.createGain();
-        src.buffer = b; src.playbackRate.value = rate;
+        src.buffer = b; src.playbackRate.value = lr;
         env.gain.setValueAtTime(l.g, t);
         if (l.d) { env.gain.setValueAtTime(l.g, t + Math.max(0, len - 0.015)); env.gain.linearRampToValueAtTime(0, t + len); }   // taglio con dissolvenza
         src.connect(env); env.connect(out);

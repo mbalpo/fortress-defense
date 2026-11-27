@@ -1734,5 +1734,20 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     Il clic non l’ho usato: è già il suono del guardiano, e a 6-7 salve al secondo i colpi alla cupola si confonderebbero con gli spari. Tolti i 5 vetri (glass_001, 002, 004, 005, 006).
   - **Volumi**: tarati come nella 1.31.0 (forte come il sintetico, scarto entro 0,7 dB): varianti 0,41 / 0,39 / 0,31, peso 3 0,42.
   - **File**: 13, **272,4 KB** (278 948 byte).
+- **Campioni per sette torrette** **[deciso]** (Marco, 27/11/2026, dopo la prova della 1.31.1): si passa ai campioni anche per gli spari di **Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun**.
+  Restano sintetiche Sky Guard, Firewheel, Thunderbolt e Teslacoil (fuoco ed elettricità). Valgono le regole della prova: sintetico selezionabile con lo stesso tasto, nessun valore di gioco cambia.
+- **Torrette con i campioni (1.32.0)** · scelte **[Claude] [da rivedere]** (non ascoltate: candidati dai dati dei file, Marco sceglie nel catalogo sonoro e sul telefono):
+  - **Criterio**: timbro di famiglia per tipo di danno, come nel sintetico (§ 18, “Eventi”). Solo file brevi originali: i suoni “motore” del pacchetto (spaceEngine, thrusterFire, engineCircular, computerNoise)
+    sono loop da 5 s e 100-200 KB l’uno, e qui non c’è un codificatore per tagliarli (Opus solo in CAF, che Chrome non legge; AAC aggiunge silenzio all’inizio).
+  - **Laser** (energy): laserLarge_000, 001, 002. **Beam** (energy): laserLarge_003, 004 più gravi (×0,8) con sotto il ronzio di forceField_004 (×0,8, a 0,3, tagliato a 1,2 s), il raggio che resta acceso.
+  - **Disruption Drone** (force): forceField_000, 002 tagliati a 0,8 s, il campo di forza largo (più acuti del forceField_001 della cupola, che ha anche il colpo metallico sopra).
+  - **Hive** (force): tre laserSmall in fila a 70 ms l’uno dall’altro, lo sciame che parte (000, 001, 003 oppure 001, 002, 000).
+  - **Gravity Vortex Gun** (force): rombo profondo lowFrequency_explosion_000 (sale in 0,2 s) tagliato a 1,2 s; seconda variante con sotto forceField_000 molto grave (×0,5).
+  - **Aeroblast** (physical): colpo sordo di mortaio, lowFrequency_explosion_001 (0,5 s) con impactMetal_000 (0,25 s), oppure explosionCrunch_001 accelerato (×1,3, 0,35 s) con lowFrequency_explosion_001.
+  - **Railgun** (physical): laserRetro_000, 001, 003 (scarica secca) con sotto impactMetal_004 tagliato a 0,15 s.
+  - **Strumento nuovo del modulo**: intonazione per strato (`r`, velocità di lettura), oltre a quella dell’evento (±4% per le torrette).
+  - **Volumi** tarati sul sintetico (entro 1,1 dB): volume dell’evento 0,043 Laser, 0,047 Beam, 0,11 Disruption, 0,15 Hive, 0,076 Vortex, 0,103 Aeroblast, 0,26 Railgun
+    (Laser e Beam sintetici sono i più piani: anche i campioni lo restano). Voci, soglie e priorità quelle dell’evento; le ricariche (1,5-8 s) sono più lunghe dei campioni (al massimo 1,2 s).
+  - **File**: 29 in tutto (16 nuovi), **563,0 KB** (576 559 byte); memoria dei campioni decodificati circa **3,5 MB** (19,3 s mono a 48 kHz); decodifica di tutti 21-32 ms sul computer. Sul telefono non misurato.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.
