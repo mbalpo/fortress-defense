@@ -115,7 +115,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 
 ## 4. Campagna e progressione
 
-- La campagna arriva al **livello 400** **[deciso]** (Marco, 26/11/2026) (prima “almeno 200”; nel codice `CAMPAIGN.maxLevel` è ancora 200, vedi “Campagna a 400 livelli” in fondo al § 16); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello in Standard. **Epica**: numerazione e avanzamento propri, indipendenti da Standard. Si apre dopo il 50 di Standard;
+- La campagna arriva al **livello 400** **[deciso]** (Marco, 26/11/2026) (prima “almeno 200”; `CAMPAIGN.maxLevel` = 400 dalla 1.26.0, vedi “Campagna a 400 livelli” in fondo al § 16); si selezionano i livelli fino a “completati + 1”. Il livello di difficoltà D è il numero del livello in Standard. **Epica**: numerazione e avanzamento propri, indipendenti da Standard. Si apre dopo il 50 di Standard;
   il **livello 1 di Epica ha difficoltà 31** (D = livello di Epica + 30) e si selezionano i livelli di Epica fino a “Epica completati + 1”. **[deciso]** (Marco)
   Salvataggio: nuovo campo `clearedEpic`, `SAVE_VERSION` +1; in migrazione, i livelli di Epica già fatti si ricavano dalle chiavi `e…` dei premi riscossi. **[Claude]**
   Menu (1.14.2) **[Claude]**: il selettore (−/+, frecce, griglia) vale per la **modalità attiva**, che si cambia con la striscia “Standard ⇄ Epica” in fondo al riquadro del livello
@@ -213,7 +213,7 @@ Legenda: **[deciso]** scelto da Marco · **[Claude]** valore scelto da Claude, a
 - La tabella delle resistenze (× 0,5 al proprio tipo, ×1,5 a un altro) è un **segnaposto** di Claude: **da decidere** (§ 11).
 
 - **Griglia dei livelli** (1.12.3) **[deciso]** (Marco: griglia, Standard/Epica, Sigilli presi; impaginazione **[Claude]**): toccando “Livello N” nel menu si apre una griglia
-  di 50 livelli per pagina (1-50, 51-100, …), con Standard/Epica in alto; ogni livello mostra due rombi (Sigillo del primo completamento e premio della cupola al 100%; pieno = preso),
+  di 50 livelli per pagina (1-50, 51-100, …; dalla 1.26.0 8 pagine, scelte con ‹ › e con le frecce della tastiera, al posto delle schede **[Claude]**), con Standard/Epica in alto; ogni livello mostra due rombi (Sigillo del primo completamento e premio della cupola al 100%; pieno = preso),
   i muri in giallo, i livelli non ancora giocabili spenti; il filtro “Solo i livelli con Sigilli da prendere” spegne gli altri. Un tocco sceglie, un secondo tocco (o “Gioca”) parte.
 - **Guida** (1.12.3, menu → “Guida”) **[deciso]** (le pagine) · contenuti **[Claude]**: scheda “Stati dei nemici” (icone, effetti e valori, altri effetti senza icona, resistenza dei boss);
   scheda “Carte”: guardiano e 11 torrette, con statistiche di base e tutte le carte (categoria, blocco nell’albero, descrizione, effetto per pila delle standard con il nodo dell’albero).
@@ -679,7 +679,7 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
 | 380 e oltre | 2 | 21 | 30 | 33 | 14 |
 
   Righe dal 220 **[deciso]** (Marco, 27/11/2026, su proposta di Claude; campagna a 400, “mantenendo una progressione simile”): stesso passo di 40, comune −6/−5/−4/−3/−2, epico verso il 30%,
-  leggendario +4 e ancestrale +2 a riga (dal 180 il passo dell’ancestrale era +1). Da misurare (`equip-atteso.js --ancestrale`, curva oltre il 200); valgono anche per il pacco regalo.
+  leggendario +4 e ancestrale +2 a riga (dal 180 il passo dell’ancestrale era +1). Nel codice dalla 1.26.0 (`DROP_RARITY`). Da misurare (`equip-atteso.js --ancestrale`, curva oltre il 200); valgono anche per il pacco regalo.
 
 - **Colori della rarità** **[deciso]**: ogni rarità ha il suo colore, pieno per pezzi e Moduli, tranne l’**ancestrale, iridescente** (sfumatura che cambia colore).
   Colori **[Claude] [da rivedere]**, scelti per non confondersi con quelli dei tipi di danno: comune grigio `#8e98a4`, raro verde `#46c86e`, epico blu `#3d7bff`,
@@ -1157,7 +1157,7 @@ Regole di calcolo **[Claude] [da rivedere]**:
 - **Avviso di sblocco al 200** **[deciso]** (Marco, 27/11/2026): al primo completamento del 200 di Standard, come gli avvisi dei livelli 10-50 (nodi finali e tetto al 65%), e testi sui nodi; **non** nella schermata iniziale. Testi **[Claude]**.
 
 ### Campagna a 400 livelli
-- **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, oggi 200 nel codice). Decisioni del 27/11/2026 **[deciso]** (Marco): **nessun tetto** al livello delle abilità dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400);
+- **Lunghezza** **[deciso]** (Marco, 26/11/2026): **400 livelli** (prima “almeno 200”; `CAMPAIGN.maxLevel`, nel codice dalla **1.26.0** con la tabella dei drop oltre il 180; nodi finali, nodo del 65% e avviso al 200 arrivano con il loro blocco). Decisioni del 27/11/2026 **[deciso]** (Marco): **nessun tetto** al livello delle abilità dei giganti (1 + ⌊(difficoltà − 70) ÷ 10⌋: 34 al 400);
   **tabella dei drop estesa oltre il 180** con una progressione simile (valori in § 15, proposti da Claude e confermati); salvataggio: `cleared` e `clearedEpic` validati fino a 400, formato invariato;
   testi che citano il 200 aggiornati; **valute a 400 vanno bene così** (✦ e ◆ sotto). Resta **[aperto]**: `FINAL_BOSS_K` per i muri oltre il 200 (oggi ×1: vedi § 5), da decidere con le misure.
 - Dati **[Claude]** (pendenza 1,2 dal 30, rispetto al 200, da `effD` e `LV`): al 400 vita ×1,87, danno ×1,73, numero ×1,56, velocità ×1,33, combinato (vita × danno × numero) ×5,0; in Epica 400 (difficoltà 430) ×6,0.
@@ -1179,6 +1179,10 @@ Regole di calcolo **[Claude] [da rivedere]**:
 
     Al 250 le differenze sono nel rumore (±7-10 punti con 60 partite). Con 1,2 i muri crollano dal 300 per il giocatore atteso; 0,6 resta vicino alla soglia del 50%. I bot non hanno
     ancestrale+N, nodi finali né ranger, che oltre il 200 alzano la potenza. Scelta: **0,8** **[deciso]** (Marco, 26/11/2026), nel codice dalla 1.25.5 (`EFF_SLOPE_200`).
+- **Muri dal 210 al 400 nella 1.26.0** **[Claude]** (27/11/2026, `EQUIP=1.5 node tests/tools/curva.js L 30`: profilo atteso con la tabella dei drop nuova e la pendenza 0,8; 60 partite per muro, random + smart;
+  i bot non hanno ancora ancestrale+N, nodi finali, nodo del 65% né ranger al 20): 210 35,0 · 220 53,3 · 230 33,3 · 240 20,0 · 250 46,7 · 260 73,3 · 270 31,7 · 280 50,0 · 290 45,0 ·
+  300 71,7 · 310 45,0 · 320 70,0 · 330 35,0 · 340 20,0 · 350 51,7 · 360 41,7 · 370 26,7 · 380 43,3 · 390 26,7 · 400 23,3% (media **42,2%**; 13 muri su 20 sotto il 50%, i più duri 240, 340, 370, 390, 400).
+  Con la tabella dei drop vecchia (misura del 26/11) erano 250 50,0 · 300 40,0 · 350 21,7 · 400 15,0%. Nessun valore ritarato: è la base per decidere `FINAL_BOSS_K` oltre il 200 **[aperto]**.
 - **Misura delle valute** **[Claude]** (26/11/2026, `node tests/tools/pacco-stima.js`): ✦ in Epica a 400, un passaggio: 40 + 108,4 = **148,4**, mancano 39,6; con il pacco (Standard ed Epica)
   preso al 100% **156,9** (mancano 31,1, circa 25 rigiocate di un boss finale con i suoi mini-boss, 1,27 ✦ l’una), al 50% 152,7 (mancano 35,3, circa 28).
   ◆ con la cupola al 100% / 75% / 50% dei livelli: **2340 / 2047,5 / 1755** (Standard 740 / 647,5 / 555 + Epica 1600 / 1400 / 1200); col pacco preso al 100% +170, al 50% +85.

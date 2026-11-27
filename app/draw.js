@@ -1521,12 +1521,10 @@ function levelsScreen() {
     button(16 + i * 168, 46, 160, 30, label, () => { if (!off && lvMode !== id) lvTab(id); },
       { size: 12, fill: on ? "rgba(63,224,160,0.12)" : "rgba(18,30,58,0.92)", stroke: on ? c : "#2c4272", color: off ? "#5f7299" : on ? "#e8eefc" : "#9fb4d9" });
   });
-  const pages = Math.ceil(CAMPAIGN.maxLevel / 50);
-  for (let i = 0; i < pages; i++) {
-    const on = lvPage === i, open = i * 50 + 1 <= maxSelectable(lvMode);
-    button(16 + i * 84, 82, 80, 26, (i * 50 + 1) + "-" + Math.min(CAMPAIGN.maxLevel, i * 50 + 50), () => { lvPage = i; },
-      { size: 11, fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)", stroke: on ? "#7fa0e0" : "#2c4272", color: open ? (on ? "#e8eefc" : "#9fb4d9") : "#5f7299" });
-  }
+  const pages = lvPages(), first = lvPage * 50 + 1, open = first <= maxSelectable(lvMode);   // 1.26.0: 8 pagine da 50 con ‹ › (prima 4 schede)
+  [[16, "‹", -1, lvPage > 0], [300, "›", 1, lvPage < pages - 1]].forEach(([x, t, d, ok]) =>
+    button(x, 82, 44, 26, t, () => lvTurn(d), { size: 16, stroke: ok ? "#7fa0e0" : "#2c4272", color: ok ? "#e8eefc" : "#5f7299" }));
+  txt("Livelli " + first + "-" + Math.min(CAMPAIGN.maxLevel, first + 49) + " · pagina " + (lvPage + 1) + " di " + pages, W / 2, 95, 12, open ? "#e8eefc" : "#5f7299", "center", "700");
   button(16, 114, 328, 24, (lvFilter ? "☑" : "☐") + " Solo i livelli con Sigilli da prendere", () => { lvFilter = !lvFilter; },
     { size: 11, stroke: lvFilter ? "#c9a2ff" : "#2c4272", color: lvFilter ? "#e8eefc" : "#9fb4d9" });
   for (let i = 0; i < 50; i++) {

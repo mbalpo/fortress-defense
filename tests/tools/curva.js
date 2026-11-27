@@ -7,7 +7,7 @@
 // Profilo “tutto al massimo” (26/11/2026, § 16 “Campagna a 400 livelli”), solo nelle misure (sostituzioni nel sorgente, il gioco non cambia):
 //   MASSIMO=<N> → albero pieno, nodi finali (danno di guardiano e torrette ×1,83), tetto della riduzione del danno al 65%, equipaggiamento ancestrale+N
 //   con i Moduli ancestrali migliori (6, 7, 8 slot a +1, +5, +10), ranger al “20” (default RANGERS=atlante:10,epsilon:10 con supporti ×3,85 / 2,35 e +50% al danno del guardiano).
-//   PENDENZA=<s> → pendenza della difficoltà oltre il 200 (`EFF_SLOPE_200`, 0,8 dalla 1.25.5; fino al 200 resta 1,2). Livelli oltre il 200: CAMPAIGN.maxLevel portato a 400.
+//   PENDENZA=<s> → pendenza della difficoltà oltre il 200 (`EFF_SLOPE_200`, 0,8 dalla 1.25.5; fino al 200 resta 1,2). La campagna arriva a 400 dalla 1.26.0.
 const { play, makeGame } = require("../bot.js");
 const { gearFor, gearMax, patchAncestrale, slotsAt } = require("./equip-atteso.js");
 const EQUIP = +(process.env.EQUIP || 0);
@@ -17,7 +17,6 @@ const MASSIMO = process.env.MASSIMO === undefined ? null : +process.env.MASSIMO,
 if (MASSIMO !== null && !process.env.RANGERS) process.env.RANGERS = "atlante:10,epsilon:10";
 const sub = (h, x, y) => { if (!h.includes(x)) throw new Error("manca " + x); return h.replace(x, y); };
 function extra(h) {
-  if (MASSIMO !== null || LVS.some((L) => L > 200)) h = sub(h, "maxLevel: 200,", "maxLevel: 400,");
   if (PEND !== null) h = sub(h, "const EFF_SLOPE_200 = 0.8;", `const EFF_SLOPE_200 = ${PEND};`);
   if (MASSIMO === null) return h;
   h = patchAncestrale(h, MASSIMO);

@@ -14,7 +14,7 @@ console.log("— Griglia dei livelli —");
   const { g, ev, T } = fresh(55, { claims: ["s31", "s31p", "s32", "e3"] });
   g.click(180, 158); g.up(180, 158);
   const t = T();
-  console.log("tocco su “Livello” nel menu → stato", ev("state"), "| griglia 1-50:", /1-50/.test(t) && /51-100/.test(t), ok(ev("state") === "levels" && /Gioca il livello/.test(t)));
+  console.log("tocco su “Livello” nel menu → stato", ev("state"), "| griglia 1-50:", /Livelli 1-50 · pagina 1 di 8/.test(t), ok(ev("state") === "levels" && /Gioca il livello/.test(t)));
   const s31 = ev("JSON.stringify(sealStatus('standard', 31))"), s32 = ev("JSON.stringify(sealStatus('standard', 32))"), s20 = ev("JSON.stringify(sealStatus('standard', 20))"), e3 = ev("JSON.stringify(sealStatus('epic', 3))");
   console.log("Sigilli: 31", s31, "| 32", s32, "| 20", s20, "| Epica 3", e3,
     ok(s31 === '{"first":"got","full":"got"}' && s32 === '{"first":"got","full":"open"}' && s20 === '{"first":"no","full":"no"}' && e3 === '{"first":"got","full":"open"}'));

@@ -3,6 +3,30 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.26.0 — Campagna a 400 livelli
+
+- **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 4, § 15, § 16): la campagna arriva al **livello 400** (`CAMPAIGN.maxLevel` da 200 a 400), anche l’Epica (difficoltà fino a 430);
+  **tabella dei drop oltre il 180** con le righe 220, 260, 300, 340 e 380 (proposta di Claude, confermata: `DROP_RARITY`); nessun tetto al livello delle abilità dei giganti (34 al 400).
+  Salvataggio: `cleared` e `clearedEpic` validati fino a 400 dalla stessa costante, chiavi dei premi già a tre cifre: **formato invariato**, nessun `SAVE_VERSION` nuovo.
+- **Griglia dei livelli** (`draw.js`, `levelsScreen`): con 8 pagine da 50 le schede non stavano più nei 360 px; ora un selettore “‹ Livelli 51-100 · pagina 2 di 8 ›” (anche frecce ← → della tastiera,
+  `lvTurn`, `lvPages`) **[Claude]**. All’apertura resta la pagina del livello scelto.
+- Avviso di sblocco al 200 e nodi del 200 (finali e tetto al 65%): rimandati al loro blocco, come proposto.
+- `APP_VERSION` e `sw.js` 1.26.0.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/campagna400.js` (10 controlli): limite 400, completati 350 ed Epica 380 conservati e 999 portati a 400, esportazione e reimportazione;
+griglia a 8 pagine (› fino in fondo, ← →, livello 400 scelto, pagina del livello scelto all’apertura, ‹ fino all’inizio); righe dei drop (somme 100, comune in calo, ancestrale in crescita) ed estrazioni
+al 200 / 300 / 430 vicine alla tabella; difficoltà effettiva 230 / 310 / 390 / 414 al 200 / 300 / 400 / 430; partita al 400 in Standard (difficoltà 400) ed Epica (430) con boss finale all’ondata 20, senza errori.
+`tests/equip.js`: tabella attesa con le righe nuove. `tests/schermate.js`: etichetta della griglia nuova. `tests/tools/curva.js`: tolta la sostituzione del limite 200.
+`npm run screenshots`: griglia dei livelli (44, 45, 63) dentro i bordi.
+
+**Misura** (`EQUIP=1.5 node tests/tools/curva.js L 30`, 60 partite per muro): muri dal 210 al 400 in media **42,2%**, 13 su 20 sotto il 50% (240 20,0 · 340 20,0 · 370 26,7 · 390 26,7 · 400 23,3%;
+i migliori 260 73,3 · 300 71,7 · 320 70,0%). Numeri per muro in DESIGN.md § 16. Nessun valore ritarato: servono per decidere `FINAL_BOSS_K` oltre il 200. I bot non hanno ancora ancestrale+N,
+nodi finali, nodo del 65% né ranger al 20.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): la scena della griglia dei livelli mostra il selettore di pagina nuovo.
+
+Checklist: aggiornata (versione 66): prova della griglia a 8 pagine e dei livelli oltre il 200; la domanda su `FINAL_BOSS_K` con i muri misurati.
+
 ## Documentazione del 27/11/2026 — Dettagli per implementare le decisioni del 26/11 (nessuna versione nuova)
 
 - **Decisioni di Marco** (27/11/2026; DESIGN.md § 11, 15, 16, 17):
