@@ -1,6 +1,6 @@
 # Crediti dei suoni
 
-Campioni usati dalla prova dei campioni (Planet Defense 1.31.0, rivista nella 1.31.1, DESIGN.md § 18) per `guardiano`, `esplosione.grande`, `cupola` e, dalla 1.32.0, gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun; dalla 1.34.0 anche Sky Guard, Firewheel e gli ingressi di mini-boss e boss; dalla 1.36.0 il pacco regalo; dalla 1.37.0 Thunderbolt e Teslacoil.
+Campioni usati dalla prova dei campioni (Planet Defense 1.31.0, rivista nella 1.31.1, DESIGN.md § 18) per `guardiano`, `esplosione.grande`, `cupola` e, dalla 1.32.0, gli spari di Laser, Beam, Disruption Drone, Hive, Gravity Vortex Gun, Aeroblast e Railgun; dalla 1.34.0 anche Sky Guard, Firewheel e gli ingressi di mini-boss e boss; dalla 1.36.0 il pacco regalo; dalla 1.37.0 Thunderbolt e Teslacoil (dalla 1.38.0 con i file portati da Marco, sotto) e le bolle di Gamma.
 Sono i file originali, non modificati (OGG Vorbis, 44,1 kHz): mono, volume e tagli li fa `app/audio.js` alla decodifica e al suono.
 
 - **Autore**: Kenney (www.kenney.nl), pacchetti “Interface Sounds” (1.0) e “Sci-Fi Sounds” (1.0, 11/10/2020).
@@ -13,15 +13,11 @@ Sono i file originali, non modificati (OGG Vorbis, 44,1 kHz): mono, volume e tag
 | `click_005.ogg` | Kenney Interface Sounds (1.0) | 4,3 KB |
 | `explosionCrunch_000.ogg` | Kenney Sci-Fi Sounds (1.0) | 27,6 KB |
 | `explosionCrunch_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 46,8 KB |
-| `explosionCrunch_003.ogg` | Kenney Sci-Fi Sounds (1.0) | 53,5 KB |
 | `explosionCrunch_004.ogg` | Kenney Sci-Fi Sounds (1.0) | 77,4 KB |
 | `forceField_000.ogg` | Kenney Sci-Fi Sounds (1.0) | 25,1 KB |
 | `forceField_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 28,3 KB |
 | `forceField_002.ogg` | Kenney Sci-Fi Sounds (1.0) | 27,0 KB |
-| `forceField_003.ogg` | Kenney Sci-Fi Sounds (1.0) | 23,4 KB |
 | `forceField_004.ogg` | Kenney Sci-Fi Sounds (1.0) | 26,3 KB |
-| `glitch_003.ogg` | Kenney Interface Sounds (1.0) | 4,8 KB |
-| `glitch_004.ogg` | Kenney Interface Sounds (1.0) | 5,1 KB |
 | `impactMetal_000.ogg` | Kenney Sci-Fi Sounds (1.0) | 15,1 KB |
 | `impactMetal_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 14,9 KB |
 | `impactMetal_002.ogg` | Kenney Sci-Fi Sounds (1.0) | 12,4 KB |
@@ -48,4 +44,15 @@ Sono i file originali, non modificati (OGG Vorbis, 44,1 kHz): mono, volume e tag
 | `spaceEngine_003.ogg` | Kenney Sci-Fi Sounds (1.0) | 65,9 KB |
 | `thrusterFire_001.ogg` | Kenney Sci-Fi Sounds (1.0) | 199,4 KB |
 
-Totale: 39 file, 1045,2 KB.
+Totale: 38 file, 1210,8 KB.
+
+## File portati da Marco (1.38.0)
+
+Scaricati da Marco e messi nel gioco con un nome senza spazi; usati non modificati (OGG Vorbis, 44,1 kHz, stereo: mono, volume e tagli li fa `app/audio.js`).
+**Fonte, autore e licenza: da indicare** (Marco, prima della pubblicazione).
+
+| File nel gioco | File originale | Uso | Peso |
+|---|---|---|---|
+| `thunderVeryClose_01.ogg` | “Thunder, Very Close, Rain, 01.mp3.ogg” | Thunderbolt (solo il tuono, da 1,18 s per 1,4 s) | 166,1 KB |
+| `buzz.ogg` | “buzz.ogg” | Teslacoil (partenza e carica) | 23,1 KB |
+| `pops3.ogg` | “3pops.ogg” | bolle di Gamma (i tre scoppi) | 63,3 KB |

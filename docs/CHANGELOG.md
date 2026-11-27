@@ -3,6 +3,21 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.38.0 — Elettricità e bolle con i file di Marco
+
+- **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Elettricità con i file di Marco”): i suoni elettrici della 1.37.0 non piacciono; prova con quattro file portati da Marco, tra cui la bolla che esplode.
+- **Scelte** **[Claude] [da rivedere]**: Thunderbolt con il tuono vicino (dal colpo, 1,4 s; due intonazioni); Teslacoil con il ronzio di buzz (0,35 s) e lo stesso ronzio continuo durante la carica;
+  bolle di Gamma (`bolla.scoppia`) con i tre scoppi di 3pops. Tolti glitch_003, glitch_004, explosionCrunch_003, forceField_003. electricitysoundspreview non usato (raccolta di 56 s, 677 KB, non tagliabile qui).
+- **Volumi** tarati sul sintetico: Thunderbolt 0,034, Teslacoil 0,113, bolle 0,33; ronzio continuo 0,0385.
+- **File**: thunderVeryClose_01, buzz, pops3 (nomi senza spazi): **38 file, 1210,8 KB** (prima 1045,2). `ASSETS`, `CREDITI.md` (fonte e licenza **da indicare**), dati del catalogo sonoro aggiornati.
+  `APP_VERSION` e `sw.js` 1.38.0.
+
+**Test**: `npm test`: tutti verdi. `tests/sonoro.js`: con “campioni” suonano con i file 21 eventi; controllo 1.38.0 (tuono, ronzio anche durante la carica, tre scoppi di bolla, pezzi Kenney della 1.37.0 tolti); catalogo con 22 tasti sintetici.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): solo per l’hash dei file di app/; nessun disegno cambiato.
+
+Checklist: aggiornata (versione 79, insieme alla 1.39.0): elettricità e bolle con i file di Marco; fonte e licenza da indicare.
+
 ## 1.37.0 — Thunderbolt e Teslacoil con i campioni
 
 - **Decisione di Marco** (27/11/2026, DESIGN.md § 18 “Elettricità con i campioni”): campioni anche per Thunderbolt e Teslacoil; nei pacchetti non c’è un fulmine, forse un ronzio per l’elettricità.

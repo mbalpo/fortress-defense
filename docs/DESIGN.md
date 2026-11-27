@@ -1803,5 +1803,15 @@ Il corto raggio si misura **dal ranger** (non dal centro in basso come per le to
     (0,7-2,7 s, torretta occupata: suono continuo come quello del Laser), circa 8 dB più piano della partenza.
   - **Volumi**: forti come il sintetico (Thunderbolt 0,068, Teslacoil 0,087; continuo 0,05).
   - **File**: 4 nuovi (glitch_003, glitch_004, explosionCrunch_003, forceField_003): **39 file, 1045,2 KB** (1 070 248 byte). Ora tutte le 11 torrette hanno i campioni.
+- **Elettricità con i file di Marco** **[deciso]** (Marco, 27/11/2026): i suoni elettrici della 1.37.0 non piacciono; Marco porta quattro file (3pops, buzz, electricitysoundspreview, “Thunder, Very Close, Rain, 01”), tra cui l’effetto della bolla che esplode.
+- **Thunderbolt, Teslacoil e bolle (1.38.0)** · scelte **[Claude] [da rivedere]**:
+  - **Thunderbolt**: il **tuono vicino** (“Thunder, Very Close, Rain, 01”), dal colpo (1,18 s del file) per 1,4 s, meno della ricarica di 1,6 s, prima che resti solo la pioggia; due varianti (intonazione 1 e 0,85).
+  - **Teslacoil**: il **ronzio elettrico** di buzz (0,35 s, da due punti del file) e lo stesso ronzio continuo finché la bobina si carica (il tratto pieno, 0,2-0,9 s, ripetuto).
+  - **Bolle di Gamma** (`bolla.scoppia`): i **tre scoppi** di 3pops (a 0,6, 1,6 e 2,95 s del file), 0,35 s ciascuno, volumi pareggiati.
+  - **Tolti** i pezzi Kenney della 1.37.0 (glitch_003, glitch_004, explosionCrunch_003, forceField_003).
+  - **electricitysoundspreview non usato**: è una raccolta di 56 s di scariche diverse (677 KB, più della metà di tutti i suoni) e qui non si può tagliare senza un codificatore OGG.
+  - **Volumi**: forti come il sintetico (Thunderbolt 0,034, Teslacoil 0,113, bolle 0,33; ronzio continuo 0,0385, circa 8 dB sotto la partenza).
+  - **File**: nel gioco con un nome senza spazi (thunderVeryClose_01, buzz, pops3); **38 file, 1210,8 KB** (1 239 879 byte; il tuono pesa 166 KB per i suoi 12,8 s, quasi tutti di pioggia).
+    **Fonte, autore e licenza dei tre file: da indicare** in `app/suoni/CREDITI.md` prima della pubblicazione.
 - **Fuori dal perimetro** (non deciso): musica, morte dei nemici, frenesia, vittoria e sconfitta, sibilo di avvicinamento del kamikaze.
   - **Interfaccia (menu, carte, avvisi)** **[deciso]** (Marco, 27/11/2026): niente suoni di interfaccia, almeno per il momento; non entra nemmeno nella prova dei campioni.
