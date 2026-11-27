@@ -7,7 +7,7 @@ const ok = (c) => c ? "✓" : "✗ ERRORE";
 const patch = (h) => h.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
 const J = (ev, c) => JSON.parse(ev("JSON.stringify(" + c + ")"));
 const IDS = ["alfa", "prometeo", "omega", "mnemosine", "sigma", "ceo", "gamma", "iperione", "epsilon", "atlante"];
-const frags = (lv10) => Object.fromEntries(IDS.map((id) => [id, lv10.includes(id) ? 1100 : 0]));   // 1100 = livello 10
+const frags = (top) => Object.fromEntries(IDS.map((id) => [id, top.includes(id) ? 2100 : 0]));   // 2100 = livello 20, il massimo dalla 1.28.0 (prima 1100, livello 10)
 function game(o) {
   o = o || {};
   const prog = { cleared: 200, clearedEpic: 200, seen: o.seen || ["gift"], planet: { lv: {}, frags: frags(o.max || []), day: { d: "", n: 0 }, eq: o.eq || [] } };
@@ -126,10 +126,11 @@ console.log("— Ricompensa —");
   { const nine = IDS.filter((id) => id !== "ceo"), seen = new Set();
     for (let s = 1; s <= 12; s++) { const { ev } = game({ max: nine, seed: s }); ev(`giftRand = (() => { let x = ${s * 97}; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })();` + START("standard", 61) + READY(180, 400) + FR); diff(kill(ev).f0, J(ev, "progress.planet.frags")).forEach(([k]) => seen.add(k)); }
     const { ev } = game({ max: nine }); ev(START("standard", 61) + READY(180, 400) + FR); const d = diff(kill(ev).f0, J(ev, "progress.planet.frags"));
-    console.log("nove ranger al 10: frammenti sempre a Ceo", JSON.stringify(d), [...seen].join(","), "(× M 1,9: 5 → 10)", ok(d.length === 1 && d[0][0] === "ceo" && d[0][1] === 10 && [...seen].join(",") === "ceo")); }
+    console.log("nove ranger al massimo: frammenti sempre a Ceo", JSON.stringify(d), [...seen].join(","), "(× M 1,9: 5 → 10)", ok(d.length === 1 && d[0][0] === "ceo" && d[0][1] === 10 && [...seen].join(",") === "ceo")); }
   { const { ev } = game({ max: ["alfa", "omega", "sigma", "gamma"] }); ev(START("standard", 61) + READY(180, 400) + FR); const r = kill(ev), d = diff(r.f0, r.f1);
-    console.log("quattro ranger al 10: M", ev("fragM()"), "· frammenti", JSON.stringify(d), "(5 × 1,4 = 7)", ok(Math.abs(ev("fragM()") - 1.4) < 1e-9 && d.length === 1 && d[0][1] === 7)); }
+    console.log("quattro ranger al 10 o più: M", ev("fragM()"), "· frammenti", JSON.stringify(d), "(5 × 1,4 = 7)", ok(Math.abs(ev("fragM()") - 1.4) < 1e-9 && d.length === 1 && d[0][1] === 7)); }
   { const { ev } = game(); const k = { frags: 0, pcs: 0, mods: 0, seals: 0, majors: 0 }, rar = [0, 0, 0, 0, 0]; let bad = 0;
+    ev("giftRand = (() => { let x = 11; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })();");   // generatore a seme fisso: estrazione ripetibile
     const s0 = J(ev, "[progress.seals, progress.majors]");
     for (let i = 0; i < 1000; i++) { const n = J(ev, `(() => { ${START("epic", 270)} giftPlan = { wave: 4, done: false }; return giftReward(); })()`); if (!n || !k.hasOwnProperty(n.kind)) { bad++; continue; } k[n.kind]++; if (n.r != null) rar[n.r]++; }
     const s1 = J(ev, "[progress.seals, progress.majors]"), pct = (x) => x / 10;
@@ -141,6 +142,7 @@ console.log("— Ricompensa —");
     const st = ev(`(() => { giftRand = Math.random; ${START("standard", 61)} let n = 0; for (let i = 0; i < 500; i++) { giftRoll(); if (giftPlan) n++; } giftPlan = { wave: 4, done: false }; startWave(4); waveTime = 3.5; queue = []; enemies = []; giftTick(0.01); return { n, sp: !!gift }; })()`);
     console.log("tutti i ranger al massimo, Standard: pacco su 500 livelli", st.n, "· comparsa forzata", st.sp, ok(Math.abs(st.n - 300) < 45 && st.sp)); }
   { const { ev } = game({ max: IDS }); const kinds = { pcs: 0, mods: 0, seals: 0, majors: 0 }, rar = new Set(); let bad = 0;
+    ev("giftRand = (() => { let x = 23; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; })();");   // seme fisso
     for (const [m, lv] of [["epic", 31], ["epic", 100], ["standard", 170]]) for (let i = 0; i < 100; i++) {
       ev(START(m, lv) + READY(180, 400)); const r = kill(ev), n = r.note;
       if (!n || !kinds.hasOwnProperty(n.kind)) { bad++; continue; }

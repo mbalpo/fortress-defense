@@ -1072,7 +1072,7 @@ function rangersScreen() {
     fitTxt(RANGER_DEF[id].role === "conv" ? "Conversione" : "Supporto · " + RANGER_DEF[id].fx, x + 46, y + 34, w - 52, 10, c, "left", "600");
     if (on) txt("IN CAMPO", x + w - 6, y + 9, 8, "#ffd166", "right", "800");
     const next = L >= RANGER.maxLv ? null : rangerTotal(L + 1), prev = L ? rangerTotal(L) : 0;
-    txt(L ? "Liv " + L + "/" + RANGER.maxLv : "Bloccato", x + 46, y + 50, 11, L ? "#e8eefc" : "#6f82ad", "left", "700");
+    txt(L ? "Liv " + L : "Bloccato", x + 46, y + 50, 11, L ? "#e8eefc" : "#6f82ad", "left", "700");   // 1.28.0: senza “/20”, che con i frammenti a 4 cifre si sovrapponeva
     txt(next ? fr[id] + "/" + next : "max", x + w - 8, y + 50, 10, "#9fb4d9", "right", "500");
     ctx.fillStyle = "rgba(7,11,22,0.8)"; ctx.fillRect(x + 46, y + 58, w - 54, 5);
     ctx.fillStyle = c; ctx.fillRect(x + 46, y + 58, (w - 54) * (next ? clamp((fr[id] - prev) / (next - prev), 0, 1) : 1), 5);

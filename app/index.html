@@ -257,6 +257,7 @@ const PLANET = {
   land: { fire: "Europa", force: "Africa", electric: "Asia", energy: "Americhe", physical: "Oceania" },
   week: [null, "physical", "force", "energy", "electric", "fire", null],   // domenica … sabato; sabato e domenica a caso (seme = data) [deciso]
   F: 10,                                                       // frammenti di una partita piena al livello 1 [Claude, provvisorio] (crescita con la scala: da misurare)
+  winBonus: 0.5,                                               // bonus di completamento: + 0,5 × F × M se il boss è sconfitto [deciso] (Marco, 26/11/2026, su proposta di Claude)
   diff: (L) => 55 + 5 * L,                                     // difficoltà: livello 1 = 60, +5 per livello [Claude, provvisorio]
   bossAt: 18,                                                  // il boss compare all’ondata 18 e conta come ondata 20 [deciso]
   // tempo stimato di ogni ondata (s), dalla sua partenza alla successiva: mediana del tempo di pulizia dei bot con albero ed equipaggiamento attesi,
@@ -943,26 +944,27 @@ const planetLv = (t) => progress.planet.lv[t] + 1;            // livello da gioc
 const gamesToday = () => progress.planet.day.d === dayKey(planetNow()) ? progress.planet.day.n : 0;
 const gamesLeft = () => Math.max(0, PLANET.perDay - gamesToday());
 function countGame() { progress.planet.day = { d: dayKey(planetNow()), n: gamesToday() + 1 }; saveProgress(); }
-// frammenti di una partita (anche persa o abbandonata): F × (0,7 × ondate partite ÷ 20 + 0,3 × mini-boss sconfitti ÷ 3), ×2 nel giorno del tipo;
-// divisi a caso tra i due ranger del tipo (proporzione uniforme). [deciso] (Marco); F e ×2 [provvisorio]
+// frammenti di una partita (anche persa o abbandonata): F × M × (0,7 × ondate partite ÷ 20 + 0,3 × mini-boss sconfitti ÷ 3) + 0,5 × F × M se il livello è completato,
+// ×2 nel giorno del tipo; divisi a caso tra i due ranger del tipo (proporzione uniforme). [deciso] (Marco; M e bonus di completamento dalla 1.28.0); F e ×2 [provvisorio]
 let planetGain = null;
-function planetReward() {
+function planetReward(won) {
   if (!pw || pw.paid) return null;
   pw.paid = true;
-  const x2 = dayType() === planetType, f = PLANET.F * (0.7 * Math.min(wave, N_WAVES) / N_WAVES + 0.3 * Math.min(pw.mb, 3) / 3) * (x2 ? PLANET.dayBonus : 1);
+  const x2 = dayType() === planetType, M = fragM();
+  const f = PLANET.F * M * (0.7 * Math.min(wave, N_WAVES) / N_WAVES + 0.3 * Math.min(pw.mb, 3) / 3 + (won ? PLANET.winBonus : 0)) * (x2 ? PLANET.dayBonus : 1);
   const n = Math.round(f), [a, b] = RANGERS[planetType], fr = progress.planet.frags;
   const ma = rangerLv(a) >= RANGER.maxLv, mb = rangerLv(b) >= RANGER.maxLv;   // uno al livello massimo: tutti all’altro [deciso]
   const na = ma && !mb ? 0 : mb && !ma ? n : Math.round(n * Math.random());
   fr[a] += na; fr[b] += n - na; saveProgress();
-  return { n, x2, parts: [[a, na], [b, n - na]] };
+  return { n, x2, M, won: !!won, parts: [[a, na], [b, n - na]] };
 }
 
 /* ---------- RANGER (DESIGN.md § 17, fase 2) ----------
-   Due per tipo: supporto (cubo con la lettera greca) e conversione (sfera). Si sbloccano con i frammenti (soglia T) e salgono di livello fino al 10:
+   Due per tipo: supporto (cubo con la lettera greca) e conversione (sfera). Si sbloccano con i frammenti (soglia T) e salgono di livello fino al 20 (1.28.0; prima 10):
    il livello L richiede in tutto T × (1 + 0,5 × (L − 1)) frammenti [deciso]; T = 20 F = 200 [Claude, provvisorio].
    Al massimo 2 equipaggiati, un solo ranger di conversione [deciso]; valgono in tutte le modalità [Claude, da confermare]. */
 const RANGER = {
-  T: 200, maxLv: 10,
+  T: 200, maxLv: 20,                                           // livello massimo 20 [deciso] (Marco, 26/11/2026)
   range: 260,                                                  // corto raggio = portata dell’Aeroblast senza potenziamenti, misurato dal ranger [deciso]
   side: 34, front: 46,                                         // distanza dal guardiano ai lati; davanti quando il lato esce dallo schermo [deciso]
   first: 5,                                                    // il primo effetto dei supporti dopo 5 s [Claude]
@@ -980,15 +982,23 @@ const RANGER_DEF = {
   epsilon:   { type: "physical", role: "sup",  letter: "ε", fx: "Missili" },
   atlante:   { type: "physical", role: "conv" },
 };
-const lin = (a, b, L) => a + (b - a) * (L - 1) / 9;            // interpolazione lineare tra livello 1 e 10
+const lin = (a, b, L) => a + (b - a) * (Math.min(L, 10) - 1) / 9;   // interpolazione lineare tra livello 1 e 10; oltre il 10 resta il valore del 10
+const over = (L) => Math.max(0, L - 10), at = (L, lvs) => lvs.filter((x) => L >= x).length;   // livelli oltre il 10; quanti dei livelli indicati sono raggiunti
+// dal livello 11 al 20 (1.28.0) [deciso] (Marco, 26/11/2026): danno dei supporti +15% per livello (Gamma +7%), ciclo fermo a 20 s; il resto voce per voce (DESIGN.md § 17)
+const EPS = { n: [2, 2, 3, 3, 3, 4, 4, 4, 5, 6], mul: [1, 1.3, 1.3, 1.3, 1.6, 1.6, 1.6, 1.9, 1.9, 1.9], range: [260, 260, 260, 299, 299, 299, 338, 338, 338, 377] };
 const RV = {
-  cd: (L) => Math.round(lin(40, 20, L) * 10) / 10,             // ciclo dei supporti (s)
-  dmg: (L) => 1 + 0.15 * (L - 1),                              // danno: +15% del valore base per livello
-  alfaY: (L) => Math.round(lin(4, 10, L) * 10) / 10, alfaZ: (L) => 0.1 * L, alfaDps: 4, alfaBurn: 4,
-  omegaDeg: (L) => Math.round(lin(20, 120, L)), omegaDmg: 20, omegaT: 3,
-  sigmaN: (L) => Math.ceil(L / 2), sigmaP: (L) => 0.05 * L, sigmaDmg: 14, sigmaPara: 1,
-  gammaN: (L) => Math.round(lin(2, 12, L)), gammaDmg: 20, gammaMul: (L) => 1 + 0.07 * (L - 1), gammaRad: 40, gammaLife: 15,
-  epsN: [2, 2, 3, 3, 3, 4, 4, 4, 5, 6], epsMul: [1, 1.3, 1.3, 1.3, 1.6, 1.6, 1.6, 1.9, 1.9, 1.9], epsRange: [260, 260, 260, 299, 299, 299, 338, 338, 338, 377], epsDmg: 20,
+  cd: (L) => Math.round(lin(40, 20, L) * 10) / 10,             // ciclo dei supporti (s), fermo a 20 s dal 10
+  dmg: (L) => 1 + 0.15 * (L - 1),                              // danno: +15% del valore base per livello (anche dopo il 10)
+  alfaY: (L) => Math.round(lin(4, 10, L) * 10) / 10, alfaZ: (L) => Math.min(1, 0.1 * L), alfaDps: 4, alfaBurn: 4,
+  alfaBurnT: (L) => 3 + 0.2 * over(L),                         // bruciatura da 3 a 5 s dall’11 al 20
+  omegaDeg: (L) => Math.round(lin(20, 120, L)), omegaDmg: 20,
+  omegaT: (L) => 3 + 0.2 * over(L), omegaStates: (L) => L >= 15 ? 2 : 1,   // stato da 3 a 5 s; due stati diversi per onda dal 15
+  sigmaN: (L) => Math.ceil(Math.min(L, 10) / 2), sigmaP: (L) => Math.min(1, 0.05 * L), sigmaDmg: 14, sigmaPara: 1,   // bersagli fermi a 5, paralisi fino al 100%
+  gammaN: (L) => Math.round(lin(2, 12, L)) + at(L, [12, 15, 18]), gammaDmg: 20, gammaMul: (L) => 1 + 0.07 * (L - 1), gammaRad: 40, gammaLife: 15,   // bolle fino a 15
+  epsN: (L) => EPS.n[Math.min(L, 10) - 1] + at(L, [12, 15, 18]),                       // missili ai livelli 12, 15, 18
+  epsMul: (L) => EPS.mul[Math.min(L, 10) - 1] + 0.15 * at(L, [11, 13, 15, 17, 19]),   // danno ai livelli dispari, +15% del base
+  epsRange: (L) => EPS.range[Math.min(L, 10) - 1] + 39 * at(L, [14, 16, 20]), epsDmg: 20,   // portata nei livelli rimanenti, +39 px
+  convDmg: (L) => 0.05 * over(L),                              // conversioni (anche Atlante): +5% di danno del guardiano per livello dall’11
 };
 const rangerTotal = (L) => RANGER.T * (1 + 0.5 * (L - 1));      // frammenti in tutto per avere il livello L
 function rangerLv(id) { const f = progress.planet.frags[id] || 0; let L = 0; while (L < RANGER.maxLv && f >= rangerTotal(L + 1)) L++; return L; }
@@ -1005,13 +1015,14 @@ function toggleRanger(id) {
 // effetto al livello L, per la schermata dei ranger (danni prima dei bonus di albero e Moduli)
 function rangerDesc(id, L) {
   const d = RANGER_DEF[id], t = TYPES[d.type].name, every = " ogni " + fmt(RV.cd(L)) + " s", m = RV.dmg(L);
-  if (id === "atlante") return ["Il guardiano ignora il " + 10 * L + "% della resistenza", "dei nemici (le debolezze non cambiano)"];
-  if (d.role === "conv") return ["Il " + 10 * L + "% del danno di ogni colpo del guardiano", "diventa " + t];
-  if (id === "alfa") return ["Fiammata" + every + " per " + fmt(RV.alfaY(L)) + " s, " + fmt(RV.alfaDps * m) + " al secondo", "bruciatura " + Math.round(RV.alfaZ(L) * 100) + "% (" + fmt(RV.alfaBurn * m) + " al secondo)"];
-  if (id === "omega") return ["Onda di " + RV.omegaDeg(L) + "°" + every + ", danno " + fmt(RV.omegaDmg * m), "vulnerabilità, rallentamento o indebolimento"];
+  const q = Math.min(100, 10 * L), plus = RV.convDmg(L) ? ", danno +" + Math.round(RV.convDmg(L) * 100) + "%" : "";
+  if (id === "atlante") return ["Il guardiano ignora il " + q + "% della resistenza" + plus, "dei nemici (le debolezze non cambiano)"];
+  if (d.role === "conv") return ["Il " + q + "% del danno di ogni colpo del guardiano", "diventa " + t + plus];
+  if (id === "alfa") return ["Fiammata" + every + " per " + fmt(RV.alfaY(L)) + " s, " + fmt(RV.alfaDps * m) + " al secondo", "bruciatura " + Math.round(RV.alfaZ(L) * 100) + "% (" + fmt(RV.alfaBurn * m) + " al secondo per " + fmt(RV.alfaBurnT(L)) + " s)"];
+  if (id === "omega") return ["Onda di " + RV.omegaDeg(L) + "°" + every + ", danno " + fmt(RV.omegaDmg * m), (RV.omegaStates(L) > 1 ? "due stati" : "uno stato") + " di " + fmt(RV.omegaT(L)) + " s (vulnerab., rallent., indebol.)"];
   if (id === "sigma") return ["Fulmine" + every + " su " + RV.sigmaN(L) + (RV.sigmaN(L) === 1 ? " bersaglio" : " bersagli") + ", danno " + fmt(RV.sigmaDmg * m), "paralisi " + Math.round(RV.sigmaP(L) * 100) + "%"];
   if (id === "gamma") return [RV.gammaN(L) + " bolle" + every + ", durano " + RV.gammaLife + " s", "esplodono al contatto: danno " + fmt(RV.gammaDmg * RV.gammaMul(L))];
-  return [RV.epsN[L - 1] + " missili a ricerca" + every, "danno " + fmt(RV.epsDmg * RV.epsMul[L - 1]) + ", portata " + RV.epsRange[L - 1] + " px"];
+  return [RV.epsN(L) + " missili a ricerca" + every, "danno " + fmt(RV.epsDmg * RV.epsMul(L)) + ", portata " + RV.epsRange(L) + " px"];
 }
 // schermata dei ranger (dalla Protezione planetaria e dal menu): ranger scelto, messaggio, schermata a cui tornare
 let rangerSel = "alfa", rangerMsg = "", rangerBack = "menu";
@@ -2458,7 +2469,7 @@ const GUN = { dx: 7, dy: -56 };
 function frenzyOn(p) { return (p.st.frenzyT || 0) > 0; }
 // equipaggiamento sul guardiano: un solo bonus che somma statistica base e “+X% danni” dei Moduli (fissi, per torre, per nemico vicino, per carta scelta)
 const nearBarrier = (e) => domeK(e.x, e.y, GEAR_NEAR + e.def.r) <= 1;
-const gearMul = () => 1 + GEAR.pdmg + GEAR.perTower * slots.filter(Boolean).length + GEAR.perCard * runPicks
+const gearMul = () => 1 + GEAR.pdmg + RG.pdmg + GEAR.perTower * slots.filter(Boolean).length + GEAR.perCard * runPicks
   + (GEAR.perNear ? GEAR.perNear * Math.min(10, living().filter(nearBarrier).length) : 0);
 // bonus che dipendono dal nemico colpito (Moduli 6, 13, 18): si aggiungono allo stesso bonus
 const gearHit = (e) => (GEAR.debuff && debuffed(e) ? GEAR.debuff : 0) + (GEAR.nearB && nearBarrier(e) ? GEAR.nearB : 0) + (GEAR.high && e.hp > 0.7 * e.maxHp ? GEAR.high : 0);
@@ -2522,14 +2533,14 @@ function fanOffsets(p) { return [-0.6, -0.3, 0.3, 0.6]; }
 // frag = frammento della combo Railgun (skip: nemici già colpiti dal proiettile da cui nasce); charged = Colpo caricato (Teslacoil: numero di rimbalzi ereditati); proc = combo da attivare al primo impatto
 /* ---------- RANGER IN CAMPO (DESIGN.md § 17, fase 2) ---------- */
 // RG: ranger della partita (dai ranger equipaggiati e sbloccati); conv = conversione del guardiano { type, k }; ign = quota di resistenza ignorata (Atlante)
-let RG = { list: [], conv: null, ign: 0 };
+let RG = { list: [], conv: null, ign: 0, pdmg: 0 };
 function startRangers() {
-  RG = { list: [], conv: null, ign: 0 };
+  RG = { list: [], conv: null, ign: 0, pdmg: 0 };
   progress.planet.eq.forEach((id, i) => {
     const L = rangerLv(id), d = RANGER_DEF[id]; if (!L) return;
     const r = { id, L, d, type: d.type, x: player.x, y: player.y, t: RANGER.first, bob: i * 1.7 };
     RG.list.push(r);
-    if (d.role === "conv") { if (d.type === "physical") RG.ign = 0.1 * L; else RG.conv = { type: d.type, k: 0.1 * L }; }
+    if (d.role === "conv") { const k = Math.min(1, 0.1 * L); if (d.type === "physical") RG.ign = k; else RG.conv = { type: d.type, k }; RG.pdmg = RV.convDmg(L); }   // dall’11: +5% di danno per livello
   });
   RG.list.forEach((r, i) => { r.side = RG.list.length === 1 ? -1 : i ? 1 : -1; });
 }
@@ -2549,7 +2560,7 @@ function rangerTick(dt) {
     r.x += (tx - r.x) * Math.min(1, dt * 10); r.y += (ty - r.y) * Math.min(1, dt * 10); r.bob += dt;
     if (r.d.role !== "sup") continue;
     r.t -= dt; if (r.t > 0) continue;
-    const reach = r.id === "epsilon" ? RV.epsRange[r.L - 1] : RANGER.range;
+    const reach = r.id === "epsilon" ? RV.epsRange(r.L) : RANGER.range;
     const tg = nearestTo(r.x, r.y, reach + 30); if (!tg || edist(tg, r.x, r.y) > reach + tg.def.r) continue;   // aspetta un nemico a portata
     r.t = RV.cd(r.L); SUPPORT[r.id](r, tg);
   }
@@ -2568,7 +2579,7 @@ const SUPPORT = {
           let da = Math.atan2(dy, dx) - this.ang; da = Math.atan2(Math.sin(da), Math.cos(da));
           if (Math.abs(da) > 0.2 + e.def.r / Math.max(d, 1)) continue;
           damage(e, RV.alfaDps * m * dt, "fire", true, "ranger");
-          if (e.burnT <= 0 && (e.alfaT || 0) <= clock) { e.alfaT = clock + 1; if (Math.random() < Z) burn(e, 3, RV.alfaBurn * m); }   // un tiro al secondo per nemico
+          if (e.burnT <= 0 && (e.alfaT || 0) <= clock) { e.alfaT = clock + 1; if (Math.random() < Z) burn(e, RV.alfaBurnT(r.L), RV.alfaBurn * m); }   // un tiro al secondo per nemico
         }
       },
       draw() { FX.rangerFlame(this, r); } });
@@ -2580,8 +2591,8 @@ const SUPPORT = {
       let da = Math.atan2(dy, dx) - ang; da = Math.atan2(Math.sin(da), Math.cos(da));
       if (Math.abs(da) > half + e.def.r / Math.max(d, 1)) continue;
       damage(e, RV.omegaDmg * m, "force", false, "ranger"); if (e.dead) continue;
-      const k = Math.floor(Math.random() * 3);
-      if (k === 0) vuln(e, RV.omegaT, "all"); else if (k === 1) slow(e, RV.omegaT); else weaken(e, RV.omegaT);
+      const T = RV.omegaT(r.L), k = Math.floor(Math.random() * 3), ks = RV.omegaStates(r.L) > 1 ? [k, (k + 1 + Math.floor(Math.random() * 2)) % 3] : [k];   // dal 15 due stati diversi
+      for (const j of ks) { if (j === 0) vuln(e, T, "all"); else if (j === 1) slow(e, T); else weaken(e, T); }
     }
     spawnEnt({ t: 0.35, dead: false, update(dt) { this.t -= dt; if (this.t <= 0) this.dead = true; },
       draw() { FX.hiveWave(this, r.x, r.y, ang, RANGER.range, half, TYPES.force.color); } });
@@ -2617,7 +2628,7 @@ const SUPPORT = {
     }
   },
   epsilon(r) {                                      // raffica di missili a ricerca (da 2 a 6), danno e portata a livelli alterni
-    const m = RV.epsMul[r.L - 1] * rangerBonus("physical"), n = RV.epsN[r.L - 1], list = pickTargets({ x: r.x, y: r.y }, 9999, 99).filter((e) => edist(e, r.x, r.y) <= RV.epsRange[r.L - 1] + e.def.r);
+    const m = RV.epsMul(r.L) * rangerBonus("physical"), n = RV.epsN(r.L), list = pickTargets({ x: r.x, y: r.y }, 9999, 99).filter((e) => edist(e, r.x, r.y) <= RV.epsRange(r.L) + e.def.r);
     for (let k = 0; k < n && list.length; k++) {
       spawnEnt({ x: r.x, y: r.y - 6, a: -Math.PI / 2 + (k - (n - 1) / 2) * 0.35, t: list[k % list.length], age: 0, dead: false, tint: TYPES.physical.color,
         update(dt) {
@@ -2649,7 +2660,7 @@ const GIFT_COLOR = "#ff5fa8";                       // diverso dai cinque tipi
 let giftRand = (() => { let s = (Date.now() ^ 0x5f3759df) >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
 let giftPlan = null, gift = null, giftWait = -1, giftNote = null, shotManual = false;   // giftPlan: { wave, done } del livello; gift: il pacco in campo; giftNote: avviso del premio
 const giftOn = () => (mode === "standard" && campLevel >= GIFT.stdFrom) || (mode === "epic" && campLevel >= GIFT.epicFrom);   // dalla 1.27.0 anche con tutti i ranger al massimo
-// crescita dei frammenti (DESIGN.md § 17) [deciso, Marco 26/11/2026]: M = 1 + 0,1 × ranger arrivati al livello 10 (pacco; dalla 1.28.0 anche le partite della Protezione planetaria)
+// crescita dei frammenti (DESIGN.md § 17) [deciso, Marco 26/11/2026]: M = 1 + 0,1 × ranger arrivati al livello 10 (pacco dalla 1.27.0, partite della Protezione planetaria dalla 1.28.0)
 const fragM = () => 1 + 0.1 * Object.keys(RANGER_DEF).filter((id) => rangerLv(id) >= 10).length;
 function giftRoll() {                              // a inizio livello (non con “Continua”, che riprende il piano salvato)
   giftPlan = giftOn() && giftRand() < GIFT.chance ? { wave: GIFT.waves[Math.floor(giftRand() * GIFT.waves.length)], done: false } : null;
@@ -3538,7 +3549,7 @@ function winLevel() {
   state = "won"; clearRun();
   if (pw) {                                        // Protezione planetaria: si sblocca il livello successivo del tipo; niente Sigilli né equipaggiamento [Claude]
     const L = progress.planet.lv; if (campLevel > L[planetType]) L[planetType] = campLevel;
-    sealGain = null; gearGain = null; planetGain = planetReward(); saveProgress(); return;
+    sealGain = null; gearGain = null; planetGain = planetReward(true); saveProgress(); return;
   }
   const before = progress.cleared;
   if (mode === "standard" && campLevel > progress.cleared) progress.cleared = campLevel;
@@ -3850,7 +3861,7 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.27.0";
+const APP_VERSION = "1.28.0";
 const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)

@@ -96,10 +96,10 @@ console.log("— Fine partita e frammenti —");
   ev("openPlanet(); startPlanet('fire')"); g.frame();   // giovedì: tipo del giorno electric, fire senza ×2
   ev("pw.mb = 2; queue = []; enemies = []; for (let k = 1; k < 20; k++) pw.clr[k] = true; planetWave(20); queue = []"); g.frame();
   const gain = JSON.parse(ev("JSON.stringify(planetGain)")), p = stored().planet;
-  console.log("vittoria al livello 1:", ev("state"), "| livelli fire", p.lv.fire, "| frammenti", gain.n, "(attesi 10 × (0,7 + 0,2) = 9) divisi", JSON.stringify(gain.parts),
-    "| salvati", p.frags.alfa + p.frags.prometeo, ok(ev("state") === "won" && p.lv.fire === 1 && gain.n === 9 && !gain.x2 && p.frags.alfa + p.frags.prometeo === 9));
+  console.log("vittoria al livello 1:", ev("state"), "| livelli fire", p.lv.fire, "| frammenti", gain.n, "(attesi 10 × (0,7 + 0,2 + 0,5 di completamento, 1.28.0) = 14) divisi", JSON.stringify(gain.parts),
+    "| salvati", p.frags.alfa + p.frags.prometeo, ok(ev("state") === "won" && p.lv.fire === 1 && gain.n === 14 && !gain.x2 && p.frags.alfa + p.frags.prometeo === 14));
   g.texts.length = 0; g.frame();
-  console.log("schermata:", g.texts.includes("+9 frammenti"), g.texts.includes("Protezione planetaria"), ok(g.texts.includes("+9 frammenti") && g.texts.includes("Protezione planetaria")));
+  console.log("schermata:", g.texts.includes("+14 frammenti"), g.texts.includes("Protezione planetaria"), ok(g.texts.includes("+14 frammenti") && g.texts.includes("Protezione planetaria")));
   ev("nextOrRetry()"); ev("startPlanet('fire')");
   console.log("partita successiva: livello", ev("campLevel"), "difficoltà", ev("curDiff()"), ok(ev("campLevel") === 2 && ev("curDiff()") === 65));
   const c = fresh(60); c.ev("openPlanet(); startPlanet('electric')"); c.g.frame();   // tipo del giorno: ×2

@@ -17,9 +17,9 @@ const J = (ev, c) => JSON.parse(ev("JSON.stringify(" + c + ")"));
 console.log("— Frammenti, livelli, equipaggiamento —");
 {
   const { ev } = fresh([], 0);
-  const lv = [199, 200, 299, 300, 400, 1099, 1100, 5000].map((f) => ev(`progress.planet.frags.alfa = ${f}; rangerLv("alfa")`));
-  console.log("livello con 199 · 200 · 299 · 300 · 400 · 1099 · 1100 · 5000 frammenti:", lv.join(" · "), "| totale per il 10:", ev("rangerTotal(10)"),
-    ok(lv.join() === "0,1,1,2,3,9,10,10" && ev("rangerTotal(10)") === 1100));
+  const lv = [199, 200, 299, 300, 400, 1099, 1100, 2099, 2100, 5000].map((f) => ev(`progress.planet.frags.alfa = ${f}; rangerLv("alfa")`));
+  console.log("livello con 199 · 200 · 299 · 300 · 400 · 1099 · 1100 · 2099 · 2100 · 5000 frammenti:", lv.join(" · "), "| totale per il 10:", ev("rangerTotal(10)"), "· per il 20 (massimo, 1.28.0):", ev("rangerTotal(20)"),
+    ok(lv.join() === "0,1,1,2,3,9,10,19,20,20" && ev("rangerTotal(10)") === 1100 && ev("rangerTotal(20)") === 2100));
   ev("progress.planet.frags.alfa = 0"); const locked = ev("toggleRanger('alfa')");
   ev("for (const id of ['alfa', 'prometeo', 'omega', 'ceo', 'sigma']) progress.planet.frags[id] = 200");
   const m = ["alfa", "prometeo", "ceo", "omega"].map((id) => ev(`toggleRanger("${id}")`));
@@ -27,7 +27,7 @@ console.log("— Frammenti, livelli, equipaggiamento —");
   console.log("bloccato: “" + locked + "” | Alfa, Prometeo:", m[0], "/", m[1], "| terzo: “" + m[2] + "” | dopo aver tolto Alfa, Ceo: “" + conv + "” | tolto Prometeo, Ceo:", swap,
     ok(locked === "Servono 200 frammenti per sbloccarlo" && eq1.join() === "alfa,prometeo" && m[2] === "Al massimo 2 ranger: togline uno"
       && conv === "Un solo ranger di conversione alla volta" && swap === "Ceo equipaggiato" && J(ev, "progress.planet.eq").join() === "ceo"));
-  ev("progress.planet.frags.sigma = 1100; progress.planet.frags.ceo = 0; planetType = 'electric'; startRun('planet'); pw.mb = 3; wave = 20; domeHp = 0"); ev("update(0.01)");
+  ev("progress.planet.frags.sigma = 2100; progress.planet.frags.ceo = 0; planetType = 'electric'; startRun('planet'); pw.mb = 3; wave = 20; domeHp = 0"); ev("update(0.01)");
   const gain = J(ev, "planetGain");
   console.log("Sigma al livello massimo: frammenti tutti a Ceo", JSON.stringify(gain.parts), ok(gain.parts[0][1] === 0 && gain.parts[1][1] === gain.n && gain.n > 0));
 }

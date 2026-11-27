@@ -3,6 +3,29 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.28.0 — Ranger fino al livello 20
+
+- **Decisioni di Marco** (26/11/2026, DESIGN.md § 17 “Livello massimo 20”): livello massimo **20** (2100 frammenti); dall’11 al 20 il ciclo resta 20 s e:
+  Alfa danno +15% a livello, bruciatura da 3 a 5 s (fiammata ferma a 10 s) · Omega danno +15%, stato da 3 a 5 s, due stati diversi per onda dal 15 · Sigma danno +15%, paralisi fino al 100%,
+  bersagli fermi a 5 · Gamma danno +7% a livello, bolle 13, 14, 15 ai livelli 12, 15, 18, raggio fermo · Epsilon danno +15% del base ai livelli dispari, missili ai livelli 12, 15, 18, portata +39 px
+  ai livelli 14, 16, 20 · conversioni (anche Atlante) **+5% di danno del guardiano** per livello (+50% al 20).
+- **Frammenti della Protezione planetaria**: F × **M** × (0,7 × ondate ÷ 20 + 0,3 × mini-boss ÷ 3) + **0,5 × F × M** se il livello è completato (`PLANET.winBonus`, `planetReward(won)`); M già nel pacco dalla 1.27.0.
+- **Letture di Claude** (DESIGN.md): il +5% si somma al bonus dell’equipaggiamento (`gearMul`); ×2 del giorno su tutto; arrotondamento all’intero.
+- **Schermata dei ranger**: “Liv 16” senza “/20” nelle schede (con i frammenti a 4 cifre si sovrapponeva al conteggio); descrizioni con la durata della bruciatura, gli stati di Omega e il +X% delle conversioni.
+- **Salvataggio** invariato: il livello si ricava dai frammenti (chi aveva già frammenti oltre il 10 sale subito).
+- `APP_VERSION` e `sw.js` 1.28.0.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/ranger20.js` (23 controlli): tutti i valori dall’11 al 20 contro la tabella del § 17, livelli 1 / 5 / 10 invariati, conversioni (Prometeo 10 / 20, Atlante 15 / 20,
+Iperione 13) e danno al secondo del guardiano ×1,5 al 20, bruciatura di Alfa di 5 s, Omega con uno stato al 14 e due al 15, frammenti 10 / 15 / 20 (persa, vinta, vinta con M 1,3), schermata al 20.
+Aggiornati: `tests/rangers.js` (livelli fino al 20, totale 2100; ranger al massimo = 20), `tests/planet.js` (vittoria: 14 frammenti col bonus di completamento), `tests/pacco.js`
+(“al massimo” = livello 20; due controlli statistici con un generatore a seme fisso: nella 1.27.0 potevano fallire di rado). `tests/tools/screens.js`: nuove 119-122 (ranger al 20), testi dentro i bordi.
+
+**Misura** (`EQUIP=1.5 RANGERS=… node tests/tools/curva.js`, 60 partite per muro, Atlante ed Epsilon): senza ranger / al 10 / al 20: 240 20,0 / 70,0 / 73,3% · 340 20,0 / 43,3 / 56,7% · 400 23,3 / 28,3 / 35,0%.
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): incorpora il codice nuovo; le scene dei ranger restano al livello 10.
+
+Checklist: aggiornata (versione 68): prove dei ranger oltre il 10; riferimento del livello massimo 20.
+
 ## 1.27.0 — Pacco regalo: 60% e premio a estrazione
 
 - **Decisioni di Marco** (26/11/2026, DESIGN.md § 17 “Pacco regalo”): probabilità **60%** per livello (prima 25%); premio estratto: **50% frammenti** (5 Standard, 10 Epica, × M) · **20% pezzo**

@@ -1236,7 +1236,14 @@ Regole di calcolo **[Claude] [da rivedere]**:
 | Epsilon: portata (px) | 377 | 377 | 377 | 416 | 416 | 455 | 455 | 455 | 455 | 494 |
 | Conversioni: danno del guardiano | +5% | +10% | +15% | +20% | +25% | +30% | +35% | +40% | +45% | +50% |
 
-  Raffica di Epsilon (missili × danno, base 20): 228 al 10 → 477 al 20 (×2,1). Danni prima dei bonus di albero e Moduli.
+  Raffica di Epsilon (missili × danno, base 20): 228 al 10 → 477 al 20 (×2,1).
+  - **Costruito (1.28.0)**: `RANGER.maxLv` = 20; `RV` con i valori dall’11 al 20 della tabella (Epsilon con funzioni al posto delle liste); `RV.convDmg` e `RG.pdmg`.
+    Letture **[Claude]**: il +5% delle conversioni si somma al bonus dell’equipaggiamento del guardiano (`gearMul`, come i Moduli “Danno del guardiano”), mentre l’albero resta un fattore a parte;
+    il bonus di completamento e M valgono anche sulle partite perse (M) e il ×2 del tipo del giorno si applica a tutto; i frammenti si arrotondano all’intero più vicino.
+    Schermata: nelle schede “Liv 16” senza “/20” (con i frammenti a 4 cifre le scritte si sovrapponevano); “max” al 20. Salvataggio invariato (il livello si ricava dai frammenti:
+    chi aveva già più di 1100 frammenti su un ranger al 10 sale subito oltre il 10).
+  - **Misura (1.28.0)** **[Claude]** (`EQUIP=1.5 RANGERS=atlante:L,epsilon:L node tests/tools/curva.js M 30`, 60 partite per muro): senza ranger / al 10 / al 20:
+    240 20,0 / 70,0 / 73,3% · 340 20,0 / 43,3 / 56,7% · 400 23,3 / 28,3 / 35,0%. Tempi di sblocco con le regole nuove: “Ranger fino al 20” più sotto (misura del 26/11, stesse regole). Danni prima dei bonus di albero e Moduli.
 
 ### Nomi e supporti dei ranger
 **[deciso]** (Marco). **Per tutti i supporti**: l’effetto si ripete ogni **X secondi**, da **40 s al livello 1 a 20 s al livello 10**; dove non è indicato altro,

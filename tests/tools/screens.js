@@ -324,3 +324,9 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   e("for (const ab of MAJOR_KEYS) for (const t of TYPE_KEYS) progress.seen.push(MAJOR_DEF[ab].look + ':' + t); pauseScroll = 5000"); g.frame(2); g.save("117-pausa-maggiori.png");
   e("resumeGame(); state = 'menu'; openGuide(); guideTab = 'status'"); g.frame(); g.save("118-guida-mini-boss-maggiori.png");
 }
+{ // 1.28.0: ranger fino al 20 (DESIGN.md § 17, “Livello massimo 20”): schermata con un supporto e un ranger di conversione al massimo
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const frags = { alfa: 2100, prometeo: 1500, omega: 1700, mnemosine: 0, sigma: 1100, ceo: 260, gamma: 2100, iperione: 90, epsilon: 2100, atlante: 2100 };
+  const g = game({ progress: { cleared: 64, seen: ALL_SEEN, planet: { lv: {}, frags, day: { d: "", n: 0 }, eq: ["alfa", "atlante"] } }, src }), e = g.w.__ev;
+  for (const [n, id] of [[119, "alfa"], [120, "omega"], [121, "epsilon"], [122, "atlante"]]) { e("openRangers('menu'); rangerSel = '" + id + "'"); g.frame(); g.save(n + "-ranger-" + id + "-20.png"); }
+}
