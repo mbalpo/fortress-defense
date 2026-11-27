@@ -330,3 +330,10 @@ window.__x = { player: () => player, slots: () => slots, makeShooter, TURRETS, S
   const g = game({ progress: { cleared: 64, seen: ALL_SEEN, planet: { lv: {}, frags, day: { d: "", n: 0 }, eq: ["alfa", "atlante"] } }, src }), e = g.w.__ev;
   for (const [n, id] of [[119, "alfa"], [120, "omega"], [121, "epsilon"], [122, "atlante"]]) { e("openRangers('menu'); rangerSel = '" + id + "'"); g.frame(); g.save(n + "-ranger-" + id + "-20.png"); }
 }
+{ // 1.29.0: ancestrale+N (DESIGN.md § 15): arma +10 con 8 Moduli; guanti +3 in “Fondi” con gli ancestrali per il +4
+  const src = SRC.replace("requestAnimationFrame(frame);\n})();", "requestAnimationFrame(frame);\nwindow.__ev = (c) => eval(c);\n})();");
+  const eq = { arma: { r: 4, m: [4, 1, 2, 7, 17, 18, 19, 23].map((fx, i) => [fx, 4 - (i % 3)]), p: 10 }, guanti: { r: 4, m: [[20, 4], [1, 3], [6, 2], [7, 1]], p: 3 }, testa: { r: 2, m: [[22, 2]] } };
+  const g = game({ progress: { cleared: 220, seen: ALL_SEEN, gear: { pcs: { "guanti:4": 5, "guanti:2": 2 }, mods: { "arma:4:24": 1 }, eq } }, src }), e = g.w.__ev;
+  e("openGear(); gearSel = 'arma'; gearTab = 'pcs'; gearMode = 'use'"); g.frame(); g.save("123-ancestrale-piu-10.png");
+  e("gearSel = 'guanti'; gearMode = 'fuse'; tapPiece(4)"); g.frame(); g.save("124-ancestrale-fondi.png");
+}

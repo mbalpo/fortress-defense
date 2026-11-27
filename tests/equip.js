@@ -33,7 +33,7 @@ console.log("— Inventario e salvataggio versione 3 —");
     ok(JSON.stringify(g.pcs) === '{"arma:2":3}' && JSON.stringify(g.mods) === '{"arma:1:17":2,"nucleo:4:30":1}' && JSON.stringify(g.eq.arma) === '{"r":1,"m":[[17,0],[2,1]]}'
       && !g.eq.testa && JSON.stringify(g.eq.stivali) === '{"r":0,"m":[]}'));
   const save = J(ev, "makeSave()");
-  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 9 && save.progress.gear.pcs["arma:2"] === 3));
+  console.log("esportato: versione", save.version, "| equipaggiamento", !!save.progress.gear, ok(save.version === 10 && save.progress.gear.pcs["arma:2"] === 3));
   const code = ev("makeCode()"); ev("progress.gear = emptyGear()"); ev(`applySave(parseSave(${JSON.stringify(code)}))`);
   console.log("codice andata e ritorno: arma", JSON.stringify(J(ev, "progress.gear.eq.arma")), "| salvato:", !!stored().gear.eq.arma, ok(J(ev, "progress.gear.eq.arma").m.length === 2 && stored().gear.pcs["arma:2"] === 3));
   const v2 = JSON.stringify({ game: "fortress-defense", version: 2, progress: { cleared: 40, seen: [], seals: 3, claims: [], tree: {}, loadout: [] }, settings: {} });
@@ -179,8 +179,10 @@ console.log("— Schermata —");
   ev("tapPiece(4)"); g.frame();
   console.log("equipaggia l’arma ancestrale in due tocchi (1.14.0): primo → in attesa", a0, "equipaggiata", eq0, "| mostra cosa cambia", /Tocca di nuovo: danno del guardiano \+0% → \+28%/.test(P1),
     "| secondo → slot", ev("progress.gear.eq.arma.r + 1"), ok(a0 === "p4" && !eq0 && /Tocca di nuovo: danno del guardiano \+0% → \+28%/.test(P1) && ev("progress.gear.eq.arma.r") === 4));
-  ev("tapPiece(4)"); ev("tapPiece(0)"); const a2 = ev("gearArm"); ev("gearArm = null"); g.frame();
-  console.log("toccare un’altra riga annulla: in attesa", a2, "| arma ancora ancestrale", ev("progress.gear.eq.arma.r"), ok(a2 === "p0" && ev("progress.gear.eq.arma.r") === 4));
+  ev("tapPiece(4)"); ev("tapPiece(0)"); const a2 = ev("gearArm"), m2 = ev("gearMsg"); ev("gearArm = null; gearMsg = ''"); g.frame();
+  // 1.29.0: con un ancestrale equipaggiato le righe non si armano (l’ancestrale non si cambia) e compare il messaggio
+  console.log("con l’ancestrale equipaggiato le righe non si armano: in attesa", a2, "| messaggio:", m2, "| arma ancora ancestrale", ev("progress.gear.eq.arma.r"),
+    ok(a2 === null && /non si toglie né si cambia/.test(m2) && ev("progress.gear.eq.arma.r") === 4));
   ev("gearSetMode('fuse'); tapPiece(0)"); const armed = ev("gearArm"); ev("tapPiece(0)");
   console.log("fusione dei pezzi in due tocchi: in attesa", armed, "→ armi rare", ev("progress.gear.pcs['arma:1']"), ok(armed === "p0" && ev("progress.gear.pcs['arma:1']") === 1));
   ev("gearSetTab('mods'); gearSetMode('use'); tapMod(1)"); const m1 = J(ev, "progress.gear.eq.arma.m").length; ev("tapMod(1); tapMod(2); tapMod(2)"); g.frame();

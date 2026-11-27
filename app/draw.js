@@ -1377,6 +1377,13 @@ function gearHeader() {
   const s = gearStats(progress.gear), p = (x) => "+" + fmt(x * 100) + "%";
   return "Guardiano " + p(s.pdmg) + " · barriera " + p(s.hp) + " · torri " + p(s.tdmg);
 }
+// riga degli ancestrali in “Fondi” (1.29.0): evolvono quello equipaggiato (+N con N ancestrali)
+function plusSub(e, n, armed) {
+  if (!e || e.r !== 4) return "Equipaggia un ancestrale per evolverlo (+1, +2…)";
+  if (plusOf(e) >= PLUS.max) return "Equipaggiato al massimo: +" + PLUS.max;
+  const need = plusNeed(e);
+  return n >= need ? (armed ? "Tocca di nuovo: " + need + " ancestrali → +" + need : need + " ancestrali → equipaggiato +" + need) : "Per il +" + need + " servono " + need + " ancestrali";
+}
 function gearScreen() {
   dim(0.92);
   const g = progress.gear, pc = gearSel, e = g.eq[pc], P = PIECES[pc];
@@ -1389,7 +1396,7 @@ function gearScreen() {
     button(x, y, 108, 44, "", () => gearPick(id), { stroke: q ? rarColor(q.r) : on ? "#7fa0e0" : "#2c4272", fill: on ? "rgba(127,160,224,0.18)" : "rgba(18,30,58,0.92)" });
     pieceIcon(id, x + 19, y + 22, 24, q ? rarColor(q.r) : "#4a5a80");
     txt(PIECES[id].name, x + 66, y + 14, 12, on ? "#e8eefc" : "#b9c8e6", "center", "700");
-    if (q) fitTxt(RARITY[q.r].name + " " + q.m.length + "/" + (q.r + 1), x + 66, y + 31, 70, 10, rarColor(q.r), "center", "700");
+    if (q) fitTxt((plusOf(q) ? RAR_SHORT[q.r] + " +" + plusOf(q) : RARITY[q.r].name) + " " + q.m.length + "/" + slotsOf(q), x + 66, y + 31, 70, 10, rarColor(q.r), "center", "700");   // +N: nome breve, sta nella tessera
     else txt(gearCount(g, "pcs", id) ? "da equipaggiare" : "vuoto", x + 66, y + 31, 10, "#6f82ad", "center", "500");
   });
   // pezzo scelto: statistica base e slot dei Moduli
@@ -1397,28 +1404,30 @@ function gearScreen() {
   if (e) {
     pieceIcon(pc, 28, y + 10, 26, rarColor(e.r));
     txt(P.name, 48, y + 2, 14, "#e8eefc", "left", "800");
-    txt(RARITY[e.r].name, 48 + tw(P.name, 14, "800") + 8, y + 2, 12, rarColor(e.r), "left", "700");
-    txt(STAT_TXT[P.stat] + " +" + fmt(P.base[e.r]) + "%", 48, y + 18, 11, "#9fb4d9", "left", "500");
+    const anc = e.r === 4, plus = plusOf(e);                   // 1.29.0: ancestrale+N, fisso (non si toglie), fino a 8 slot
+    fitTxt(RARITY[e.r].name.toLowerCase() + (plus ? " +" + plus : ""), 48 + tw(P.name, 14, "800") + 8, y + 2, 160 - tw(P.name, 14, "800"), 12, rarColor(e.r), "left", "700");
+    txt(STAT_TXT[P.stat] + " +" + fmt(pieceBase(pc, e)) + "%", 48, y + 18, 11, "#9fb4d9", "left", "500");
     const arm = gearArm === "u";
     lockButton(220, y - 8, 26, !!e.lk, tapLockEq);
-    button(252, y - 8, 96, 26, arm ? "Tocca ancora" : "Togli", tapUnequip, { size: 11, stroke: arm ? "#ffd166" : "#2c4272", color: arm ? "#ffd166" : "#9fb4d9" });
-    for (let i = 0; i <= e.r; i++) {
-      const yy = y + 30 + i * 26, m = e.m[i];
+    button(252, y - 8, 96, 26, anc ? "Fisso" : arm ? "Tocca ancora" : "Togli", tapUnequip, { size: 11, stroke: arm ? "#ffd166" : "#2c4272", color: anc ? "#5f7299" : arm ? "#ffd166" : "#9fb4d9" });
+    const ns = slotsOf(e), sp = Math.min(26, 136 / ns), sh = sp - 2, sf = sh < 20 ? 9 : 11;   // gli slot stanno tra y + 30 e l’inventario (y 330)
+    for (let i = 0; i < ns; i++) {
+      const yy = y + 30 + i * sp, m = e.m[i];
       if (m) {
         const armed = gearArm === "s" + i;
-        lockButton(320, yy, 24, !!m[2], () => tapLockSlot(i));
-        button(12, yy, 304, 24, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
-        modIcon(pc, 25, yy + 12, 16, rarColor(m[1]));
-        fitTxt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + 12, 274, 11, armed ? "#ffd166" : "#e8eefc", "left", "600");
+        lockButton(320, yy, sh, !!m[2], () => tapLockSlot(i));
+        button(12, yy, 304, sh, "", () => tapSlot(i), { stroke: armed ? "#ffd166" : rarColor(m[1]) });
+        modIcon(pc, 25, yy + sh / 2, Math.min(16, sh - 4), rarColor(m[1]));
+        fitTxt(armed ? "Tocca di nuovo per togliere il Modulo" : modText(m[0], m[1]), 36, yy + sh / 2, 274, sf, armed ? "#ffd166" : "#e8eefc", "left", "600");
       } else {
-        rr(12, yy, 336, 24, 8); ctx.lineWidth = 1; ctx.strokeStyle = "#24345a"; ctx.stroke();
-        txt("Slot libero · Moduli: " + P.name.toLowerCase(), 24, yy + 12, 10, "#5f7299", "left", "500");
+        rr(12, yy, 336, sh, 8); ctx.lineWidth = 1; ctx.strokeStyle = "#24345a"; ctx.stroke();
+        txt("Slot libero · Moduli: " + P.name.toLowerCase(), 24, yy + sh / 2, sf - 1, "#5f7299", "left", "500");
       }
     }
   } else {
     txt(P.name + " · nessun pezzo equipaggiato", 16, y + 2, 14, "#e8eefc", "left", "800");
     txt("Statistica base: " + STAT_TXT[P.stat] + ".", 16, y + 20, 11, "#9fb4d9", "left", "500");
-    txt("Slot dei Moduli: da 1 (comune) a 5 (ancestrale).", 16, y + 36, 11, "#9fb4d9", "left", "500");
+    txt("Slot dei Moduli: da 1 (comune) a 5 (ancestrale), fino a 8 (+10).", 16, y + 36, 11, "#9fb4d9", "left", "500");
     txt("Equipaggia un pezzo dall’inventario qui sotto.", 16, y + 52, 11, "#6f82ad", "left", "500");
   }
   // inventario del pezzo scelto
@@ -1448,10 +1457,10 @@ function gearScreen() {
       let sub = "";
       if (gearMode === "use") {
         const pv = equipPreview(pc, r);
-        sub = !n ? "" : pv.same ? "Uguale a quello equipaggiato" : armed ? "Tocca di nuovo: " + STAT_TXT[P.stat] + " +" + fmt(pv.from) + "% → +" + fmt(pv.to) + "%"
+        sub = !n ? "" : e && e.r === 4 ? "L’ancestrale equipaggiato non si cambia" : pv.same ? "Uguale a quello equipaggiato" : armed ? "Tocca di nuovo: " + STAT_TXT[P.stat] + " +" + fmt(pv.from) + "% → +" + fmt(pv.to) + "%"
           + (pv.back ? " · " + pv.back + (pv.back === 1 ? " Modulo torna" : " Moduli tornano") + " in inventario" : "") : "Tocca per equipaggiare (" + (r + 1) + " slot)";
       } else if (lk) sub = n ? "Bloccati: togli il lucchetto per " + (gearMode === "fuse" ? "fonderli" : "scartarli") : "";
-      else if (gearMode === "fuse") sub = r >= 4 ? "Rarità massima" : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali non bloccati";
+      else if (gearMode === "fuse") sub = r >= 4 ? plusSub(e, n, armed) : n >= 5 ? (armed ? "Tocca di nuovo: 5 → 1 " + RARITY[r + 1].name.toLowerCase() : "5 → 1 " + RARITY[r + 1].name.toLowerCase()) : "Servono 5 pezzi uguali non bloccati";
       else sub = n ? (armed ? "Tocca di nuovo per scartarne uno" : "Tocca per scartarne uno") : "";
       if (n) lockButton(320, yy, h, lk, () => tapLock("pcs", k, lk));
       button(12, yy, n ? 304 : 336, h, "", () => tapPiece(r, lk), { stroke: armed ? "#ffd166" : n ? rarColor(r) : "#24345a", fill: n ? "rgba(18,30,58,0.92)" : "rgba(10,16,32,0.6)" });

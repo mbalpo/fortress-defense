@@ -712,6 +712,12 @@ const PIECES = {          // pool: il primo effetto è l’esclusivo del pezzo
   nucleo:   { name: "Nucleo",   stat: "tdmg", base: [4, 7, 11, 15, 20],  pool: [30, 3, 9, 21, 23, 25, 27, 28, 29] },
 };
 const PIECE_IDS = Object.keys(PIECES);
+// ancestrale+N (1.29.0, DESIGN.md § 15) [deciso] (Marco, 26-27/11/2026): un ancestrale equipaggiato non si toglie e si evolve fino a +10 con la fusione
+// (+N = +(N−1) e N ancestrali base dello stesso tipo, non bloccati); +20% del valore ancestrale a passo; uno slot in più a +1, +5 e +10 (6, 7, 8)
+const PLUS = { max: 10, step: 0.2, slotsAt: [1, 5, 10] };
+const plusOf = (e) => e && e.r === 4 ? e.p || 0 : 0;
+const slotsOf = (e) => e.r + 1 + PLUS.slotsAt.filter((x) => plusOf(e) >= x).length;
+const pieceBase = (pc, e) => PIECES[pc].base[e.r] * (1 + PLUS.step * plusOf(e));   // statistica base del pezzo equipaggiato (%)
 const STAT_TXT = { pdmg: "danno del guardiano", hp: "vita della barriera", tdmg: "danno delle torrette" };
 const sgn = (v) => (v > 0 ? "+" : "−") + fmt(Math.abs(v));
 const typeMod = (type) => ({ w: 3, type, v: [6, 11, 17, 24, 32], t: (v) => "Danno " + TYPES[type].name + " +" + fmt(v) + "% (torrette)" });
@@ -1139,9 +1145,9 @@ function cleanGear(p) {                           // da dati qualsiasi: tiene so
   }
   if (src.eq && typeof src.eq === "object") for (const pc of PIECE_IDS) {
     const e = src.eq[pc]; if (!e || !okR(e.r)) continue;
-    const m = [];
-    for (const x of Array.isArray(e.m) ? e.m : []) if (Array.isArray(x) && okFx(pc, x[0]) && okR(x[1]) && !m.some((y) => y[0] === x[0]) && m.length < e.r + 1) m.push(x[2] ? [x[0], x[1], 1] : [x[0], x[1]]);
-    g.eq[pc] = e.lk ? { r: e.r, m, lk: 1 } : { r: e.r, m };
+    const m = [], p = e.r === 4 ? clamp(Math.floor(+e.p) || 0, 0, PLUS.max) : 0, slots = slotsOf({ r: e.r, p });   // versioni 1-9: nessun +N
+    for (const x of Array.isArray(e.m) ? e.m : []) if (Array.isArray(x) && okFx(pc, x[0]) && okR(x[1]) && !m.some((y) => y[0] === x[0]) && m.length < slots) m.push(x[2] ? [x[0], x[1], 1] : [x[0], x[1]]);
+    g.eq[pc] = Object.assign({ r: e.r, m }, e.lk ? { lk: 1 } : {}, p ? { p } : {});
   }
   // bloccati: solo righe esistenti, mai più degli esemplari posseduti (versioni 1-4: nessun blocco)
   if (src.lock && typeof src.lock === "object") for (const k in src.lock) {
@@ -1154,6 +1160,7 @@ const gearCount = (g, kind, pc) => Object.entries(g[kind]).reduce((a, [k, v]) =>
 // lk: si prende un esemplare bloccato (la riga dei bloccati); il blocco segue l’esemplare
 function equipPiece(pc, r, lk) {
   const g = progress.gear, k = pcKey(pc, r); if (!gearOpen() || !qty(g.pcs, k)) return false;
+  if (g.eq[pc] && g.eq[pc].r === 4) return false;                          // l’ancestrale equipaggiato non si cambia (1.29.0)
   lk = lk ? lockN(g, k) > 0 : freeN(g, "pcs", k) <= 0;                      // senza esemplari della riga chiesta si usa l’altra
   const old = g.eq[pc], m = old ? old.m : [];
   take(g, "pcs", k, lk);
@@ -1165,10 +1172,10 @@ function equipPiece(pc, r, lk) {
 // cosa cambia equipaggiando la rarità r al posto del pezzo attuale (per il primo tocco): statistica base e Moduli che tornano in inventario
 function equipPreview(pc, r) {
   const e = progress.gear.eq[pc];
-  return { from: e ? PIECES[pc].base[e.r] : 0, to: PIECES[pc].base[r], back: e ? Math.max(0, e.m.length - (r + 1)) : 0, same: !!e && e.r === r };
+  return { from: e ? pieceBase(pc, e) : 0, to: PIECES[pc].base[r], back: e ? Math.max(0, e.m.length - (r + 1)) : 0, same: !!e && e.r === r };
 }
 function unequipPiece(pc) {                      // toglie il pezzo: pezzo e Moduli tornano in inventario (con il loro blocco)
-  const g = progress.gear, e = g.eq[pc]; if (!e) return false;
+  const g = progress.gear, e = g.eq[pc]; if (!e || e.r === 4) return false;   // l’ancestrale non si toglie (1.29.0)
   put(g, "pcs", pcKey(pc, e.r), e.lk); e.m.forEach(([fx, mr, ml]) => put(g, "mods", modKey(pc, mr, fx), ml));
   delete g.eq[pc]; saveProgress(); return true;
 }
@@ -1178,7 +1185,7 @@ function installCheck(pc, fx, r) {
   const e = progress.gear.eq[pc]; if (!e) return "none";
   const same = e.m.find((x) => x[0] === fx);
   if (same) return r !== undefined && r > same[1] ? "replace" : "dup";
-  return e.m.length < e.r + 1 ? "ok" : "full";
+  return e.m.length < slotsOf(e) ? "ok" : "full";
 }
 const canInstall = (pc, fx, r) => { const c = installCheck(pc, fx, r); return c === "ok" || c === "replace"; };
 function installMod(pc, r, fx, lk) {
@@ -1208,6 +1215,13 @@ function lockSlot(pc, i) { const e = progress.gear.eq[pc]; if (!e || !e.m[i]) re
 function fusePieces(pc, r) {
   const g = progress.gear; if (r >= 4 || freeN(g, "pcs", pcKey(pc, r)) < 5) return false;
   bump(g.pcs, pcKey(pc, r), -5); bump(g.pcs, pcKey(pc, r + 1), 1); saveProgress(); return true;
+}
+// evoluzione dell’ancestrale equipaggiato: +N con N ancestrali base dello stesso tipo dall’inventario, non bloccati (1.29.0)
+const plusNeed = (e) => plusOf(e) + 1;
+function fusePlus(pc) {
+  const g = progress.gear, e = g.eq[pc]; if (!e || e.r !== 4 || plusOf(e) >= PLUS.max) return false;
+  const need = plusNeed(e), k = pcKey(pc, 4); if (freeN(g, "pcs", k) < need) return false;
+  bump(g.pcs, k, -need); e.p = need; saveProgress(); return true;
 }
 // fusione dei Moduli: 5 dello stesso pezzo e della stessa rarità, anche con effetti diversi (sel = { effetto: quanti });
 // l’effetto del risultato si estrae dal pool del pezzo con i pesi
@@ -1251,7 +1265,7 @@ function gearStats(gear) {
     red: 0, perCard: 0, nearB: 0, lowImm: 0, abCd: 0, heal: 0, pierce: 0, high: 0, explo: 0, maxHp: 0, refresh: 0, four: 0, p2: 0, t2: 0, mods: 0 };
   for (const pc of PIECE_IDS) {
     const e = gear && gear.eq[pc]; if (!e) continue;
-    s[PIECES[pc].stat] += PIECES[pc].base[e.r] / 100;
+    s[PIECES[pc].stat] += pieceBase(pc, e) / 100;
     for (const [fx, r] of e.m) {
       const v = MOD[fx].v[r], f = Array.isArray(v) ? v.map((x) => x / 100) : v / 100; s.mods++;
       switch (fx) {
@@ -3638,7 +3652,16 @@ function tapPiece(r, lk) {
   if (gearRO()) return;
   if (!n) { gearArm = null; return; }
   if (gearMode !== "use" && lk) { gearArm = null; gearMsg = LOCKED_MSG; return; }
-  if (gearMode === "fuse" && (r >= 4 || n < 5)) { gearArm = null; return; }
+  const e = progress.gear.eq[gearSel];
+  if (gearMode === "use" && e && e.r === 4) { gearArm = null; gearMsg = ANC_MSG; return; }   // 1.29.0: l’ancestrale non si cambia
+  if (gearMode === "fuse" && r >= 4) {             // ancestrali: evolvono quello equipaggiato (+N)
+    if (!e || e.r !== 4) { gearArm = null; gearMsg = "Equipaggia prima un ancestrale: poi lo evolvi con gli altri (+1, +2…)"; return; }
+    if (plusOf(e) >= PLUS.max) { gearArm = null; gearMsg = "Già al massimo: +" + PLUS.max; return; }
+    if (n < plusNeed(e)) { gearArm = null; gearMsg = "Per il +" + plusNeed(e) + " servono " + plusNeed(e) + " ancestrali non bloccati (ne hai " + n + ")"; return; }
+    if (gearArm !== id) { gearArm = id; return; }
+    gearArm = null; fusePlus(gearSel); gearMsg = PIECES[gearSel].name + " ancestrale +" + plusOf(e) + ": " + STAT_TXT[PIECES[gearSel].stat] + " +" + fmt(pieceBase(gearSel, e)) + "%, " + slotsOf(e) + " slot"; return;
+  }
+  if (gearMode === "fuse" && n < 5) { gearArm = null; return; }
   if (gearArm !== id) { gearArm = id; return; }                    // primo tocco: seleziona e mostra cosa cambia
   gearArm = null;
   if (gearMode === "use") equipPiece(gearSel, r, lk);
@@ -3666,7 +3689,12 @@ function tapSlot(i) {                              // Modulo installato: primo t
   if (gearArm !== "s" + i) { gearArm = "s" + i; return; }
   gearArm = null; removeMod(gearSel, i);
 }
-function tapUnequip() { if (gearRO()) return; if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel); }
+const ANC_MSG = "L’ancestrale equipaggiato non si toglie né si cambia: evolvilo con “Fondi”";
+function tapUnequip() {
+  if (gearRO()) return; const e = progress.gear.eq[gearSel];
+  if (e && e.r === 4) { gearArm = null; gearMsg = ANC_MSG; return; }
+  if (gearArm !== "u") { gearArm = "u"; return; } gearArm = null; unequipPiece(gearSel);
+}
 // lucchetti: un tocco, anche con una partita in sospeso
 function tapLock(kind, k, lk) { gearArm = null; gearMsg = ""; toggleLock(kind, k, lk); }
 function tapLockEq() { gearArm = null; gearMsg = ""; lockEquipped(gearSel); }
@@ -3861,13 +3889,14 @@ resize();
    SALVATAGGIO: esporta e importa progressi e impostazioni
    File (JSON leggibile) oppure codice di testo "FD1:…" da copiare e incollare.
    ===================================================================== */
-const APP_VERSION = "1.28.0";
-const SAVE_GAME = "fortress-defense", SAVE_VERSION = 9, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
+const APP_VERSION = "1.29.0";
+const SAVE_GAME = "fortress-defense", SAVE_VERSION = 10, CODE_PREFIX = "FD1:";   // "fortress-defense" e "FD1:": nomi del primo nome del gioco, restano per i salvataggi già fatti (1.13.1)
 // versioni: 2: Sigilli, premi, nodi dell’albero, torrette equipaggiate · 3: equipaggiamento · 4: Sigilli maggiori · 5: blocchi (gear.lock, lk)
 // · 6: clearedEpic (livelli di Epica completati; dalle versioni precedenti si ricava dalle chiavi “e<N>” dei premi)
 // · 7: planet (Protezione planetaria: livelli per tipo, frammenti dei ranger, partite del giorno); dalle versioni precedenti si parte da zero
 // · 8: planet.eq (ranger equipaggiati); dalla versione 7 nessun ranger equipaggiato
 // · 9: startCards (carta iniziale per entità, 1.22.0); dalle versioni precedenti nessuna carta scelta
+// · 10: gear.eq.<pezzo>.p (ancestrale+N, 1.29.0) e fino a 8 Moduli installati; dalle versioni precedenti nessun +N
 const $id = (id) => document.getElementById(id);
 function makeSave() {
   return { game: SAVE_GAME, version: SAVE_VERSION, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),

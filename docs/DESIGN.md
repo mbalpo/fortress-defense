@@ -709,6 +709,10 @@ altre impostazioni (il sonoro è al § 18) · bilanciamento tarato da un giocato
   - **Gestione dell’oggetto** **[deciso]** (Marco, 27/11/2026): un pezzo ancestrale **equipaggiato non si toglie più** (né si sostituisce con un altro pezzo): si può solo **evolvere**
     nelle versioni “+” con il tasto **Fusione**, scegliendo gli altri ancestrali dello stesso tipo presenti in inventario (non bloccati). Così i pezzi +N esistono solo equipaggiati
     e non ci sono mai, per esempio, più elmi +1 in inventario. Nome: “**Arma ancestrale +3**”, colore iridescente con il numero. I Moduli installati si tolgono e si cambiano come sempre **[Claude]**.
+  - **Costruito (1.29.0)**: `PLUS`, `plusOf`, `slotsOf`, `pieceBase`, `fusePlus`; il “+N” sta nel pezzo equipaggiato (`gear.eq.<pezzo>.p`), salvataggio **versione 10** (dalle precedenti nessun +N).
+    Schermata **[Claude]**: titolo “Arma ancestrale +3”, tessera “Ancest. +3 4/6”, tasto “Fisso” al posto di “Togli”; in “Fondi” la riga degli ancestrali dice quanti ne servono
+    (“4 ancestrali → equipaggiato +4”) e con due tocchi evolve; con più di 5 slot le righe dei Moduli si stringono. Un ancestrale già equipaggiato prima della 1.29.0 diventa fisso.
+    I bot (`equip-atteso.js`, `curva.js`) non evolvono gli ancestrali: le calibrazioni non cambiano.
   - **Slot** **[deciso]** (Marco, 26/11/2026): un nuovo slot per Moduli a +1, +5 e +10 (6, 7 e 8 slot), che accettano Moduli di **ogni rarità** **[deciso]** (Marco, 26/11/2026, su proposta di Claude).
   - **Moduli ancestrali nuovi** **[aperto]** (Marco: “in un secondo momento”).
   - Stime **[Claude]** (tabella dei drop 180+, fusione ideale, da simulare): set di 6 pezzi ancestrale 37 vittorie · +1 74 · +2 150 · +3 260 · +5 600 · +10 2100.

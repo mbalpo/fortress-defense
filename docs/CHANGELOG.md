@@ -3,6 +3,29 @@
 Ogni voce: cosa è cambiato, test eseguiti, voci della checklist da aggiornare su claude.ai.
 Da questa versione ogni voce dice anche se il catalogo grafico è stato rigenerato.
 
+## 1.29.0 — Ancestrale+N
+
+- **Decisioni di Marco** (26-27/11/2026, DESIGN.md § 15 “Ancestrale+N”): un ancestrale **equipaggiato non si toglie né si cambia**; si **evolve** fino a **+10** con il tasto “Fondi”:
+  il +N costa **N ancestrali base** dello stesso tipo dall’inventario, non bloccati (2, 4, 7, 16, 56 in tutto per +1, +2, +3, +5, +10). Ogni passo aggiunge il **20%** del valore ancestrale
+  (+10 = ×3: guardiano 204%, barriera 168%, torrette 60% con il set intero); **slot** 6, 7, 8 a +1, +5, +10, per Moduli di ogni rarità. Nome “Arma ancestrale +3”, iridescente col numero.
+- **Codice**: `PLUS`, `plusOf`, `slotsOf`, `pieceBase`, `fusePlus`, `plusNeed`; `equipPiece` e `unequipPiece` rifiutano di cambiare o togliere l’ancestrale (messaggio in schermata);
+  `installCheck` e `cleanGear` contano gli slot del +N; `gearStats` usa la statistica del +N.
+- **Salvataggio versione 10**: `gear.eq.<pezzo>.p` (0-10, solo sugli ancestrali), fino a 8 Moduli installati; le versioni 1-9 si importano senza +N.
+- **Schermata** (`draw.js`) **[Claude]**: titolo “ancestrale +3”, tessera “Ancest. +3 4/6” (il nome intero non stava), tasto “Fisso”, riga degli ancestrali in “Fondi” con quanti ne servono,
+  righe dei Moduli più strette oltre i 5 slot.
+- `APP_VERSION` e `sw.js` 1.29.0.
+
+**Test**: `npm test`: tutti verdi. Nuovo `tests/ancestrale.js` (8 controlli): ancestrale fisso (togliere e cambiare rifiutati, messaggi), evoluzione dal +0 al +10 con 55 ancestrali (5 bloccati esclusi),
+slot e statistica a ogni passo (+1 6 slot 33,6% · +5 7 slot · +10 8 slot 84%), set +10 (204 / 168 / 60%), 8 Moduli al +10 e 7 di ogni rarità al +5, caricamento (p oltre 10 → 10, p ignorato sui non ancestrali,
+Moduli oltre gli slot scartati), versione 10 esportata e reimportata, versione 9 senza +N; schermata (“ancestrale +3”, “Fisso”, fusione in due tocchi e messaggio).
+Aggiornati per la versione 10: `equip.js` (e il tocco sulle righe con l’ancestrale equipaggiato, che ora mostra il messaggio invece di armare la riga), `planet.js`, `rangers.js`, `seals.js`, `v122.js`,
+`schermate.js`, `savetest.js` (versione futura 11), `run.js` (`versione \d+`). `npm run screenshots`: nuove 123-124 (arma +10 con 8 Moduli, “Fondi” per il +4), dopo aver accorciato la tessera.
+**Bot**: non evolvono gli ancestrali, le calibrazioni non cambiano (misura dei tempi dell’ancestrale+N in DESIGN.md § 15, del 26/11).
+
+Catalogo grafico: rigenerato → docs/catalogo-grafico.html (e alternativo HD-2D): incorpora il codice nuovo; la schermata dell’equipaggiamento nel catalogo non ha ancestrali +N.
+
+Checklist: aggiornata (versione 69): prove dell’ancestrale+N sul telefono; riferimento della fusione.
+
 ## 1.28.0 — Ranger fino al livello 20
 
 - **Decisioni di Marco** (26/11/2026, DESIGN.md § 17 “Livello massimo 20”): livello massimo **20** (2100 frammenti); dall’11 al 20 il ciclo resta 20 s e:

@@ -90,7 +90,7 @@ console.log("— Salvataggio, schermata, HD-2D —");
   const bad = J(ev, `parseSave(JSON.stringify({ game: "fortress-defense", version: 8, progress: { cleared: 70, seen: [], planet: { eq: ["prometeo", "ceo", "alfa", "zzz"] } } })).planet.eq`);
   const v7 = J(ev, `parseSave(JSON.stringify({ game: "fortress-defense", version: 7, progress: { cleared: 70, seen: [], planet: { lv: { fire: 2 } } } })).planet`);
   console.log("esportato: versione", save.version, "| in campo", save.progress.planet.eq.join(","), "| non validi:", JSON.stringify(bad), "| versione 7: in campo", JSON.stringify(v7.eq), "livelli fire", v7.lv.fire,
-    ok(save.version === 9 && save.progress.planet.eq.join() === "gamma,atlante" && bad.join() === "prometeo,alfa" && v7.eq.length === 0 && v7.lv.fire === 2));
+    ok(save.version === 10 && save.progress.planet.eq.join() === "gamma,atlante" && bad.join() === "prometeo,alfa" && v7.eq.length === 0 && v7.lv.fire === 2));
   ev("openPlanet()"); g.frame(); ev("openRangers('planet')"); g.texts.length = 0; g.frame(); const T = [...g.texts];
   ev("tapRanger('omega')"); const sel = ev("rangerSel"); ev("tapRanger('omega')"); const msg = ev("rangerMsg");
   ev("closeRangers()");

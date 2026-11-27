@@ -70,7 +70,7 @@ console.log("— Salvataggio versione 9 —");
   const bad = J(ev, `parseSave(${JSON.stringify(JSON.stringify(Object.assign({}, save, { progress: Object.assign({}, save.progress, { startCards: { sky: "burn2", laser: "dmg", nope: "x", player: "dmg" } }) })))}).startCards`);
   const v8 = J(ev, `parseSave(${JSON.stringify(JSON.stringify(Object.assign({}, save, { version: 8, progress: Object.assign({}, save.progress, { startCards: undefined }) })))}).startCards`);
   console.log("esportato: versione", save.version, JSON.stringify(save.progress.startCards), "· reimportato", JSON.stringify(back), "· non validi tolti", JSON.stringify(bad), "· versione 8:", JSON.stringify(v8),
-    ok(save.version === 9 && back.sky === "burn1" && JSON.stringify(bad) === "{}" && JSON.stringify(v8) === "{}"));
+    ok(save.version === 10 && back.sky === "burn1" && JSON.stringify(bad) === "{}" && JSON.stringify(v8) === "{}"));
 }
 
 console.log("— Carta extra: nodo e costi —");
